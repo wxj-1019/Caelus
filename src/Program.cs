@@ -265,6 +265,7 @@ namespace CaelusApp
             {
                 return gameMode.NeedsWhitelistParentIdentity(session)
                     || gameMode.NeedsGameProcessIdentity(name, session)
+                    || BuildCatalog.IsMatch(name)
                     ;
             };
             procNotify.CaptureParentIdentity =

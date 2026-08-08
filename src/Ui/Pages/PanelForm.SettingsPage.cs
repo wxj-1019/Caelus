@@ -46,6 +46,29 @@ namespace CaelusApp
             MakeAutoCard(scroll, 6, sy, ScrollContentW, 76, Lang.T("set.dev"), Lang.T("set.dev.n"), swDev, out cardH);
             sy += cardH + 8;
 
+            // 自定义编译进程输入
+            CardLabel(scroll, Lang.T("set.dev.custom"), 14, sy + 6, ScrollContentW - 28, 18, 8f, true, Theme.Fg);
+            var devCustom = Theme.MakeTextBox(Theme.S(14), Theme.S(sy + 26), Theme.S(ScrollContentW - 110));
+            devCustom.Text = BuildCatalog.CustomList;
+            devCustom.Height = Theme.S(44);
+            devCustom.Multiline = true;
+            devCustom.ScrollBars = ScrollBars.Vertical;
+            devCustom.ForeColor = Theme.Fg;
+            devCustom.BackColor = Theme.Inset;
+            scroll.Controls.Add(devCustom);
+            var btnDevSave = new PillButton(Lang.T("set.dev.custom.save"), BtnKind.Normal);
+            btnDevSave.Bg = Theme.Card;
+            btnDevSave.Size = new Size(Theme.S(80), Theme.S(30));
+            btnDevSave.Location = new Point(Theme.S(ScrollContentW - 96), Theme.S(sy + 30));
+            btnDevSave.Click += delegate
+            {
+                BuildCatalog.CustomList = devCustom.Text;
+                btnDevSave.Text = Lang.T("set.dev.custom.saved");
+            };
+            scroll.Controls.Add(btnDevSave);
+            CardLabel(scroll, Lang.T("set.dev.custom.n"), 14, sy + 76, ScrollContentW - 28, 32, 7.4f, false, Theme.Dim);
+            sy += 114;
+
             sy += 10;
             Section(scroll, Lang.T("sec.maint"), 6, sy); sy += 24;
 

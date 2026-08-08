@@ -3,6 +3,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 
 namespace CaelusApp
 {
@@ -12,6 +13,7 @@ namespace CaelusApp
         private readonly object sync = new object();
         private readonly HashSet<int> activeBuildPids = new HashSet<int>();
         private bool suppressing;
+        private long sessionStartTicks;
 
         public bool IsActive { get { lock (sync) return activeBuildPids.Count > 0; } }
 
@@ -45,6 +47,23 @@ namespace CaelusApp
                         activeBuildPids.Remove(pc.Pid);
                 }
 
+                // 兜底清理：短命编译进程的 Stopped 事件可能因进程已退出而丢失，
+                // PID 会永远留在集合里导致会话不结束。每次事件到达时清理已死的 PID。
+                if (activeBuildPids.Count > 0)
+                {
+                    var dead = new List<int>();
+                    foreach (int pid in activeBuildPids)
+                    {
+                        try
+                        {
+                            using (var p = Process.GetProcessById(pid)) { }
+                        }
+                        catch (ArgumentException) { dead.Add(pid); }
+                        catch (InvalidOperationException) { dead.Add(pid); }
+                    }
+                    foreach (int pid in dead) activeBuildPids.Remove(pid);
+                }
+
                 activeCount = activeBuildPids.Count;
 
                 if (activeCount > 0 && !suppressing)
@@ -68,9 +87,10 @@ namespace CaelusApp
         {
             try
             {
+                sessionStartTicks = DateTime.UtcNow.Ticks;
                 SvcPause.Activate();
                 BoostBuildProcesses();
-                Logger.Log("开发模式：检测到编译/调试进程（" + activeCount + " 个活跃），已压制后台并暂停索引服务");
+                Logger.Log("开发模式：检测到编译/调试进程（" + activeCount + " 个活跃），已暂停索引服务并提优编译进程");
                 try { SessionChanged("bal.buildstart"); } catch { }
             }
             catch (Exception ex) { Logger.LogFailure("开发模式激活失败", ex); }
@@ -81,6 +101,10 @@ namespace CaelusApp
             try
             {
                 SvcPause.Restore();
+                long elapsedMs = (DateTime.UtcNow.Ticks - sessionStartTicks) / TimeSpan.TicksPerMillisecond;
+                if (elapsedMs >= 0)
+                    Logger.Log(string.Format("开发模式：本次编译 {0:0.#} 秒，索引服务已恢复",
+                        elapsedMs / 1000.0));
                 Logger.Log("开发模式：编译/调试进程已退出，恢复后台资源");
                 try { SessionChanged("bal.buildend"); } catch { }
             }

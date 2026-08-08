@@ -17,7 +17,13 @@ namespace CaelusApp
             // ES/日志栈
             "elasticsearch", "kibana", "logstash", "filebeat", "metricbeat",
             // 消息队列
-            "rabbitmq-server", "kafka", "nats-server"
+            "rabbitmq-server", "kafka", "nats-server",
+            // 热重载守护（编译期间不压，避免热重载失效）
+            "dotnet-watch", "nodemon", "webpack-dev-server", "vite", "concurrently", "pm2",
+            // IDE 语言服务器（编译期间不压，保证智能提示/补全不卡）
+            "omnisharp", "roslyn", "jdtls", "jdt", "eclipse-jdt", "pyls", "pyright", "pylance",
+            "jedi-language-server", "tsserver", "vscode-language-server", "gopls", "rust-analyzer",
+            "clangd", "ccls", "language-server", "lsp"
         };
 
         public static bool Contains(string processName)

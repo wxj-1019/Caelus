@@ -418,7 +418,7 @@ namespace CaelusApp
             string state = gameActive ? "ACTIVE" : guardEnabled ? "STANDBY" : "OFFLINE";
             Color stateColor = gameActive ? Theme.Green : guardEnabled ? accent : Theme.Faint;
             Rectangle top = new Rectangle((int)(cx - Theme.S(70)), (int)(cy - Theme.S(67)), Theme.S(140), Theme.S(16));
-            TextRenderer.DrawText(g, "PAVISE CORE", Theme.Mono(7f), top, Theme.Dim,
+            TextRenderer.DrawText(g, "CAELUS CORE", Theme.Mono(7f), top, Theme.Dim,
                 TextFormatFlags.HorizontalCenter | TextFormatFlags.VerticalCenter | TextFormatFlags.NoPadding);
             Rectangle modeBox = new Rectangle((int)(cx - Theme.S(76)), (int)(cy + Theme.S(42)), Theme.S(152), Theme.S(22));
             TextRenderer.DrawText(g, ModeButton.ModeName(mode), Theme.UI(10f, true), modeBox, Theme.Fg,

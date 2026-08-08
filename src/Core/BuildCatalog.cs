@@ -22,7 +22,7 @@ namespace CaelusApp
             // 调试器
             "gdb", "lldb", "msvsmon",
             // Git 大规模 IO 操作（rebase/gc/pack/clone）
-            "git", "git-bash", "git-cmd", "hub", "gh",
+            "git", "git-bash", "git-cmd",
             // Docker（build/run 都触发；守护进程 dockerd 在豁免列表不受影响）
             "docker", "docker-buildx",
             // 测试运行器

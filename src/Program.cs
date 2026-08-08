@@ -242,7 +242,7 @@ namespace CaelusApp
             var gameMode = new GameMode(dir, core);
             gameMode.Enabled = Settings.Load("GameModeOn", true);
 
-            var buildWatch = new BuildWatch(core);
+            var buildWatch = new BuildWatch(() => gameMode.IsActive);
 
             var startGate = new object();
             bool exiting = false;

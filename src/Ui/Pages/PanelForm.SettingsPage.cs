@@ -64,6 +64,10 @@ namespace CaelusApp
             {
                 BuildCatalog.CustomList = devCustom.Text;
                 btnDevSave.Text = Lang.T("set.dev.custom.saved");
+                var revert = new System.Windows.Forms.Timer();
+                revert.Interval = 1500;
+                revert.Tick += (s2, e2) => { revert.Stop(); revert.Dispose(); btnDevSave.Text = Lang.T("set.dev.custom.save"); };
+                revert.Start();
             };
             scroll.Controls.Add(btnDevSave);
             CardLabel(scroll, Lang.T("set.dev.custom.n"), 14, sy + 76, ScrollContentW - 28, 32, 7.4f, false, Theme.Dim);

@@ -8,8 +8,13 @@
 Caelus-v*.zip
 Caelus.freeze.state
 Caelus.freeze.state.tmp.*
+Caelus.autoignore.txt
 Caelus.games.txt
 Caelus.log
+Caelus.log.old
+Caelus.manifest.tmp
+Caelus.portable
+Caelus.preview.log
 Caelus.profiles.dat
 Caelus.reports.log
 Caelus.selftest.*.txt

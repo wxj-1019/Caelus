@@ -1,0 +1,34 @@
+// @author zenjiro 18967498922@163.com
+// 文件用途 只负责 CPU 分区决策 不读取硬件也不调用 Windows API
+
+using System;
+
+namespace CaelusApp
+{
+    internal static class CpuPartitionPolicy
+    {
+        public static ulong StrictMask(ulong all, ulong background, ulong performance, ulong cache)
+        {
+            ulong preferred = cache != 0 ? cache
+                : (performance != 0 ? performance : (all & ~background));
+            preferred &= all;
+            return preferred != 0 ? preferred : all;
+        }
+
+        public static int BackgroundCoreCount(int physicalCoreCount)
+        {
+            if (physicalCoreCount <= 6) return 0;
+            if (physicalCoreCount <= 10) return 1;
+            return Math.Min(4, Math.Max(2, physicalCoreCount / 8));
+        }
+
+        public static double CoreInterruptRate(double[] rates, ulong coreMask)
+        {
+            if (rates == null || coreMask == 0) return 0;
+            double peak = 0;
+            for (int i = 0; i < rates.Length && i < 64; i++)
+                if (((coreMask >> i) & 1UL) != 0 && rates[i] > peak) peak = rates[i];
+            return peak;
+        }
+    }
+}

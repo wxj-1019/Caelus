@@ -1,0 +1,233 @@
+﻿// @author zenjiro 18967498922@163.com
+// 文件用途 维护内置的三语版本说明并记录已读版本
+
+using System;
+using System.Collections.Generic;
+
+namespace CaelusApp
+{
+    internal sealed class ReleaseNote
+    {
+        public readonly string Version;
+        public readonly string Date;
+        private readonly string[][] items;
+
+        public ReleaseNote(string version, string date, string[][] entries)
+        {
+            Version = version; Date = date; items = entries;
+        }
+
+        public string Tag { get { return "v" + Version; } }
+
+        public int Count { get { return items == null ? 0 : items.Length; } }
+
+        public string Item(int index)
+        {
+            if (items == null || index < 0 || index >= items.Length) return "";
+            string[] row = items[index];
+            if (row == null || row.Length == 0) return "";
+            int lang = Lang.Cur;
+            if (lang < 0 || lang >= row.Length || string.IsNullOrEmpty(row[lang])) return row[0];
+            return row[lang];
+        }
+    }
+
+    internal static class ReleaseNotes
+    {
+        private const string SeenKey = "LastSeenNotesVersion";
+
+        public static readonly ReleaseNote[] All = new[]
+        {
+            new ReleaseNote("1.7.0", "2026-08-08", new[]
+            {
+                new[]{ "项目由 Pavise 重构为 Caelus（zenjiro 维护）：产品名、作者、命名空间、数据文件名、注册表根全部更换。全新安装，不迁移旧版数据。" },
+                new[]{ "启动弹窗改为更新日志：首次安装和每次版本更新后各显示一次，看过即不再弹。" },
+                new[]{ "产品定位从纯游戏扩展为兼顾开发：当你全神贯注时——打游戏、写代码、编译——把系统资源让给当前重任。" },
+            }),
+            new ReleaseNote("1.6.7", "2026-08-06", new[]
+            {
+                new[]{ "电源计划改为自建的「Caelus 竞技」：竞技模式下 CPU 锁 100% 下限、核心不停放、睿频与能效偏好拉满；大小核机器额外接管 E 核与线程调度。本机没有的项自动跳过，退出游戏切回原计划。" },
+                new[]{ "「锁定 CPU 最低频率」与「电源滑块拉到最高」并入「游戏时切换电源计划」，一个开关管完。" },
+                new[]{ "移除「英雄联盟专栏」，改为设置页的「英雄联盟附加层清理」：删掉 AI 教练、录制这类附加组件，游戏本体和登录链路不动。" },
+                new[]{ "体检页新增显卡一行，标出核显与独显；驱动调优不可用时区分是没有这块卡，还是有卡但驱动接口调不起来。" },
+                new[]{ "游戏提优改不动时明确告知已被目标反作弊保护。" },
+                new[]{ "修复日志与界面显示压制 0 个，实际已经压制。" },
+                new[]{ "修复每局报告漏算中途退出的进程，CPU 占用统计偏低。" },
+                new[]{ "修复列表滚动与鼠标悬浮时闪烁。" },
+                new[]{ "修复亮色主题下列表文字发虚。" },
+                new[]{ "主窗口打开改为淡入，动画被系统禁用时直接显示。" },
+                new[]{ "修复小屏与高缩放下窗口超出屏幕，界面改为按可用区域自适应。" },
+                new[]{ "修复电源计划副本堆积：记录丢失后会重复新建，在系统里留下多个同名计划。" },
+                new[]{ "修复 ReBAR 检测把核显也算进去。" },
+            }),
+            new ReleaseNote("1.6.6", "2026-08-06", new[]
+            {
+                new[]{ "本版首次启动会清除旧版本全部数据，回到全新安装状态；清除前先还原所有系统改动，有任何一项没还原成功就整体中止。游戏库与白名单需要重新添加。" },
+                new[]{ "显卡页扩容（NVIDIA）：DLSS 换新算法、ReBAR 强开、屏蔽 Ansel、笔记本电池满血。改过的都记原值，关掉就还原。" },
+                new[]{ "自动检测 ReBAR 在 BIOS 里开没开，开关旁与体检页各一行。" },
+                new[]{ "新增「后台硬限帧」：打游戏时后台限到 20 帧，退游戏恢复。" },
+                new[]{ "新增 AMD 驱动调优（实验性）：Anti-Lag、Chill 限帧、Enhanced Sync、RIS 锐化、着色器缓存重置。遇到问题请联系群主" },
+                new[]{ "每局结束在运行日志里记下显卡被什么限制：功耗墙、温度墙还是电池；体检页新增「NVIDIA 降频状态」可实时查看。" },
+                new[]{ "新增「不许无故降级」：系统会在长时间无键鼠输入后给前台降一档，手柄游戏和过场动画会中招，现在可以关掉。" },
+                new[]{ "新增「不熄屏不睡眠」：打游戏期间屏幕不熄，退出自动解除。" },
+                new[]{ "新增「电源滑块拉到最高」：打游戏时切到最佳性能，退出还原原档位。" },
+                new[]{ "白名单独立成页：拖入 EXE 或快捷方式即可，作用范围自动判定；可从运行中的程序里直接挑选，带图标、内存占用与搜索。" },
+                new[]{ "内置豁免扩到主流游戏平台：Epic、EA app、育碧 Connect、战网、GOG、R星、Riot、Xbox、WeGame、HoYoPlay 等，按名称加安装目录双重校验。" },
+                new[]{ "内核反作弊（Ricochet、Vanguard 等）下不再反复重试：读回句柄实际权限，一轮即可确证，之后本局不再对游戏本体写入。" },
+                new[]{ "「后备提优」改为启动时预置，并补齐 IO 与页面优先级；受内核反作弊保护的游戏下次启动即由内核赋予高优先级。" },
+                new[]{ "「严格核心分区」改为默认关闭，竞技档不再强制接管。" },
+                new[]{ "移除「音视频调度优先（MMCSS）」，实测无收益；升级后自动还原旧版本写入的值。" },
+                new[]{ "移除「前台调度稳定」，它取消的是前台程序本该有的时间片优势；升级后自动还原旧版本写入的值。" },
+                new[]{ "补删中断核规避的遗留判定，游戏分区不再因中断分布少一个核；体检页与 --irq-map 的中断测量保留。" },
+                new[]{ "绑核目标增加安全校验，与能效核重叠时退回不限核。" },
+                new[]{ "体检页新增节能模式检查与 AMD 写入实测，NVIDIA 写入实测覆盖全部新项。" },
+                new[]{ "修复帧率上限选 240 会被改成「关」。" },
+                new[]{ "修复效率模式与核心策略写入失败后无限重试并刷屏。" },
+                new[]{ "修复 Xbox / 微软商店版游戏加不进游戏库。" },
+            }),
+            new ReleaseNote("1.6.5", "2026-08-05", new[]
+            {
+                new[]{ "新增「扫描已安装游戏」，读取各平台安装记录，勾选批量加入游戏库。" },
+                new[]{ "加速器不再被列为游戏。" },
+                new[]{ "修复回滚旧版本会清空游戏库。" },
+                new[]{ "修复安装目录识别过窄。" },
+                new[]{ "修复启动器换壳认错后无法纠正。" },
+                new[]{ "竞技档下前台程序的子进程一并豁免。" },
+                new[]{ "移除报告模式，只留日志；每局成效改记在日志里。" },
+                new[]{ "系统体检若干修正。" },
+                new[]{ "界面功能说明全部重写。" },
+            }),
+            new ReleaseNote("1.6.4", "2026-08-05", new[]
+            {
+                new[]{ "系统体检新增六项：刷新率、内存余量、供电方式、后台占用前三、Game DVR、系统版本。" },
+                new[]{ "新增启动反馈弹窗，可关闭。" },
+                new[]{ "新版本启动会接管在跑的旧版本，旧实例完整还原后再退出。" },
+                new[]{ "修复体检页滚动后重新体检顶部留白。" },
+                new[]{ "效率模式判定细分为不支持 / 接口可用 / 支持。" },
+            }),
+            new ReleaseNote("1.6.3", "2026-08-05", new[]
+            {
+                new[]{ "新增「系统体检」页，只读检查本机能力与设置，输出带依据的结论清单。" },
+                new[]{ "体检页支持 NVIDIA 写入实测。" },
+                new[]{ "移除 v1.6.2 的中断核规避，收益不抵让出一个物理核的代价。" },
+                new[]{ "修复 Xbox / 微软商店版游戏加不进目标库。" },
+            }),
+            new ReleaseNote("1.6.2", "2026-08-05", new[]
+            {
+                new[]{ "新增「中断核规避」（默认关，8 核以上生效）。" },
+                new[]{ "规避目标改为开局实测，不再固定屏蔽 CPU 0。" },
+                new[]{ "中断测量改用 30 秒窗口，精度提高十倍。" },
+                new[]{ "许可协议改为 Pavise 许可协议：源码公开、可自由使用与修改，禁止收费分发。" },
+            }),
+            new ReleaseNote("1.6.1", "2026-08-04", new[]
+            {
+                new[]{ "修复跑在临时目录的程序主体被当后台压制。" },
+                new[]{ "新增写入失败熔断，连续失败 2 次自动关闭对应开关。" },
+                new[]{ "识别拒绝一切修改的自保护程序，后续对局直接跳过。" },
+                new[]{ "游戏退出增加 15 秒宽限期，启动器换壳不再触发整套还原。" },
+                new[]{ "竞技电源策略补齐隐藏调速参数。" },
+                new[]{ "游戏提速新增退出效率模式的回读验证。" },
+                new[]{ "移除 NVIDIA 低延迟中驱动不接受的一项设置。" },
+                new[]{ "证据模式开启前增加确认弹窗。" },
+            }),
+            new ReleaseNote("1.6.0", "2026-08-02", new[]
+            {
+                new[]{ "仓库迁移至 github.com/dulaiduwang003/Pavise-Game。" },
+                new[]{ "新增「后台冻结」（默认关，仅竞技 / 激进自定义档）：挂起已隔离、30 秒无动静且无窗口的后台。" },
+                new[]{ "新增「渲染主权域」（默认关）：单独抬高决定帧数的主线程。" },
+                new[]{ "新增「NVIDIA 低延迟」（默认关）：渲染队列压到 1 帧。" },
+                new[]{ "新增「后备提优」（默认关）：打不开句柄时由系统在进程创建时给高优先级。" },
+                new[]{ "新增「Windows 游戏模式守护」与「TCP 低延迟」（均默认关）。" },
+                new[]{ "修正「前台调度加权」，原写入值等同系统默认，实为空操作；改名「前台调度稳定」。" },
+                new[]{ "「后台 GPU 让位」与「后台冻结」接入优化策略页，此前无法开启。" },
+            }),
+            new ReleaseNote("1.5.1", "2026-07-31", new[]
+            {
+                new[]{ "新增「后台 GPU 让位」（默认关）：被重压的后台连显卡优先级一并降低。" },
+                new[]{ "帧率统计剔除失焦帧。" },
+                new[]{ "竞技模式不再把库中另一个正在运行的游戏当后台压制。" },
+                new[]{ "英雄联盟安装扫描改为按需触发。" },
+                new[]{ "预设白名单收敛为系统核心进程，早前并入的 11 条第三方豁免会自动移除。" },
+                new[]{ "游戏库拒绝盘符根目录。" },
+            }),
+            new ReleaseNote("1.5", "2026-07-29", new[]
+            {
+                new[]{ "新增「英雄联盟专栏」：精准退出国服附加进程，对局中收起大厅，赛后自动恢复。" },
+                new[]{ "新增附加层删除，需单独确认。" },
+                new[]{ "新增「竞技画质」，可一键还原。" },
+                new[]{ "界面只保留简体中文，体积由约 610 KB 降至约 500 KB。" },
+                new[]{ "修复一批压制与提速的稳定性问题。" },
+                new[]{ "修正退出、关机与崩溃恢复的若干问题。" },
+            }),
+            new ReleaseNote("1.4.4", "2026-07-25", new[]
+            {
+                new[]{ "安全修复：反作弊豁免与识别的判定宽度不一致，可能压到反作弊导致掉线。" },
+                new[]{ "安全修复：向 PowerShell 传目录名使用字符串拼接，可被构造目录名借管理员权限执行任意命令。" },
+                new[]{ "修复游戏档案读取失败被当成空档案，此时新增游戏会覆盖原文件。" },
+                new[]{ "修复主界面部分说明文字被截断、托盘菜单文字偏上。" },
+                new[]{ "还原更完整：效率模式原值、逐游戏图形选项其它字段、中断亲和设备名单。" },
+            }),
+            new ReleaseNote("1.4.3", "2026-07-25", new[]
+            {
+                new[]{ "新增显卡中断亲和与游戏网络优先，均需重启生效。" },
+                new[]{ "压制豁免改为沿父进程链识别启动器，不再写死平台名。" },
+                new[]{ "新增开场动画与「检测到游戏后自动收起窗口」（默认关）。" },
+                new[]{ "新增内置版本说明。" },
+                new[]{ "修复注册表恢复无法处理二进制类型的值。" },
+            }),
+            new ReleaseNote("1.4.2", "2026-07-24", new[]
+            {
+                new[]{ "不限于游戏：手动添加的任何程序都能被识别、保护并提速。" },
+                new[]{ "新增套壳启动器识别，支持位数与版本后缀。" },
+                new[]{ "新增会话粘性保护，切到桌面不再被判定为游戏已退出。" },
+                new[]{ "新增竞技级压制范围。" },
+                new[]{ "系统核心豁免收紧为进程名加路径的精确名单。" },
+                new[]{ "修复竞技模式下切出游戏时，游戏进程本身被当后台压制。" },
+                new[]{ "安全：反作弊无条件豁免压制。" },
+            }),
+            new ReleaseNote("1.0", "2026-07-24", new[]
+            {
+                new[]{ "本仓库下的首个公开发布版本。" },
+            }),
+        };
+
+        public static ReleaseNote Current
+        {
+            get
+            {
+                foreach (ReleaseNote n in All)
+                    if (string.Equals(n.Version, App.Version, StringComparison.OrdinalIgnoreCase)) return n;
+                return null;
+            }
+        }
+
+        public static bool HasUnseen
+        {
+            get { return !string.Equals(Settings.LoadStr(SeenKey, ""), App.Version, StringComparison.OrdinalIgnoreCase); }
+        }
+
+        public static void MarkSeen() { Settings.SaveStr(SeenKey, App.Version); }
+
+#if CAELUS_SELFTEST
+        internal static List<string> MissingTranslations()
+        {
+            var bad = new List<string>();
+            foreach (ReleaseNote n in All)
+                for (int i = 0; i < n.Count; i++)
+                {
+                    int prev = Lang.Cur;
+                    try
+                    {
+                        for (int lang = 0; lang < 3; lang++)
+                        {
+                            Lang.Cur = lang;
+                            if (string.IsNullOrEmpty(n.Item(i))) bad.Add(n.Version + " #" + i + " lang" + lang);
+                        }
+                    }
+                    finally { Lang.Cur = prev; }
+                }
+            return bad;
+        }
+#endif
+    }
+}

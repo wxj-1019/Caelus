@@ -956,6 +956,8 @@ namespace CaelusApp
             test("调色板：正文/次级文字与底色对比度达到 AA", TestPaletteContrast);
             test("动效：规格 §6 六档时长 Token 固定", TestMotionTokens);
             test("动效：减少动态效果时时长减半且禁用位移", TestMotionReducedPolicy);
+            test("MVVM：SetProperty 同值静默、异值通知一次", TestViewModelBase);
+            test("MVVM：RelayCommand 尊重 CanExecute 并执行委托", TestRelayCommand);
             test("运行时图标：托盘图标铺满画布并随生效模式变化", TestModeIcons);
             test("仪表盘动效：各图层逐帧独立推进", TestDashboardMotion);
             test("高 DPI 字体：100% 到 200% 缩放下正文字号都落在整数像素上", () =>

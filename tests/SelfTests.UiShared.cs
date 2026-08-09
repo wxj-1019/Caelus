@@ -109,5 +109,41 @@ namespace CaelusApp
             Eq(true, UiMotion.AllowsOffset(false));
             Eq(false, UiMotion.AllowsOffset(true));
         }
+
+        private sealed class ProbeVm : ViewModelBase
+        {
+            private int count;
+            public int Count
+            {
+                get { return count; }
+                set { SetProperty(ref count, value, "Count"); }
+            }
+        }
+
+        private static void TestViewModelBase()
+        {
+            var vm = new ProbeVm();
+            var changed = new System.Collections.Generic.List<string>();
+            vm.PropertyChanged += (s, e) => changed.Add(e.PropertyName);
+            vm.Count = 1;
+            vm.Count = 1; // 同值不应重复触发
+            vm.Count = 2;
+            Eq(2, changed.Count);
+            Eq("Count", changed[0]);
+            Eq(2, vm.Count);
+        }
+
+        private static void TestRelayCommand()
+        {
+            int runs = 0;
+            var can = new RelayCommand(() => runs++, () => false);
+            Eq(false, can.CanExecute(null));
+            can.Execute(null);
+            Eq(0, runs);
+            var go = new RelayCommand(() => runs++);
+            Eq(true, go.CanExecute(null));
+            go.Execute(null);
+            Eq(1, runs);
+        }
     }
 }

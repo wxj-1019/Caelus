@@ -958,6 +958,9 @@ namespace CaelusApp
             test("动效：减少动态效果时时长减半且禁用位移", TestMotionReducedPolicy);
             test("MVVM：SetProperty 同值静默、异值通知一次", TestViewModelBase);
             test("MVVM：RelayCommand 尊重 CanExecute 并执行委托", TestRelayCommand);
+            test("概览结论：守护/危险/警告/游戏中共五种状态的优先级与文案", TestOverviewConclusionRules);
+            test("概览指标：GPU 温度与内存占用的分级阈值", TestMetricLevels);
+            test("概览结论：状态等级映射到语义色 Token 键", TestConclusionColorKeys);
             test("运行时图标：托盘图标铺满画布并随生效模式变化", TestModeIcons);
             test("仪表盘动效：各图层逐帧独立推进", TestDashboardMotion);
             test("高 DPI 字体：100% 到 200% 缩放下正文字号都落在整数像素上", () =>

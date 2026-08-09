@@ -145,5 +145,44 @@ namespace CaelusApp
             go.Execute(null);
             Eq(1, runs);
         }
+
+        private static void TestOverviewConclusionRules()
+        {
+            // 规格 §5.1：守护关闭优先级最高，其次是危险、警告，再区分游戏中/就绪
+            Eq(StatusLevel.Off, OverviewStatus.Conclude(false, false, false, false).Level);
+            Eq(StatusLevel.Off, OverviewStatus.Conclude(false, true, true, true).Level);
+            Eq(StatusLevel.Critical, OverviewStatus.Conclude(true, false, true, true).Level);
+            Eq(StatusLevel.Attention, OverviewStatus.Conclude(true, false, true, false).Level);
+            Eq(StatusLevel.Optimizing, OverviewStatus.Conclude(true, true, false, false).Level);
+            Eq(StatusLevel.Ready, OverviewStatus.Conclude(true, false, false, false).Level);
+
+            Eq("游戏环境已准备好", OverviewStatus.Conclude(true, false, false, false).Title);
+            Eq("守护已关闭", OverviewStatus.Conclude(false, false, false, false).Title);
+            Eq("游戏优化中", OverviewStatus.Conclude(true, true, false, false).Title);
+        }
+
+        private static void TestMetricLevels()
+        {
+            // GPU 温度阈值 75/85（规格 §5.1）
+            Eq(MetricLevel.Ok, OverviewStatus.LevelFor(62, 75, 85));
+            Eq(MetricLevel.Warning, OverviewStatus.LevelFor(75, 75, 85));
+            Eq(MetricLevel.Warning, OverviewStatus.LevelFor(80, 75, 85));
+            Eq(MetricLevel.Critical, OverviewStatus.LevelFor(85, 75, 85));
+            Eq(MetricLevel.Critical, OverviewStatus.LevelFor(96, 75, 85));
+            // 内存占用阈值 80/90（百分比）
+            Eq(MetricLevel.Ok, OverviewStatus.LevelFor(53, 80, 90));
+            Eq(MetricLevel.Warning, OverviewStatus.LevelFor(80, 80, 90));
+            Eq(MetricLevel.Critical, OverviewStatus.LevelFor(90, 80, 90));
+        }
+
+        private static void TestConclusionColorKeys()
+        {
+            // Level → 语义色 Token 键名（XAML 用 DynamicResource 解析）
+            Eq("Success", OverviewStatus.ColorKey(StatusLevel.Ready));
+            Eq("Success", OverviewStatus.ColorKey(StatusLevel.Optimizing));
+            Eq("Warning", OverviewStatus.ColorKey(StatusLevel.Attention));
+            Eq("Warning", OverviewStatus.ColorKey(StatusLevel.Off));
+            Eq("Danger", OverviewStatus.ColorKey(StatusLevel.Critical));
+        }
     }
 }

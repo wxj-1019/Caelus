@@ -32,6 +32,8 @@ namespace CaelusApp.WpfHost
             {
                 Directory.CreateDirectory(dir);
                 ShutdownMode = ShutdownMode.OnExplicitShutdown;
+                // 离屏渲染捕获最终视觉态：禁用进入动效，避免捕获到淡入起始帧（Opacity=0）
+                Motion.Enabled = false;
                 foreach (UiTone tone in new UiTone[] { UiTone.Light, UiTone.Dark })
                 {
                     ThemeManager.Apply(this, tone);

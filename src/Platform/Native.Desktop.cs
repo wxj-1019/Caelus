@@ -88,12 +88,22 @@ namespace CaelusApp
                 try
                 {
                     SetWindowTheme(control.Handle,
-                        Theme.LightMode ? "Explorer" : "DarkMode_Explorer", null);
+                        QueryLightMode() ? "Explorer" : "DarkMode_Explorer", null);
                 }
                 catch { }
             };
             control.HandleCreated += apply;
             if (control.IsHandleCreated) apply(null, EventArgs.Empty);
+        }
+
+        // 应用主题查询钩子：由 UI 层注入；未注入时回退为深色（false），
+        // 使 Platform 层不依赖任何 UI 程序集。
+        public static Func<bool> LightModeQuery;
+
+        public static bool QueryLightMode()
+        {
+            Func<bool> q = LightModeQuery;
+            return q != null && q();
         }
 
         public const uint SPI_GETUIEFFECTS = 0x103E;

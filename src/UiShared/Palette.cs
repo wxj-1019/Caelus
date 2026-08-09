@@ -41,8 +41,8 @@ namespace CaelusApp
             Border = "#D8E0E6",
             BorderSubtle = "#E8EDF1",
             TextPrimary = "#141F29",
-            TextSecondary = "#6E7D89",
-            TextTertiary = "#9AA6AE"
+            TextSecondary = "#61727E",
+            TextTertiary = "#848F96"
         };
 
         private static readonly ThemeColors dark = new ThemeColors

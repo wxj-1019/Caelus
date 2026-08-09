@@ -61,8 +61,13 @@ namespace CaelusApp
                 ThemeColors c = Palette.For(tone);
                 double ratio = Contrast(c.TextPrimary, c.Background);
                 if (ratio < 4.5) throw new Exception(tone + " text/background contrast " + ratio.ToString("0.00"));
-                double sub = Contrast(c.TextSecondary, c.Surface);
-                if (sub < 4.5) throw new Exception(tone + " secondary/surface contrast " + sub.ToString("0.00"));
+                double subSurf = Contrast(c.TextSecondary, c.Surface);
+                if (subSurf < 4.5) throw new Exception(tone + " secondary/surface contrast " + subSurf.ToString("0.00"));
+                double subBg = Contrast(c.TextSecondary, c.Background);
+                if (subBg < 4.5) throw new Exception(tone + " secondary/background contrast " + subBg.ToString("0.00"));
+                // 三级文字用于占位符等非正文，WCAG AA 允许 3:1（UI 组件/大字号标准）
+                double ter = Contrast(c.TextTertiary, c.Surface);
+                if (ter < 3.0) throw new Exception(tone + " tertiary/surface contrast " + ter.ToString("0.00"));
             }
         }
 

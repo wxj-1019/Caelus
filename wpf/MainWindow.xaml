@@ -21,9 +21,11 @@
         <TextBlock Text="CAELUS · OVERVIEW" VerticalAlignment="Center" Margin="14,0,0,0"
                    Foreground="{DynamicResource TextTertiaryBrush}" FontSize="10"/>
         <Button x:Name="CloseBtn" DockPanel.Dock="Right" Content="X" Width="46"
+                AutomationProperties.Name="关闭窗口"
                 Click="CloseClick" Background="Transparent" BorderThickness="0"
                 Foreground="{DynamicResource TextSecondaryBrush}"/>
         <Button x:Name="MinBtn" DockPanel.Dock="Right" Content="_" Width="40"
+                AutomationProperties.Name="最小化窗口"
                 Click="MinClick" Background="Transparent" BorderThickness="0"
                 Foreground="{DynamicResource TextSecondaryBrush}"/>
       </DockPanel>
@@ -42,12 +44,18 @@
           <TextBlock Text="caelus" FontWeight="Bold" FontSize="16" Margin="18,0,0,20"
                      Foreground="{DynamicResource TextPrimaryBrush}"/>
           <RadioButton x:Name="NavOverview" Style="{DynamicResource NavItem}"
-                       Content="概览" IsChecked="True" GroupName="nav" Checked="NavChecked"/>
-          <RadioButton Style="{DynamicResource NavItem}" Content="游戏库" GroupName="nav" Checked="NavChecked"/>
-          <RadioButton Style="{DynamicResource NavItem}" Content="优化策略" GroupName="nav" Checked="NavChecked"/>
-          <RadioButton Style="{DynamicResource NavItem}" Content="系统体检" GroupName="nav" Checked="NavChecked"/>
-          <RadioButton Style="{DynamicResource NavItem}" Content="日志" GroupName="nav" Checked="NavChecked"/>
-          <RadioButton Style="{DynamicResource NavItem}" Content="设置" GroupName="nav" Checked="NavChecked"/>
+                       Content="概览" IsChecked="True" GroupName="nav" Checked="NavChecked"
+                       AutomationProperties.Name="导航：概览"/>
+          <RadioButton Style="{DynamicResource NavItem}" Content="游戏库" GroupName="nav" Checked="NavChecked"
+                       AutomationProperties.Name="导航：游戏库"/>
+          <RadioButton Style="{DynamicResource NavItem}" Content="优化策略" GroupName="nav" Checked="NavChecked"
+                       AutomationProperties.Name="导航：优化策略"/>
+          <RadioButton Style="{DynamicResource NavItem}" Content="系统体检" GroupName="nav" Checked="NavChecked"
+                       AutomationProperties.Name="导航：系统体检"/>
+          <RadioButton Style="{DynamicResource NavItem}" Content="日志" GroupName="nav" Checked="NavChecked"
+                       AutomationProperties.Name="导航：日志"/>
+          <RadioButton Style="{DynamicResource NavItem}" Content="设置" GroupName="nav" Checked="NavChecked"
+                       AutomationProperties.Name="导航：设置"/>
         </StackPanel>
       </Border>
 
@@ -70,9 +78,12 @@
                   VerticalAlignment="Top">
             <StackPanel Orientation="Horizontal">
               <RadioButton Style="{DynamicResource SegmentItem}" Content="常规"
-                           IsChecked="True" GroupName="mode"/>
-              <RadioButton Style="{DynamicResource SegmentItem}" Content="竞技" GroupName="mode"/>
-              <RadioButton Style="{DynamicResource SegmentItem}" Content="自定义" GroupName="mode"/>
+                           IsChecked="True" GroupName="mode"
+                           AutomationProperties.Name="模式：常规"/>
+              <RadioButton Style="{DynamicResource SegmentItem}" Content="竞技" GroupName="mode"
+                           AutomationProperties.Name="模式：竞技"/>
+              <RadioButton Style="{DynamicResource SegmentItem}" Content="自定义" GroupName="mode"
+                           AutomationProperties.Name="模式：自定义"/>
             </StackPanel>
           </Border>
         </DockPanel>

@@ -21,6 +21,7 @@
         </Border>
         <Button Style="{DynamicResource GhostButton}" DockPanel.Dock="Right"
                 VerticalAlignment="Center"
+                AutomationProperties.Name="查看或收起诊断详情"
                 Content="{Binding DetailVisible, Converter={StaticResource DetailText}}"
                 Command="{Binding ToggleDetailCommand}"/>
         <StackPanel Margin="12,0,0,0" VerticalAlignment="Center">

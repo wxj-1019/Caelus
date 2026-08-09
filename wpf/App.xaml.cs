@@ -11,6 +11,18 @@ namespace CaelusApp.WpfHost
 {
     public partial class App : Application
     {
+        private System.Windows.Forms.NotifyIcon tray;
+
+        protected override void OnExit(ExitEventArgs e)
+        {
+            try
+            {
+                if (tray != null) { tray.Visible = false; tray.Dispose(); }
+            }
+            catch { }
+            base.OnExit(e);
+        }
+
         protected override void OnStartup(StartupEventArgs e)
         {
             base.OnStartup(e);
@@ -23,6 +35,12 @@ namespace CaelusApp.WpfHost
             ThemeManager.Apply(this, UiTone.Light);
             MainWindow w = new MainWindow();
             w.Show();
+            tray = new System.Windows.Forms.NotifyIcon
+            {
+                Text = "Caelus",
+                Visible = true,
+                Icon = System.Drawing.SystemIcons.Application
+            };
         }
 
         // 离屏渲染深浅两个主题的概览页 PNG，供视觉验收

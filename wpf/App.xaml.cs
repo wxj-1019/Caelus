@@ -10,6 +10,7 @@ namespace CaelusApp.WpfHost
         protected override void OnStartup(StartupEventArgs e)
         {
             base.OnStartup(e);
+            ThemeManager.Apply(this, UiTone.Light);
             var w = new MainWindow();
             w.Show();
         }

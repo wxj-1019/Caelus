@@ -91,5 +91,23 @@ namespace CaelusApp
             double v = Convert.ToInt32(hh, 16) / 255.0;
             return v <= 0.03928 ? v / 12.92 : Math.Pow((v + 0.055) / 1.055, 2.4);
         }
+
+        private static void TestMotionTokens()
+        {
+            Eq(250, UiMotion.PageFadeMs);
+            Eq(300, UiMotion.CardExpandMs);
+            Eq(400, UiMotion.NumberRollMs);
+            Eq(200, UiMotion.ToggleMs);
+            Eq(250, UiMotion.ModalMs);
+            Eq(400, UiMotion.SuccessPopMs);
+        }
+
+        private static void TestMotionReducedPolicy()
+        {
+            Eq(250, UiMotion.Duration(UiMotion.PageFadeMs, false));
+            Eq(125, UiMotion.Duration(UiMotion.PageFadeMs, true));
+            Eq(true, UiMotion.AllowsOffset(false));
+            Eq(false, UiMotion.AllowsOffset(true));
+        }
     }
 }

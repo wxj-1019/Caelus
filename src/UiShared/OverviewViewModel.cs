@@ -20,10 +20,10 @@ namespace CaelusApp
 
     internal sealed class MetricViewModel
     {
-        public string Label;
-        public string ValueText;
-        public double Fraction;      // 0..1，进度条；不可用时为 0
-        public string ColorKey;      // Success / Warning / Danger / Info
+        public string Label { get; set; }
+        public string ValueText { get; set; }
+        public double Fraction { get; set; }      // 0..1，进度条；不可用时为 0
+        public string ColorKey { get; set; }      // Success / Warning / Danger / Info
     }
 
     internal sealed class OverviewViewModel : ViewModelBase

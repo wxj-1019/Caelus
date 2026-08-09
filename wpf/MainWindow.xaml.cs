@@ -10,10 +10,15 @@ namespace CaelusApp.WpfHost
 {
     public partial class MainWindow : Window
     {
-        public MainWindow()
+        public MainWindow() : this(null) { }
+
+        internal MainWindow(IOverviewSource source)
         {
             InitializeComponent();
-            PageHost.Content = new OverviewView();
+            OverviewViewModel vm = new OverviewViewModel(source ?? new SampleOverviewSource());
+            vm.Refresh();
+            DataContext = vm;
+            PageHost.Content = new OverviewView { DataContext = vm };
         }
 
         private void TitleBarDrag(object sender, MouseButtonEventArgs e)
@@ -36,7 +41,7 @@ namespace CaelusApp.WpfHost
             RadioButton rb = sender as RadioButton;
             if (rb == null || PageHost == null) return;
             PageHost.Content = rb == NavOverview
-                ? (object)new OverviewView()
+                ? (object)new OverviewView { DataContext = DataContext }
                 : new PlaceholderView();
         }
     }

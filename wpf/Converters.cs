@@ -58,12 +58,18 @@ namespace CaelusApp.WpfHost
 
     internal sealed class FractionGridLengthConverter : IValueConverter
     {
+        // 比例 f∈[0,1] → Grid 列宽。默认返回 f* 作为「填充列」，
+        // 第二列需绑定同一 Fraction 并传 ConverterParameter="rest"，
+        // 返回 (1-f)*，两者合计恒为 1*，故填充列占比恰为 f（与布局宽度无关）。
+        // 直接用单个 star 列 + 另一个 1* 列会得到 f/(f+1)，是错误的。
         public object Convert(object value, Type t, object p, CultureInfo c)
         {
             double f = value is double ? (double)value : 0;
             if (f < 0) f = 0;
             if (f > 1) f = 1;
-            return new GridLength(f, GridUnitType.Star);
+            bool rest = p != null && p.ToString() == "rest";
+            double stars = rest ? 1.0 - f : f;
+            return new GridLength(stars, GridUnitType.Star);
         }
 
         public object ConvertBack(object v, Type t, object p, CultureInfo c)

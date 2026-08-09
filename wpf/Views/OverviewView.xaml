@@ -52,7 +52,7 @@
               <Grid Height="4" Margin="0,9,0,0">
                 <Grid.ColumnDefinitions>
                   <ColumnDefinition Width="{Binding Fraction, Converter={StaticResource FracLen}}"/>
-                  <ColumnDefinition Width="*"/>
+                  <ColumnDefinition Width="{Binding Fraction, Converter={StaticResource FracLen}, ConverterParameter=rest}"/>
                 </Grid.ColumnDefinitions>
                 <Border Grid.ColumnSpan="2" CornerRadius="2"
                         Background="{DynamicResource BorderSubtleBrush}"/>

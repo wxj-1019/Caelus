@@ -184,5 +184,71 @@ namespace CaelusApp
             Eq("Warning", OverviewStatus.ColorKey(StatusLevel.Off));
             Eq("Danger", OverviewStatus.ColorKey(StatusLevel.Critical));
         }
+
+        private sealed class StubSource : IOverviewSource
+        {
+            public bool GuardEnabled = true;
+            public bool GameActive;
+            public bool HasWarning;
+            public bool HasCritical;
+            public double? GpuTempC = 62;
+            public double? MemoryUsedPct = 53;
+            public string MemoryUsedText = "8.4 GB";
+            public string ModeText = "常规";
+            public string LastCheckText = "上次检查 2 分钟前";
+
+            bool IOverviewSource.GuardEnabled { get { return GuardEnabled; } }
+            bool IOverviewSource.GameActive { get { return GameActive; } }
+            bool IOverviewSource.HasWarning { get { return HasWarning; } }
+            bool IOverviewSource.HasCritical { get { return HasCritical; } }
+            double? IOverviewSource.GpuTempC { get { return GpuTempC; } }
+            double? IOverviewSource.MemoryUsedPct { get { return MemoryUsedPct; } }
+            string IOverviewSource.MemoryUsedText { get { return MemoryUsedText; } }
+            string IOverviewSource.ModeText { get { return ModeText; } }
+            string IOverviewSource.LastCheckText { get { return LastCheckText; } }
+        }
+
+        private static void TestOverviewViewModelMapping()
+        {
+            var src = new StubSource();
+            var vm = new OverviewViewModel(src);
+            vm.Refresh();
+            Eq("游戏环境已准备好", vm.ConclusionTitle);
+            Eq("Success", vm.ConclusionColorKey);
+            Eq("常规", vm.ModeText);
+            Eq(3, vm.Metrics.Count);
+            Eq("GPU 温度", vm.Metrics[0].Label);
+            Eq("62°", vm.Metrics[0].ValueText);
+            Eq("Success", vm.Metrics[0].ColorKey);
+            Eq("8.4 GB", vm.Metrics[2].ValueText);
+
+            src.GuardEnabled = false;
+            vm.Refresh();
+            Eq("守护已关闭", vm.ConclusionTitle);
+            Eq("Warning", vm.ConclusionColorKey);
+        }
+
+        private static void TestOverviewViewModelUnavailableMetrics()
+        {
+            var src = new StubSource();
+            src.GpuTempC = null;
+            src.MemoryUsedPct = null;
+            src.MemoryUsedText = null;
+            var vm = new OverviewViewModel(src);
+            vm.Refresh();
+            Eq("—", vm.Metrics[0].ValueText);
+            Eq("Info", vm.Metrics[0].ColorKey);
+            Eq("—", vm.Metrics[2].ValueText);
+        }
+
+        private static void TestOverviewDetailToggle()
+        {
+            var vm = new OverviewViewModel(new StubSource());
+            Eq(false, vm.DetailVisible);
+            vm.ToggleDetailCommand.Execute(null);
+            Eq(true, vm.DetailVisible);
+            vm.ToggleDetailCommand.Execute(null);
+            Eq(false, vm.DetailVisible);
+        }
     }
 }

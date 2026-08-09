@@ -961,6 +961,9 @@ namespace CaelusApp
             test("概览结论：守护/危险/警告/游戏中共五种状态的优先级与文案", TestOverviewConclusionRules);
             test("概览指标：GPU 温度与内存占用的分级阈值", TestMetricLevels);
             test("概览结论：状态等级映射到语义色 Token 键", TestConclusionColorKeys);
+            test("概览 VM：数据源映射为结论/指标/颜色键", TestOverviewViewModelMapping);
+            test("概览 VM：探测不可用时指标显示 — 且不着语义色", TestOverviewViewModelUnavailableMetrics);
+            test("概览 VM：查看详情命令往返切换", TestOverviewDetailToggle);
             test("运行时图标：托盘图标铺满画布并随生效模式变化", TestModeIcons);
             test("仪表盘动效：各图层逐帧独立推进", TestDashboardMotion);
             test("高 DPI 字体：100% 到 200% 缩放下正文字号都落在整数像素上", () =>

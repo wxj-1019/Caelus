@@ -951,6 +951,9 @@ namespace CaelusApp
                 Theme.SetMode(PerformancePreset.Standard, false);
             });
             test("桌面主题钩子：未注入时安全回退，注入后跟随应用主题", TestNativeLightModeHook);
+            test("调色板：深浅主题 13 个 Token 齐全且为合法 hex", TestPaletteCompleteness);
+            test("调色板：语义色互异，品牌色跨主题固定为 #D4A847", TestPaletteSemantics);
+            test("调色板：正文/次级文字与底色对比度达到 AA", TestPaletteContrast);
             test("运行时图标：托盘图标铺满画布并随生效模式变化", TestModeIcons);
             test("仪表盘动效：各图层逐帧独立推进", TestDashboardMotion);
             test("高 DPI 字体：100% 到 200% 缩放下正文字号都落在整数像素上", () =>

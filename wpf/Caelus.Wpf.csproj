@@ -48,6 +48,9 @@
     <Page Include="Themes\Tokens.xaml" />
     <Page Include="Themes\Colors.Light.xaml" />
     <Page Include="Themes\Colors.Dark.xaml" />
+    <Page Include="Themes\Styles.xaml" />
+    <Page Include="Views\OverviewView.xaml" />
+    <Page Include="Views\PlaceholderView.xaml" />
   </ItemGroup>
   <ItemGroup>
     <Compile Include="ThemeManager.cs" />
@@ -57,6 +60,12 @@
     </Compile>
     <Compile Include="MainWindow.xaml.cs">
       <DependentUpon>MainWindow.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Views\OverviewView.xaml.cs">
+      <DependentUpon>Views\OverviewView.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Views\PlaceholderView.xaml.cs">
+      <DependentUpon>Views\PlaceholderView.xaml</DependentUpon>
     </Compile>
     <!-- Link-compile framework-agnostic Core sources so new files auto-enter
          both the legacy (build.cmd) and WPF builds. WinForms-only sources

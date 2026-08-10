@@ -1,6 +1,8 @@
 <UserControl x:Class="CaelusApp.WpfHost.Views.WhitelistView"
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:local="clr-namespace:CaelusApp.WpfHost"
+             xmlns:controls="clr-namespace:CaelusApp.WpfHost.Controls"
              AllowDrop="True" Drop="OnDrop" DragOver="OnDragOver">
   <Grid>
     <Grid.RowDefinitions>
@@ -55,9 +57,9 @@
                 </TextBlock>
 
                 <!-- 普通条目（IsGroupHeader=false 时显示） -->
-                <Border MouseLeftButtonDown="OnItemClick">
-                  <Border.Style>
-                    <Style TargetType="Border" BasedOn="{StaticResource LibraryItemCard}">
+                <controls:GlassCard Padding="14,10" local:Motion.Lift="True" MouseLeftButtonDown="OnItemClick">
+                  <controls:GlassCard.Style>
+                    <Style TargetType="controls:GlassCard" BasedOn="{StaticResource GlassCard}">
                       <Setter Property="Visibility" Value="Visible"/>
                       <Style.Triggers>
                         <DataTrigger Binding="{Binding IsGroupHeader}" Value="True">
@@ -65,7 +67,7 @@
                         </DataTrigger>
                       </Style.Triggers>
                     </Style>
-                  </Border.Style>
+                  </controls:GlassCard.Style>
                   <DockPanel>
                     <!-- 右：状态点 + 文案 -->
                     <StackPanel DockPanel.Dock="Right" VerticalAlignment="Center" Margin="8,0,0,0">
@@ -118,7 +120,7 @@
                                  TextTrimming="CharacterEllipsis" Margin="0,2,0,0"/>
                     </StackPanel>
                   </DockPanel>
-                </Border>
+                </controls:GlassCard>
               </Grid>
             </DataTemplate>
           </ItemsControl.ItemTemplate>

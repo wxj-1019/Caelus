@@ -22,16 +22,17 @@
       <TextBlock Grid.Column="2" x:Name="LblInfo" Text="正在扫描…" FontSize="11"
                  Foreground="{DynamicResource TextSecondaryBrush}" VerticalAlignment="Center"/>
       <Button Grid.Column="3" x:Name="BtnAdd" Content="添加" Click="OnAccept" Padding="16,6" Margin="8,0,0,0"
-              IsEnabled="False" FontWeight="Bold"/>
-      <Button Grid.Column="4" Content="取消" Click="OnCancel" Padding="12,6" Margin="8,0,0,0"/>
+              IsEnabled="False" Style="{DynamicResource PrimaryButton}"/>
+      <Button Grid.Column="4" Content="取消" Click="OnCancel" Padding="12,6" Margin="8,0,0,0"
+              Style="{DynamicResource GhostButton}" Foreground="{DynamicResource TextSecondaryBrush}"/>
     </Grid>
 
     <!-- 过滤栏 -->
     <DockPanel DockPanel.Dock="Top" Margin="0,0,0,8">
       <Button DockPanel.Dock="Right" Content="全选" Click="OnSelectAll" Padding="10,4" Margin="8,0,0,0"/>
       <TextBox x:Name="TbFilter" TextChanged="OnFilterChanged" Padding="6,4"
-               Background="{DynamicResource GlassCardBrush}"
-               BorderBrush="{DynamicResource GlassBorderBrush}"
+               Background="{DynamicResource Surface0Brush}"
+               BorderBrush="{DynamicResource BorderSubtleBrush}"
                Foreground="{DynamicResource TextPrimaryBrush}"/>
     </DockPanel>
 

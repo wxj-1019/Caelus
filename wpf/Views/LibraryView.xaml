@@ -1,6 +1,8 @@
 <UserControl x:Class="CaelusApp.WpfHost.Views.LibraryView"
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:local="clr-namespace:CaelusApp.WpfHost"
+             xmlns:controls="clr-namespace:CaelusApp.WpfHost.Controls"
              AllowDrop="True" Drop="OnDrop" DragOver="OnDragOver">
   <Grid>
     <Grid.RowDefinitions>
@@ -51,7 +53,8 @@
           </ItemsControl.ItemsPanel>
           <ItemsControl.ItemTemplate>
             <DataTemplate>
-              <Border Style="{DynamicResource LibraryItemCard}" Margin="0,0,0,6">
+              <controls:GlassCard Style="{DynamicResource GlassCard}" Padding="14,10"
+                                  local:Motion.Lift="True" Margin="0,0,0,6">
                 <DockPanel>
                   <!-- 运行状态徽标 -->
                   <TextBlock DockPanel.Dock="Right" VerticalAlignment="Center" FontSize="11">
@@ -76,7 +79,7 @@
                                TextTrimming="CharacterEllipsis" Margin="0,2,0,0"/>
                   </StackPanel>
                 </DockPanel>
-              </Border>
+              </controls:GlassCard>
             </DataTemplate>
           </ItemsControl.ItemTemplate>
         </ItemsControl>

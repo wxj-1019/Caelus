@@ -16,6 +16,11 @@ namespace CaelusApp.WpfHost
         public static UiTone CurrentTone { get; private set; }
         public static AppMode CurrentMode { get; private set; }
 
+        // 模式（或明暗）换槽完成事件：CaelusCore 等随模式换肤的控件订阅。
+        // 注意：这是静态事件，会强引用订阅者实例——订阅者必须在 Unloaded 时取消订阅，
+        // 否则控件无法被 GC（每次导航换页泄漏一份）。
+        public static event EventHandler ModeChanged;
+
         public static void Apply(Application app, UiTone tone, AppMode appMode)
         {
             var merged = app.Resources.MergedDictionaries;
@@ -48,6 +53,11 @@ namespace CaelusApp.WpfHost
                 merged.Remove(user);
                 merged.Add(user);
             }
+
+            // 换槽完成：通知订阅者（CaelusCore 等随模式换肤控件）。user 已重新提升，
+            // 订阅者看到的资源状态是最终态。
+            var handler = ModeChanged;
+            if (handler != null) handler(null, EventArgs.Empty);
 
             Native.LightModeQuery = () => tone == UiTone.Light;
         }

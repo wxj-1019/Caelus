@@ -45,6 +45,7 @@
   <ItemGroup>
     <ApplicationDefinition Include="App.xaml" />
     <Page Include="MainWindow.xaml" />
+    <Page Include="Controls\AmbientLayer.xaml" />
     <Page Include="Themes\Tokens.xaml" />
     <Page Include="Themes\Colors.Light.xaml" />
     <Page Include="Themes\Colors.Dark.xaml" />
@@ -65,6 +66,9 @@
     </Compile>
     <Compile Include="MainWindow.xaml.cs">
       <DependentUpon>MainWindow.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Controls\AmbientLayer.xaml.cs">
+      <DependentUpon>Controls\AmbientLayer.xaml</DependentUpon>
     </Compile>
     <Compile Include="Views\OverviewView.xaml.cs">
       <DependentUpon>Views\OverviewView.xaml</DependentUpon>

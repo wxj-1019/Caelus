@@ -19,6 +19,12 @@ namespace CaelusApp.WpfHost
             vm.Refresh();
             DataContext = vm;
             PageHost.Content = new OverviewView { DataContext = vm };
+            Loaded += OnLoadedAmbient;
+        }
+
+        private void OnLoadedAmbient(object sender, RoutedEventArgs e)
+        {
+            Ambient.Show();
         }
 
         private void TitleBarDrag(object sender, MouseButtonEventArgs e)

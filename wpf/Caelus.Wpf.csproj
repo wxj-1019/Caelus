@@ -55,6 +55,7 @@
     <Page Include="Themes\Styles.xaml" />
     <Page Include="Views\OverviewView.xaml" />
     <Page Include="Views\PlaceholderView.xaml" />
+    <Page Include="Views\PolicyView.xaml" />
   </ItemGroup>
   <ItemGroup>
     <Compile Include="ThemeManager.cs" />
@@ -76,6 +77,9 @@
     </Compile>
     <Compile Include="Views\PlaceholderView.xaml.cs">
       <DependentUpon>Views\PlaceholderView.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Views\PolicyView.xaml.cs">
+      <DependentUpon>Views\PolicyView.xaml</DependentUpon>
     </Compile>
     <!-- Link-compile framework-agnostic Core sources so new files auto-enter
          both the legacy (build.cmd) and WPF builds. WinForms-only sources

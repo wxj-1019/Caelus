@@ -1,0 +1,142 @@
+<UserControl x:Class="CaelusApp.WpfHost.Views.SettingsView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+  <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
+    <StackPanel Margin="0,0,0,16">
+
+      <!-- 分组 1：应用自身 -->
+      <TextBlock Text="{Binding AppSectionTitle}" FontSize="{DynamicResource FontSizeBody}"
+                 FontWeight="Bold" Foreground="{DynamicResource TextPrimaryBrush}" Margin="0,0,0,8"/>
+
+      <!-- 开机自启 -->
+      <Border Style="{DynamicResource PolicyCard}" Margin="0,0,0,6">
+        <DockPanel>
+          <ToggleButton Style="{DynamicResource PolicyToggle}" IsChecked="{Binding AutoStart}"
+                        DockPanel.Dock="Right" VerticalAlignment="Top" Margin="0,2,0,0"/>
+          <StackPanel VerticalAlignment="Center">
+            <TextBlock Text="{Binding AutoStartTitle}" FontSize="{DynamicResource FontSizeCaption}"
+                       FontWeight="Bold" Foreground="{DynamicResource TextPrimaryBrush}"/>
+            <TextBlock Text="{Binding AutoStartNote}" FontSize="11"
+                       Foreground="{DynamicResource TextSecondaryBrush}" TextWrapping="Wrap" Margin="0,2,0,0"/>
+          </StackPanel>
+        </DockPanel>
+      </Border>
+
+      <!-- 自动收起 -->
+      <Border Style="{DynamicResource PolicyCard}" Margin="0,0,0,6">
+        <DockPanel>
+          <ToggleButton Style="{DynamicResource PolicyToggle}" IsChecked="{Binding AutoHide}"
+                        DockPanel.Dock="Right" VerticalAlignment="Top" Margin="0,2,0,0"/>
+          <StackPanel VerticalAlignment="Center">
+            <TextBlock Text="{Binding AutoHideTitle}" FontSize="{DynamicResource FontSizeCaption}"
+                       FontWeight="Bold" Foreground="{DynamicResource TextPrimaryBrush}"/>
+            <TextBlock Text="{Binding AutoHideNote}" FontSize="11"
+                       Foreground="{DynamicResource TextSecondaryBrush}" TextWrapping="Wrap" Margin="0,2,0,0"/>
+          </StackPanel>
+        </DockPanel>
+      </Border>
+
+      <!-- 开发模式 -->
+      <Border Style="{DynamicResource PolicyCard}" Margin="0,0,0,6">
+        <DockPanel>
+          <ToggleButton Style="{DynamicResource PolicyToggle}" IsChecked="{Binding DevMode}"
+                        DockPanel.Dock="Right" VerticalAlignment="Top" Margin="0,2,0,0"/>
+          <StackPanel VerticalAlignment="Center">
+            <TextBlock Text="{Binding DevModeTitle}" FontSize="{DynamicResource FontSizeCaption}"
+                       FontWeight="Bold" Foreground="{DynamicResource TextPrimaryBrush}"/>
+            <TextBlock Text="{Binding DevModeNote}" FontSize="11"
+                       Foreground="{DynamicResource TextSecondaryBrush}" TextWrapping="Wrap" Margin="0,2,0,0"/>
+          </StackPanel>
+        </DockPanel>
+      </Border>
+
+      <!-- 自定义编译进程 -->
+      <Border Style="{DynamicResource CardBorder}" Margin="0,0,0,6" Padding="14,10">
+        <StackPanel>
+          <TextBlock Text="{Binding DevCustomTitle}" FontSize="{DynamicResource FontSizeCaption}"
+                     FontWeight="Bold" Foreground="{DynamicResource TextPrimaryBrush}" Margin="0,0,0,6"/>
+          <DockPanel Margin="0,0,0,6">
+            <Button x:Name="BtnDevSave" Content="{Binding DevCustomSaveText}" Click="OnDevSave"
+                    Style="{DynamicResource GhostButton}" Padding="12,4"
+                    DockPanel.Dock="Right" VerticalAlignment="Top" Margin="8,0,0,0"/>
+            <TextBox x:Name="TbDevCustom" TextWrapping="Wrap" AcceptsReturn="True"
+                     VerticalScrollBarVisibility="Auto" MinHeight="44" MaxHeight="100"
+                     FontFamily="{DynamicResource FontMono}" FontSize="12"
+                     Foreground="{DynamicResource TextPrimaryBrush}"/>
+          </DockPanel>
+          <TextBlock Text="{Binding DevCustomNote}" FontSize="11"
+                     Foreground="{DynamicResource TextSecondaryBrush}" TextWrapping="Wrap"/>
+        </StackPanel>
+      </Border>
+
+      <!-- 分组 2：维护 -->
+      <TextBlock Text="{Binding MaintSectionTitle}" FontSize="{DynamicResource FontSizeBody}"
+                 FontWeight="Bold" Foreground="{DynamicResource TextPrimaryBrush}" Margin="0,16,0,8"/>
+
+      <!-- 一键恢复 -->
+      <Border Style="{DynamicResource PolicyCard}" Margin="0,0,0,6">
+        <DockPanel>
+          <Button x:Name="BtnRestore" Content="{Binding RestoreText}" Click="OnRestore"
+                  Style="{DynamicResource GhostButton}" Padding="12,4"
+                  Foreground="{DynamicResource DangerBrush}"
+                  DockPanel.Dock="Right" VerticalAlignment="Top"/>
+          <StackPanel VerticalAlignment="Center">
+            <TextBlock Text="{Binding RestoreTitle}" FontSize="{DynamicResource FontSizeCaption}"
+                       FontWeight="Bold" Foreground="{DynamicResource TextPrimaryBrush}"/>
+            <TextBlock Text="{Binding RestoreDesc}" FontSize="11"
+                       Foreground="{DynamicResource TextSecondaryBrush}" TextWrapping="Wrap" Margin="0,2,0,0"/>
+          </StackPanel>
+        </DockPanel>
+      </Border>
+
+      <!-- Defender 排除 -->
+      <Border Style="{DynamicResource PolicyCard}" Margin="0,0,0,6">
+        <DockPanel>
+          <Button x:Name="BtnDefender" Content="{Binding DefenderText}" Click="OnDefender"
+                  Style="{DynamicResource GhostButton}" Padding="12,4"
+                  DockPanel.Dock="Right" VerticalAlignment="Top"/>
+          <StackPanel VerticalAlignment="Center">
+            <TextBlock Text="{Binding DefenderTitle}" FontSize="{DynamicResource FontSizeCaption}"
+                       FontWeight="Bold" Foreground="{DynamicResource TextPrimaryBrush}"/>
+            <TextBlock Text="{Binding DefenderDesc}" FontSize="11"
+                       Foreground="{DynamicResource TextSecondaryBrush}" TextWrapping="Wrap" Margin="0,2,0,0"/>
+          </StackPanel>
+        </DockPanel>
+      </Border>
+
+      <!-- 英雄联盟附加层 -->
+      <Border Style="{DynamicResource PolicyCard}" Margin="0,0,0,6">
+        <DockPanel>
+          <Button x:Name="BtnAddon" Content="{Binding AddonText}" Click="OnAddon"
+                  Style="{DynamicResource GhostButton}" Padding="12,4"
+                  DockPanel.Dock="Right" VerticalAlignment="Top"/>
+          <StackPanel VerticalAlignment="Center">
+            <TextBlock Text="{Binding AddonTitle}" FontSize="{DynamicResource FontSizeCaption}"
+                       FontWeight="Bold" Foreground="{DynamicResource TextPrimaryBrush}"/>
+            <TextBlock Text="{Binding AddonDesc}" FontSize="11"
+                       Foreground="{DynamicResource TextSecondaryBrush}" TextWrapping="Wrap" Margin="0,2,0,0"/>
+          </StackPanel>
+        </DockPanel>
+      </Border>
+
+      <!-- 着色器缓存 -->
+      <Border Style="{DynamicResource PolicyCard}" Margin="0,0,0,6">
+        <DockPanel>
+          <Button x:Name="BtnShader" Content="{Binding ShaderText}" Click="OnShader"
+                  Style="{DynamicResource GhostButton}" Padding="12,4"
+                  DockPanel.Dock="Right" VerticalAlignment="Top"/>
+          <StackPanel VerticalAlignment="Center">
+            <TextBlock Text="{Binding ShaderTitle}" FontSize="{DynamicResource FontSizeCaption}"
+                       FontWeight="Bold" Foreground="{DynamicResource TextPrimaryBrush}"/>
+            <TextBlock x:Name="LblShaderStatus" Text="{Binding ShaderNote}" FontSize="11"
+                       Foreground="{DynamicResource TextSecondaryBrush}" TextWrapping="Wrap" Margin="0,2,0,0"/>
+          </StackPanel>
+        </DockPanel>
+      </Border>
+
+      <!-- 版本信息 -->
+      <TextBlock Text="{Binding AboutText}" FontSize="11" TextWrapping="Wrap"
+                 Foreground="{DynamicResource TextTertiaryBrush}" Margin="8,8,0,0"/>
+    </StackPanel>
+  </ScrollViewer>
+</UserControl>

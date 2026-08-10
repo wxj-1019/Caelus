@@ -16,6 +16,9 @@ namespace CaelusApp.WpfHost
         private readonly GameMode gameMode;
         private readonly PolicyPageViewModel policyVm;
         private readonly LibraryViewModel libraryVm;
+        private readonly LogViewModel logVm;
+        private readonly AboutViewModel aboutVm;
+        private readonly SettingsViewModel settingsVm;
 
         public MainWindow() : this(null) { }
 
@@ -29,6 +32,11 @@ namespace CaelusApp.WpfHost
             policyVm = new PolicyPageViewModel(gameMode);
             libraryVm = new LibraryViewModel(gameMode);
             libraryVm.Refresh();
+            logVm = new LogViewModel();
+            logVm.Refresh();
+            aboutVm = new AboutViewModel();
+            // WPF 预览宿主没有运行中的 Tamer；为设置页构造一个仅用于一键恢复的实例。
+            settingsVm = new SettingsViewModel(gameMode, new Tamer(new SuppressionCore()));
             DataContext = vm;
             PageHost.Content = new OverviewView { DataContext = vm };
             Loaded += OnLoadedAmbient;
@@ -85,6 +93,15 @@ namespace CaelusApp.WpfHost
                 PageHost.Content = new PolicyView { DataContext = policyVm };
             else if (rb == NavLibrary)
                 PageHost.Content = new LibraryView { DataContext = libraryVm };
+            else if (rb == NavLog)
+            {
+                logVm.Refresh();
+                PageHost.Content = new LogView { DataContext = logVm };
+            }
+            else if (rb == NavSettings)
+                PageHost.Content = new SettingsView { DataContext = settingsVm };
+            else if (rb == NavAbout)
+                PageHost.Content = new AboutView { DataContext = aboutVm };
             else
                 PageHost.Content = new PlaceholderView();
         }

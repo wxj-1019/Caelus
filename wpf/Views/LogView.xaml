@@ -1,0 +1,28 @@
+<UserControl x:Class="CaelusApp.WpfHost.Views.LogView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+  <DockPanel Margin="0,0,0,16">
+    <!-- 底部按钮 -->
+    <Grid DockPanel.Dock="Bottom" Margin="0,8,0,0">
+      <Grid.ColumnDefinitions>
+        <ColumnDefinition Width="Auto"/>
+        <ColumnDefinition Width="Auto"/>
+        <ColumnDefinition Width="*"/>
+      </Grid.ColumnDefinitions>
+      <Button Grid.Column="0" x:Name="BtnOpen" Content="{Binding OpenLogText}" Click="OnOpenLog"
+              Style="{DynamicResource GhostButton}" Padding="12,6"/>
+      <Button Grid.Column="1" x:Name="BtnClear" Content="{Binding ClearLogText}" Click="OnClearLog"
+              Style="{DynamicResource GhostButton}" Padding="12,6" Margin="8,0,0,0"
+              Foreground="{DynamicResource DangerBrush}"/>
+    </Grid>
+    <!-- 日志文本 -->
+    <Border Style="{DynamicResource CardBorder}" ClipToBounds="True">
+      <TextBox x:Name="TbLog" IsReadOnly="True" BorderThickness="0"
+               Background="Transparent"
+               Foreground="{DynamicResource TextSecondaryBrush}"
+               FontFamily="{DynamicResource FontMono}" FontSize="12"
+               VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Auto"
+               TextWrapping="NoWrap" Text="{Binding LogText, Mode=OneWay}"/>
+    </Border>
+  </DockPanel>
+</UserControl>

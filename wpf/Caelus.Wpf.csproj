@@ -57,6 +57,9 @@
     <Page Include="Views\PlaceholderView.xaml" />
     <Page Include="Views\PolicyView.xaml" />
     <Page Include="Views\LibraryView.xaml" />
+    <Page Include="Views\LogView.xaml" />
+    <Page Include="Views\AboutView.xaml" />
+    <Page Include="Views\SettingsView.xaml" />
     <Page Include="Dialogs\AddGameDialogWpf.xaml" />
   </ItemGroup>
   <ItemGroup>
@@ -87,6 +90,18 @@
     <Compile Include="Views\LibraryView.xaml.cs">
       <DependentUpon>Views\LibraryView.xaml</DependentUpon>
     </Compile>
+    <Compile Include="Views\LogView.xaml.cs">
+      <DependentUpon>Views\LogView.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Views\AboutView.xaml.cs">
+      <DependentUpon>Views\AboutView.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Views\SettingsView.xaml.cs">
+      <DependentUpon>Views\SettingsView.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="LogViewModel.cs" />
+    <Compile Include="AboutViewModel.cs" />
+    <Compile Include="SettingsViewModel.cs" />
     <Compile Include="Dialogs\AddGameDialogWpf.xaml.cs">
       <DependentUpon>Dialogs\AddGameDialogWpf.xaml</DependentUpon>
     </Compile>

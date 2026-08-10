@@ -56,10 +56,12 @@
                        AutomationProperties.Name="导航：优化策略"/>
           <RadioButton Style="{DynamicResource NavItem}" Content="系统体检" GroupName="nav" Checked="NavChecked"
                        AutomationProperties.Name="导航：系统体检"/>
-          <RadioButton Style="{DynamicResource NavItem}" Content="日志" GroupName="nav" Checked="NavChecked"
+          <RadioButton x:Name="NavLog" Style="{DynamicResource NavItem}" Content="日志" GroupName="nav" Checked="NavChecked"
                        AutomationProperties.Name="导航：日志"/>
-          <RadioButton Style="{DynamicResource NavItem}" Content="设置" GroupName="nav" Checked="NavChecked"
+          <RadioButton x:Name="NavSettings" Style="{DynamicResource NavItem}" Content="设置" GroupName="nav" Checked="NavChecked"
                        AutomationProperties.Name="导航：设置"/>
+          <RadioButton x:Name="NavAbout" Style="{DynamicResource NavItem}" Content="关于" GroupName="nav" Checked="NavChecked"
+                       AutomationProperties.Name="导航：关于"/>
         </StackPanel>
       </Border>
 

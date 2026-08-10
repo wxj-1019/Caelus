@@ -54,6 +54,12 @@
                        AutomationProperties.Name="导航：游戏库"/>
           <RadioButton x:Name="NavPolicy" Style="{DynamicResource NavItem}" Content="优化策略" GroupName="nav" Checked="NavChecked"
                        AutomationProperties.Name="导航：优化策略"/>
+          <RadioButton x:Name="NavAntiCheat" Style="{DynamicResource NavItem}" Content="反作弊" GroupName="nav" Checked="NavChecked"
+                       AutomationProperties.Name="导航：反作弊"/>
+          <RadioButton x:Name="NavGraphics" Style="{DynamicResource NavItem}" Content="显卡" GroupName="nav" Checked="NavChecked"
+                       AutomationProperties.Name="导航：显卡"/>
+          <RadioButton x:Name="NavEnvironment" Style="{DynamicResource NavItem}" Content="系统环境" GroupName="nav" Checked="NavChecked"
+                       AutomationProperties.Name="导航：系统环境"/>
           <RadioButton Style="{DynamicResource NavItem}" Content="系统体检" GroupName="nav" Checked="NavChecked"
                        AutomationProperties.Name="导航：系统体检"/>
           <RadioButton x:Name="NavLog" Style="{DynamicResource NavItem}" Content="日志" GroupName="nav" Checked="NavChecked"

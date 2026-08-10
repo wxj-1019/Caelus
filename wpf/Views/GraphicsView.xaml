@@ -1,0 +1,263 @@
+<UserControl x:Class="CaelusApp.WpfHost.Views.GraphicsView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:ctl="clr-namespace:CaelusApp.WpfHost.Controls">
+  <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
+    <StackPanel Margin="0,0,0,16">
+
+      <!-- ===== 分组 1：逐游戏 NV ===== -->
+      <TextBlock Text="{Binding PerGameTitle}" FontSize="{DynamicResource FontSizeBody}"
+                 FontWeight="Bold" Foreground="{DynamicResource TextPrimaryBrush}" Margin="0,0,0,8"/>
+
+      <!-- GPU 高性能偏好 -->
+      <Border Style="{DynamicResource PolicyCard}" Margin="0,0,0,6">
+        <DockPanel>
+          <ToggleButton Style="{DynamicResource PolicyToggle}" IsChecked="{Binding GpuHighPerf}"
+                        DockPanel.Dock="Right" VerticalAlignment="Top" Margin="0,2,0,0"/>
+          <StackPanel VerticalAlignment="Center">
+            <TextBlock Text="{Binding GpuTitle}" FontSize="{DynamicResource FontSizeCaption}"
+                       FontWeight="Bold" Foreground="{DynamicResource TextPrimaryBrush}"/>
+            <TextBlock Text="{Binding GpuNote}" FontSize="11"
+                       Foreground="{DynamicResource TextSecondaryBrush}" TextWrapping="Wrap" Margin="0,2,0,0"/>
+          </StackPanel>
+        </DockPanel>
+      </Border>
+
+      <!-- 关闭 FSO -->
+      <Border Style="{DynamicResource PolicyCard}" Margin="0,0,0,6">
+        <DockPanel>
+          <ToggleButton Style="{DynamicResource PolicyToggle}" IsChecked="{Binding DisableFso}"
+                        DockPanel.Dock="Right" VerticalAlignment="Top" Margin="0,2,0,0"/>
+          <StackPanel VerticalAlignment="Center">
+            <TextBlock Text="{Binding FsoTitle}" FontSize="{DynamicResource FontSizeCaption}"
+                       FontWeight="Bold" Foreground="{DynamicResource TextPrimaryBrush}"/>
+            <TextBlock Text="{Binding FsoNote}" FontSize="11"
+                       Foreground="{DynamicResource TextSecondaryBrush}" TextWrapping="Wrap" Margin="0,2,0,0"/>
+          </StackPanel>
+        </DockPanel>
+      </Border>
+
+      <!-- NV 最高性能 -->
+      <Border Style="{DynamicResource PolicyCard}" Margin="0,0,0,6">
+        <DockPanel>
+          <ToggleButton Style="{DynamicResource PolicyToggle}" IsChecked="{Binding NvMaxPerf}"
+                        IsEnabled="{Binding NvAvailable}"
+                        DockPanel.Dock="Right" VerticalAlignment="Top" Margin="0,2,0,0"/>
+          <StackPanel VerticalAlignment="Center">
+            <TextBlock Text="{Binding NvMaxTitle}" FontSize="{DynamicResource FontSizeCaption}"
+                       FontWeight="Bold" Foreground="{DynamicResource TextPrimaryBrush}"/>
+            <TextBlock Text="{Binding NvMaxNote}" FontSize="11"
+                       Foreground="{DynamicResource TextSecondaryBrush}" TextWrapping="Wrap" Margin="0,2,0,0"/>
+          </StackPanel>
+        </DockPanel>
+      </Border>
+
+      <!-- NV 低延迟 -->
+      <Border Style="{DynamicResource PolicyCard}" Margin="0,0,0,6">
+        <DockPanel>
+          <ToggleButton Style="{DynamicResource PolicyToggle}" IsChecked="{Binding NvLowLatency}"
+                        IsEnabled="{Binding NvAvailable}"
+                        DockPanel.Dock="Right" VerticalAlignment="Top" Margin="0,2,0,0"/>
+          <StackPanel VerticalAlignment="Center">
+            <TextBlock Text="{Binding NvLowLatTitle}" FontSize="{DynamicResource FontSizeCaption}"
+                       FontWeight="Bold" Foreground="{DynamicResource TextPrimaryBrush}"/>
+            <TextBlock Text="{Binding NvLowLatNote}" FontSize="11"
+                       Foreground="{DynamicResource TextSecondaryBrush}" TextWrapping="Wrap" Margin="0,2,0,0"/>
+          </StackPanel>
+        </DockPanel>
+      </Border>
+
+      <!-- NV 帧率上限（5 段）-->
+      <Border Style="{DynamicResource PolicyCard}" Margin="0,0,0,6">
+        <StackPanel>
+          <StackPanel Orientation="Horizontal">
+            <TextBlock Text="{Binding NvFrlTitle}" FontSize="{DynamicResource FontSizeCaption}"
+                       FontWeight="Bold" Foreground="{DynamicResource TextPrimaryBrush}" VerticalAlignment="Center"/>
+          </StackPanel>
+          <TextBlock Text="{Binding NvFrlNote}" FontSize="11"
+                     Foreground="{DynamicResource TextSecondaryBrush}" TextWrapping="Wrap" Margin="0,2,0,8"/>
+          <ctl:SegmentedControl ItemsSource="{Binding FrlLabels}"
+                                SelectedIndex="{Binding NvFrlIndex, Mode=TwoWay}"
+                                IsEnabled="{Binding NvAvailable}"
+                                SelectionChanged="OnFrlChanged"/>
+        </StackPanel>
+      </Border>
+
+      <!-- NV DLSS（4 段）-->
+      <Border Style="{DynamicResource PolicyCard}" Margin="0,0,0,6">
+        <StackPanel>
+          <TextBlock Text="{Binding NvDlssTitle}" FontSize="{DynamicResource FontSizeCaption}"
+                     FontWeight="Bold" Foreground="{DynamicResource TextPrimaryBrush}"/>
+          <TextBlock Text="{Binding NvDlssNote}" FontSize="11"
+                     Foreground="{DynamicResource TextSecondaryBrush}" TextWrapping="Wrap" Margin="0,2,0,8"/>
+          <ctl:SegmentedControl ItemsSource="{Binding DlssLabels}"
+                                SelectedIndex="{Binding NvDlssIndex, Mode=TwoWay}"
+                                IsEnabled="{Binding DlssAvailable}"
+                                SelectionChanged="OnDlssChanged"/>
+        </StackPanel>
+      </Border>
+
+      <!-- NV ReBAR -->
+      <Border Style="{DynamicResource PolicyCard}" Margin="0,0,0,6">
+        <DockPanel>
+          <ToggleButton Style="{DynamicResource PolicyToggle}" IsChecked="{Binding NvRebar}"
+                        IsEnabled="{Binding NvAvailable}"
+                        DockPanel.Dock="Right" VerticalAlignment="Top" Margin="0,2,0,0"/>
+          <StackPanel VerticalAlignment="Center">
+            <TextBlock Text="{Binding NvRebarTitle}" FontSize="{DynamicResource FontSizeCaption}"
+                       FontWeight="Bold" Foreground="{DynamicResource TextPrimaryBrush}"/>
+            <TextBlock Text="{Binding NvRebarNote}" FontSize="11"
+                       Foreground="{DynamicResource TextSecondaryBrush}" TextWrapping="Wrap" Margin="0,2,0,0"/>
+          </StackPanel>
+        </DockPanel>
+      </Border>
+
+      <!-- NV Ansel -->
+      <Border Style="{DynamicResource PolicyCard}" Margin="0,0,0,6">
+        <DockPanel>
+          <ToggleButton Style="{DynamicResource PolicyToggle}" IsChecked="{Binding NvAnselOff}"
+                        IsEnabled="{Binding NvAvailable}"
+                        DockPanel.Dock="Right" VerticalAlignment="Top" Margin="0,2,0,0"/>
+          <StackPanel VerticalAlignment="Center">
+            <TextBlock Text="{Binding NvAnselTitle}" FontSize="{DynamicResource FontSizeCaption}"
+                       FontWeight="Bold" Foreground="{DynamicResource TextPrimaryBrush}"/>
+            <TextBlock Text="{Binding NvAnselNote}" FontSize="11"
+                       Foreground="{DynamicResource TextSecondaryBrush}" TextWrapping="Wrap" Margin="0,2,0,0"/>
+          </StackPanel>
+        </DockPanel>
+      </Border>
+
+      <!-- NV 电池满血 -->
+      <Border Style="{DynamicResource PolicyCard}" Margin="0,0,0,6">
+        <DockPanel>
+          <ToggleButton Style="{DynamicResource PolicyToggle}" IsChecked="{Binding NvBattFull}"
+                        IsEnabled="{Binding NvAvailable}"
+                        DockPanel.Dock="Right" VerticalAlignment="Top" Margin="0,2,0,0"/>
+          <StackPanel VerticalAlignment="Center">
+            <TextBlock Text="{Binding NvBattTitle}" FontSize="{DynamicResource FontSizeCaption}"
+                       FontWeight="Bold" Foreground="{DynamicResource TextPrimaryBrush}"/>
+            <TextBlock Text="{Binding NvBattNote}" FontSize="11"
+                       Foreground="{DynamicResource TextSecondaryBrush}" TextWrapping="Wrap" Margin="0,2,0,0"/>
+          </StackPanel>
+        </DockPanel>
+      </Border>
+
+      <!-- ===== 分组 2：会话 ===== -->
+      <TextBlock Text="{Binding SessionTitle}" FontSize="{DynamicResource FontSizeBody}"
+                 FontWeight="Bold" Foreground="{DynamicResource TextPrimaryBrush}" Margin="0,16,0,8"/>
+
+      <!-- 后台硬限帧 -->
+      <Border Style="{DynamicResource PolicyCard}" Margin="0,0,0,6">
+        <DockPanel>
+          <ToggleButton Style="{DynamicResource PolicyToggle}" IsChecked="{Binding NvBgFrl}"
+                        IsEnabled="{Binding NvAvailable}"
+                        DockPanel.Dock="Right" VerticalAlignment="Top" Margin="0,2,0,0"/>
+          <StackPanel VerticalAlignment="Center">
+            <TextBlock Text="{Binding NvBgTitle}" FontSize="{DynamicResource FontSizeCaption}"
+                       FontWeight="Bold" Foreground="{DynamicResource TextPrimaryBrush}"/>
+            <TextBlock Text="{Binding NvBgNote}" FontSize="11"
+                       Foreground="{DynamicResource TextSecondaryBrush}" TextWrapping="Wrap" Margin="0,2,0,0"/>
+          </StackPanel>
+        </DockPanel>
+      </Border>
+
+      <!-- ===== 分组 3：呈现路径 ===== -->
+      <TextBlock Text="{Binding PresentTitle}" FontSize="{DynamicResource FontSizeBody}"
+                 FontWeight="Bold" Foreground="{DynamicResource TextPrimaryBrush}" Margin="0,16,0,8"/>
+
+      <!-- 窗口化游戏优化 -->
+      <Border Style="{DynamicResource PolicyCard}" Margin="0,0,0,6">
+        <DockPanel>
+          <ToggleButton Style="{DynamicResource PolicyToggle}" IsChecked="{Binding WindowedOpt}"
+                        DockPanel.Dock="Right" VerticalAlignment="Top" Margin="0,2,0,0"/>
+          <StackPanel VerticalAlignment="Center">
+            <TextBlock Text="{Binding WindowedOptTitle}" FontSize="{DynamicResource FontSizeCaption}"
+                       FontWeight="Bold" Foreground="{DynamicResource TextPrimaryBrush}"/>
+            <TextBlock Text="{Binding WindowedOptNote}" FontSize="11"
+                       Foreground="{DynamicResource TextSecondaryBrush}" TextWrapping="Wrap" Margin="0,2,0,0"/>
+          </StackPanel>
+        </DockPanel>
+      </Border>
+
+      <!-- ===== 分组 4：AMD ===== -->
+      <TextBlock Text="{Binding AmdTitle}" FontSize="{DynamicResource FontSizeBody}"
+                 FontWeight="Bold" Foreground="{DynamicResource TextPrimaryBrush}" Margin="0,16,0,8"/>
+
+      <!-- AMD Anti-Lag -->
+      <Border Style="{DynamicResource PolicyCard}" Margin="0,0,0,6">
+        <DockPanel>
+          <ToggleButton Style="{DynamicResource PolicyToggle}" IsChecked="{Binding AmdAntiLag}"
+                        IsEnabled="{Binding AmdAvailable}"
+                        DockPanel.Dock="Right" VerticalAlignment="Top" Margin="0,2,0,0"/>
+          <StackPanel VerticalAlignment="Center">
+            <TextBlock Text="{Binding AmdAlagTitle}" FontSize="{DynamicResource FontSizeCaption}"
+                       FontWeight="Bold" Foreground="{DynamicResource TextPrimaryBrush}"/>
+            <TextBlock Text="{Binding AmdAlagNote}" FontSize="11"
+                       Foreground="{DynamicResource TextSecondaryBrush}" TextWrapping="Wrap" Margin="0,2,0,0"/>
+          </StackPanel>
+        </DockPanel>
+      </Border>
+
+      <!-- AMD Chill 限帧（5 段）-->
+      <Border Style="{DynamicResource PolicyCard}" Margin="0,0,0,6">
+        <StackPanel>
+          <TextBlock Text="{Binding AmdChillTitle}" FontSize="{DynamicResource FontSizeCaption}"
+                     FontWeight="Bold" Foreground="{DynamicResource TextPrimaryBrush}"/>
+          <TextBlock Text="{Binding AmdChillNote}" FontSize="11"
+                     Foreground="{DynamicResource TextSecondaryBrush}" TextWrapping="Wrap" Margin="0,2,0,8"/>
+          <ctl:SegmentedControl ItemsSource="{Binding FrlLabels}"
+                                SelectedIndex="{Binding AmdChillIndex, Mode=TwoWay}"
+                                IsEnabled="{Binding AmdAvailable}"
+                                SelectionChanged="OnAmdChillChanged"/>
+        </StackPanel>
+      </Border>
+
+      <!-- AMD Enhanced Sync -->
+      <Border Style="{DynamicResource PolicyCard}" Margin="0,0,0,6">
+        <DockPanel>
+          <ToggleButton Style="{DynamicResource PolicyToggle}" IsChecked="{Binding AmdEnhSync}"
+                        IsEnabled="{Binding AmdAvailable}"
+                        DockPanel.Dock="Right" VerticalAlignment="Top" Margin="0,2,0,0"/>
+          <StackPanel VerticalAlignment="Center">
+            <TextBlock Text="{Binding AmdEsyncTitle}" FontSize="{DynamicResource FontSizeCaption}"
+                       FontWeight="Bold" Foreground="{DynamicResource TextPrimaryBrush}"/>
+            <TextBlock Text="{Binding AmdEsyncNote}" FontSize="11"
+                       Foreground="{DynamicResource TextSecondaryBrush}" TextWrapping="Wrap" Margin="0,2,0,0"/>
+          </StackPanel>
+        </DockPanel>
+      </Border>
+
+      <!-- AMD RIS -->
+      <Border Style="{DynamicResource PolicyCard}" Margin="0,0,0,6">
+        <DockPanel>
+          <ToggleButton Style="{DynamicResource PolicyToggle}" IsChecked="{Binding AmdRis}"
+                        IsEnabled="{Binding AmdAvailable}"
+                        DockPanel.Dock="Right" VerticalAlignment="Top" Margin="0,2,0,0"/>
+          <StackPanel VerticalAlignment="Center">
+            <TextBlock Text="{Binding AmdRisTitle}" FontSize="{DynamicResource FontSizeCaption}"
+                       FontWeight="Bold" Foreground="{DynamicResource TextPrimaryBrush}"/>
+            <TextBlock Text="{Binding AmdRisNote}" FontSize="11"
+                       Foreground="{DynamicResource TextSecondaryBrush}" TextWrapping="Wrap" Margin="0,2,0,0"/>
+          </StackPanel>
+        </DockPanel>
+      </Border>
+
+      <!-- AMD 着色器缓存重置 -->
+      <Border Style="{DynamicResource PolicyCard}" Margin="0,0,0,6">
+        <DockPanel>
+          <Button x:Name="BtnAmdCache" Content="{Binding AmdCacheBtnText}" Click="OnAmdCache"
+                  Style="{DynamicResource GhostButton}" Padding="12,4"
+                  IsEnabled="{Binding AmdAvailable}"
+                  DockPanel.Dock="Right" VerticalAlignment="Top"/>
+          <StackPanel VerticalAlignment="Center">
+            <TextBlock Text="{Binding AmdCacheTitle}" FontSize="{DynamicResource FontSizeCaption}"
+                       FontWeight="Bold" Foreground="{DynamicResource TextPrimaryBrush}"/>
+            <TextBlock Text="{Binding AmdCacheNote}" FontSize="11"
+                       Foreground="{DynamicResource TextSecondaryBrush}" TextWrapping="Wrap" Margin="0,2,0,0"/>
+          </StackPanel>
+        </DockPanel>
+      </Border>
+
+    </StackPanel>
+  </ScrollViewer>
+</UserControl>

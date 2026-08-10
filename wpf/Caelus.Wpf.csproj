@@ -60,6 +60,10 @@
     <Page Include="Views\LogView.xaml" />
     <Page Include="Views\AboutView.xaml" />
     <Page Include="Views\SettingsView.xaml" />
+    <Page Include="Views\AntiCheatView.xaml" />
+    <Page Include="Views\EnvironmentView.xaml" />
+    <Page Include="Views\GraphicsView.xaml" />
+    <Page Include="Controls\SegmentedControl.xaml" />
     <Page Include="Dialogs\AddGameDialogWpf.xaml" />
   </ItemGroup>
   <ItemGroup>
@@ -99,9 +103,24 @@
     <Compile Include="Views\SettingsView.xaml.cs">
       <DependentUpon>Views\SettingsView.xaml</DependentUpon>
     </Compile>
+    <Compile Include="Views\AntiCheatView.xaml.cs">
+      <DependentUpon>Views\AntiCheatView.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Views\EnvironmentView.xaml.cs">
+      <DependentUpon>Views\EnvironmentView.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Views\GraphicsView.xaml.cs">
+      <DependentUpon>Views\GraphicsView.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Controls\SegmentedControl.xaml.cs">
+      <DependentUpon>Controls\SegmentedControl.xaml</DependentUpon>
+    </Compile>
     <Compile Include="LogViewModel.cs" />
     <Compile Include="AboutViewModel.cs" />
     <Compile Include="SettingsViewModel.cs" />
+    <Compile Include="AntiCheatViewModel.cs" />
+    <Compile Include="EnvironmentViewModel.cs" />
+    <Compile Include="GraphicsViewModel.cs" />
     <Compile Include="Dialogs\AddGameDialogWpf.xaml.cs">
       <DependentUpon>Dialogs\AddGameDialogWpf.xaml</DependentUpon>
     </Compile>

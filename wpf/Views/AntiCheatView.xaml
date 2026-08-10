@@ -1,0 +1,67 @@
+<UserControl x:Class="CaelusApp.WpfHost.Views.AntiCheatView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:ctl="clr-namespace:CaelusApp.WpfHost.Controls">
+  <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
+    <StackPanel Margin="0,0,0,16">
+
+      <!-- 总开关卡 -->
+      <Border Style="{DynamicResource HeroCardBorder}" Margin="0,0,0,16">
+        <DockPanel>
+          <ToggleButton x:Name="SwMaster" Style="{DynamicResource PolicyToggle}"
+                        IsChecked="{Binding MasterOn}"
+                        DockPanel.Dock="Right" VerticalAlignment="Top" Margin="0,2,0,0"/>
+          <StackPanel VerticalAlignment="Center">
+            <TextBlock Text="{Binding MasterTitle}" FontSize="{DynamicResource FontSizeCaption}"
+                       FontWeight="Bold" Foreground="{DynamicResource TextPrimaryBrush}"/>
+            <TextBlock Text="{Binding MasterSub}" FontSize="11"
+                       Foreground="{DynamicResource TextSecondaryBrush}" TextWrapping="Wrap" Margin="0,2,0,0"/>
+          </StackPanel>
+        </DockPanel>
+      </Border>
+
+      <!-- 分组小标题 -->
+      <TextBlock Text="{Binding BoundaryTitle}" FontSize="{DynamicResource FontSizeBody}"
+                 FontWeight="Bold" Foreground="{DynamicResource TextPrimaryBrush}" Margin="0,0,0,8"/>
+
+      <!-- 9 个反作弊产品卡片 -->
+      <ItemsControl ItemsSource="{Binding Cards}">
+        <ItemsControl.ItemsPanel>
+          <ItemsPanelTemplate><StackPanel/></ItemsPanelTemplate>
+        </ItemsControl.ItemsPanel>
+        <ItemsControl.ItemTemplate>
+          <DataTemplate>
+            <Border Style="{DynamicResource PolicyCard}" Margin="0,0,0,6">
+              <StackPanel>
+                <DockPanel>
+                  <ToggleButton Style="{DynamicResource PolicyToggle}"
+                                IsChecked="{Binding Enabled}"
+                                DockPanel.Dock="Right" VerticalAlignment="Top" Margin="0,2,0,0"/>
+                  <StackPanel VerticalAlignment="Center">
+                    <TextBlock Text="{Binding Title}" FontSize="{DynamicResource FontSizeCaption}"
+                               FontWeight="Bold" Foreground="{DynamicResource TextPrimaryBrush}"
+                               TextWrapping="Wrap"/>
+                    <TextBlock Text="{Binding Desc}" FontSize="11"
+                               Foreground="{DynamicResource TextSecondaryBrush}"
+                               TextWrapping="Wrap" Margin="0,2,0,0"/>
+                  </StackPanel>
+                </DockPanel>
+                <DockPanel Margin="0,8,0,0">
+                  <TextBlock Text="{Binding Status}" FontSize="11"
+                             Foreground="{DynamicResource ModeAccentBrush}"
+                             VerticalAlignment="Center" DockPanel.Dock="Right"
+                             HorizontalAlignment="Right"/>
+                  <ctl:SegmentedControl ItemsSource="{Binding RelativeSource={RelativeSource AncestorType=UserControl}, Path=DataContext.LevelLabels}"
+                                        SelectedIndex="{Binding LevelIndex, Mode=TwoWay}"
+                                        SelectionChanged="OnLevelChanged"
+                                        HorizontalAlignment="Left"/>
+                </DockPanel>
+              </StackPanel>
+            </Border>
+          </DataTemplate>
+        </ItemsControl.ItemTemplate>
+      </ItemsControl>
+
+    </StackPanel>
+  </ScrollViewer>
+</UserControl>

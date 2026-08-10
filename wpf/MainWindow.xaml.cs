@@ -19,6 +19,10 @@ namespace CaelusApp.WpfHost
         private readonly LogViewModel logVm;
         private readonly AboutViewModel aboutVm;
         private readonly SettingsViewModel settingsVm;
+        private readonly AntiCheatViewModel antiCheatVm;
+        private readonly EnvironmentViewModel environmentVm;
+        private readonly GraphicsViewModel graphicsVm;
+        private readonly Tamer tamer;
 
         public MainWindow() : this(null) { }
 
@@ -35,8 +39,14 @@ namespace CaelusApp.WpfHost
             logVm = new LogViewModel();
             logVm.Refresh();
             aboutVm = new AboutViewModel();
-            // WPF 预览宿主没有运行中的 Tamer；为设置页构造一个仅用于一键恢复的实例。
-            settingsVm = new SettingsViewModel(gameMode, new Tamer(new SuppressionCore()));
+            // 单一 Tamer 实例供设置页（一键恢复）与反作弊页共用。
+            tamer = new Tamer(new SuppressionCore());
+            settingsVm = new SettingsViewModel(gameMode, tamer);
+            antiCheatVm = new AntiCheatViewModel(tamer);
+            antiCheatVm.BuildCards();
+            environmentVm = new EnvironmentViewModel(gameMode);
+            environmentVm.BuildToggles();
+            graphicsVm = new GraphicsViewModel(gameMode);
             DataContext = vm;
             PageHost.Content = new OverviewView { DataContext = vm };
             Loaded += OnLoadedAmbient;
@@ -93,6 +103,18 @@ namespace CaelusApp.WpfHost
                 PageHost.Content = new PolicyView { DataContext = policyVm };
             else if (rb == NavLibrary)
                 PageHost.Content = new LibraryView { DataContext = libraryVm };
+            else if (rb == NavAntiCheat)
+            {
+                antiCheatVm.RefreshStatus();
+                PageHost.Content = new AntiCheatView { DataContext = antiCheatVm };
+            }
+            else if (rb == NavGraphics)
+                PageHost.Content = new GraphicsView { DataContext = graphicsVm };
+            else if (rb == NavEnvironment)
+            {
+                environmentVm.RefreshStatus();
+                PageHost.Content = new EnvironmentView { DataContext = environmentVm };
+            }
             else if (rb == NavLog)
             {
                 logVm.Refresh();

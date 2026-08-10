@@ -60,10 +60,12 @@
                        AutomationProperties.Name="导航：显卡"/>
           <RadioButton x:Name="NavEnvironment" Style="{DynamicResource NavItem}" Content="系统环境" GroupName="nav" Checked="NavChecked"
                        AutomationProperties.Name="导航：系统环境"/>
-          <RadioButton Style="{DynamicResource NavItem}" Content="系统体检" GroupName="nav" Checked="NavChecked"
+          <RadioButton x:Name="NavAudit" Style="{DynamicResource NavItem}" Content="系统体检" GroupName="nav" Checked="NavChecked"
                        AutomationProperties.Name="导航：系统体检"/>
           <RadioButton x:Name="NavLog" Style="{DynamicResource NavItem}" Content="日志" GroupName="nav" Checked="NavChecked"
                        AutomationProperties.Name="导航：日志"/>
+          <RadioButton x:Name="NavWhitelist" Style="{DynamicResource NavItem}" Content="白名单" GroupName="nav" Checked="NavChecked"
+                       AutomationProperties.Name="导航：白名单"/>
           <RadioButton x:Name="NavSettings" Style="{DynamicResource NavItem}" Content="设置" GroupName="nav" Checked="NavChecked"
                        AutomationProperties.Name="导航：设置"/>
           <RadioButton x:Name="NavAbout" Style="{DynamicResource NavItem}" Content="关于" GroupName="nav" Checked="NavChecked"

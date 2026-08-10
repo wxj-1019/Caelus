@@ -1,0 +1,226 @@
+<UserControl x:Class="CaelusApp.WpfHost.Views.AuditView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+  <UserControl.Resources>
+    <BooleanToVisibilityConverter x:Key="BoolVis"/>
+  </UserControl.Resources>
+  <Grid>
+    <Grid.RowDefinitions>
+      <RowDefinition Height="Auto"/>
+      <RowDefinition Height="*"/>
+    </Grid.RowDefinitions>
+
+    <!-- 顶部按钮条（始终可见，扫描中禁用） -->
+    <StackPanel Grid.Row="0" Orientation="Horizontal" Margin="0,0,0,12">
+      <Button x:Name="BtnQuick" Style="{DynamicResource PrimaryButton}"
+              Content="{Binding QuickText}" Click="OnQuickClick" Margin="0,0,8,0"
+              IsEnabled="{Binding ButtonsEnabled}"/>
+      <Button x:Name="BtnPrecise" Style="{DynamicResource GhostButton}"
+              Content="{Binding PreciseText}" Click="OnPreciseClick" Margin="0,0,8,0"
+              IsEnabled="{Binding ButtonsEnabled}"/>
+      <Button x:Name="BtnNv" Style="{DynamicResource GhostButton}"
+              Content="{Binding NvProbeText}" Click="OnNvClick" Margin="0,0,8,0"
+              IsEnabled="{Binding ButtonsEnabled}"/>
+      <Button x:Name="BtnAmd" Style="{DynamicResource GhostButton}"
+              Content="{Binding AmdProbeText}" Click="OnAmdClick" Margin="0,0,8,0"
+              IsEnabled="{Binding ButtonsEnabled}"/>
+      <TextBlock Text="{Binding StatusText}" FontSize="11" VerticalAlignment="Center"
+                 Foreground="{DynamicResource TextSecondaryBrush}" Margin="8,0,0,0"/>
+    </StackPanel>
+
+    <!-- 空闲态：开始按钮 + 引导文案 -->
+    <StackPanel Grid.Row="1" VerticalAlignment="Center" HorizontalAlignment="Center"
+                Visibility="{Binding IsIdle, Converter={StaticResource BoolVis}}">
+      <TextBlock Text="{Binding IdleTitle}" FontSize="{DynamicResource FontSizeTitle}"
+                 FontWeight="Bold" Foreground="{DynamicResource TextPrimaryBrush}"
+                 HorizontalAlignment="Center" Margin="0,0,0,8"/>
+      <TextBlock Text="{Binding IdleHint}" FontSize="{DynamicResource FontSizeCaption}"
+                 Foreground="{DynamicResource TextSecondaryBrush}"
+                 HorizontalAlignment="Center" TextAlignment="Center"
+                 TextWrapping="Wrap" MaxWidth="400" Margin="0,0,0,20"/>
+      <Button x:Name="BtnStart" Style="{DynamicResource PrimaryButton}"
+              Content="{Binding StartButtonText}" Click="OnStartClick"
+              Padding="20,8" HorizontalAlignment="Center"/>
+    </StackPanel>
+
+    <!-- 扫描中：进度条 + 阶段文案 -->
+    <StackPanel Grid.Row="1" VerticalAlignment="Center" HorizontalAlignment="Center"
+                Visibility="{Binding IsScanning, Converter={StaticResource BoolVis}}"
+                MaxWidth="500">
+      <ProgressBar Value="{Binding Progress}" Maximum="1" Minimum="0"
+                   Height="6" Margin="0,0,0,16"/>
+      <TextBlock Text="{Binding PhaseText}" FontSize="{DynamicResource FontSizeBody}"
+                 FontWeight="Bold" Foreground="{DynamicResource ModeAccentBrush}"
+                 HorizontalAlignment="Center" TextAlignment="Center" TextWrapping="Wrap"/>
+    </StackPanel>
+
+    <!-- 结果态：4 分组列表 -->
+    <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto"
+                  HorizontalScrollBarVisibility="Disabled"
+                  Visibility="{Binding HasResult, Converter={StaticResource BoolVis}}">
+      <StackPanel Margin="0,0,0,16">
+
+        <!-- 写入能力 -->
+        <TextBlock Text="{Binding CapabilityTitle}" FontSize="{DynamicResource FontSizeBody}"
+                   FontWeight="Bold" Foreground="{DynamicResource TextPrimaryBrush}"
+                   Margin="0,0,0,8"/>
+        <ItemsControl ItemsSource="{Binding CapabilityRows}" Margin="0,0,0,16">
+          <ItemsControl.ItemTemplate>
+            <DataTemplate>
+              <Border Style="{DynamicResource PolicyCard}" Margin="0,0,0,6">
+                <StackPanel>
+                  <DockPanel>
+                    <TextBlock Text="{Binding Name}" FontSize="{DynamicResource FontSizeCaption}"
+                               FontWeight="Bold" Foreground="{DynamicResource TextPrimaryBrush}"
+                               DockPanel.Dock="Left"/>
+                    <TextBlock Text="{Binding Evidence}" FontSize="10"
+                               Foreground="{DynamicResource TextTertiaryBrush}"
+                               HorizontalAlignment="Right" TextAlignment="Right"
+                               TextTrimming="CharacterEllipsis"/>
+                  </DockPanel>
+                  <TextBlock Text="{Binding Value}" FontSize="{DynamicResource FontSizeCaption}"
+                             FontWeight="Bold" Margin="0,4,0,4" TextWrapping="Wrap">
+                    <TextBlock.Style>
+                      <Style TargetType="TextBlock">
+                        <Setter Property="Foreground" Value="{DynamicResource TextPrimaryBrush}"/>
+                        <Style.Triggers>
+                          <DataTrigger Binding="{Binding Warn}" Value="True">
+                            <Setter Property="Foreground" Value="{DynamicResource WarningBrush}"/>
+                          </DataTrigger>
+                        </Style.Triggers>
+                      </Style>
+                    </TextBlock.Style>
+                  </TextBlock>
+                  <TextBlock Text="{Binding Note}" FontSize="11"
+                             Foreground="{DynamicResource TextSecondaryBrush}" TextWrapping="Wrap"/>
+                </StackPanel>
+              </Border>
+            </DataTemplate>
+          </ItemsControl.ItemTemplate>
+        </ItemsControl>
+
+        <!-- 本机实测 -->
+        <TextBlock Text="{Binding MachineTitle}" FontSize="{DynamicResource FontSizeBody}"
+                   FontWeight="Bold" Foreground="{DynamicResource TextPrimaryBrush}"
+                   Margin="0,0,0,8"/>
+        <ItemsControl ItemsSource="{Binding MachineRows}" Margin="0,0,0,16">
+          <ItemsControl.ItemTemplate>
+            <DataTemplate>
+              <Border Style="{DynamicResource PolicyCard}" Margin="0,0,0,6">
+                <StackPanel>
+                  <DockPanel>
+                    <TextBlock Text="{Binding Name}" FontSize="{DynamicResource FontSizeCaption}"
+                               FontWeight="Bold" Foreground="{DynamicResource TextPrimaryBrush}"
+                               DockPanel.Dock="Left"/>
+                    <TextBlock Text="{Binding Evidence}" FontSize="10"
+                               Foreground="{DynamicResource TextTertiaryBrush}"
+                               HorizontalAlignment="Right" TextAlignment="Right"
+                               TextTrimming="CharacterEllipsis"/>
+                  </DockPanel>
+                  <TextBlock Text="{Binding Value}" FontSize="{DynamicResource FontSizeCaption}"
+                             FontWeight="Bold" Margin="0,4,0,4" TextWrapping="Wrap">
+                    <TextBlock.Style>
+                      <Style TargetType="TextBlock">
+                        <Setter Property="Foreground" Value="{DynamicResource TextPrimaryBrush}"/>
+                        <Style.Triggers>
+                          <DataTrigger Binding="{Binding Warn}" Value="True">
+                            <Setter Property="Foreground" Value="{DynamicResource WarningBrush}"/>
+                          </DataTrigger>
+                        </Style.Triggers>
+                      </Style>
+                    </TextBlock.Style>
+                  </TextBlock>
+                  <TextBlock Text="{Binding Note}" FontSize="11"
+                             Foreground="{DynamicResource TextSecondaryBrush}" TextWrapping="Wrap"/>
+                </StackPanel>
+              </Border>
+            </DataTemplate>
+          </ItemsControl.ItemTemplate>
+        </ItemsControl>
+
+        <!-- 持久系统设置 -->
+        <TextBlock Text="{Binding PersistentTitle}" FontSize="{DynamicResource FontSizeBody}"
+                   FontWeight="Bold" Foreground="{DynamicResource TextPrimaryBrush}"
+                   Margin="0,0,0,8"/>
+        <ItemsControl ItemsSource="{Binding PersistentRows}" Margin="0,0,0,16">
+          <ItemsControl.ItemTemplate>
+            <DataTemplate>
+              <Border Style="{DynamicResource PolicyCard}" Margin="0,0,0,6">
+                <StackPanel>
+                  <DockPanel>
+                    <TextBlock Text="{Binding Name}" FontSize="{DynamicResource FontSizeCaption}"
+                               FontWeight="Bold" Foreground="{DynamicResource TextPrimaryBrush}"
+                               DockPanel.Dock="Left"/>
+                    <TextBlock Text="{Binding Evidence}" FontSize="10"
+                               Foreground="{DynamicResource TextTertiaryBrush}"
+                               HorizontalAlignment="Right" TextAlignment="Right"
+                               TextTrimming="CharacterEllipsis"/>
+                  </DockPanel>
+                  <TextBlock Text="{Binding Value}" FontSize="{DynamicResource FontSizeCaption}"
+                             FontWeight="Bold" Margin="0,4,0,4" TextWrapping="Wrap">
+                    <TextBlock.Style>
+                      <Style TargetType="TextBlock">
+                        <Setter Property="Foreground" Value="{DynamicResource TextPrimaryBrush}"/>
+                        <Style.Triggers>
+                          <DataTrigger Binding="{Binding Warn}" Value="True">
+                            <Setter Property="Foreground" Value="{DynamicResource WarningBrush}"/>
+                          </DataTrigger>
+                        </Style.Triggers>
+                      </Style>
+                    </TextBlock.Style>
+                  </TextBlock>
+                  <TextBlock Text="{Binding Note}" FontSize="11"
+                             Foreground="{DynamicResource TextSecondaryBrush}" TextWrapping="Wrap"/>
+                </StackPanel>
+              </Border>
+            </DataTemplate>
+          </ItemsControl.ItemTemplate>
+        </ItemsControl>
+
+        <!-- 结论清单 -->
+        <TextBlock Text="{Binding VerdictTitle}" FontSize="{DynamicResource FontSizeBody}"
+                   FontWeight="Bold" Foreground="{DynamicResource TextPrimaryBrush}"
+                   Margin="0,0,0,8"/>
+        <ItemsControl ItemsSource="{Binding VerdictRows}" Margin="0,0,0,16">
+          <ItemsControl.ItemTemplate>
+            <DataTemplate>
+              <Border Style="{DynamicResource PolicyCard}" Margin="0,0,0,6">
+                <StackPanel>
+                  <DockPanel>
+                    <TextBlock Text="{Binding Name}" FontSize="{DynamicResource FontSizeCaption}"
+                               FontWeight="Bold" Foreground="{DynamicResource TextPrimaryBrush}"
+                               DockPanel.Dock="Left"/>
+                    <TextBlock Text="{Binding Evidence}" FontSize="10"
+                               Foreground="{DynamicResource TextTertiaryBrush}"
+                               HorizontalAlignment="Right" TextAlignment="Right"
+                               TextTrimming="CharacterEllipsis"/>
+                  </DockPanel>
+                  <TextBlock Text="{Binding Value}" FontSize="{DynamicResource FontSizeCaption}"
+                             FontWeight="Bold" Margin="0,4,0,4" TextWrapping="Wrap">
+                    <TextBlock.Style>
+                      <Style TargetType="TextBlock">
+                        <Setter Property="Foreground" Value="{DynamicResource TextPrimaryBrush}"/>
+                        <Style.Triggers>
+                          <DataTrigger Binding="{Binding Warn}" Value="True">
+                            <Setter Property="Foreground" Value="{DynamicResource WarningBrush}"/>
+                          </DataTrigger>
+                        </Style.Triggers>
+                      </Style>
+                    </TextBlock.Style>
+                  </TextBlock>
+                  <TextBlock Text="{Binding Note}" FontSize="11"
+                             Foreground="{DynamicResource TextSecondaryBrush}" TextWrapping="Wrap"/>
+                </StackPanel>
+              </Border>
+            </DataTemplate>
+          </ItemsControl.ItemTemplate>
+        </ItemsControl>
+
+        <!-- 页脚说明 -->
+        <TextBlock Text="{Binding FooterText}" FontSize="10"
+                   Foreground="{DynamicResource TextTertiaryBrush}"
+                   TextWrapping="Wrap" Margin="0,8,0,0"/>
+      </StackPanel>
+    </ScrollViewer>
+  </Grid>
+</UserControl>

@@ -22,6 +22,8 @@ namespace CaelusApp.WpfHost
         private readonly AntiCheatViewModel antiCheatVm;
         private readonly EnvironmentViewModel environmentVm;
         private readonly GraphicsViewModel graphicsVm;
+        private readonly AuditViewModel auditVm;
+        private readonly WhitelistViewModel whitelistVm;
         private readonly Tamer tamer;
 
         public MainWindow() : this(null) { }
@@ -47,6 +49,8 @@ namespace CaelusApp.WpfHost
             environmentVm = new EnvironmentViewModel(gameMode);
             environmentVm.BuildToggles();
             graphicsVm = new GraphicsViewModel(gameMode);
+            auditVm = new AuditViewModel();
+            whitelistVm = new WhitelistViewModel(gameMode);
             DataContext = vm;
             PageHost.Content = new OverviewView { DataContext = vm };
             Loaded += OnLoadedAmbient;
@@ -115,6 +119,10 @@ namespace CaelusApp.WpfHost
                 environmentVm.RefreshStatus();
                 PageHost.Content = new EnvironmentView { DataContext = environmentVm };
             }
+            else if (rb == NavAudit)
+                PageHost.Content = new AuditView { DataContext = auditVm };
+            else if (rb == NavWhitelist)
+                PageHost.Content = new WhitelistView { DataContext = whitelistVm };
             else if (rb == NavLog)
             {
                 logVm.Refresh();

@@ -63,6 +63,8 @@
     <Page Include="Views\AntiCheatView.xaml" />
     <Page Include="Views\EnvironmentView.xaml" />
     <Page Include="Views\GraphicsView.xaml" />
+    <Page Include="Views\AuditView.xaml" />
+    <Page Include="Views\WhitelistView.xaml" />
     <Page Include="Controls\SegmentedControl.xaml" />
     <Page Include="Dialogs\AddGameDialogWpf.xaml" />
   </ItemGroup>
@@ -112,6 +114,12 @@
     <Compile Include="Views\GraphicsView.xaml.cs">
       <DependentUpon>Views\GraphicsView.xaml</DependentUpon>
     </Compile>
+    <Compile Include="Views\AuditView.xaml.cs">
+      <DependentUpon>Views\AuditView.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Views\WhitelistView.xaml.cs">
+      <DependentUpon>Views\WhitelistView.xaml</DependentUpon>
+    </Compile>
     <Compile Include="Controls\SegmentedControl.xaml.cs">
       <DependentUpon>Controls\SegmentedControl.xaml</DependentUpon>
     </Compile>
@@ -121,6 +129,8 @@
     <Compile Include="AntiCheatViewModel.cs" />
     <Compile Include="EnvironmentViewModel.cs" />
     <Compile Include="GraphicsViewModel.cs" />
+    <Compile Include="AuditViewModel.cs" />
+    <Compile Include="WhitelistViewModel.cs" />
     <Compile Include="Dialogs\AddGameDialogWpf.xaml.cs">
       <DependentUpon>Dialogs\AddGameDialogWpf.xaml</DependentUpon>
     </Compile>

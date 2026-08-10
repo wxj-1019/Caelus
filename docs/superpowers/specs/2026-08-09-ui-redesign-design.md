@@ -81,8 +81,8 @@ Caelus v1.7.0 是基于 C# WinForms 的 Windows 桌面游戏优化工具。当�
 | `border` | `#D8E0E6` | 卡片边框、分隔线 |
 | `border-subtle` | `#E8EDF1` | 内部弱分隔 |
 | `text-primary` | `#141F29` | 主要文字 |
-| `text-secondary` | `#6E7D89` | 次要文字、说明 |
-| `text-tertiary` | `#9AA6AE` | 占位符、禁用态 |
+| `text-secondary` | `#61727E` | 次要文字、说明 |
+| `text-tertiary` | `#848F96` | 占位符、禁用态 |
 
 #### 3.1.3 中性色板（深色主题）
 

@@ -29,3 +29,6 @@ release-v*/
 setup.log
 swap.log
 Caelus.exe.sha256
+# WPF project build output (MSBuild obj/bin from wpf/Caelus.Wpf.csproj)
+wpf/bin/
+wpf/obj/

@@ -1,0 +1,21 @@
+<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+  <Color x:Key="AmbientPrimaryColor">#E5484D</Color>
+  <Color x:Key="AmbientPrimaryFadeColor">#00E5484D</Color>
+  <Color x:Key="AmbientSecondaryColor">#C22E3E</Color>
+  <Color x:Key="AmbientSecondaryFadeColor">#00C22E3E</Color>
+  <Color x:Key="ModeAccentOnDarkColor">#FF6B74</Color>
+  <Color x:Key="ModeAccentOnLightColor">#CC2020</Color>
+  <RadialGradientBrush x:Key="AmbientPrimaryBrush" Center="0.5,0.5" RadiusX="0.5" RadiusY="0.5">
+    <GradientStop Color="{DynamicResource AmbientPrimaryColor}" Offset="0"/>
+    <GradientStop Color="{DynamicResource AmbientPrimaryFadeColor}" Offset="1"/>
+  </RadialGradientBrush>
+  <RadialGradientBrush x:Key="AmbientSecondaryBrush" Center="0.5,0.5" RadiusX="0.5" RadiusY="0.5">
+    <GradientStop Color="{DynamicResource AmbientSecondaryColor}" Offset="0"/>
+    <GradientStop Color="{DynamicResource AmbientSecondaryFadeColor}" Offset="1"/>
+  </RadialGradientBrush>
+  <SolidColorBrush x:Key="ModeAccentOnDarkBrush" Color="{DynamicResource ModeAccentOnDarkColor}"/>
+  <SolidColorBrush x:Key="ModeAccentOnLightBrush" Color="{DynamicResource ModeAccentOnLightColor}"/>
+  <SolidColorBrush x:Key="ModeAccentSoftBrush" Color="#1FFF6B74"/>
+  <SolidColorBrush x:Key="ModeAccentEdgeBrush" Color="#54FF6B74"/>
+</ResourceDictionary>

@@ -1,0 +1,99 @@
+<Window x:Class="CaelusApp.WpfHost.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:views="clr-namespace:CaelusApp.WpfHost.Views"
+        xmlns:controls="clr-namespace:CaelusApp.WpfHost.Controls"
+        Title="Caelus" Width="1196" Height="768"
+        WindowStartupLocation="CenterScreen"
+        WindowStyle="None" AllowsTransparency="False" ResizeMode="CanResizeWithGrip"
+        Background="{DynamicResource BackgroundBrush}"
+        FontFamily="{DynamicResource FontUi}">
+  <Grid>
+    <Grid.RowDefinitions>
+      <RowDefinition Height="38"/>
+      <RowDefinition Height="*"/>
+    </Grid.RowDefinitions>
+
+    <!-- 环境光层：放在第一个使其处于 z 序最底层，跨越两行 -->
+    <controls:AmbientLayer x:Name="Ambient" Grid.RowSpan="2"/>
+
+    <!-- 标题栏 -->
+    <Border Grid.Row="0" Background="{DynamicResource SurfaceBrush}"
+            BorderBrush="{DynamicResource BorderSubtleBrush}" BorderThickness="0,0,0,1"
+            MouseLeftButtonDown="TitleBarDrag">
+      <DockPanel LastChildFill="False">
+        <TextBlock Text="CAELUS · OVERVIEW" VerticalAlignment="Center" Margin="14,0,0,0"
+                   Foreground="{DynamicResource TextTertiaryBrush}" FontSize="10"/>
+        <Button x:Name="CloseBtn" DockPanel.Dock="Right" Content="X" Width="46"
+                AutomationProperties.Name="关闭窗口"
+                Click="CloseClick" Background="Transparent" BorderThickness="0"
+                Foreground="{DynamicResource TextSecondaryBrush}"/>
+        <Button x:Name="MinBtn" DockPanel.Dock="Right" Content="_" Width="40"
+                AutomationProperties.Name="最小化窗口"
+                Click="MinClick" Background="Transparent" BorderThickness="0"
+                Foreground="{DynamicResource TextSecondaryBrush}"/>
+      </DockPanel>
+    </Border>
+
+    <Grid Grid.Row="1">
+      <Grid.ColumnDefinitions>
+        <ColumnDefinition Width="200"/>
+        <ColumnDefinition Width="*"/>
+      </Grid.ColumnDefinitions>
+
+      <!-- NavRail -->
+      <Border Grid.Column="0" Background="{DynamicResource BackgroundBrush}"
+              BorderBrush="{DynamicResource BorderSubtleBrush}" BorderThickness="0,0,1,0">
+        <StackPanel Margin="0,14,0,0">
+          <TextBlock Text="caelus" FontWeight="Bold" FontSize="16" Margin="18,0,0,20"
+                     Foreground="{DynamicResource TextPrimaryBrush}"/>
+          <RadioButton x:Name="NavOverview" Style="{DynamicResource NavItem}"
+                       Content="概览" IsChecked="True" GroupName="nav" Checked="NavChecked"
+                       AutomationProperties.Name="导航：概览"/>
+          <RadioButton Style="{DynamicResource NavItem}" Content="游戏库" GroupName="nav" Checked="NavChecked"
+                       AutomationProperties.Name="导航：游戏库"/>
+          <RadioButton Style="{DynamicResource NavItem}" Content="优化策略" GroupName="nav" Checked="NavChecked"
+                       AutomationProperties.Name="导航：优化策略"/>
+          <RadioButton Style="{DynamicResource NavItem}" Content="系统体检" GroupName="nav" Checked="NavChecked"
+                       AutomationProperties.Name="导航：系统体检"/>
+          <RadioButton Style="{DynamicResource NavItem}" Content="日志" GroupName="nav" Checked="NavChecked"
+                       AutomationProperties.Name="导航：日志"/>
+          <RadioButton Style="{DynamicResource NavItem}" Content="设置" GroupName="nav" Checked="NavChecked"
+                       AutomationProperties.Name="导航：设置"/>
+        </StackPanel>
+      </Border>
+
+      <!-- 内容区 -->
+      <Grid Grid.Column="1" Margin="22,18,22,16">
+        <Grid.RowDefinitions>
+          <RowDefinition Height="Auto"/>
+          <RowDefinition Height="*"/>
+        </Grid.RowDefinitions>
+
+        <DockPanel Grid.Row="0" Margin="0,0,0,14">
+          <StackPanel>
+            <TextBlock Text="系统状态" FontSize="{DynamicResource FontSizeDisplay}"
+                       FontWeight="Bold" Foreground="{DynamicResource TextPrimaryBrush}"/>
+            <TextBlock Text="上次检查 2 分钟前" FontSize="{DynamicResource FontSizeCaption}"
+                       Foreground="{DynamicResource TextSecondaryBrush}" Margin="0,2,0,0"/>
+          </StackPanel>
+          <!-- 分段控件：模式选择 -->
+          <Border Style="{DynamicResource SegmentHost}" DockPanel.Dock="Right"
+                  VerticalAlignment="Top">
+            <StackPanel Orientation="Horizontal">
+              <RadioButton x:Name="SegStandard" Style="{DynamicResource SegmentItem}" Content="常规"
+                           IsChecked="True" GroupName="mode" Checked="ModeChecked"
+                           AutomationProperties.Name="模式：常规"/>
+              <RadioButton x:Name="SegCompetitive" Style="{DynamicResource SegmentItem}" Content="竞技" GroupName="mode"
+                           Checked="ModeChecked" AutomationProperties.Name="模式：竞技"/>
+              <RadioButton x:Name="SegCustom" Style="{DynamicResource SegmentItem}" Content="自定义" GroupName="mode"
+                           Checked="ModeChecked" AutomationProperties.Name="模式：自定义"/>
+            </StackPanel>
+          </Border>
+        </DockPanel>
+
+        <ContentControl x:Name="PageHost" Grid.Row="1"/>
+      </Grid>
+    </Grid>
+  </Grid>
+</Window>

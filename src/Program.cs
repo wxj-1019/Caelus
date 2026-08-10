@@ -17,19 +17,6 @@ using Microsoft.Win32;
 
 namespace CaelusApp
 {
-    internal static class App
-    {
-        public const string DisplayName = "CAELUS";
-        public const string Version = "1.7.0";
-        public const string Author = "zenjiro";
-        public const string AuthorEmail = "18967498922@163.com";
-        public const string WeChat = "";
-        public const string RepoName = "wxj-1019/Caelus";
-        public const string RepoUrl = "https://github.com/" + RepoName;
-        public const string ReleasesUrl = RepoUrl + "/releases";
-        public static string VersionTag { get { return "v" + Version; } }
-    }
-
     internal static class Program
     {
         private const string PendingPanelKey = "ShowPanelOnNextStart";

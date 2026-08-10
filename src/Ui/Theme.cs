@@ -30,6 +30,11 @@ namespace CaelusApp
         private static bool light;
         public static bool LightMode { get { return light; } }
 
+        static Theme()
+        {
+            Native.LightModeQuery = () => light;
+        }
+
         public static Color Bg        { get { return light ? Color.FromArgb(243, 245, 248) : Color.FromArgb(9, 10, 12); } }
         public static Color Nav       { get { return light ? Color.FromArgb(232, 235, 240) : Color.FromArgb(6, 7, 9); } }
         public static Color Card      { get { return light ? Color.FromArgb(255, 255, 255) : Color.FromArgb(17, 19, 23); } }

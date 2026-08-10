@@ -312,5 +312,24 @@ namespace CaelusApp
                 Convert.ToInt32(hex.Substring(5, 2), 16)
             };
         }
+
+        private static void TestPolicyItemsCompleteness()
+        {
+            // 三分组共 21 项
+            Eq(9, PolicyViewModel.CoreItems.Count);
+            Eq(5, PolicyViewModel.CustomItems.Count);
+            Eq(7, PolicyViewModel.ExtraItems.Count);
+            // 每项有标题、说明、属性名
+            foreach (PolicyItem item in PolicyViewModel.AllItems())
+            {
+                if (string.IsNullOrEmpty(item.Title)) throw new Exception("empty title: " + item.PropertyName);
+                if (string.IsNullOrEmpty(item.Description)) throw new Exception("empty desc: " + item.PropertyName);
+                if (string.IsNullOrEmpty(item.PropertyName)) throw new Exception("empty propname");
+            }
+            // 验证关键文案（非空 = Lang.T 找到了 key）
+            Eq("后台调度 · 总开关", PolicyViewModel.CoreItems[0].Title);
+            Eq("严格 CPU 分区", PolicyViewModel.CustomItems[0].Title);
+            Eq("竞技模式禁用 CPU 空闲状态", PolicyViewModel.ExtraItems[0].Title);
+        }
     }
 }

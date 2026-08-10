@@ -77,4 +77,20 @@ namespace CaelusApp.WpfHost
             throw new NotSupportedException();
         }
     }
+
+    // 语义键 → 当前主题的画刷颜色（供发光 Effect 的 Color 绑定）
+    internal sealed class KeyColorConverter : IValueConverter
+    {
+        public object Convert(object value, Type t, object p, CultureInfo c)
+        {
+            string key = (value as string) ?? "Info";
+            SolidColorBrush brush = Application.Current.TryFindResource(key + "Brush") as SolidColorBrush;
+            return brush == null ? Colors.Gray : brush.Color;
+        }
+
+        public object ConvertBack(object v, Type t, object p, CultureInfo c)
+        {
+            throw new NotSupportedException();
+        }
+    }
 }

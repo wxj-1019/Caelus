@@ -5,16 +5,21 @@
   <UserControl.Resources>
     <local:KeyBrushConverter x:Key="KeyBrush"/>
     <local:KeySoftBrushConverter x:Key="KeySoftBrush"/>
+    <local:KeyColorConverter x:Key="KeyColor"/>
     <BooleanToVisibilityConverter x:Key="BoolVis"/>
     <local:DetailButtonTextConverter x:Key="DetailText"/>
     <local:FractionGridLengthConverter x:Key="FracLen"/>
   </UserControl.Resources>
   <StackPanel>
     <!-- 结论卡片（规格 §5.1：结论前置） -->
-    <Border Style="{DynamicResource CardBorder}" Padding="16,14">
+    <Border Style="{DynamicResource HeroCardBorder}" Padding="16,14">
       <DockPanel>
         <Border Width="32" Height="32" CornerRadius="16" VerticalAlignment="Center"
                 Background="{Binding ConclusionColorKey, Converter={StaticResource KeySoftBrush}}">
+          <Border.Effect>
+            <DropShadowEffect BlurRadius="18" ShadowDepth="0" Opacity="0.35"
+                              Color="{Binding ConclusionColorKey, Converter={StaticResource KeyColor}}"/>
+          </Border.Effect>
           <TextBlock Text="{Binding ConclusionGlyph}" HorizontalAlignment="Center"
                      VerticalAlignment="Center" FontSize="15"
                      Foreground="{Binding ConclusionColorKey, Converter={StaticResource KeyBrush}}"/>
@@ -56,9 +61,14 @@
                   <ColumnDefinition Width="{Binding Fraction, Converter={StaticResource FracLen}, ConverterParameter=rest}"/>
                 </Grid.ColumnDefinitions>
                 <Border Grid.ColumnSpan="2" CornerRadius="2"
-                        Background="{DynamicResource BorderSubtleBrush}"/>
+                        Background="{DynamicResource TrackBrush}"/>
                 <Border Grid.Column="0" CornerRadius="2" HorizontalAlignment="Stretch"
-                        Background="{Binding ColorKey, Converter={StaticResource KeyBrush}}"/>
+                        Background="{Binding ColorKey, Converter={StaticResource KeyBrush}}">
+                  <Border.Effect>
+                    <DropShadowEffect BlurRadius="8" ShadowDepth="0" Opacity="0.45"
+                                      Color="{Binding ColorKey, Converter={StaticResource KeyColor}}"/>
+                  </Border.Effect>
+                </Border>
               </Grid>
             </StackPanel>
           </Border>

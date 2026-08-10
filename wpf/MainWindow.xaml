@@ -5,7 +5,7 @@
         xmlns:controls="clr-namespace:CaelusApp.WpfHost.Controls"
         Title="Caelus" Width="1196" Height="768"
         WindowStartupLocation="CenterScreen"
-        WindowStyle="None" AllowsTransparency="False" ResizeMode="CanResizeWithGrip"
+        WindowStyle="None" AllowsTransparency="False" ResizeMode="CanResize"
         Background="{DynamicResource BackgroundBrush}"
         FontFamily="{DynamicResource FontUi}">
   <Grid>
@@ -22,7 +22,7 @@
             BorderBrush="{DynamicResource BorderSubtleBrush}" BorderThickness="0,0,0,1"
             MouseLeftButtonDown="TitleBarDrag">
       <DockPanel LastChildFill="False">
-        <TextBlock Text="CAELUS · OVERVIEW" VerticalAlignment="Center" Margin="14,0,0,0"
+        <TextBlock Text="CAELUS" VerticalAlignment="Center" Margin="14,0,0,0"
                    Foreground="{DynamicResource TextTertiaryBrush}" FontSize="10"/>
         <Button x:Name="CloseBtn" DockPanel.Dock="Right" Content="X" Width="46"
                 AutomationProperties.Name="关闭窗口"
@@ -79,7 +79,7 @@
           </StackPanel>
           <!-- 分段控件：模式选择 -->
           <Border Style="{DynamicResource SegmentHost}" DockPanel.Dock="Right"
-                  VerticalAlignment="Top">
+                  VerticalAlignment="Top" HorizontalAlignment="Right">
             <StackPanel Orientation="Horizontal">
               <RadioButton x:Name="SegStandard" Style="{DynamicResource SegmentItem}" Content="常规"
                            IsChecked="True" GroupName="mode" Checked="ModeChecked"

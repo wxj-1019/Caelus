@@ -8,10 +8,12 @@
   <Color x:Key="ModeAccentOnLightColor">#0E7490</Color>
   <RadialGradientBrush x:Key="AmbientPrimaryBrush" Center="0.5,0.5" RadiusX="0.5" RadiusY="0.5">
     <GradientStop Color="{DynamicResource AmbientPrimaryColor}" Offset="0"/>
+    <GradientStop Color="{DynamicResource AmbientPrimaryFadeColor}" Offset="0.55"/>
     <GradientStop Color="{DynamicResource AmbientPrimaryFadeColor}" Offset="1"/>
   </RadialGradientBrush>
   <RadialGradientBrush x:Key="AmbientSecondaryBrush" Center="0.5,0.5" RadiusX="0.5" RadiusY="0.5">
     <GradientStop Color="{DynamicResource AmbientSecondaryColor}" Offset="0"/>
+    <GradientStop Color="{DynamicResource AmbientSecondaryFadeColor}" Offset="0.55"/>
     <GradientStop Color="{DynamicResource AmbientSecondaryFadeColor}" Offset="1"/>
   </RadialGradientBrush>
   <SolidColorBrush x:Key="ModeAccentOnDarkBrush" Color="{DynamicResource ModeAccentOnDarkColor}"/>

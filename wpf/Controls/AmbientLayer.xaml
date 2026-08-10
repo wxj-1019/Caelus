@@ -3,13 +3,14 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              IsHitTestVisible="False">
   <Grid>
-    <Ellipse x:Name="FrontPrimary" Width="680" Height="680" HorizontalAlignment="Right"
-             VerticalAlignment="Top" Margin="0,-260,-180,0" Opacity="0"/>
-    <Ellipse x:Name="FrontSecondary" Width="520" Height="520" HorizontalAlignment="Left"
-             VerticalAlignment="Bottom" Margin="40,0,0,-200" Opacity="0"/>
-    <Ellipse x:Name="BackPrimary" Width="680" Height="680" HorizontalAlignment="Right"
-             VerticalAlignment="Top" Margin="0,-260,-180,0" Opacity="0"/>
-    <Ellipse x:Name="BackSecondary" Width="520" Height="520" HorizontalAlignment="Left"
-             VerticalAlignment="Bottom" Margin="40,0,0,-200" Opacity="0"/>
+    <!-- 光域中心偏出窗口角落，渐变提前渐隐（Offset 0.55），窗口边缘已透明，避免硬边裁剪 -->
+    <Ellipse x:Name="FrontPrimary" Width="600" Height="600" HorizontalAlignment="Right"
+             VerticalAlignment="Top" Margin="0,-200,-90,0" Opacity="0"/>
+    <Ellipse x:Name="FrontSecondary" Width="460" Height="460" HorizontalAlignment="Left"
+             VerticalAlignment="Bottom" Margin="30,0,0,-160" Opacity="0"/>
+    <Ellipse x:Name="BackPrimary" Width="600" Height="600" HorizontalAlignment="Right"
+             VerticalAlignment="Top" Margin="0,-200,-90,0" Opacity="0"/>
+    <Ellipse x:Name="BackSecondary" Width="460" Height="460" HorizontalAlignment="Left"
+             VerticalAlignment="Bottom" Margin="30,0,0,-160" Opacity="0"/>
   </Grid>
 </UserControl>

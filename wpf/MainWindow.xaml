@@ -90,7 +90,7 @@
               </StackPanel>
             </RadioButton>
             <RadioButton x:Name="NavAntiCheat" Style="{DynamicResource NavItem}" GroupName="nav" Checked="NavChecked"
-                         AutomationProperties.Name="导航：反作弊">
+                         AutomationProperties.Name="导航：反作弊专项">
               <StackPanel Orientation="Horizontal">
                 <controls:IconView Key="IconShield" Width="15" Height="15" VerticalAlignment="Center"/>
                 <TextBlock Text="反作弊专项" Margin="9,0,0,0" VerticalAlignment="Center"/>

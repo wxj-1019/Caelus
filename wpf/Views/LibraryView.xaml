@@ -3,8 +3,19 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              AllowDrop="True" Drop="OnDrop" DragOver="OnDragOver">
   <Grid>
+    <Grid.RowDefinitions>
+      <RowDefinition Height="Auto"/>
+      <RowDefinition Height="*"/>
+    </Grid.RowDefinitions>
+
+    <!-- 页头（规格 §7 5a） -->
+    <StackPanel Grid.Row="0" Margin="0,0,0,12">
+      <TextBlock Text="游戏库" Style="{DynamicResource SectionTitle}"/>
+      <TextBlock Text="已纳管的游戏与进程证据" Style="{DynamicResource SectionSubtitle}" Margin="0,3,0,0"/>
+    </StackPanel>
+
     <!-- 空态（默认可见，code-behind 控制） -->
-    <StackPanel x:Name="EmptyPanel" HorizontalAlignment="Center" VerticalAlignment="Center">
+    <StackPanel x:Name="EmptyPanel" Grid.Row="1" HorizontalAlignment="Center" VerticalAlignment="Center">
       <TextBlock Text="{Binding EmptyTitle}" FontSize="{DynamicResource FontSizeDisplay}"
                  FontWeight="Bold" Foreground="{DynamicResource TextTertiaryBrush}"
                  HorizontalAlignment="Center" Margin="0,0,0,8"/>
@@ -15,7 +26,7 @@
     </StackPanel>
 
     <!-- 列表（默认隐藏，code-behind 控制） -->
-    <DockPanel x:Name="ListPanel" Visibility="Collapsed">
+    <DockPanel x:Name="ListPanel" Grid.Row="1" Visibility="Collapsed">
       <!-- 顶部按钮栏 -->
       <Grid DockPanel.Dock="Top" Margin="0,0,0,12">
         <Grid.ColumnDefinitions>

@@ -53,6 +53,7 @@
     <Page Include="Themes\Mode.Competitive.xaml" />
     <Page Include="Themes\Mode.Custom.xaml" />
     <Page Include="Themes\Styles.xaml" />
+    <Page Include="Themes\Icons.xaml" />
     <Page Include="Views\OverviewView.xaml" />
     <Page Include="Views\PlaceholderView.xaml" />
     <Page Include="Views\PolicyView.xaml" />
@@ -74,6 +75,7 @@
     <Compile Include="PolicyRuntime.cs" />
     <Compile Include="Converters.cs" />
     <Compile Include="Motion.cs" />
+    <Compile Include="Controls\IconView.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="App.xaml.cs">
       <DependentUpon>App.xaml</DependentUpon>

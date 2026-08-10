@@ -45,7 +45,7 @@ namespace CaelusApp.WpfHost
             };
         }
 
-        // 离屏渲染深浅两个主题的概览页 PNG，供视觉验收
+        // 离屏渲染模式×主题矩阵 PNG，供视觉验收与回归基线（规格 §7.5）
         private int RunShot(string dir)
         {
             try
@@ -54,10 +54,14 @@ namespace CaelusApp.WpfHost
                 ShutdownMode = ShutdownMode.OnExplicitShutdown;
                 // 离屏渲染捕获最终视觉态：禁用进入动效，避免捕获到淡入起始帧（Opacity=0）
                 Motion.Enabled = false;
-                foreach (UiTone tone in new UiTone[] { UiTone.Light, UiTone.Dark })
+                UiTone[] tones = new UiTone[] { UiTone.Dark, UiTone.Dark, UiTone.Dark, UiTone.Light };
+                AppMode[] modes = new AppMode[] { AppMode.Standard, AppMode.Competitive, AppMode.Custom, AppMode.Standard };
+                string[] names = new string[] { "dark-cruise", "dark-combat", "dark-custom", "light-cruise" };
+                for (int i = 0; i < tones.Length; i++)
                 {
-                    ThemeManager.Apply(this, tone, AppMode.Standard);
+                    ThemeManager.Apply(this, tones[i], modes[i]);
                     MainWindow w = new MainWindow(new SampleOverviewSource());
+                    w.ApplyPersistedMode(modes[i]);
                     w.WindowStartupLocation = WindowStartupLocation.Manual;
                     w.Left = -20000;
                     w.Top = -20000;
@@ -73,8 +77,7 @@ namespace CaelusApp.WpfHost
                     rtb.Render(w);
                     PngBitmapEncoder enc = new PngBitmapEncoder();
                     enc.Frames.Add(BitmapFrame.Create(rtb));
-                    string file = Path.Combine(dir, "wpf-overview-" +
-                        (tone == UiTone.Light ? "light" : "dark") + ".png");
+                    string file = Path.Combine(dir, "wpf-overview-" + names[i] + ".png");
                     using (FileStream fs = File.Create(file)) enc.Save(fs);
                     w.Close();
                 }

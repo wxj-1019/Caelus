@@ -26,6 +26,17 @@ namespace CaelusApp.WpfHost
         protected override void OnStartup(StartupEventArgs e)
         {
             base.OnStartup(e);
+            // 迭代测试期间的异常观测点（问题解决后评估保留）
+            DispatcherUnhandledException += (s, ex) =>
+            {
+                try
+                {
+                    File.AppendAllText(
+                        Path.Combine(Path.GetTempPath(), "CaelusWpf.crash.log"),
+                        DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss") + " " + ex.Exception + Environment.NewLine);
+                }
+                catch { }
+            };
             if (e.Args.Length >= 2 && e.Args[0] == "--wpf-shot")
             {
                 int code = RunShot(e.Args[1]);

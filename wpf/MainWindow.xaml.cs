@@ -1,6 +1,7 @@
 // @author zenjiro 18967498922@163.com
 // 文件用途 WPF 预览宿主主窗口外壳：标题栏 / NavRail / 内容宿主 / 模式切换
 
+using System;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;

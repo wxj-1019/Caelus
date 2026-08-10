@@ -15,6 +15,7 @@ namespace CaelusApp.WpfHost
         private readonly OverviewViewModel vm;
         private readonly GameMode gameMode;
         private readonly PolicyPageViewModel policyVm;
+        private readonly LibraryViewModel libraryVm;
 
         public MainWindow() : this(null) { }
 
@@ -26,6 +27,8 @@ namespace CaelusApp.WpfHost
             vm.Refresh();
             gameMode = gm ?? new GameMode(Paths.Data, new SuppressionCore());
             policyVm = new PolicyPageViewModel(gameMode);
+            libraryVm = new LibraryViewModel(gameMode);
+            libraryVm.Refresh();
             DataContext = vm;
             PageHost.Content = new OverviewView { DataContext = vm };
             Loaded += OnLoadedAmbient;
@@ -80,6 +83,8 @@ namespace CaelusApp.WpfHost
                 PageHost.Content = new OverviewView { DataContext = DataContext };
             else if (rb == NavPolicy)
                 PageHost.Content = new PolicyView { DataContext = policyVm };
+            else if (rb == NavLibrary)
+                PageHost.Content = new LibraryView { DataContext = libraryVm };
             else
                 PageHost.Content = new PlaceholderView();
         }
@@ -88,6 +93,13 @@ namespace CaelusApp.WpfHost
         internal void NavigateToPolicyForShot()
         {
             PageHost.Content = new PolicyView { DataContext = policyVm };
+            UpdateLayout();
+        }
+
+        // 截图探针：离屏渲染前切到游戏库页
+        internal void NavigateToLibraryForShot()
+        {
+            PageHost.Content = new LibraryView { DataContext = libraryVm };
             UpdateLayout();
         }
     }

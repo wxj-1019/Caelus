@@ -257,4 +257,11 @@
     <Setter Property="FontSize" Value="11"/>
     <Setter Property="Foreground" Value="{DynamicResource TextSecondaryBrush}"/>
   </Style>
+
+  <!-- 导航分组小标签 -->
+  <Style x:Key="NavGroupLabel" TargetType="TextBlock">
+    <Setter Property="FontSize" Value="9"/>
+    <Setter Property="Foreground" Value="{DynamicResource TextTertiaryBrush}"/>
+    <Setter Property="Margin" Value="18,14,0,6"/>
+  </Style>
 </ResourceDictionary>

@@ -391,5 +391,83 @@ namespace CaelusApp
             System.IO.Directory.CreateDirectory(dir);
             return new GameMode(dir, new SuppressionCore());
         }
+
+        // 写一个最小合法 PE 文件（MZ 头 + PE 签名），让 GameExecutableResolver 接受。
+        private static string WriteStubExe(string dir, string fileName)
+        {
+            string exe = System.IO.Path.Combine(dir, fileName);
+            var pe = new byte[512];
+            pe[0] = 0x4D; pe[1] = 0x5A;          // MZ
+            pe[0x3C] = 0x80;                      // e_lfanew → PE 偏移
+            pe[0x80] = 0x50; pe[0x81] = 0x45;     // "PE"
+            System.IO.File.WriteAllBytes(exe, pe);
+            return exe;
+        }
+
+        private static void TestLibraryRefresh()
+        {
+            string dir;
+            GameMode gm = CreateTestGameMode(out dir);
+            try
+            {
+                // Add a test game so the list isn't empty
+                string exe = WriteStubExe(dir, "TestGame.exe");
+                string err;
+                Eq(true, gm.AddGameFile(exe, out err));
+
+                var vm = new LibraryViewModel(gm);
+                vm.Refresh();
+                Eq(1, vm.Items.Count);
+                Eq(false, string.IsNullOrEmpty(vm.Items[0].Name));
+                Eq(false, string.IsNullOrEmpty(vm.Items[0].Path));
+                Eq(false, vm.Items[0].IsRunning);
+                Eq(false, vm.IsEmpty);
+
+                // Remove it
+                vm.RemoveAt(0);
+                vm.Refresh();
+                Eq(0, vm.Items.Count);
+                Eq(true, vm.IsEmpty);
+            }
+            finally { try { System.IO.Directory.Delete(dir, true); } catch { } }
+        }
+
+        private static void TestLibraryAddDuplicate()
+        {
+            string dir;
+            GameMode gm = CreateTestGameMode(out dir);
+            try
+            {
+                string exe = WriteStubExe(dir, "DupGame.exe");
+                string err1;
+                Eq(true, gm.AddGameFile(exe, out err1));
+                // Second add should fail (duplicate)
+                string err2;
+                Eq(false, gm.AddGameFile(exe, out err2));
+                Eq("该游戏已经在列表中", err2);
+
+                var vm = new LibraryViewModel(gm);
+                vm.Refresh();
+                Eq(1, vm.Items.Count); // still only 1
+            }
+            finally { try { System.IO.Directory.Delete(dir, true); } catch { } }
+        }
+
+        private static void TestLibraryEmptyState()
+        {
+            string dir;
+            GameMode gm = CreateTestGameMode(out dir);
+            try
+            {
+                var vm = new LibraryViewModel(gm);
+                vm.Refresh();
+                Eq(0, vm.Items.Count);
+                Eq(true, vm.IsEmpty);
+                // EmptyText and EmptyHint should be non-empty
+                Eq(false, string.IsNullOrEmpty(vm.EmptyTitle));
+                Eq(false, string.IsNullOrEmpty(vm.EmptyHint));
+            }
+            finally { try { System.IO.Directory.Delete(dir, true); } catch { } }
+        }
     }
 }

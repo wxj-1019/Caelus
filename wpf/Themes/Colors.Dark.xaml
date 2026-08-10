@@ -26,4 +26,19 @@
   <SolidColorBrush x:Key="TextPrimaryBrush" Color="{StaticResource TextPrimaryColor}"/>
   <SolidColorBrush x:Key="TextSecondaryBrush" Color="{StaticResource TextSecondaryColor}"/>
   <SolidColorBrush x:Key="TextTertiaryBrush" Color="{StaticResource TextTertiaryColor}"/>
+  <!-- 玻璃面板填充（规格 §4.1 深色配方）：导航 5% / 卡片 6% / 主卡片 8% / 浮起 10% -->
+  <SolidColorBrush x:Key="GlassNavBrush" Color="#0DFFFFFF"/>
+  <SolidColorBrush x:Key="GlassCardBrush" Color="#0FFFFFFF"/>
+  <SolidColorBrush x:Key="GlassHeroBrush" Color="#14FFFFFF"/>
+  <SolidColorBrush x:Key="GlassRaisedBrush" Color="#1AFFFFFF"/>
+  <!-- 玻璃边框：常规 10% / 高层 14% / 顶部内高光 12% / 进度条轨道 8% -->
+  <SolidColorBrush x:Key="GlassBorderBrush" Color="#1AFFFFFF"/>
+  <SolidColorBrush x:Key="GlassBorderHiBrush" Color="#24FFFFFF"/>
+  <SolidColorBrush x:Key="InnerHighlightBrush" Color="#1FFFFFFF"/>
+  <SolidColorBrush x:Key="TrackBrush" Color="#14FFFFFF"/>
+  <!-- 环境光强度（规格 §4.1：深色 主 13% / 次 8%） -->
+  <sys:Double x:Key="AmbientPrimaryOpacity" xmlns:sys="clr-namespace:System;assembly=mscorlib">0.13</sys:Double>
+  <sys:Double x:Key="AmbientSecondaryOpacity" xmlns:sys="clr-namespace:System;assembly=mscorlib">0.08</sys:Double>
+  <!-- 模式强调色别名：深色主题指向 OnDark 档 -->
+  <SolidColorBrush x:Key="ModeAccentBrush" Color="{DynamicResource ModeAccentOnDarkColor}"/>
 </ResourceDictionary>

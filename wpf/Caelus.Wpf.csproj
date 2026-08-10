@@ -48,6 +48,9 @@
     <Page Include="Themes\Tokens.xaml" />
     <Page Include="Themes\Colors.Light.xaml" />
     <Page Include="Themes\Colors.Dark.xaml" />
+    <Page Include="Themes\Mode.Standard.xaml" />
+    <Page Include="Themes\Mode.Competitive.xaml" />
+    <Page Include="Themes\Mode.Custom.xaml" />
     <Page Include="Themes\Styles.xaml" />
     <Page Include="Views\OverviewView.xaml" />
     <Page Include="Views\PlaceholderView.xaml" />

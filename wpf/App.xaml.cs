@@ -32,7 +32,7 @@ namespace CaelusApp.WpfHost
                 Shutdown(code);
                 return;
             }
-            ThemeManager.Apply(this, UiTone.Light);
+            ThemeManager.Apply(this, UiTone.Light, AppMode.Standard);
             MainWindow w = new MainWindow();
             w.Show();
             tray = new System.Windows.Forms.NotifyIcon
@@ -54,7 +54,7 @@ namespace CaelusApp.WpfHost
                 Motion.Enabled = false;
                 foreach (UiTone tone in new UiTone[] { UiTone.Light, UiTone.Dark })
                 {
-                    ThemeManager.Apply(this, tone);
+                    ThemeManager.Apply(this, tone, AppMode.Standard);
                     MainWindow w = new MainWindow(new SampleOverviewSource());
                     w.WindowStartupLocation = WindowStartupLocation.Manual;
                     w.Left = -20000;

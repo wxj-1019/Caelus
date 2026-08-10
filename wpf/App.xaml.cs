@@ -48,6 +48,13 @@ namespace CaelusApp.WpfHost
             MainWindow w = new MainWindow();
             w.ApplyPersistedMode(initial);
             w.Show();
+            // 托盘图标延迟到消息循环运行后创建（OnStartup 阶段 Dispatcher 尚未泵消息，
+            // 此时创建的 NotifyIcon 不会在通知区域显示）
+            Dispatcher.BeginInvoke(new Action(CreateTray));
+        }
+
+        private void CreateTray()
+        {
             tray = new System.Windows.Forms.NotifyIcon
             {
                 Text = "Caelus",

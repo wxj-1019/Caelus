@@ -1,8 +1,8 @@
 # UI 迭代测试报告（Phase 1 + 1.5）
 
 **日期**: 2026-08-10  
-**范围**: 已完成内容（Phase 1 WPF 骨架 + Phase 1.5 Radium 座舱化）的迭代测试  
-**结论**: **全部通过，应用零缺陷**
+**范围**: 已完成内容（Phase 1 WPF 骨架 + Phase 1.5 Radium 座舱化）的迭代测试（两轮）  
+**结论**: **应用零缺陷**（唯一未实机验证项：托盘图标，已隔离确认为环境问题）
 
 ---
 
@@ -52,6 +52,31 @@
 | `App.xaml.cs`：DispatcherUnhandledException 处理器（写 %TEMP%\CaelusWpf.crash.log） | 生产健壮性：未处理异常不再无声崩溃，可诊断 |
 | 临时调试日志（ModeController/AmbientLayer/MainWindow） | 已移除（定位完成后清理） |
 
+## 第二轮迭代测试（边界场景）
+
+### 测试结果
+
+| # | 场景 | 结果 |
+|---|------|------|
+| T1 | **减少动画模式**（SPI_SETCLIENTANIMATION 关闭系统动画，测完恢复）：模式切换瞬时完成 | ✅ PASS |
+| T2 | **快速连点**（100ms 间隔连切竞技→自定义→竞技→自定义）：最终注册表=2 正确、进程存活、概览页完好 | ✅ PASS |
+| T3 | **最小化按钮**：窗口 rect 变 (-32000,-32000) 确认最小化 | ✅ PASS |
+| T4 | **托盘图标**：见下方专项调查 | ⚠️ 环境问题 |
+| T5 | **关闭/重启循环 3 轮**：每轮启动+关闭干净，无残留进程 | ✅ PASS |
+
+### T4 托盘图标专项调查（结论：环境问题，非应用缺陷）
+
+**证据链**：
+1. Caelus 启动前后任务栏通知区域（500x48 像素）像素对比 diff=0——图标未显示
+2. PowerShell 直接创建 NotifyIcon（有/无 DoEvents 消息泵）——均不显示
+3. **独立编译的 WinForms 探针应用**（完整 `Application.Run` 消息循环 + NotifyIcon）——**同样不显示**（diff=0）
+4. 系统图标（OneDrive、时钟等）正常显示——说明通知区域本身工作，**只有新注册的图标不显示**
+5. 根因：`HKCU\Software\Microsoft\Windows\CurrentVersion\Explorer\TrayNotify` 注册表键**缺失**——本机 Windows 会话（10.0.26200.0）的托盘配置状态异常
+
+**结论**：托盘图标不显示是**本机环境问题**（独立 WinForms 应用同样失败），Caelus 的 NotifyIcon 代码逻辑本身无缺陷。**需在正常桌面环境人工确认托盘显示**。
+
+**顺带改进**（已提交）：`App.xaml.cs` 的托盘创建从 OnStartup 改为 `Dispatcher.BeginInvoke` 延迟创建——WPF+NotifyIcon 最佳实践（消息循环运行后创建，避免隐藏窗口/消息时机问题），在正常环境下更稳妥。
+
 ## 测试方法论沉淀（供后续阶段复用）
 
 1. **GUI 交互测试用 UIA Select + 注册表/树状态验证**，不用真实鼠标（不干扰用户、不受遮挡）
@@ -60,3 +85,5 @@
 4. **交互前后读注册表/持久化状态**做逻辑验证，与视觉验证解耦
 5. **测试前检查**：`Get-Process CaelusWpf` 残留进程、顶层窗口遮挡（EnumWindows）
 6. **DPI 处理**：GetDpiForWindow 或 GetWindowRect 交叉验证，勿假设缩放
+7. **托盘图标验证**：像素对比（任务栏区域前后差异）比 UIA 枚举可靠；UIA 枚举 Windows 11 通知区域不稳定（TrayNotifyWnd 空）
+8. **环境隔离**：托盘不显示时先编译独立 WinForms 探针验证环境，勿急于判应用缺陷

@@ -196,6 +196,7 @@ namespace CaelusApp
             public string MemoryUsedText = "8.4 GB";
             public string ModeText = "常规";
             public string LastCheckText = "上次检查 2 分钟前";
+            private System.Collections.Generic.IList<double> tempHistory;
 
             bool IOverviewSource.GuardEnabled { get { return GuardEnabled; } }
             bool IOverviewSource.GameActive { get { return GameActive; } }
@@ -206,6 +207,19 @@ namespace CaelusApp
             string IOverviewSource.MemoryUsedText { get { return MemoryUsedText; } }
             string IOverviewSource.ModeText { get { return ModeText; } }
             string IOverviewSource.LastCheckText { get { return LastCheckText; } }
+            System.Collections.Generic.IList<double> IOverviewSource.TempHistory
+            {
+                get
+                {
+                    if (tempHistory == null)
+                    {
+                        var list = new System.Collections.Generic.List<double>(8);
+                        for (int i = 0; i < 8; i++) list.Add(60 + i);
+                        tempHistory = list;
+                    }
+                    return tempHistory;
+                }
+            }
         }
 
         private static void TestOverviewViewModelMapping()

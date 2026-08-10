@@ -78,6 +78,7 @@
     <Compile Include="Motion.cs" />
     <Compile Include="Controls\IconView.cs" />
     <Compile Include="Controls\Sparkline.cs" />
+    <Compile Include="Controls\GlassCard.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="App.xaml.cs">
       <DependentUpon>App.xaml</DependentUpon>

@@ -1,23 +1,24 @@
 <ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
-                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                    xmlns:controls="clr-namespace:CaelusApp.WpfHost.Controls">
 
   <!-- 玻璃卡片（规格 §4.1 普通卡片档：白 8% 填充 + 白 14% 边框 + 内高光）
        注意：Style Setter 中的 Effect 在 net4 WPF 不渲染（Freezable 冻结共享问题），
        需要阴影的卡片在元素上直接写 Border.Effect（见 OverviewView 结论卡） -->
   <Style x:Key="CardBorder" TargetType="Border">
     <Setter Property="Background" Value="{DynamicResource GlassCardBrush}"/>
-    <Setter Property="BorderBrush" Value="{DynamicResource GlassBorderBrush}"/>
+    <Setter Property="BorderBrush" Value="{DynamicResource CardEdgeBrush}"/>
     <Setter Property="BorderThickness" Value="1"/>
-    <Setter Property="CornerRadius" Value="{DynamicResource RadiusMd}"/>
+    <Setter Property="CornerRadius" Value="{DynamicResource RadiusLg}"/>
     <Setter Property="Padding" Value="12"/>
   </Style>
 
   <!-- 结论主卡片档（白 10% 填充 + 白 18% 边框；阴影由使用方在元素上直接添加） -->
   <Style x:Key="HeroCardBorder" TargetType="Border">
     <Setter Property="Background" Value="{DynamicResource GlassHeroBrush}"/>
-    <Setter Property="BorderBrush" Value="{DynamicResource GlassBorderHiBrush}"/>
+    <Setter Property="BorderBrush" Value="{DynamicResource CardEdgeBrush}"/>
     <Setter Property="BorderThickness" Value="1"/>
-    <Setter Property="CornerRadius" Value="{DynamicResource RadiusMd}"/>
+    <Setter Property="CornerRadius" Value="{DynamicResource RadiusLg}"/>
     <Setter Property="Padding" Value="12"/>
   </Style>
 
@@ -134,9 +135,9 @@
   <!-- 策略开关卡片：玻璃底，整卡可点击 -->
   <Style x:Key="PolicyCard" TargetType="Border">
     <Setter Property="Background" Value="{DynamicResource GlassCardBrush}"/>
-    <Setter Property="BorderBrush" Value="{DynamicResource GlassBorderBrush}"/>
+    <Setter Property="BorderBrush" Value="{DynamicResource CardEdgeBrush}"/>
     <Setter Property="BorderThickness" Value="1"/>
-    <Setter Property="CornerRadius" Value="{DynamicResource RadiusMd}"/>
+    <Setter Property="CornerRadius" Value="{DynamicResource RadiusLg}"/>
     <Setter Property="Padding" Value="14,10"/>
   </Style>
 
@@ -175,9 +176,85 @@
   <!-- 游戏库列表项卡片 -->
   <Style x:Key="LibraryItemCard" TargetType="Border">
     <Setter Property="Background" Value="{DynamicResource GlassCardBrush}"/>
-    <Setter Property="BorderBrush" Value="{DynamicResource GlassBorderBrush}"/>
+    <Setter Property="BorderBrush" Value="{DynamicResource CardEdgeBrush}"/>
     <Setter Property="BorderThickness" Value="1"/>
-    <Setter Property="CornerRadius" Value="{DynamicResource RadiusMd}"/>
+    <Setter Property="CornerRadius" Value="{DynamicResource RadiusLg}"/>
     <Setter Property="Padding" Value="14,10"/>
+  </Style>
+
+  <!-- ===== Aurora Bento v2 ===== -->
+
+  <!-- 玻璃卡片 v2：渐变描边 + 顶部高光线 + 悬停描边点亮（规格 §5；不用 Effect——环境不渲染） -->
+  <Style x:Key="GlassCard" TargetType="controls:GlassCard">
+    <Setter Property="Background" Value="{DynamicResource Surface0Brush}"/>
+    <Setter Property="Padding" Value="14"/>
+    <Setter Property="Template">
+      <Setter.Value>
+        <ControlTemplate TargetType="controls:GlassCard">
+          <Grid>
+            <Border CornerRadius="{TemplateBinding CornerRadius}"
+                    Background="{TemplateBinding Background}"
+                    BorderBrush="{DynamicResource CardEdgeBrush}" BorderThickness="1"/>
+            <Border x:Name="HoverEdge" CornerRadius="{TemplateBinding CornerRadius}"
+                    BorderBrush="{DynamicResource BorderStrongBrush}" BorderThickness="1" Opacity="0"/>
+            <!-- 顶部高光线：左右缩进 14 对齐默认 Padding=14；若实例覆盖 Padding 需同步调整 -->
+            <Rectangle Height="1" VerticalAlignment="Top" Margin="14,0"
+                       RadiusX="2" RadiusY="2" Fill="{DynamicResource TopHighlightBrush}"/>
+            <ContentPresenter Margin="{TemplateBinding Padding}"/>
+          </Grid>
+          <!-- 悬停描边点亮（纯 Opacity 装饰，不涉及位移）；注意不响应 Motion.Reduced 系统降级——
+               真正的悬停位移由外部 Motion.Lift 处理（T16），Lift 遵守 Reduced。此处为已知遗留 -->
+          <ControlTemplate.Triggers>
+            <Trigger Property="IsMouseOver" Value="True">
+              <Trigger.EnterActions>
+                <BeginStoryboard>
+                  <Storyboard>
+                    <DoubleAnimation Storyboard.TargetName="HoverEdge" Storyboard.TargetProperty="Opacity"
+                                     To="1" Duration="0:0:0.15"/>
+                  </Storyboard>
+                </BeginStoryboard>
+              </Trigger.EnterActions>
+              <Trigger.ExitActions>
+                <BeginStoryboard>
+                  <Storyboard>
+                    <DoubleAnimation Storyboard.TargetName="HoverEdge" Storyboard.TargetProperty="Opacity"
+                                     To="0" Duration="0:0:0.2"/>
+                  </Storyboard>
+                </BeginStoryboard>
+              </Trigger.ExitActions>
+            </Trigger>
+          </ControlTemplate.Triggers>
+        </ControlTemplate>
+      </Setter.Value>
+    </Setter>
+  </Style>
+
+  <!-- 排印（规格 §5）：超大细字重 + 等宽数字。
+       注意：Microsoft YaHei UI 仅内置 Regular/Bold，Light 实际 fallback 为 Regular，
+       SemiBold 可能 fallback 为 Bold——这是规格 §5 承认的 WPF 局限（诚实降级） -->
+  <Style x:Key="DisplayNumber" TargetType="TextBlock">
+    <Setter Property="FontSize" Value="{DynamicResource FontSizeHero}"/>
+    <Setter Property="FontWeight" Value="Light"/>
+    <Setter Property="Foreground" Value="{DynamicResource TextPrimaryBrush}"/>
+    <Setter Property="Typography.NumeralAlignment" Value="Tabular"/>
+  </Style>
+  <Style x:Key="MetricNumber" TargetType="TextBlock">
+    <Setter Property="FontSize" Value="{DynamicResource FontSizeMetric}"/>
+    <Setter Property="FontWeight" Value="Light"/>
+    <Setter Property="Foreground" Value="{DynamicResource TextPrimaryBrush}"/>
+    <Setter Property="Typography.NumeralAlignment" Value="Tabular"/>
+  </Style>
+  <Style x:Key="CardLabel" TargetType="TextBlock">
+    <Setter Property="FontSize" Value="10"/>
+    <Setter Property="Foreground" Value="{DynamicResource TextSecondaryBrush}"/>
+  </Style>
+  <Style x:Key="SectionTitle" TargetType="TextBlock">
+    <Setter Property="FontSize" Value="{DynamicResource FontSizeSection}"/>
+    <Setter Property="FontWeight" Value="SemiBold"/>
+    <Setter Property="Foreground" Value="{DynamicResource TextPrimaryBrush}"/>
+  </Style>
+  <Style x:Key="SectionSubtitle" TargetType="TextBlock">
+    <Setter Property="FontSize" Value="11"/>
+    <Setter Property="Foreground" Value="{DynamicResource TextSecondaryBrush}"/>
   </Style>
 </ResourceDictionary>

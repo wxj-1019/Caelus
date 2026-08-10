@@ -22,13 +22,14 @@
     <Setter Property="Padding" Value="12"/>
   </Style>
 
-  <!-- 主按钮：ModeAccent 填充（规格 §5），不发光 -->
+  <!-- 主按钮 v2：Accent 渐变填充（规格 §7），不发光 -->
   <Style x:Key="PrimaryButton" TargetType="Button">
-    <Setter Property="Background" Value="{DynamicResource ModeAccentBrush}"/>
-    <Setter Property="Foreground" Value="#FF0A0F14"/>
+    <Setter Property="Background" Value="{DynamicResource AccentGradientBrush}"/>
+    <Setter Property="Foreground" Value="{DynamicResource OnAccentBrush}"/>
     <Setter Property="BorderThickness" Value="0"/>
     <Setter Property="Padding" Value="12,7"/>
     <Setter Property="FontSize" Value="{DynamicResource FontSizeCaption}"/>
+    <Setter Property="FontWeight" Value="SemiBold"/>
     <Setter Property="Cursor" Value="Hand"/>
     <Setter Property="Template">
       <Setter.Value>
@@ -54,22 +55,22 @@
     </Setter>
   </Style>
 
-  <!-- 幽灵按钮：ModeAccent 文字 -->
+  <!-- 幽灵按钮 v2：Accent 文字 -->
   <Style x:Key="GhostButton" TargetType="Button">
     <Setter Property="Background" Value="Transparent"/>
-    <Setter Property="Foreground" Value="{DynamicResource ModeAccentBrush}"/>
+    <Setter Property="Foreground" Value="{DynamicResource AccentPrimaryBrush}"/>
     <Setter Property="BorderThickness" Value="0"/>
     <Setter Property="Padding" Value="6,4"/>
     <Setter Property="FontSize" Value="{DynamicResource FontSizeCaption}"/>
     <Setter Property="Cursor" Value="Hand"/>
   </Style>
 
-  <!-- 导航项（规格 §5）：选中 = ModeAccent 12% 填充 + ModeAccent 文字 + 1px 内描边，不发光 -->
+  <!-- 导航项 v2：选中 = AccentSoft 底 + AccentEdge 描边 + Accent 文字（规格 §7） -->
   <Style x:Key="NavItem" TargetType="RadioButton">
     <Setter Property="Foreground" Value="{DynamicResource TextSecondaryBrush}"/>
-    <Setter Property="FontSize" Value="{DynamicResource FontSizeCaption}"/>
-    <Setter Property="Padding" Value="10,8"/>
-    <Setter Property="Margin" Value="6,1"/>
+    <Setter Property="FontSize" Value="{DynamicResource FontSizeBody}"/>
+    <Setter Property="Padding" Value="10,7"/>
+    <Setter Property="Margin" Value="8,1"/>
     <Setter Property="HorizontalContentAlignment" Value="Left"/>
     <Setter Property="Cursor" Value="Hand"/>
     <Setter Property="Template">
@@ -83,10 +84,10 @@
           </Border>
           <ControlTemplate.Triggers>
             <Trigger Property="IsChecked" Value="True">
-              <Setter TargetName="bd" Property="Background" Value="{DynamicResource ModeAccentSoftBrush}"/>
-              <Setter TargetName="bd" Property="BorderBrush" Value="{DynamicResource ModeAccentEdgeBrush}"/>
-              <Setter Property="Foreground" Value="{DynamicResource ModeAccentBrush}"/>
-              <Setter Property="FontWeight" Value="Bold"/>
+              <Setter TargetName="bd" Property="Background" Value="{DynamicResource AccentSoftBrush}"/>
+              <Setter TargetName="bd" Property="BorderBrush" Value="{DynamicResource AccentEdgeBrush}"/>
+              <Setter Property="Foreground" Value="{DynamicResource AccentPrimaryBrush}"/>
+              <Setter Property="FontWeight" Value="SemiBold"/>
             </Trigger>
             <Trigger Property="IsMouseOver" Value="True">
               <Setter TargetName="bd" Property="Background" Value="{DynamicResource GlassNavBrush}"/>
@@ -97,25 +98,25 @@
     </Setter>
   </Style>
 
-  <!-- 分段控件项（规格 §5）：容器白 5%，选中项白 8% + 主文字色 -->
+  <!-- 分段控件项 v2：选中 = SegSelected 浅底 + 深字（深色旗舰反差点） -->
   <Style x:Key="SegmentItem" TargetType="RadioButton">
     <Setter Property="Foreground" Value="{DynamicResource TextSecondaryBrush}"/>
-    <Setter Property="FontSize" Value="{DynamicResource FontSizeCaption}"/>
-    <Setter Property="Padding" Value="14,6"/>
+    <Setter Property="FontSize" Value="11"/>
+    <Setter Property="Padding" Value="16,5"/>
     <Setter Property="Cursor" Value="Hand"/>
     <Setter Property="Template">
       <Setter.Value>
         <ControlTemplate TargetType="RadioButton">
-          <Border x:Name="bd" CornerRadius="{DynamicResource RadiusSm}"
+          <Border x:Name="bd" CornerRadius="99"
                   Padding="{TemplateBinding Padding}"
                   Background="Transparent">
             <ContentPresenter HorizontalAlignment="Center"/>
           </Border>
           <ControlTemplate.Triggers>
             <Trigger Property="IsChecked" Value="True">
-              <Setter TargetName="bd" Property="Background" Value="{DynamicResource GlassHeroBrush}"/>
-              <Setter Property="Foreground" Value="{DynamicResource TextPrimaryBrush}"/>
-              <Setter Property="FontWeight" Value="Bold"/>
+              <Setter TargetName="bd" Property="Background" Value="{DynamicResource SegSelectedBrush}"/>
+              <Setter Property="Foreground" Value="{DynamicResource SegSelectedTextBrush}"/>
+              <Setter Property="FontWeight" Value="SemiBold"/>
             </Trigger>
           </ControlTemplate.Triggers>
         </ControlTemplate>
@@ -123,12 +124,12 @@
     </Setter>
   </Style>
 
-  <!-- 分段控件容器：玻璃导航档 -->
+  <!-- 分段控件容器 v2：胶囊 -->
   <Style x:Key="SegmentHost" TargetType="Border">
     <Setter Property="Background" Value="{DynamicResource GlassNavBrush}"/>
-    <Setter Property="CornerRadius" Value="{DynamicResource RadiusSm}"/>
+    <Setter Property="CornerRadius" Value="99"/>
     <Setter Property="Padding" Value="3"/>
-    <Setter Property="BorderBrush" Value="{DynamicResource GlassBorderBrush}"/>
+    <Setter Property="BorderBrush" Value="{DynamicResource BorderSubtleBrush}"/>
     <Setter Property="BorderThickness" Value="1"/>
   </Style>
 
@@ -160,7 +161,7 @@
           </Grid>
           <ControlTemplate.Triggers>
             <Trigger Property="IsChecked" Value="True">
-              <Setter TargetName="track" Property="Background" Value="{DynamicResource SuccessBrush}"/>
+              <Setter TargetName="track" Property="Background" Value="{DynamicResource AccentGradientBrush}"/>
               <Setter TargetName="thumb" Property="HorizontalAlignment" Value="Right"/>
               <Setter TargetName="thumb" Property="Margin" Value="0,0,2,0"/>
             </Trigger>

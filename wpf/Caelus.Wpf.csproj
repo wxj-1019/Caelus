@@ -58,6 +58,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="ThemeManager.cs" />
+    <Compile Include="ModeController.cs" />
     <Compile Include="Converters.cs" />
     <Compile Include="Motion.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />

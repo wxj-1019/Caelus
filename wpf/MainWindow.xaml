@@ -81,13 +81,13 @@
           <Border Style="{DynamicResource SegmentHost}" DockPanel.Dock="Right"
                   VerticalAlignment="Top">
             <StackPanel Orientation="Horizontal">
-              <RadioButton Style="{DynamicResource SegmentItem}" Content="常规"
-                           IsChecked="True" GroupName="mode"
+              <RadioButton x:Name="SegStandard" Style="{DynamicResource SegmentItem}" Content="常规"
+                           IsChecked="True" GroupName="mode" Checked="ModeChecked"
                            AutomationProperties.Name="模式：常规"/>
-              <RadioButton Style="{DynamicResource SegmentItem}" Content="竞技" GroupName="mode"
-                           AutomationProperties.Name="模式：竞技"/>
-              <RadioButton Style="{DynamicResource SegmentItem}" Content="自定义" GroupName="mode"
-                           AutomationProperties.Name="模式：自定义"/>
+              <RadioButton x:Name="SegCompetitive" Style="{DynamicResource SegmentItem}" Content="竞技" GroupName="mode"
+                           Checked="ModeChecked" AutomationProperties.Name="模式：竞技"/>
+              <RadioButton x:Name="SegCustom" Style="{DynamicResource SegmentItem}" Content="自定义" GroupName="mode"
+                           Checked="ModeChecked" AutomationProperties.Name="模式：自定义"/>
             </StackPanel>
           </Border>
         </DockPanel>

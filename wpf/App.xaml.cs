@@ -32,8 +32,10 @@ namespace CaelusApp.WpfHost
                 Shutdown(code);
                 return;
             }
-            ThemeManager.Apply(this, UiTone.Light, AppMode.Standard);
+            AppMode initial = ModeController.LoadPersisted();
+            ThemeManager.Apply(this, UiTone.Dark, initial);
             MainWindow w = new MainWindow();
+            w.ApplyPersistedMode(initial);
             w.Show();
             tray = new System.Windows.Forms.NotifyIcon
             {

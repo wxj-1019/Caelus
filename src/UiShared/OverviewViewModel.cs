@@ -153,6 +153,8 @@ namespace CaelusApp
     // 示例数据源：供 --wpf-shot 截图与手动预览使用
     internal sealed class SampleOverviewSource : IOverviewSource
     {
+        private string modeText = "常规";
+
         public bool GuardEnabled { get { return true; } }
         public bool GameActive { get { return false; } }
         public bool HasWarning { get { return false; } }
@@ -160,7 +162,13 @@ namespace CaelusApp
         public double? GpuTempC { get { return 62; } }
         public double? MemoryUsedPct { get { return 53; } }
         public string MemoryUsedText { get { return "8.4 GB"; } }
-        public string ModeText { get { return "常规"; } }
+        public string ModeText { get { return modeText; } }
         public string LastCheckText { get { return "上次检查 2 分钟前 · 没有需要处理的问题"; } }
+
+        // 预览宿主模式切换时更新显示文案（竞技/自定义下示例结论同步变化）
+        public void SetMode(AppMode mode)
+        {
+            modeText = ModePalette.DisplayName(mode);
+        }
     }
 }

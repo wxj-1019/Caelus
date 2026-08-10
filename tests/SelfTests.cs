@@ -968,6 +968,8 @@ namespace CaelusApp
             test("模式色板：三模式互异且巡航/战备色相距足够远", TestModePaletteDistinct);
             test("模式色板：ModeAccent 深浅两档对比度达到 AA", TestModeAccentContrast);
             test("策略项：三分组共 21 项，标题/说明/属性名齐全", TestPolicyItemsCompleteness);
+            test("策略锁定矩阵：5 自定义项在 Standard/Competitive 锁定，Custom 放开", TestPolicyLockMatrix);
+            test("策略属性映射：21 项 get/set 正确读写 GameMode", TestPolicyPropertyAccess);
             test("运行时图标：托盘图标铺满画布并随生效模式变化", TestModeIcons);
             test("仪表盘动效：各图层逐帧独立推进", TestDashboardMotion);
             test("高 DPI 字体：100% 到 200% 缩放下正文字号都落在整数像素上", () =>

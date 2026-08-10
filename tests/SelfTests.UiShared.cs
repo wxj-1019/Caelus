@@ -331,5 +331,65 @@ namespace CaelusApp
             Eq("严格 CPU 分区", PolicyViewModel.CustomItems[0].Title);
             Eq("竞技模式禁用 CPU 空闲状态", PolicyViewModel.ExtraItems[0].Title);
         }
+
+        private static void TestPolicyLockMatrix()
+        {
+            foreach (PolicyItem item in PolicyViewModel.CustomItems)
+            {
+                bool stdLocked, stdValue;
+                PolicyViewModel.GetLockState(item.PropertyName, PerformancePreset.Standard, out stdLocked, out stdValue);
+                if (!stdLocked) throw new Exception(item.PropertyName + " should be locked in Standard");
+                Eq(false, stdValue);
+
+                bool compLocked, compValue;
+                PolicyViewModel.GetLockState(item.PropertyName, PerformancePreset.Competitive, out compLocked, out compValue);
+                if (!compLocked) throw new Exception(item.PropertyName + " should be locked in Competitive");
+                Eq(true, compValue);
+
+                bool custLocked, custValue;
+                PolicyViewModel.GetLockState(item.PropertyName, PerformancePreset.Custom, out custLocked, out custValue);
+                if (custLocked) throw new Exception(item.PropertyName + " should be unlocked in Custom");
+            }
+
+            foreach (PolicyItem item in PolicyViewModel.CoreItems)
+            {
+                bool locked, value;
+                PolicyViewModel.GetLockState(item.PropertyName, PerformancePreset.Competitive, out locked, out value);
+                if (locked) throw new Exception("core item " + item.PropertyName + " should never lock");
+            }
+            foreach (PolicyItem item in PolicyViewModel.ExtraItems)
+            {
+                bool locked, value;
+                PolicyViewModel.GetLockState(item.PropertyName, PerformancePreset.Competitive, out locked, out value);
+                if (locked) throw new Exception("extra item " + item.PropertyName + " should never lock");
+            }
+        }
+
+        private static void TestPolicyPropertyAccess()
+        {
+            string dir;
+            GameMode gm = CreateTestGameMode(out dir);
+            try
+            {
+                bool v = PolicyViewModel.GetProperty(gm, "SuppressBackground");
+                PolicyViewModel.SetProperty(gm, "BoostGame", true);
+                Eq(true, PolicyViewModel.GetProperty(gm, "BoostGame"));
+                PolicyViewModel.SetProperty(gm, "BoostGame", false);
+                Eq(false, PolicyViewModel.GetProperty(gm, "BoostGame"));
+                foreach (PolicyItem item in PolicyViewModel.AllItems())
+                {
+                    PolicyViewModel.GetProperty(gm, item.PropertyName);
+                }
+            }
+            finally { try { System.IO.Directory.Delete(dir, true); } catch { } }
+        }
+
+        private static GameMode CreateTestGameMode(out string dir)
+        {
+            dir = System.IO.Path.Combine(System.IO.Path.GetTempPath(),
+                "CaelusPolicyTest_" + System.Diagnostics.Process.GetCurrentProcess().Id);
+            System.IO.Directory.CreateDirectory(dir);
+            return new GameMode(dir, new SuppressionCore());
+        }
     }
 }

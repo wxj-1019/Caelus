@@ -64,5 +64,78 @@ namespace CaelusApp
             foreach (PolicyItem i in custom) yield return i;
             foreach (PolicyItem i in extra) yield return i;
         }
+
+        public static void GetLockState(string propertyName, PerformancePreset preset,
+            out bool locked, out bool lockedValue)
+        {
+            bool isCustom = false;
+            foreach (PolicyItem item in custom)
+            {
+                if (item.PropertyName == propertyName) { isCustom = true; break; }
+            }
+            if (!isCustom) { locked = false; lockedValue = false; return; }
+
+            if (preset == PerformancePreset.Standard) { locked = true; lockedValue = false; return; }
+            if (preset == PerformancePreset.Competitive) { locked = true; lockedValue = true; return; }
+            locked = false; lockedValue = false;
+        }
+
+        public static bool GetProperty(GameMode gm, string name)
+        {
+            switch (name)
+            {
+                case "SuppressBackground": return gm.SuppressBackground;
+                case "GpuDemote": return gm.GpuDemote;
+                case "FreezeBackground": return gm.FreezeBackground;
+                case "BoostGame": return gm.BoostGame;
+                case "IfeoBoostFallback": return gm.IfeoBoostFallback;
+                case "RenderLaneOn": return gm.RenderLaneOn;
+                case "PowerPlanSwitch": return gm.PowerPlanSwitch;
+                case "NotifQuiet": return gm.NotifQuiet;
+                case "HzGuard": return gm.HzGuard;
+                case "StrictCoreIsolation": return gm.StrictCoreIsolation;
+                case "AggressiveSuppression": return gm.AggressiveSuppression;
+                case "PauseDownloads": return gm.PauseDownloads;
+                case "PauseSvcIndex": return gm.PauseSvcIndex;
+                case "KillGameDvr": return gm.KillGameDvr;
+                case "IdleStateDisable": return gm.IdleStateDisable;
+                case "VisualFxDowngrade": return gm.VisualFxDowngrade;
+                case "TrimWorkingSet": return gm.TrimWorkingSet;
+                case "PurgeStandby": return gm.PurgeStandby;
+                case "PauseWindowsUpdate": return gm.PauseWindowsUpdate;
+                case "PresenceQosOff": return gm.PresenceQosOff;
+                case "KeepAwake": return gm.KeepAwake;
+                default: throw new System.ArgumentException("unknown policy property: " + name);
+            }
+        }
+
+        public static void SetProperty(GameMode gm, string name, bool value)
+        {
+            switch (name)
+            {
+                case "SuppressBackground": gm.SuppressBackground = value; break;
+                case "GpuDemote": gm.GpuDemote = value; break;
+                case "FreezeBackground": gm.FreezeBackground = value; break;
+                case "BoostGame": gm.BoostGame = value; break;
+                case "IfeoBoostFallback": gm.IfeoBoostFallback = value; break;
+                case "RenderLaneOn": gm.RenderLaneOn = value; break;
+                case "PowerPlanSwitch": gm.PowerPlanSwitch = value; break;
+                case "NotifQuiet": gm.NotifQuiet = value; break;
+                case "HzGuard": gm.HzGuard = value; break;
+                case "StrictCoreIsolation": gm.StrictCoreIsolation = value; break;
+                case "AggressiveSuppression": gm.AggressiveSuppression = value; break;
+                case "PauseDownloads": gm.PauseDownloads = value; break;
+                case "PauseSvcIndex": gm.PauseSvcIndex = value; break;
+                case "KillGameDvr": gm.KillGameDvr = value; break;
+                case "IdleStateDisable": gm.IdleStateDisable = value; break;
+                case "VisualFxDowngrade": gm.VisualFxDowngrade = value; break;
+                case "TrimWorkingSet": gm.TrimWorkingSet = value; break;
+                case "PurgeStandby": gm.PurgeStandby = value; break;
+                case "PauseWindowsUpdate": gm.PauseWindowsUpdate = value; break;
+                case "PresenceQosOff": gm.PresenceQosOff = value; break;
+                case "KeepAwake": gm.KeepAwake = value; break;
+                default: throw new System.ArgumentException("unknown policy property: " + name);
+            }
+        }
     }
 }

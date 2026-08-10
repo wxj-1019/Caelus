@@ -13,15 +13,19 @@ namespace CaelusApp.WpfHost
     {
         private readonly SampleOverviewSource source;
         private readonly OverviewViewModel vm;
+        private readonly GameMode gameMode;
+        private readonly PolicyPageViewModel policyVm;
 
         public MainWindow() : this(null) { }
 
-        internal MainWindow(IOverviewSource overviewSource)
+        internal MainWindow(GameMode gm)
         {
             InitializeComponent();
-            source = overviewSource as SampleOverviewSource ?? new SampleOverviewSource();
+            source = new SampleOverviewSource();
             vm = new OverviewViewModel(source);
             vm.Refresh();
+            gameMode = gm ?? new GameMode(Paths.Data, new SuppressionCore());
+            policyVm = new PolicyPageViewModel(gameMode);
             DataContext = vm;
             PageHost.Content = new OverviewView { DataContext = vm };
             Loaded += OnLoadedAmbient;
@@ -35,6 +39,7 @@ namespace CaelusApp.WpfHost
             else SegStandard.IsChecked = true;
             source.SetMode(mode);
             vm.Refresh();
+            policyVm.RefreshLocks();
         }
 
         private void OnLoadedAmbient(object sender, RoutedEventArgs e)
@@ -48,6 +53,8 @@ namespace CaelusApp.WpfHost
             AppMode mode = sender == SegCompetitive ? AppMode.Competitive
                 : sender == SegCustom ? AppMode.Custom : AppMode.Standard;
             ModeController.SwitchTo(Application.Current, mode, Ambient, source, vm, true);
+            gameMode.Preset = ModeController.ToPreset(mode);
+            policyVm.RefreshLocks();
         }
 
         private void TitleBarDrag(object sender, MouseButtonEventArgs e)
@@ -69,9 +76,19 @@ namespace CaelusApp.WpfHost
         {
             RadioButton rb = sender as RadioButton;
             if (rb == null || PageHost == null) return;
-            PageHost.Content = rb == NavOverview
-                ? (object)new OverviewView { DataContext = DataContext }
-                : new PlaceholderView();
+            if (rb == NavOverview)
+                PageHost.Content = new OverviewView { DataContext = DataContext };
+            else if (rb == NavPolicy)
+                PageHost.Content = new PolicyView { DataContext = policyVm };
+            else
+                PageHost.Content = new PlaceholderView();
+        }
+
+        // 截图探针：离屏渲染前切到策略页
+        internal void NavigateToPolicyForShot()
+        {
+            PageHost.Content = new PolicyView { DataContext = policyVm };
+            UpdateLayout();
         }
     }
 }

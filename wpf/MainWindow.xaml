@@ -52,7 +52,7 @@
                        AutomationProperties.Name="导航：概览"/>
           <RadioButton Style="{DynamicResource NavItem}" Content="游戏库" GroupName="nav" Checked="NavChecked"
                        AutomationProperties.Name="导航：游戏库"/>
-          <RadioButton Style="{DynamicResource NavItem}" Content="优化策略" GroupName="nav" Checked="NavChecked"
+          <RadioButton x:Name="NavPolicy" Style="{DynamicResource NavItem}" Content="优化策略" GroupName="nav" Checked="NavChecked"
                        AutomationProperties.Name="导航：优化策略"/>
           <RadioButton Style="{DynamicResource NavItem}" Content="系统体检" GroupName="nav" Checked="NavChecked"
                        AutomationProperties.Name="导航：系统体检"/>

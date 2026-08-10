@@ -29,7 +29,7 @@ namespace CaelusApp.WpfHost
             if (vm != null) vm.Refresh();
         }
 
-        private static PerformancePreset ToPreset(AppMode mode)
+        public static PerformancePreset ToPreset(AppMode mode)
         {
             if (mode == AppMode.Competitive) return PerformancePreset.Competitive;
             if (mode == AppMode.Custom) return PerformancePreset.Custom;

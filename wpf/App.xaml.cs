@@ -45,7 +45,10 @@ namespace CaelusApp.WpfHost
             }
             AppMode initial = ModeController.LoadPersisted();
             ThemeManager.Apply(this, UiTone.Dark, initial);
-            MainWindow w = new MainWindow();
+            Paths.Init();
+            var gameCore = new SuppressionCore();
+            var gameMode = new GameMode(Paths.Data, gameCore);
+            MainWindow w = new MainWindow(gameMode);
             w.ApplyPersistedMode(initial);
             w.Show();
             // 托盘图标延迟到消息循环运行后创建（OnStartup 阶段 Dispatcher 尚未泵消息，
@@ -72,13 +75,14 @@ namespace CaelusApp.WpfHost
                 ShutdownMode = ShutdownMode.OnExplicitShutdown;
                 // 离屏渲染捕获最终视觉态：禁用进入动效，避免捕获到淡入起始帧（Opacity=0）
                 Motion.Enabled = false;
+                Paths.Init();
                 UiTone[] tones = new UiTone[] { UiTone.Dark, UiTone.Dark, UiTone.Dark, UiTone.Light };
                 AppMode[] modes = new AppMode[] { AppMode.Standard, AppMode.Competitive, AppMode.Custom, AppMode.Standard };
                 string[] names = new string[] { "dark-cruise", "dark-combat", "dark-custom", "light-cruise" };
                 for (int i = 0; i < tones.Length; i++)
                 {
                     ThemeManager.Apply(this, tones[i], modes[i]);
-                    MainWindow w = new MainWindow(new SampleOverviewSource());
+                    MainWindow w = new MainWindow(null);
                     w.ApplyPersistedMode(modes[i]);
                     w.WindowStartupLocation = WindowStartupLocation.Manual;
                     w.Left = -20000;
@@ -99,6 +103,24 @@ namespace CaelusApp.WpfHost
                     using (FileStream fs = File.Create(file)) enc.Save(fs);
                     w.Close();
                 }
+                // 策略页截图（巡航深色）
+                ThemeManager.Apply(this, UiTone.Dark, AppMode.Standard);
+                MainWindow pw = new MainWindow(new GameMode(Paths.Data, new SuppressionCore()));
+                pw.ApplyPersistedMode(AppMode.Standard);
+                pw.WindowStartupLocation = WindowStartupLocation.Manual;
+                pw.Left = -20000; pw.Top = -20000;
+                pw.ShowInTaskbar = false; pw.ShowActivated = false;
+                pw.Show(); pw.UpdateLayout();
+                pw.NavigateToPolicyForShot();
+                Size psize = new Size(1196, 768);
+                pw.Measure(psize); pw.Arrange(new Rect(psize)); pw.UpdateLayout();
+                RenderTargetBitmap prtb = new RenderTargetBitmap(1196, 768, 96, 96, PixelFormats.Pbgra32);
+                prtb.Render(pw);
+                PngBitmapEncoder penc = new PngBitmapEncoder();
+                penc.Frames.Add(BitmapFrame.Create(prtb));
+                string pfile = Path.Combine(dir, "wpf-policy-dark-cruise.png");
+                using (FileStream pfs = File.Create(pfile)) penc.Save(pfs);
+                pw.Close();
                 return 0;
             }
             catch (Exception ex)

@@ -171,4 +171,13 @@
       </Setter.Value>
     </Setter>
   </Style>
+
+  <!-- 游戏库列表项卡片 -->
+  <Style x:Key="LibraryItemCard" TargetType="Border">
+    <Setter Property="Background" Value="{DynamicResource GlassCardBrush}"/>
+    <Setter Property="BorderBrush" Value="{DynamicResource GlassBorderBrush}"/>
+    <Setter Property="BorderThickness" Value="1"/>
+    <Setter Property="CornerRadius" Value="{DynamicResource RadiusMd}"/>
+    <Setter Property="Padding" Value="14,10"/>
+  </Style>
 </ResourceDictionary>

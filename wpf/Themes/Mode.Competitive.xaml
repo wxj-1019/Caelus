@@ -16,4 +16,6 @@
   </RadialGradientBrush>
   <SolidColorBrush x:Key="ModeAccentOnDarkBrush" Color="{DynamicResource ModeAccentOnDarkColor}"/>
   <SolidColorBrush x:Key="ModeAccentOnLightBrush" Color="{DynamicResource ModeAccentOnLightColor}"/>
+  <SolidColorBrush x:Key="ModeAccentSoftBrush" Color="#1FFF6B74"/>
+  <SolidColorBrush x:Key="ModeAccentEdgeBrush" Color="#54FF6B74"/>
 </ResourceDictionary>

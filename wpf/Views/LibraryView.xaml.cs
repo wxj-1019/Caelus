@@ -5,6 +5,7 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.Windows;
 using System.Windows.Controls;
+using CaelusApp.WpfHost.Dialogs;
 
 namespace CaelusApp.WpfHost.Views
 {
@@ -44,14 +45,14 @@ namespace CaelusApp.WpfHost.Views
         // 添加按钮
         private void OnAddClick(object sender, RoutedEventArgs e)
         {
-            // TODO: Task 4 将实现 AddGameDialogWpf
-            // if (vm == null) return;
-            // var dlg = new AddGameDialogWpf(vm.Items);
-            // bool? result = dlg.ShowDialog();
-            // if (result == true && dlg.SelectedHits.Count > 0)
-            // {
-            //     vm.AddScannedGames(dlg.SelectedHits);
-            // }
+            if (vm == null) return;
+            var dlg = new AddGameDialogWpf(vm.Items);
+            dlg.Owner = Window.GetWindow(this);
+            bool? result = dlg.ShowDialog();
+            if (result == true && dlg.SelectedHits.Count > 0)
+            {
+                vm.AddScannedGames(dlg.SelectedHits);
+            }
         }
 
         // 移除按钮（简化：移除第一个——Phase 4 可加选中态）

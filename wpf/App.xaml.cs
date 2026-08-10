@@ -121,6 +121,23 @@ namespace CaelusApp.WpfHost
                 string pfile = Path.Combine(dir, "wpf-policy-dark-cruise.png");
                 using (FileStream pfs = File.Create(pfile)) penc.Save(pfs);
                 pw.Close();
+                // 游戏库页截图
+                MainWindow lw = new MainWindow(null);
+                lw.ApplyPersistedMode(AppMode.Standard);
+                lw.WindowStartupLocation = WindowStartupLocation.Manual;
+                lw.Left = -20000; lw.Top = -20000;
+                lw.ShowInTaskbar = false; lw.ShowActivated = false;
+                lw.Show(); lw.UpdateLayout();
+                lw.NavigateToLibraryForShot();
+                Size lsize = new Size(1196, 768);
+                lw.Measure(lsize); lw.Arrange(new Rect(lsize)); lw.UpdateLayout();
+                RenderTargetBitmap lrtb = new RenderTargetBitmap(1196, 768, 96, 96, PixelFormats.Pbgra32);
+                lrtb.Render(lw);
+                PngBitmapEncoder lenc = new PngBitmapEncoder();
+                lenc.Frames.Add(BitmapFrame.Create(lrtb));
+                string lfile = Path.Combine(dir, "wpf-library-dark-cruise.png");
+                using (FileStream lfs = File.Create(lfile)) lenc.Save(lfs);
+                lw.Close();
                 return 0;
             }
             catch (Exception ex)

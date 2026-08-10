@@ -250,5 +250,67 @@ namespace CaelusApp
             vm.ToggleDetailCommand.Execute(null);
             Eq(false, vm.DetailVisible);
         }
+
+        private static void TestModePaletteCompleteness()
+        {
+            foreach (AppMode mode in new[] { AppMode.Standard, AppMode.Competitive, AppMode.Custom })
+            {
+                ModeColors c = ModePalette.For(mode);
+                string[] all = { c.AmbientPrimary, c.AmbientSecondary, c.ModeAccentOnDark, c.ModeAccentOnLight };
+                foreach (string hex in all)
+                {
+                    if (String.IsNullOrEmpty(hex)) throw new Exception("empty mode token in " + mode);
+                    Eq(7, hex.Length);
+                    Eq('#', hex[0]);
+                }
+            }
+            Eq("常规", ModePalette.DisplayName(AppMode.Standard));
+            Eq("竞技", ModePalette.DisplayName(AppMode.Competitive));
+            Eq("自定义", ModePalette.DisplayName(AppMode.Custom));
+            Eq(AppMode.Standard, ModePalette.FromPreset(PerformancePreset.Standard));
+            Eq(AppMode.Competitive, ModePalette.FromPreset(PerformancePreset.Competitive));
+            Eq(AppMode.Custom, ModePalette.FromPreset(PerformancePreset.Custom));
+        }
+
+        private static void TestModePaletteDistinct()
+        {
+            ModeColors a = ModePalette.For(AppMode.Standard);
+            ModeColors b = ModePalette.For(AppMode.Competitive);
+            ModeColors c = ModePalette.For(AppMode.Custom);
+            if (a.ModeAccentOnDark == b.ModeAccentOnDark || b.ModeAccentOnDark == c.ModeAccentOnDark
+                || a.ModeAccentOnDark == c.ModeAccentOnDark)
+                throw new Exception("mode accents must be mutually distinct");
+            if (a.AmbientPrimary == b.AmbientPrimary || b.AmbientPrimary == c.AmbientPrimary
+                || a.AmbientPrimary == c.AmbientPrimary)
+                throw new Exception("ambient primaries must be mutually distinct");
+            int[] cyan = Rgb(a.AmbientPrimary);
+            int[] red = Rgb(b.AmbientPrimary);
+            int dist = Math.Abs(cyan[0] - red[0]) + Math.Abs(cyan[1] - red[1]) + Math.Abs(cyan[2] - red[2]);
+            if (dist < 200) throw new Exception("cruise/combat ambient too close: " + dist);
+        }
+
+        private static void TestModeAccentContrast()
+        {
+            ThemeColors dark = Palette.For(UiTone.Dark);
+            ThemeColors light = Palette.For(UiTone.Light);
+            foreach (AppMode mode in new[] { AppMode.Standard, AppMode.Competitive, AppMode.Custom })
+            {
+                ModeColors c = ModePalette.For(mode);
+                double d = Contrast(c.ModeAccentOnDark, dark.Background);
+                if (d < 4.5) throw new Exception(mode + " accent/dark-bg contrast " + d.ToString("0.00"));
+                double l = Contrast(c.ModeAccentOnLight, light.Background);
+                if (l < 4.5) throw new Exception(mode + " accent/light-bg contrast " + l.ToString("0.00"));
+            }
+        }
+
+        private static int[] Rgb(string hex)
+        {
+            return new int[]
+            {
+                Convert.ToInt32(hex.Substring(1, 2), 16),
+                Convert.ToInt32(hex.Substring(3, 2), 16),
+                Convert.ToInt32(hex.Substring(5, 2), 16)
+            };
+        }
     }
 }

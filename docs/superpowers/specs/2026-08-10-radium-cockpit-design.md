@@ -95,7 +95,7 @@
 | 模式 | AmbientPrimary | AmbientSecondary | ModeAccentOnDark | ModeAccentOnLight |
 |------|---------------|------------------|------------------|-------------------|
 | 常规 · 巡航 | `#1FB6D6` | `#2E7DD1` | `#3EC9FF` | `#0E7490` |
-| 竞技 · 战备 | `#E5484D` | `#C22E3E` | `#FF6B74` | `#DC2626` |
+| 竞技 · 战备 | `#E5484D` | `#C22E3E` | `#FF6B74` | `#CC2020` |
 | 自定义 · 工程 | `#8B5CF6` | `#6D4AC8` | `#A78BFA` | `#7C3AED` |
 
 **约束（由自测强制）**：三模式色互异；`ModeAccentOnDark` 对深色 `Background`（#0F1419）对比度 ≥ 4.5:1；`ModeAccentOnLight` 对浅色 `Background`（#F5F7F9）对比度 ≥ 4.5:1。若某值不达标，按 Task 2 先例同色相微调加深/提亮并同步更新本表。

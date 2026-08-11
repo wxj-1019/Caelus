@@ -15,9 +15,20 @@ namespace CaelusApp.WpfHost
         // （Opacity=1、transform=0），而非动效起始帧。实时 UI 始终为 true。
         public static bool Enabled = true;
 
+        // 无限动画帧率上限：net4 WPF 无硬件合成时 RenderTransform/Opacity 动画走 UI 线程
+        // 软件渲染，60fps 下大量 Ellipse 会吃满 CPU。10fps 对慢动画（14-32s 周期）视觉无损，
+        // CPU 降低约 80%。T17 性能验证发现并修复。
+        private const int InfiniteFps = 8;
+
         public static bool Reduced
         {
             get { return !SystemParameters.ClientAreaAnimation; }
+        }
+
+        // 对无限动画应用帧率节流（仅 Pulse/Spin/漂移等 RepeatBehavior.Forever 动画）
+        public static void Throttle(DoubleAnimation anim)
+        {
+            Timeline.SetDesiredFrameRate(anim, InfiniteFps);
         }
 
         // 页面进入：透明度淡入 +（未降级时）20px 上浮，250ms ease-out
@@ -103,6 +114,7 @@ namespace CaelusApp.WpfHost
                 RepeatBehavior = RepeatBehavior.Forever,
                 EasingFunction = new SineEase { EasingMode = EasingMode.EaseInOut }
             };
+            Throttle(anim);
             el.BeginAnimation(UIElement.OpacityProperty, anim);
         }
 
@@ -122,6 +134,7 @@ namespace CaelusApp.WpfHost
             {
                 RepeatBehavior = RepeatBehavior.Forever
             };
+            Throttle(anim);
             rt.BeginAnimation(RotateTransform.AngleProperty, anim);
         }
     }

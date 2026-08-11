@@ -127,6 +127,7 @@ namespace CaelusApp.WpfHost.Controls
                 BeginTime = TimeSpan.FromSeconds(beginDelay),
                 EasingFunction = new SineEase { EasingMode = EasingMode.EaseInOut }
             };
+            Motion.Throttle(scaleAnim);
             scale.BeginAnimation(ScaleTransform.ScaleXProperty, scaleAnim);
             scale.BeginAnimation(ScaleTransform.ScaleYProperty, scaleAnim);
 
@@ -145,6 +146,7 @@ namespace CaelusApp.WpfHost.Controls
                 BeginTime = TimeSpan.FromSeconds(beginDelay),
                 EasingFunction = new SineEase { EasingMode = EasingMode.EaseInOut }
             };
+            Motion.Throttle(anim);
             tt.BeginAnimation(prop, anim);
         }
     }

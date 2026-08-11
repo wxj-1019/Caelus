@@ -8,6 +8,12 @@
   <Color x:Key="InfoColor">#60A5FA</Color>
   <Color x:Key="BrandColor">#D4A847</Color>
 
+  <!-- ===== 语义柔色（状态 chip 等浅底 tint；深色用亮语义色低 alpha） ===== -->
+  <SolidColorBrush x:Key="SuccessSoftBrush" Color="#4ADE8024"/>
+  <SolidColorBrush x:Key="SuccessEdgeBrush" Color="#4ADE8054"/>
+  <SolidColorBrush x:Key="WarningSoftBrush" Color="#FBBF2424"/>
+  <SolidColorBrush x:Key="WarningEdgeBrush" Color="#FBBF2454"/>
+
   <!-- ===== 表面梯度（规格 §3.3：越高越亮；Surface0 近实色半透明叠光晕等效 backdrop-blur） ===== -->
   <Color x:Key="BackgroundColor">#07080D</Color>
   <Color x:Key="Surface0Color">#D212161F</Color>

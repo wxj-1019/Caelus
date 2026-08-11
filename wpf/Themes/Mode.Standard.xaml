@@ -52,4 +52,15 @@
   <SolidColorBrush x:Key="ModeAccentOnLightBrush" Color="{StaticResource ModeAccentOnLightColor}"/>
   <SolidColorBrush x:Key="ModeAccentSoftBrush" Color="#2467E8F9"/>
   <SolidColorBrush x:Key="ModeAccentEdgeBrush" Color="#5467E8F9"/>
+
+  <!-- ===== Hero 结论标题渐变（概览按主题二选一；深色档/浅色档各自静态配色，
+       字典资源画刷的嵌套 DynamicResource 渐变停止不会随换槽重解析，故不用嵌套引用） ===== -->
+  <LinearGradientBrush x:Key="HeroTitleOnDarkBrush" StartPoint="0,0" EndPoint="1,0">
+    <GradientStop Color="#67E8F9" Offset="0"/>
+    <GradientStop Color="#818CF8" Offset="1"/>
+  </LinearGradientBrush>
+  <LinearGradientBrush x:Key="HeroTitleOnLightBrush" StartPoint="0,0" EndPoint="1,0">
+    <GradientStop Color="#0E7490" Offset="0"/>
+    <GradientStop Color="#4F46E5" Offset="1"/>
+  </LinearGradientBrush>
 </ResourceDictionary>

@@ -8,6 +8,12 @@
   <Color x:Key="InfoColor">#2563EB</Color>
   <Color x:Key="BrandColor">#D4A847</Color>
 
+  <!-- ===== 语义柔色（浅色用深语义色低 alpha，保证白底可辨） ===== -->
+  <SolidColorBrush x:Key="SuccessSoftBrush" Color="#2F9E5F24"/>
+  <SolidColorBrush x:Key="SuccessEdgeBrush" Color="#2F9E5F54"/>
+  <SolidColorBrush x:Key="WarningSoftBrush" Color="#D9770624"/>
+  <SolidColorBrush x:Key="WarningEdgeBrush" Color="#D9770654"/>
+
   <!-- ===== 表面梯度（浅色：白色 alpha 递进） ===== -->
   <Color x:Key="BackgroundColor">#F5F7F9</Color>
   <Color x:Key="Surface0Color">#A6FFFFFF</Color>

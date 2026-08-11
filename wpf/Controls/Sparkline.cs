@@ -46,7 +46,7 @@ namespace CaelusApp.WpfHost.Controls
             double range = max - min;
             if (range < 0.001) range = 1;
 
-            // 面积淡填充（描边色取 9% 透明度）
+            // 面积渐变填充（顶部 28% → 底部 0，与 HTML 沙盒 spark-fill 一致）
             Brush stroke = Stroke;
             var scb = stroke as SolidColorBrush;
             if (scb != null)
@@ -62,7 +62,12 @@ namespace CaelusApp.WpfHost.Controls
                     ctx.LineTo(new Point(0, h), true, false);
                 }
                 area.Freeze();
-                dc.DrawGeometry(new SolidColorBrush(Color.FromArgb(23, c.R, c.G, c.B)), null, area);
+                var fill = new LinearGradientBrush(
+                    Color.FromArgb(71, c.R, c.G, c.B),
+                    Color.FromArgb(0, c.R, c.G, c.B),
+                    90);
+                fill.Freeze();
+                dc.DrawGeometry(fill, null, area);
             }
 
             var line = new StreamGeometry();
@@ -78,6 +83,9 @@ namespace CaelusApp.WpfHost.Controls
                 var pen = new Pen(stroke, 1.6) { LineJoin = PenLineJoin.Round };
                 pen.Freeze();
                 dc.DrawGeometry(null, pen, line);
+                // 末端亮点（2.5px，标记最新数据点）
+                Point last = Pt(values, values.Count - 1, w, h, min, range);
+                dc.DrawGeometry(stroke, null, new EllipseGeometry(last, 2.5, 2.5));
             }
         }
 

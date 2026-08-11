@@ -52,4 +52,14 @@
   <SolidColorBrush x:Key="ModeAccentOnLightBrush" Color="{StaticResource ModeAccentOnLightColor}"/>
   <SolidColorBrush x:Key="ModeAccentSoftBrush" Color="#24FB7185"/>
   <SolidColorBrush x:Key="ModeAccentEdgeBrush" Color="#54FB7185"/>
+
+  <!-- ===== Hero 结论标题渐变（同 Mode.Standard 的结构说明） ===== -->
+  <LinearGradientBrush x:Key="HeroTitleOnDarkBrush" StartPoint="0,0" EndPoint="1,0">
+    <GradientStop Color="#FB7185" Offset="0"/>
+    <GradientStop Color="#F97316" Offset="1"/>
+  </LinearGradientBrush>
+  <LinearGradientBrush x:Key="HeroTitleOnLightBrush" StartPoint="0,0" EndPoint="1,0">
+    <GradientStop Color="#CC2020" Offset="0"/>
+    <GradientStop Color="#C2410C" Offset="1"/>
+  </LinearGradientBrush>
 </ResourceDictionary>

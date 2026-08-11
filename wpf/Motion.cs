@@ -83,6 +83,70 @@ namespace CaelusApp.WpfHost
             Animate(scale, ScaleTransform.ScaleYProperty, 0.92, 1, ms);
         }
 
+        // 分区入场：透明度 + 上浮 10px，可带延迟做 staggered 编排（reduced 时直接落位）
+        public static void RiseIn(FrameworkElement element, int delayMs)
+        {
+            if (element == null) return;
+            if (!Enabled)
+            {
+                element.Opacity = 1;
+                return;
+            }
+            int ms = UiMotion.Duration(UiMotion.PageFadeMs, Reduced);
+            element.Opacity = 0;
+            AnimateDelayed(element, UIElement.OpacityProperty, 0, 1, ms, delayMs);
+            if (!UiMotion.AllowsOffset(Reduced)) return;
+            TranslateTransform translate = TranslateOf(element);
+            translate.Y = 10;
+            AnimateDelayed(translate, TranslateTransform.YProperty, 10, 0, ms, delayMs);
+        }
+
+        // 占比条入场生长：左端点为原点 scaleX 0→1（reduced 时直接满宽）
+        public static void GrowX(FrameworkElement element, int delayMs)
+        {
+            if (element == null || !Enabled) return;
+            ScaleTransform scale = ScaleOf(element);
+            element.RenderTransformOrigin = new Point(0, 0.5);
+            scale.ScaleX = 0;
+            AnimateDelayed(scale, ScaleTransform.ScaleXProperty, 0, 1,
+                UiMotion.Duration(800, Reduced), delayMs);
+        }
+
+        // 状态点呼吸脉冲：2s 往返透明度，无限动画按惯例限帧 8fps
+        public static void BreathPulse(UIElement element)
+        {
+            if (element == null) return;
+            if (!Enabled || Reduced)
+            {
+                element.Opacity = 1;
+                return;
+            }
+            var animation = new DoubleAnimation(0.55, 1, TimeSpan.FromSeconds(2))
+            {
+                AutoReverse = true,
+                RepeatBehavior = RepeatBehavior.Forever,
+                EasingFunction = new SineEase { EasingMode = EasingMode.EaseInOut }
+            };
+            Throttle(animation);
+            element.BeginAnimation(UIElement.OpacityProperty, animation, HandoffBehavior.SnapshotAndReplace);
+        }
+
+        // 缩放呼吸（空态主图标邀请感）：fromScale↔toScale 往返，居中缩放
+        public static void BreathScale(FrameworkElement element, double fromScale, double toScale, int seconds)
+        {
+            if (element == null || !Enabled || Reduced) return;
+            ScaleTransform scale = ScaleOf(element);
+            var animation = new DoubleAnimation(fromScale, toScale, TimeSpan.FromSeconds(seconds))
+            {
+                AutoReverse = true,
+                RepeatBehavior = RepeatBehavior.Forever,
+                EasingFunction = new SineEase { EasingMode = EasingMode.EaseInOut }
+            };
+            Throttle(animation);
+            scale.BeginAnimation(ScaleTransform.ScaleXProperty, animation, HandoffBehavior.SnapshotAndReplace);
+            scale.BeginAnimation(ScaleTransform.ScaleYProperty, animation, HandoffBehavior.SnapshotAndReplace);
+        }
+
         public static readonly DependencyProperty LiftProperty = DependencyProperty.RegisterAttached(
             "Lift", typeof(bool), typeof(Motion), new PropertyMetadata(false, OnLiftChanged));
 
@@ -295,6 +359,45 @@ namespace CaelusApp.WpfHost
                 EasingFunction = new CubicEase { EasingMode = EasingMode.EaseOut },
                 FillBehavior = FillBehavior.Stop
             };
+        }
+
+        // 带 BeginTime 延迟的 Animate 变体：延迟期间目标保持调用方预设的初值
+        private static void AnimateDelayed(UIElement target, DependencyProperty property,
+            double from, double to, int milliseconds, int delayMs)
+        {
+            if (!Enabled || milliseconds <= 0)
+            {
+                target.BeginAnimation(property, null);
+                target.SetValue(property, to);
+                return;
+            }
+            DoubleAnimation animation = BuildAnimation(from, to, milliseconds);
+            if (delayMs > 0) animation.BeginTime = TimeSpan.FromMilliseconds(delayMs);
+            animation.Completed += delegate
+            {
+                target.BeginAnimation(property, null);
+                target.SetValue(property, to);
+            };
+            target.BeginAnimation(property, animation, HandoffBehavior.SnapshotAndReplace);
+        }
+
+        private static void AnimateDelayed(Animatable target, DependencyProperty property,
+            double from, double to, int milliseconds, int delayMs)
+        {
+            if (!Enabled || milliseconds <= 0)
+            {
+                target.BeginAnimation(property, null);
+                target.SetValue(property, to);
+                return;
+            }
+            DoubleAnimation animation = BuildAnimation(from, to, milliseconds);
+            if (delayMs > 0) animation.BeginTime = TimeSpan.FromMilliseconds(delayMs);
+            animation.Completed += delegate
+            {
+                target.BeginAnimation(property, null);
+                target.SetValue(property, to);
+            };
+            target.BeginAnimation(property, animation, HandoffBehavior.SnapshotAndReplace);
         }
 
         private static TransformGroup GroupOf(FrameworkElement element)

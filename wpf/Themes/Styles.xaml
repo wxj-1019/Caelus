@@ -355,6 +355,145 @@
     </Setter>
   </Style>
 
+  <!-- HeroGlassCard：概览 Hero 专用——CardEdge 渐变描边 + 卡顶高光线 + 角部 Accent 光晕 -->
+  <Style x:Key="HeroGlassCard" TargetType="controls:GlassCard" BasedOn="{StaticResource GlassCard}">
+    <Setter Property="Padding" Value="20"/>
+    <Setter Property="Template">
+      <Setter.Value>
+        <ControlTemplate TargetType="controls:GlassCard">
+          <Grid>
+            <Border Background="{TemplateBinding Background}"
+                    BorderBrush="{DynamicResource CardEdgeBrush}"
+                    BorderThickness="1" CornerRadius="{TemplateBinding CornerRadius}"/>
+            <Border CornerRadius="{TemplateBinding CornerRadius}"
+                    ClipToBounds="True" IsHitTestVisible="False">
+              <Ellipse Width="320" Height="320"
+                       HorizontalAlignment="Right" VerticalAlignment="Top"
+                       Margin="0,-90,-110,0" Opacity="0.16">
+                <Ellipse.Fill>
+                  <RadialGradientBrush>
+                    <GradientStop Color="{DynamicResource AccentGlowColor}" Offset="0"/>
+                    <GradientStop Color="#00000000" Offset="0.68"/>
+                  </RadialGradientBrush>
+                </Ellipse.Fill>
+              </Ellipse>
+            </Border>
+            <Border Height="1" VerticalAlignment="Top" Margin="28,0,28,0"
+                    Background="{DynamicResource TopHighlightBrush}" IsHitTestVisible="False"/>
+            <ContentPresenter Margin="{TemplateBinding Padding}"/>
+          </Grid>
+        </ControlTemplate>
+      </Setter.Value>
+    </Setter>
+  </Style>
+
+  <!-- EmptyChip：空态虚线 chip（未绑定/未接入类占位值；Border 非 Control 无 Template，
+       用 ContentControl + Rectangle 虚线描边实现） -->
+  <Style x:Key="EmptyChip" TargetType="ContentControl">
+    <Setter Property="HorizontalContentAlignment" Value="Center"/>
+    <Setter Property="VerticalContentAlignment" Value="Center"/>
+    <Setter Property="Template">
+      <Setter.Value>
+        <ControlTemplate TargetType="ContentControl">
+          <Grid>
+            <Rectangle RadiusX="6" RadiusY="6"
+                       Stroke="{DynamicResource BorderStrongBrush}"
+                       StrokeThickness="1" StrokeDashArray="2 2"/>
+            <ContentPresenter Margin="6,1"/>
+          </Grid>
+        </ControlTemplate>
+      </Setter.Value>
+    </Setter>
+  </Style>
+
+  <!-- GameAvatar：游戏行首字母头像（AccentSoft 底 + Accent 描边） -->
+  <Style x:Key="GameAvatar" TargetType="Border">
+    <Setter Property="Width" Value="36"/>
+    <Setter Property="Height" Value="36"/>
+    <Setter Property="CornerRadius" Value="{DynamicResource RadiusSm}"/>
+    <Setter Property="Background" Value="{DynamicResource AccentSoftBrush}"/>
+    <Setter Property="BorderBrush" Value="{DynamicResource AccentEdgeBrush}"/>
+    <Setter Property="BorderThickness" Value="1"/>
+    <Setter Property="VerticalAlignment" Value="Center"/>
+  </Style>
+
+  <!-- StatusChip：游戏行状态徽章；运行中走 success 柔色 tint（DataTrigger） -->
+  <Style x:Key="StatusChip" TargetType="Border">
+    <Setter Property="CornerRadius" Value="{DynamicResource RadiusSm}"/>
+    <Setter Property="Padding" Value="9,4"/>
+    <Setter Property="MinWidth" Value="76"/>
+    <Setter Property="VerticalAlignment" Value="Center"/>
+    <Setter Property="Background" Value="{DynamicResource GlassNavBrush}"/>
+    <Setter Property="BorderBrush" Value="{DynamicResource BorderSubtleBrush}"/>
+    <Setter Property="BorderThickness" Value="1"/>
+    <Style.Triggers>
+      <DataTrigger Binding="{Binding IsRunning}" Value="True">
+        <Setter Property="Background" Value="{DynamicResource SuccessSoftBrush}"/>
+        <Setter Property="BorderBrush" Value="{DynamicResource SuccessEdgeBrush}"/>
+      </DataTrigger>
+    </Style.Triggers>
+  </Style>
+
+  <!-- DropZoneEmpty：空态拖放区（Surface0 底 + 内嵌虚线投放暗示） -->
+  <Style x:Key="DropZoneEmpty" TargetType="ContentControl">
+    <Setter Property="Template">
+      <Setter.Value>
+        <ControlTemplate TargetType="ContentControl">
+          <Grid>
+            <Border Background="{DynamicResource Surface0Brush}"
+                    BorderBrush="{DynamicResource BorderSubtleBrush}"
+                    BorderThickness="1" CornerRadius="{DynamicResource RadiusMd}"/>
+            <Rectangle RadiusX="6" RadiusY="6" Margin="10"
+                       Stroke="{DynamicResource BorderSubtleBrush}" StrokeThickness="1.5"
+                       StrokeDashArray="4 4" IsHitTestVisible="False"/>
+            <ContentPresenter/>
+          </Grid>
+        </ControlTemplate>
+      </Setter.Value>
+    </Setter>
+  </Style>
+
+  <!-- PolicyRow：策略行（SettingsRow 基础上 + 悬停浅底） -->
+  <Style x:Key="PolicyRow" TargetType="Border" BasedOn="{StaticResource SettingsRow}">
+    <Style.Triggers>
+      <Trigger Property="IsMouseOver" Value="True">
+        <Setter Property="Background" Value="{DynamicResource Surface1Brush}"/>
+      </Trigger>
+    </Style.Triggers>
+  </Style>
+
+  <!-- WarnTag：风险策略的"需注意"小标签（Warning 柔色） -->
+  <Style x:Key="WarnTag" TargetType="Border">
+    <Setter Property="CornerRadius" Value="4"/>
+    <Setter Property="Padding" Value="5,1"/>
+    <Setter Property="Background" Value="{DynamicResource WarningSoftBrush}"/>
+    <Setter Property="BorderBrush" Value="{DynamicResource WarningEdgeBrush}"/>
+    <Setter Property="BorderThickness" Value="1"/>
+    <Setter Property="VerticalAlignment" Value="Center"/>
+  </Style>
+
+  <!-- SegValueChip：分段控件标题旁的当前档位回显（Accent 柔色） -->
+  <Style x:Key="SegValueChip" TargetType="Border">
+    <Setter Property="CornerRadius" Value="4"/>
+    <Setter Property="Padding" Value="7,1"/>
+    <Setter Property="Background" Value="{DynamicResource AccentSoftBrush}"/>
+    <Setter Property="BorderBrush" Value="{DynamicResource AccentEdgeBrush}"/>
+    <Setter Property="BorderThickness" Value="1"/>
+    <Setter Property="VerticalAlignment" Value="Center"/>
+  </Style>
+
+  <!-- ResultRow：体检结果行（SettingsRow 基础上 + 悬停浅底 + 警告项 Warning tint） -->
+  <Style x:Key="ResultRow" TargetType="Border" BasedOn="{StaticResource SettingsRow}">
+    <Style.Triggers>
+      <Trigger Property="IsMouseOver" Value="True">
+        <Setter Property="Background" Value="{DynamicResource Surface1Brush}"/>
+      </Trigger>
+      <DataTrigger Binding="{Binding Warn}" Value="True">
+        <Setter Property="Background" Value="{DynamicResource WarningSoftBrush}"/>
+      </DataTrigger>
+    </Style.Triggers>
+  </Style>
+
   <Style x:Key="DisplayNumber" TargetType="TextBlock">
     <Setter Property="FontSize" Value="{DynamicResource FontSizeHero}"/>
     <Setter Property="FontWeight" Value="Normal"/>

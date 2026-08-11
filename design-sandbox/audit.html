@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<html lang="zh-CN" data-theme="dark" data-mode="standard">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Caelus 设计沙盒 · 系统体检</title>
+<link rel="stylesheet" href="tokens.css">
+<link rel="stylesheet" href="sandbox.css">
+</head>
+<body>
+
+<div class="aurora" aria-hidden="true">
+  <div class="aurora-blob aurora-blob-1"></div>
+  <div class="aurora-blob aurora-blob-2"></div>
+  <div class="aurora-blob aurora-blob-3"></div>
+</div>
+
+<div class="app-shell">
+  <header class="titlebar">
+    <div class="titlebar-brand">C A E L U S <span class="titlebar-badge">SANDBOX</span></div>
+    <div class="titlebar-buttons">
+      <button class="win-btn">−</button><button class="win-btn">□</button><button class="win-btn win-btn-close">×</button>
+    </div>
+  </header>
+
+  <div class="app-body">
+    <aside class="sidebar">
+      <div class="sidebar-brand">
+        <p class="brand-name">caelus</p>
+        <p class="brand-sub">游戏环境控制台</p>
+      </div>
+      <nav class="sidebar-nav">
+        <div class="nav-group-label">工作台</div>
+        <button class="nav-item" data-nav-demo><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><path d="M12 2l3 7h7l-5.5 4.5L18 21l-6-4-6 4 1.5-7.5L2 9h7z"/></svg>概览</button>
+        <button class="nav-item" data-nav-demo><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><path d="M4 7l8-4 8 4-8 4-8-4z M4 7v10l8 4 8-4V7"/></svg>游戏库</button>
+        <div class="nav-group-label">游戏调优</div>
+        <button class="nav-item" data-nav-demo><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><path d="M4 8h9 M17 8h3 M4 16h3 M11 16h9 M13 8a2 2 0 1 1 4 0 2 2 0 1 1-4 0 M7 16a2 2 0 1 1 4 0 2 2 0 1 1-4 0"/></svg>优化策略</button>
+        <button class="nav-item" data-nav-demo><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><path d="M7 5h10a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V7a2 2 0 0 1 2-2z M9 1v4 M15 1v4 M9 19v4 M15 19v4 M1 9h4 M1 15h4 M19 9h4 M19 15h4"/></svg>显卡</button>
+        <button class="nav-item" data-nav-demo><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><path d="M12 3l7 3v5c0 4.5-3 8.5-7 10-4-1.5-7-5.5-7-10V6z"/></svg>反作弊专项</button>
+        <div class="nav-group-label">系统</div>
+        <button class="nav-item" data-nav-demo><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><path d="M9 12a3 3 0 1 1 6 0 3 3 0 1 1-6 0 M12 2v3 M12 19v3 M2 12h3 M19 12h3 M4.9 4.9l2.1 2.1 M17 17l2.1 2.1 M19.1 4.9L17 7 M7 17l-2.1 2.1"/></svg>系统环境</button>
+        <button class="nav-item" data-nav-demo><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><path d="M8 6h13 M8 12h13 M8 18h13 M3 6l1 1 2-2 M3 12l1 1 2-2 M3 18l1 1 2-2"/></svg>白名单</button>
+        <div class="nav-group-label">诊断</div>
+        <button class="nav-item is-checked" data-nav-demo><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><path d="M3 12h4l3-8 4 16 3-8h4"/></svg>系统体检</button>
+        <button class="nav-item" data-nav-demo><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><path d="M4 6h16 M4 12h16 M4 18h10"/></svg>日志</button>
+        <div class="nav-group-label">性能模式</div>
+        <div style="margin: 0 8px 4px;">
+          <div class="segment-host" style="display: flex; width: 100%;">
+            <div class="segment-indicator"></div>
+            <button class="segment-item is-checked" style="flex: 1;" data-sandbox-mode="standard">巡航</button>
+            <button class="segment-item" style="flex: 1;" data-sandbox-mode="competitive">竞技</button>
+            <button class="segment-item" style="flex: 1;" data-sandbox-mode="custom">自定义</button>
+          </div>
+        </div>
+        <p style="margin: 3px 14px 6px 18px; font-size: 9px; color: var(--text-tertiary);">影响调度、压制与页面中的可编辑项</p>
+      </nav>
+      <div class="sidebar-bottom">
+        <button class="nav-item" data-nav-demo><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><path d="M3 12a9 9 0 1 1 18 0 9 9 0 1 1-18 0 M12 5v2 M12 17v2 M5 12h2 M17 12h2 M12 12h0.01"/></svg>设置</button>
+        <button class="nav-item" data-nav-demo><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><path d="M3 12a9 9 0 1 1 18 0 9 9 0 1 1-18 0 M12 11v5 M12 8h0.01"/></svg>关于</button>
+      </div>
+    </aside>
+
+    <main class="content">
+      <div class="content-inner">
+
+        <!-- 页头 + 探测按钮 -->
+        <div style="display:flex; align-items:flex-end; justify-content:space-between; gap:16px; margin-bottom:16px; flex-wrap:wrap;" class="rise-in rise-in-1">
+          <div>
+            <h1 class="page-header">系统体检</h1>
+            <p class="page-subtitle">探测能力、常驻项与潜在干扰，给出可执行结论</p>
+          </div>
+          <div style="display:flex; gap:8px;">
+            <button class="btn btn-primary">快速 3s</button>
+            <button class="btn btn-ghost">精确 30s</button>
+            <button class="btn btn-ghost">NV 探测</button>
+            <button class="btn btn-ghost">AMD 探测</button>
+          </div>
+        </div>
+
+        <!-- 健康摘要条 -->
+        <div class="status-banner rise-in rise-in-2" style="margin-bottom:18px; padding:14px 16px;">
+          <div class="health-banner is-caution">
+            <span class="score">82</span>
+            <span class="score-label">分 · 良好</span>
+            <span class="sep"></span>
+            <span class="concern-chip">
+              <span class="pulse-dot" style="background:var(--warning);"></span>
+              3 项需关注
+            </span>
+            <span class="text-tertiary" style="font-size:11px;">· 上次体检：2 分钟前（精确探测）</span>
+          </div>
+        </div>
+
+        <!-- 4 指标卡 -->
+        <div style="display:grid; grid-template-columns:repeat(4,1fr); gap:12px; margin-bottom:20px;" class="rise-in rise-in-2">
+          <div class="metric-panel card-interactive">
+            <p class="card-label">能力项</p>
+            <p class="metric-number" style="margin-top:8px;">3</p>
+            <p class="text-tertiary" style="font-size:10px; margin:6px 0 0;">检测到的硬件能力</p>
+          </div>
+          <div class="metric-panel card-interactive">
+            <p class="card-label">机器指标</p>
+            <p class="metric-number" style="margin-top:8px;">3</p>
+            <p class="text-tertiary" style="font-size:10px; margin:6px 0 0;">已识别型号</p>
+          </div>
+          <div class="metric-panel card-interactive is-caution">
+            <p class="card-label">常驻项</p>
+            <p class="metric-number" style="margin-top:8px;">4</p>
+            <p class="text-tertiary" style="font-size:10px; margin:6px 0 0;">2 项可能干扰游戏</p>
+          </div>
+          <div class="metric-panel card-interactive is-caution">
+            <p class="card-label">判定</p>
+            <p class="metric-number" style="margin-top:8px;">2</p>
+            <p class="text-tertiary" style="font-size:10px; margin:6px 0 0;">含 1 项需优化</p>
+          </div>
+        </div>
+
+        <!-- 能力项 -->
+        <div class="rise-in rise-in-3" style="margin-bottom:18px;">
+          <div class="policy-group-header">
+            <span class="group-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg></span>
+            <h2>能力项</h2>
+            <span class="count">3 项</span>
+          </div>
+          <div class="settings-group">
+            <div class="result-row"><span class="cat-dot"></span><div class="row-body"><div class="row-head"><span class="row-name">CPU 虚拟化</span><span class="row-value">已启用</span></div><div class="row-evidence">cpu_feature: svm</div></div><span></span></div>
+            <div class="result-row"><span class="cat-dot"></span><div class="row-body"><div class="row-head"><span class="row-name">硬件虚拟化 VT-x</span><span class="row-value">已启用</span></div><div class="row-evidence">cpu_feature: vmx</div></div><span></span></div>
+            <div class="result-row"><span class="cat-dot"></span><div class="row-body"><div class="row-head"><span class="row-name">系统盘类型</span><span class="row-value">NVMe SSD</span></div><div class="row-evidence">physicaldrive0 · NVMe</div></div><span></span></div>
+          </div>
+        </div>
+
+        <!-- 机器指标 -->
+        <div class="rise-in rise-in-3" style="margin-bottom:18px;">
+          <div class="policy-group-header">
+            <span class="group-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><rect x="3" y="6" width="18" height="13" rx="2"/><path d="M8 6V4h8v2"/></svg></span>
+            <h2>机器指标</h2>
+            <span class="count">3 项</span>
+          </div>
+          <div class="settings-group">
+            <div class="result-row"><span class="cat-dot"></span><div class="row-body"><div class="row-head"><span class="row-name">处理器</span><span class="row-value">AMD Ryzen 7 5800X</span></div><div class="row-evidence">8 核 16 线程 · 3.8 GHz</div></div><span></span></div>
+            <div class="result-row"><span class="cat-dot"></span><div class="row-body"><div class="row-head"><span class="row-name">图形设备</span><span class="row-value">NVIDIA RTX 4070</span></div><div class="row-evidence">12 GB VRAM · 驱动 566.14</div></div><span></span></div>
+            <div class="result-row"><span class="cat-dot"></span><div class="row-body"><div class="row-head"><span class="row-name">内存</span><span class="row-value">32 GB DDR4</span></div><div class="row-evidence">3200 MHz · 双通道</div></div><span></span></div>
+          </div>
+        </div>
+
+        <!-- 常驻项 -->
+        <div class="rise-in rise-in-4" style="margin-bottom:18px;">
+          <div class="policy-group-header">
+            <span class="group-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><path d="M4 6h16 M4 12h16 M4 18h10"/></svg></span>
+            <h2>常驻项</h2>
+            <span class="count"><span class="on" style="color:var(--warning);">2</span>/4 项需关注</span>
+          </div>
+          <div class="settings-group">
+            <div class="result-row is-warn"><span class="cat-dot"></span><div class="row-body"><div class="row-head"><span class="row-name">Xbox Game Bar</span><span class="row-value">常驻</span></div><div class="row-evidence">process: GameBar.exe</div><div class="row-note">游戏覆盖会在部分全屏游戏中触发钩子，建议在设置中关闭。</div></div><span></span></div>
+            <div class="result-row is-warn"><span class="cat-dot"></span><div class="row-body"><div class="row-head"><span class="row-name">GameDVR 后台录制</span><span class="row-value">常驻</span></div><div class="row-evidence">service: BcastDVRUserService</div><div class="row-note">后台录制持续占用磁盘与编码资源，竞技场景建议禁用。</div></div><span></span></div>
+            <div class="result-row"><span class="cat-dot"></span><div class="row-body"><div class="row-head"><span class="row-name">MSI Afterburner</span><span class="row-value">常驻</span></div><div class="row-evidence">process: MSIAfterburner.exe</div></div><span></span></div>
+            <div class="result-row"><span class="cat-dot"></span><div class="row-body"><div class="row-head"><span class="row-name">Riot Client</span><span class="row-value">常驻</span></div><div class="row-evidence">process: RiotClientServices.exe</div></div><span></span></div>
+          </div>
+        </div>
+
+        <!-- 判定 -->
+        <div class="rise-in rise-in-4" style="margin-bottom:24px;">
+          <div class="policy-group-header">
+            <span class="group-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><path d="M12 3l7 3v5c0 4.5-3 8.5-7 10-4-1.5-7-5.5-7-10V6z"/></svg></span>
+            <h2>判定</h2>
+            <span class="count">2 项</span>
+          </div>
+          <div class="settings-group">
+            <div class="result-row is-warn"><span class="cat-dot"></span><div class="row-body"><div class="row-head"><span class="row-name">后台占用峰值</span><span class="row-value">偏高 18%</span></div><div class="row-evidence">peak_cpu: 18.4%</div><div class="row-note">非游戏时段后台峰值偏高，可在优化策略中开启"后台进程压制"。</div></div><span></span></div>
+            <div class="result-row"><span class="cat-dot"></span><div class="row-body"><div class="row-head"><span class="row-name">综合评估</span><span class="row-value" style="color:var(--success);">良好</span></div><div class="row-evidence">score: 82/100</div><div class="row-note">硬件能力充足，仅常驻项需精简；按建议处置后可达 90+。</div></div><span></span></div>
+          </div>
+        </div>
+
+        <!-- 扫描态预览 -->
+        <div style="margin: 28px 0 8px; display: flex; align-items: center; gap: 12px;">
+          <span class="text-tertiary" style="font-size: 10px; letter-spacing: .12em;">扫描态预览</span>
+          <div style="flex: 1; height: 1px; background: var(--border-subtle);"></div>
+        </div>
+        <div class="settings-group rise-in rise-in-5" style="padding: 36px 28px; margin-bottom: 24px; display: flex; flex-direction: column; align-items: center; gap: 16px;">
+          <div style="position: relative; width: 120px; height: 120px;">
+            <svg class="progress-orb" viewBox="0 0 120 120">
+              <circle class="track" cx="60" cy="60" r="52" fill="none" stroke-width="6"/>
+              <circle class="arc" cx="60" cy="60" r="52" fill="none" stroke-width="6" stroke-dasharray="327" transform="rotate(-90 60 60)"/>
+            </svg>
+            <div class="progress-orb-center">
+              <span class="pct">75%</span>
+              <span class="phase">扫描进程</span>
+            </div>
+          </div>
+          <div style="text-align: center;">
+            <div class="text-mode-accent" style="font-size: var(--font-size-body); font-weight: 600;">正在枚举常驻进程</div>
+            <div class="text-secondary" style="font-size: 11px; margin-top: 4px;">精确探测约需 30 秒，期间请勿启动游戏</div>
+          </div>
+        </div>
+
+      </div>
+    </main>
+  </div>
+</div>
+
+<div class="sandbox-toolbar">
+  <span class="sandbox-toolbar-label">主题</span>
+  <div class="segment-host"><div class="segment-indicator"></div>
+    <button class="segment-item is-checked" data-sandbox-theme="dark">深色</button>
+    <button class="segment-item" data-sandbox-theme="light">浅色</button>
+  </div>
+  <span class="sandbox-toolbar-label">模式</span>
+  <div class="segment-host"><div class="segment-indicator"></div>
+    <button class="segment-item is-checked" data-sandbox-mode="standard">巡航</button>
+    <button class="segment-item" data-sandbox-mode="competitive">竞技</button>
+    <button class="segment-item" data-sandbox-mode="custom">自定义</button>
+  </div>
+  <a href="index.html" style="color: var(--mode-accent); font-size: 10px;">组件展示 →</a>
+</div>
+
+<script src="sandbox.js"></script>
+</body>
+</html>

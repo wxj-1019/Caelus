@@ -1,0 +1,262 @@
+<!DOCTYPE html>
+<html lang="zh-CN" data-theme="dark" data-mode="standard">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Caelus 设计沙盒 · 组件展示</title>
+<link rel="stylesheet" href="tokens.css">
+<link rel="stylesheet" href="sandbox.css">
+</head>
+<body>
+
+<!-- Aurora 环境光层 -->
+<div class="aurora" aria-hidden="true">
+  <div class="aurora-blob aurora-blob-1"></div>
+  <div class="aurora-blob aurora-blob-2"></div>
+  <div class="aurora-blob aurora-blob-3"></div>
+</div>
+
+<main class="showcase">
+  <h1 class="page-header">Caelus 设计沙盒</h1>
+  <p class="page-subtitle">Aurora Bento 组件展示 · 与 <span class="xaml-key">wpf/Themes/Styles.xaml</span> 一一对应 ·
+    <a href="overview.html" style="color: var(--mode-accent);">查看概览页骨架 →</a></p>
+
+  <!-- ===================== 排版 ===================== -->
+  <section class="showcase-section">
+    <h2>排版</h2>
+    <p class="demo-note">Tokens.xaml 字号阶梯 · DisplayNumber / MetricNumber 使用 tabular-nums</p>
+    <div class="card demo-col">
+      <p class="display-number">40 <span class="xaml-key">FontSizeHero</span></p>
+      <p class="metric-number">24 <span class="xaml-key">FontSizeMetric</span></p>
+      <p class="page-header" style="font-size: var(--font-size-section);">页面标题 24 <span class="xaml-key">PageHeader</span></p>
+      <p style="font-size: var(--font-size-title); font-weight: 600; margin: 0;">视图标题 18 <span class="xaml-key">FontSizeTitle</span></p>
+      <p style="font-size: var(--font-size-body); margin: 0;">正文 14 <span class="xaml-key">FontSizeBody</span></p>
+      <p style="font-size: var(--font-size-caption); margin: 0;">说明 12 <span class="xaml-key">FontSizeCaption</span></p>
+      <p class="card-label">卡片标签 11 <span class="xaml-key">CardLabel</span></p>
+      <p class="mono" style="margin: 0;">Consolas 12 等宽 <span class="xaml-key">FontMono</span></p>
+    </div>
+  </section>
+
+  <!-- ===================== 按钮 ===================== -->
+  <section class="showcase-section">
+    <h2>按钮</h2>
+    <p class="demo-note">悬停 / 按压 / 禁用三态 · 按压带 scale(.97) 下沉</p>
+    <div class="card demo-row">
+      <button class="btn btn-primary">主要操作 <span class="xaml-key">PrimaryButton</span></button>
+      <button class="btn btn-ghost">次要操作 <span class="xaml-key">GhostButton</span></button>
+      <button class="btn btn-danger">危险操作 <span class="xaml-key">DangerButton</span></button>
+      <button class="btn btn-primary" disabled>禁用</button>
+      <button class="btn btn-ghost" disabled>禁用</button>
+    </div>
+  </section>
+
+  <!-- ===================== 徽章与状态 ===================== -->
+  <section class="showcase-section">
+    <h2>徽章与状态</h2>
+    <p class="demo-note">StatusBadge = accent-soft 底 + accent-edge 描边 · StatusBanner 为页面级提示条</p>
+    <div class="demo-col">
+      <div class="demo-row">
+        <span class="status-badge">
+          <span style="width: 7px; height: 7px; border-radius: 50%; background: var(--accent-primary);"></span>
+          <strong>预览模式</strong>
+          <span class="text-secondary">样例数据</span>
+        </span>
+        <span class="status-badge"><span class="text-tertiary">样例模式</span><strong class="text-accent">巡航</strong></span>
+      </div>
+      <div class="status-banner" style="width: 100%;">
+        <span class="text-secondary" style="font-size: 11px;">StatusBanner：用于设置页的提示条，Surface1 + RadiusSm。</span>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===================== 卡片 ===================== -->
+  <section class="showcase-section">
+    <h2>卡片</h2>
+    <p class="demo-note">Surface0 半透明叠在 Aurora 光晕上 · 卡顶高光线 · GlassCard 渐变描边</p>
+    <div class="demo-grid-3">
+      <div class="card">
+        <p class="section-title">标准卡片</p>
+        <p class="card-label" style="margin-top: 6px;">CardBorder · Surface0</p>
+      </div>
+      <div class="card card-hero">
+        <p class="section-title">Hero 卡片</p>
+        <p class="card-label" style="margin-top: 6px;">HeroCardBorder · Surface1</p>
+      </div>
+      <div class="glass-card">
+        <p class="section-title">玻璃卡片</p>
+        <p class="card-label" style="margin-top: 6px;">GlassCard · 渐变描边</p>
+      </div>
+    </div>
+    <div class="settings-group" style="margin-top: 12px;">
+      <div class="settings-row">
+        <span class="card-label">设置行一（SettingsRow）</span>
+        <input type="checkbox" class="toggle" checked>
+      </div>
+      <div class="settings-row">
+        <span class="card-label">设置行二 · 行间距细分隔线</span>
+        <input type="checkbox" class="toggle">
+      </div>
+      <div class="settings-row">
+        <span class="card-label">设置行三 · 禁用态</span>
+        <input type="checkbox" class="toggle" disabled>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===================== 分段控件 ===================== -->
+  <section class="showcase-section">
+    <h2>分段控件</h2>
+    <p class="demo-note">SegmentedControl：滑动指示器（accent-soft）+ 选中项 accent 文字加粗 · 点击可切换</p>
+    <div class="card demo-row">
+      <div class="segment-host">
+        <div class="segment-indicator"></div>
+        <button class="segment-item is-checked">均衡</button>
+        <button class="segment-item">性能</button>
+        <button class="segment-item">极致</button>
+      </div>
+      <div class="segment-host">
+        <div class="segment-indicator"></div>
+        <button class="segment-item is-checked">巡航</button>
+        <button class="segment-item">竞技</button>
+        <button class="segment-item">自定义</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===================== 开关 ===================== -->
+  <section class="showcase-section">
+    <h2>开关</h2>
+    <p class="demo-note">PolicyToggle 38×22 · 选中轨道 = mode-accent · 滑块 16px 平移</p>
+    <div class="card demo-row">
+      <input type="checkbox" class="toggle" checked>
+      <input type="checkbox" class="toggle">
+      <input type="checkbox" class="toggle" checked disabled>
+      <input type="checkbox" class="toggle" disabled>
+    </div>
+  </section>
+
+  <!-- ===================== 输入框 ===================== -->
+  <section class="showcase-section">
+    <h2>输入框</h2>
+    <p class="demo-note">InputBox · Surface1 底 + border-strong 描边 · 选区 accent-soft</p>
+    <div class="card demo-row">
+      <input class="input" type="text" placeholder="输入游戏路径…" style="width: 260px;">
+      <input class="input" type="text" value="C:\Games\League of Legends" style="width: 260px;">
+    </div>
+  </section>
+
+  <!-- ===================== 导航项 ===================== -->
+  <section class="showcase-section">
+    <h2>导航项</h2>
+    <p class="demo-note">NavItem：选中 = accent-soft 底 + accent-edge 描边 + mode-accent 文字 · 点击可切换</p>
+    <div class="card" style="padding: 8px; width: 220px;">
+      <div class="nav-group-label" style="margin-left: 10px;">工作台</div>
+      <button class="nav-item is-checked" data-nav-demo>
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><path d="M12 2l3 7h7l-5.5 4.5L18 21l-6-4-6 4 1.5-7.5L2 9h7z"/></svg>
+        概览
+      </button>
+      <button class="nav-item" data-nav-demo>
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><path d="M4 7l8-4 8 4-8 4-8-4z M4 7v10l8 4 8-4V7"/></svg>
+        游戏库
+      </button>
+      <button class="nav-item" data-nav-demo>
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><path d="M12 3l7 3v5c0 4.5-3 8.5-7 10-4-1.5-7-5.5-7-10V6z"/></svg>
+        反作弊专项
+      </button>
+    </div>
+  </section>
+
+  <!-- ===================== CaelusCore ===================== -->
+  <section class="showcase-section">
+    <h2>CaelusCore</h2>
+    <p class="demo-note">概览 Hero 中心件 · 外虚线环正转 14s · 中双弧环反转 22s · 内刻度环静止</p>
+    <div class="card card-hero demo-row" style="padding: 28px;">
+      <span class="caelus-core">
+        <span class="core-glow"></span>
+        <svg viewBox="0 0 132 132">
+          <g class="ring-outer">
+            <circle cx="66" cy="66" r="56" fill="none" stroke="var(--border-strong)" stroke-width="1" stroke-dasharray="3 7"/>
+            <circle cx="66" cy="14" r="2.5" fill="var(--accent-primary)"/>
+          </g>
+          <g class="ring-mid">
+            <circle cx="66" cy="66" r="46" fill="none" stroke="var(--accent-primary)" stroke-width="3" stroke-dasharray="72 217" stroke-linecap="round"/>
+            <circle cx="66" cy="66" r="46" fill="none" stroke="var(--accent-edge)" stroke-width="3" stroke-dasharray="72 217" stroke-linecap="round" transform="rotate(180 66 66)"/>
+          </g>
+          <circle cx="66" cy="66" r="36" fill="none" stroke="var(--border-subtle)" stroke-width="4" stroke-dasharray="2 4"/>
+          <circle cx="66" cy="66" r="30" fill="var(--surface-1)" stroke="var(--accent-edge)" stroke-width="1"/>
+        </svg>
+        <span class="core-center-label">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="var(--accent-primary)"><path d="M13 2L4 14h6l-1 8 9-12h-6z"/></svg>
+          <span class="mode-name">巡航</span>
+        </span>
+      </span>
+      <div class="demo-col" style="flex: 1;">
+        <p class="card-label">CAELUS CORE</p>
+        <p class="section-title">模式标识与品牌核心</p>
+        <p class="section-subtitle">随 data-mode 切换三环配色；动画时长由模式令牌控制。</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===================== 指标卡 ===================== -->
+  <section class="showcase-section">
+    <h2>指标卡</h2>
+    <p class="demo-note">MetricPanel + Sparkline + 底部占比条（TrackBrush + 语义色）</p>
+    <div class="demo-grid-3">
+      <div class="metric-panel">
+        <div style="display: flex; justify-content: space-between;">
+          <p class="card-label">GPU 温度</p><p class="text-tertiary" style="font-size: 10px; margin: 0;">样例值</p>
+        </div>
+        <p class="metric-number" style="margin-top: 8px;">62°C</p>
+        <svg height="32" width="100%" viewBox="0 0 100 32" preserveAspectRatio="none" style="margin: 8px 0;">
+          <polyline fill="none" stroke="var(--accent-primary)" stroke-width="1.5"
+            points="0,22 10,20 20,24 30,18 40,19 50,14 60,16 70,11 80,13 90,9 100,12"/>
+        </svg>
+        <div style="height: 3px; border-radius: 2px; background: var(--track); overflow: hidden;">
+          <div style="width: 62%; height: 100%; border-radius: 2px; background: var(--success);"></div>
+        </div>
+      </div>
+      <div class="metric-panel">
+        <div style="display: flex; justify-content: space-between;">
+          <p class="card-label">内存占用</p><p class="text-tertiary" style="font-size: 10px; margin: 0;">样例值</p>
+        </div>
+        <p class="metric-number" style="margin-top: 8px;">11.4 GB</p>
+        <p class="text-tertiary" style="font-size: 10px; margin: 8px 0;">来自预览数据源</p>
+        <div style="height: 3px; border-radius: 2px; background: var(--track); overflow: hidden;">
+          <div style="width: 71%; height: 100%; border-radius: 2px; background: var(--warning);"></div>
+        </div>
+      </div>
+      <div class="metric-panel">
+        <div style="display: flex; justify-content: space-between;">
+          <p class="card-label">后台压制</p><p class="text-tertiary" style="font-size: 10px; margin: 0;">样例值</p>
+        </div>
+        <p class="metric-number" style="margin-top: 8px;">14 项</p>
+        <p class="text-tertiary" style="font-size: 10px; margin: 8px 0;">来自预览数据源</p>
+        <div style="height: 3px; border-radius: 2px; background: var(--track); overflow: hidden;">
+          <div style="width: 34%; height: 100%; border-radius: 2px; background: var(--info);"></div>
+        </div>
+      </div>
+    </div>
+  </section>
+</main>
+
+<!-- 沙盒工具条：主题 × 模式切换 -->
+<div class="sandbox-toolbar">
+  <span class="sandbox-toolbar-label">主题</span>
+  <div class="segment-host">
+    <div class="segment-indicator"></div>
+    <button class="segment-item is-checked" data-sandbox-theme="dark">深色</button>
+    <button class="segment-item" data-sandbox-theme="light">浅色</button>
+  </div>
+  <span class="sandbox-toolbar-label">模式</span>
+  <div class="segment-host">
+    <div class="segment-indicator"></div>
+    <button class="segment-item is-checked" data-sandbox-mode="standard">巡航</button>
+    <button class="segment-item" data-sandbox-mode="competitive">竞技</button>
+    <button class="segment-item" data-sandbox-mode="custom">自定义</button>
+  </div>
+</div>
+
+<script src="sandbox.js"></script>
+</body>
+</html>

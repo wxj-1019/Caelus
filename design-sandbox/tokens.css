@@ -1,0 +1,207 @@
+/* ==========================================================================
+   Caelus Aurora Bento — Design Tokens (CSS export)
+   --------------------------------------------------------------------------
+   单一事实来源（Source of Truth）：
+     wpf/Themes/Tokens.xaml          → 字体 / 字号 / 间距 / 圆角
+     wpf/Themes/Colors.Dark.xaml     → [data-theme="dark"]（默认）
+     wpf/Themes/Colors.Light.xaml    → [data-theme="light"]
+     wpf/Themes/Mode.Standard.xaml   → [data-mode="standard"]（默认，巡航）
+     wpf/Themes/Mode.Competitive.xaml→ [data-mode="competitive"]（竞技）
+     wpf/Themes/Mode.Custom.xaml     → [data-mode="custom"]（自定义）
+
+   命名映射规则：XAML 的 PascalCase 键 → CSS 的 --kebab-case 变量
+     Surface0Brush      → --surface-0
+     TextPrimaryBrush   → --text-primary
+     ModeAccentBrush    → --mode-accent
+   XAML 的 ARGB (#AARRGGBB) → CSS 的 #RRGGBBAA
+
+   修改规则：先改 wpf/Themes/*.xaml，再同步本文件；不要只改一边。
+   ========================================================================== */
+
+:root {
+  /* ---- 字体（Tokens.xaml） ---- */
+  --font-ui: "Microsoft YaHei UI", "Segoe UI", "PingFang SC", system-ui, sans-serif;
+  --font-mono: Consolas, "Cascadia Mono", "Courier New", monospace;
+
+  /* ---- 字号（Tokens.xaml，WPF px @96DPI = CSS px） ---- */
+  --font-size-display: 24px;
+  --font-size-title: 18px;
+  --font-size-body: 14px;
+  --font-size-caption: 12px;
+  --font-size-mono: 12px;
+  --font-size-section: 24px;
+  --font-size-hero: 40px;
+  --font-size-metric: 24px;
+
+  /* ---- 间距（Tokens.xaml） ---- */
+  --space-xs: 4px;
+  --space-sm: 8px;
+  --space-md: 12px;
+  --space-lg: 16px;
+  --space-xl: 24px;
+  --space-2xl: 32px;
+
+  /* ---- 圆角（Tokens.xaml） ---- */
+  --radius-sm: 6px;
+  --radius-md: 8px;
+  --radius-lg: 8px;
+}
+
+/* ==========================================================================
+   深色主题（Colors.Dark.xaml）—— 默认
+   ========================================================================== */
+:root,
+[data-theme="dark"] {
+  color-scheme: dark;
+
+  /* 语义色 */
+  --success: #4ADE80;
+  --warning: #FBBF24;
+  --danger: #F87171;
+  --info: #60A5FA;
+  --brand: #D4A847;
+
+  /* 表面梯度（越高越亮；Surface0 半透明叠在 Aurora 光晕上） */
+  --background: #07080D;
+  --surface-0: #12161FD2;
+  --surface-1: #191E2EE0;
+  --surface-2: #222738E8;
+
+  /* 文字（正文对背景对比度 ≥ 4.5:1） */
+  --text-primary: #F6F8FC;
+  --text-secondary: #99A0AE;
+  --text-tertiary: #6B7280;
+
+  /* 描边体系（玻璃 2.0：上亮下隐） */
+  --border-subtle: #FFFFFF1F;
+  --border-strong: #FFFFFF42;
+  --top-highlight: linear-gradient(90deg, #FFFFFF00, #FFFFFF59, #FFFFFF00);
+  --card-edge: linear-gradient(180deg, #FFFFFF52, #FFFFFF1A 45%, #FFFFFF0A);
+
+  /* 分段控件选中态（深色旗舰：浅底深字，规格 §6） */
+  --seg-selected: #F2F5FA;
+  --seg-selected-text: #0B0E16;
+
+  /* 兼容别名层（旧键，逐页回收中；新代码勿用） */
+  --surface: #161C22;
+  --surface-raised: #1A2028;
+  --border: #26313B;
+  --track: #FFFFFF1A;
+
+  /* 模式主色解析：深色用 OnDark 变体 */
+  --mode-accent: var(--mode-accent-on-dark);
+}
+
+/* ==========================================================================
+   浅色主题（Colors.Light.xaml）
+   ========================================================================== */
+[data-theme="light"] {
+  color-scheme: light;
+
+  --success: #2F9E5F;
+  --warning: #D97706;
+  --danger: #DC2626;
+  --info: #2563EB;
+  --brand: #D4A847;
+
+  --background: #F5F7F9;
+  --surface-0: #FFFFFFA6;
+  --surface-1: #FFFFFFBF;
+  --surface-2: #FFFFFFF2;
+
+  --text-primary: #141F29;
+  --text-secondary: #61727E;
+  --text-tertiary: #848F96;
+
+  --border-subtle: #0000000F;
+  --border-strong: #0000001A;
+  --top-highlight: linear-gradient(90deg, #FFFFFF00, #FFFFFF99, #FFFFFF00);
+  --card-edge: linear-gradient(180deg, #0000001F, #0000000A 45%, #00000005);
+
+  --seg-selected: #FFFFFF;
+  --seg-selected-text: #141F29;
+
+  --surface: #FFFFFF;
+  --surface-raised: #FAFBFC;
+  --border: #D8E0E6;
+  --track: #00000014;
+
+  /* 模式主色解析：浅色用 OnLight 变体（保证对比度） */
+  --mode-accent: var(--mode-accent-on-light);
+}
+
+/* ==========================================================================
+   模式：巡航 Standard（Mode.Standard.xaml）—— 默认
+   Aurora：紫罗兰 / 蓝 / 青；Accent：青 → 紫
+   ========================================================================== */
+:root,
+[data-mode="standard"] {
+  --aurora-1: #5B3BE8;
+  --aurora-1-opacity: 0.44;
+  --aurora-2: #2563EB;
+  --aurora-2-opacity: 0.36;
+  --aurora-3: #0891B2;
+  --aurora-3-opacity: 0.26;
+  --aurora-drift: 26s;
+
+  --accent-primary: #67E8F9;
+  --accent-secondary: #818CF8;
+  --accent-gradient: linear-gradient(90deg, #67E8F9, #818CF8);
+  --accent-soft: #67E8F924;
+  --accent-edge: #67E8F954;
+  --accent-glow: #67E8F9;
+  --on-accent: #0B0E16;
+
+  --mode-accent-on-dark: #67E8F9;
+  --mode-accent-on-light: #0E7490;
+}
+
+/* ==========================================================================
+   模式：竞技 Competitive（Mode.Competitive.xaml）
+   Aurora：品红 / 橙焰 / 赭石；Accent：粉 → 橙
+   ========================================================================== */
+[data-mode="competitive"] {
+  --aurora-1: #E11D48;
+  --aurora-1-opacity: 0.42;
+  --aurora-2: #F97316;
+  --aurora-2-opacity: 0.34;
+  --aurora-3: #7C2D12;
+  --aurora-3-opacity: 0.24;
+  --aurora-drift: 22s;
+
+  --accent-primary: #FB7185;
+  --accent-secondary: #F97316;
+  --accent-gradient: linear-gradient(90deg, #FB7185, #F97316);
+  --accent-soft: #FB718524;
+  --accent-edge: #FB718554;
+  --accent-glow: #FB7185;
+  --on-accent: #14090C;
+
+  --mode-accent-on-dark: #FB7185;
+  --mode-accent-on-light: #CC2020;
+}
+
+/* ==========================================================================
+   模式：自定义 Custom（Mode.Custom.xaml）
+   Aurora：琥珀金 / 紫罗兰 / 赭金；Accent：亮金 → 琥珀
+   ========================================================================== */
+[data-mode="custom"] {
+  --aurora-1: #D4A847;
+  --aurora-1-opacity: 0.40;
+  --aurora-2: #7C3AED;
+  --aurora-2-opacity: 0.30;
+  --aurora-3: #8A5A18;
+  --aurora-3-opacity: 0.24;
+  --aurora-drift: 32s;
+
+  --accent-primary: #E9C46A;
+  --accent-secondary: #D4A847;
+  --accent-gradient: linear-gradient(90deg, #E9C46A, #D4A847);
+  --accent-soft: #E9C46A24;
+  --accent-edge: #E9C46A54;
+  --accent-glow: #E9C46A;
+  --on-accent: #171208;
+
+  --mode-accent-on-dark: #E9C46A;
+  --mode-accent-on-light: #8A5A18;
+}

@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="zh-CN" data-theme="dark" data-mode="standard">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Caelus 设计沙盒 · 优化策略</title>
+<link rel="stylesheet" href="tokens.css">
+<link rel="stylesheet" href="sandbox.css">
+</head>
+<body>
+
+<div class="aurora" aria-hidden="true">
+  <div class="aurora-blob aurora-blob-1"></div>
+  <div class="aurora-blob aurora-blob-2"></div>
+  <div class="aurora-blob aurora-blob-3"></div>
+</div>
+
+<div class="app-shell">
+  <header class="titlebar">
+    <div class="titlebar-brand">C A E L U S <span class="titlebar-badge">SANDBOX</span></div>
+    <div class="titlebar-buttons">
+      <button class="win-btn">−</button><button class="win-btn">□</button><button class="win-btn win-btn-close">×</button>
+    </div>
+  </header>
+
+  <div class="app-body">
+    <aside class="sidebar">
+      <div class="sidebar-brand">
+        <p class="brand-name">caelus</p>
+        <p class="brand-sub">游戏环境控制台</p>
+      </div>
+      <nav class="sidebar-nav">
+        <div class="nav-group-label">工作台</div>
+        <button class="nav-item" data-nav-demo><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><path d="M12 2l3 7h7l-5.5 4.5L18 21l-6-4-6 4 1.5-7.5L2 9h7z"/></svg>概览</button>
+        <button class="nav-item" data-nav-demo><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><path d="M4 7l8-4 8 4-8 4-8-4z M4 7v10l8 4 8-4V7"/></svg>游戏库</button>
+        <div class="nav-group-label">游戏调优</div>
+        <button class="nav-item is-checked" data-nav-demo><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><path d="M4 8h9 M17 8h3 M4 16h3 M11 16h9 M13 8a2 2 0 1 1 4 0 2 2 0 1 1-4 0 M7 16a2 2 0 1 1 4 0 2 2 0 1 1-4 0"/></svg>优化策略</button>
+        <button class="nav-item" data-nav-demo><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><path d="M7 5h10a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V7a2 2 0 0 1 2-2z M9 1v4 M15 1v4 M9 19v4 M15 19v4 M1 9h4 M1 15h4 M19 9h4 M19 15h4"/></svg>显卡</button>
+        <button class="nav-item" data-nav-demo><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><path d="M12 3l7 3v5c0 4.5-3 8.5-7 10-4-1.5-7-5.5-7-10V6z"/></svg>反作弊专项</button>
+        <div class="nav-group-label">系统</div>
+        <button class="nav-item" data-nav-demo><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><path d="M9 12a3 3 0 1 1 6 0 3 3 0 1 1-6 0 M12 2v3 M12 19v3 M2 12h3 M19 12h3 M4.9 4.9l2.1 2.1 M17 17l2.1 2.1 M19.1 4.9L17 7 M7 17l-2.1 2.1"/></svg>系统环境</button>
+        <button class="nav-item" data-nav-demo><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><path d="M8 6h13 M8 12h13 M8 18h13 M3 6l1 1 2-2 M3 12l1 1 2-2 M3 18l1 1 2-2"/></svg>白名单</button>
+        <div class="nav-group-label">诊断</div>
+        <button class="nav-item" data-nav-demo><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><path d="M3 12h4l3-8 4 16 3-8h4"/></svg>系统体检</button>
+        <button class="nav-item" data-nav-demo><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><path d="M4 6h16 M4 12h16 M4 18h10"/></svg>日志</button>
+        <div class="nav-group-label">性能模式</div>
+        <div style="margin: 0 8px 4px;">
+          <div class="segment-host" style="display: flex; width: 100%;">
+            <div class="segment-indicator"></div>
+            <button class="segment-item is-checked" style="flex: 1;" data-sandbox-mode="standard">巡航</button>
+            <button class="segment-item" style="flex: 1;" data-sandbox-mode="competitive">竞技</button>
+            <button class="segment-item" style="flex: 1;" data-sandbox-mode="custom">自定义</button>
+          </div>
+        </div>
+        <p style="margin: 3px 14px 6px 18px; font-size: 9px; color: var(--text-tertiary);">影响调度、压制与页面中的可编辑项</p>
+      </nav>
+      <div class="sidebar-bottom">
+        <button class="nav-item" data-nav-demo><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><path d="M3 12a9 9 0 1 1 18 0 9 9 0 1 1-18 0 M12 5v2 M12 17v2 M5 12h2 M17 12h2 M12 12h0.01"/></svg>设置</button>
+        <button class="nav-item" data-nav-demo><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><path d="M3 12a9 9 0 1 1 18 0 9 9 0 1 1-18 0 M12 11v5 M12 8h0.01"/></svg>关于</button>
+      </div>
+    </aside>
+
+    <main class="content">
+      <div class="content-inner">
+
+        <!-- 页头 -->
+        <div style="margin-bottom: 16px;" class="rise-in rise-in-1">
+          <h1 class="page-header">优化策略</h1>
+          <p class="page-subtitle">调度与压制的生效策略</p>
+        </div>
+
+        <!-- 聚合摘要（升级版 StatusBanner） -->
+        <div class="status-banner rise-in rise-in-2" style="margin-bottom: 18px; padding: 12px 16px;">
+          <div class="policy-summary">
+            <span class="ratio">12<span class="denom">/21</span></span>
+            <span class="text-secondary" style="font-size: 11px;">项已启用</span>
+            <span class="sep"></span>
+            <span class="mode-chip">
+              <span class="pulse-dot"></span>
+              <span data-mode-text>巡航</span>
+              <span class="text-tertiary">模式预设 · 切换模式会重置可编辑项</span>
+            </span>
+          </div>
+        </div>
+
+        <!-- 核心策略 -->
+        <div class="policy-group-header rise-in rise-in-3">
+          <span class="group-icon">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><rect x="4" y="4" width="16" height="16" rx="2"/><rect x="9" y="9" width="6" height="6"/><path d="M9 1v3 M15 1v3 M9 20v3 M15 20v3 M1 9h3 M1 15h3 M20 9h3 M20 15h3"/></svg>
+          </span>
+          <h2>核心策略</h2>
+          <span class="count"><span class="on">5</span>/6 项已启用</span>
+        </div>
+        <div class="settings-group rise-in rise-in-3" style="margin-bottom: 18px;">
+          <div class="policy-row"><div class="policy-text"><div class="policy-title">CPU 亲和性调度</div><div class="policy-desc">将游戏进程绑定至物理核，减少跨核迁移延迟。</div></div><input type="checkbox" class="toggle" checked></div>
+          <div class="policy-row"><div class="policy-text"><div class="policy-title">后台进程压制</div><div class="policy-desc">暂停非活跃后台进程的 CPU 时间片，回收算力给前台。</div></div><input type="checkbox" class="toggle" checked></div>
+          <div class="policy-row"><div class="policy-text"><div class="policy-title">内存优先级提升</div><div class="policy-desc">游戏进程置为高内存优先级，减少换页与磁盘抖动。</div></div><input type="checkbox" class="toggle" checked></div>
+          <div class="policy-row"><div class="policy-text"><div class="policy-title">游戏进程高优先级</div><div class="policy-desc">设为 High 优先级类；竞技档自动提至 Realtime。</div></div><input type="checkbox" class="toggle" checked></div>
+          <div class="policy-row"><div class="policy-text"><div class="policy-title">系统响应速度</div><div class="policy-desc">缩短系统时钟分辨率至 0.5ms，降低输入延迟。</div></div><input type="checkbox" class="toggle" checked></div>
+          <div class="policy-row"><div class="policy-text"><div class="policy-title">GPU 任务调度</div><div class="policy-desc">启用硬件加速 GPU 调度，降低帧提交延迟（需重启生效）。</div></div><input type="checkbox" class="toggle"></div>
+        </div>
+
+        <!-- 自定义策略 -->
+        <div class="policy-group-header rise-in rise-in-4">
+          <span class="group-icon">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 6h10 M18 6h2 M4 12h2 M10 12h10 M4 18h14 M20 18h0"/></svg>
+          </span>
+          <h2>自定义策略</h2>
+          <span class="count"><span class="on">4</span>/8 项已启用</span>
+        </div>
+        <div class="settings-group rise-in rise-in-4" style="margin-bottom: 18px;">
+          <div class="policy-row"><div class="policy-text"><div class="policy-title">网络限流</div><div class="policy-desc">限制后台更新与同步带宽，预留网络给游戏。</div></div><input type="checkbox" class="toggle" checked></div>
+          <div class="policy-row"><div class="policy-text"><div class="policy-title">设备电源管理</div><div class="policy-desc">禁止 USB 选择性挂起，避免外设瞬时掉线。</div></div><input type="checkbox" class="toggle" checked></div>
+          <div class="policy-row"><div class="policy-text"><div class="policy-title">MSI 中断模式</div><div class="policy-desc">强制设备使用 MSI 中断，降低 DPC 延迟（部分老设备不兼容）。</div></div><input type="checkbox" class="toggle"></div>
+          <div class="policy-row"><div class="policy-text"><div class="policy-title">系统服务精简</div><div class="policy-desc">按需停止非关键服务，竞技档更激进。</div></div><input type="checkbox" class="toggle" checked></div>
+          <div class="policy-row"><div class="policy-text"><div class="policy-title">计划任务延迟</div><div class="policy-desc">推迟维护类计划任务至游戏退出后再执行。</div></div><input type="checkbox" class="toggle" checked></div>
+          <div class="policy-row"><div class="policy-text"><div class="policy-title">文件系统缓存</div><div class="policy-desc">提升系统缓存配额，加快资源读取。</div></div><input type="checkbox" class="toggle"></div>
+          <div class="policy-row"><div class="policy-text"><div class="policy-title">内存压缩禁用</div><div class="policy-desc">关闭内存压缩，以内存换延迟（内存紧张时慎用）。</div></div><input type="checkbox" class="toggle"></div>
+          <div class="policy-row"><div class="policy-text"><div class="policy-title">进程亲和性锁定</div><div class="policy-desc">锁定关键进程亲和性，防止系统重排。</div></div><input type="checkbox" class="toggle"></div>
+        </div>
+
+        <!-- 额外策略 -->
+        <div class="policy-group-header rise-in rise-in-5">
+          <span class="group-icon">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><path d="M12 3l7 3v5c0 4.5-3 8.5-7 10-4-1.5-7-5.5-7-10V6z"/></svg>
+          </span>
+          <h2>额外策略</h2>
+          <span class="count"><span class="on">3</span>/7 项已启用</span>
+        </div>
+        <div class="settings-group rise-in rise-in-5" style="margin-bottom: 16px;">
+          <div class="policy-row"><div class="policy-text"><div class="policy-title">着色器缓存清理</div><div class="policy-desc">启动前清理陈旧着色器缓存，避免编译卡顿。</div></div><input type="checkbox" class="toggle"></div>
+          <div class="policy-row"><div class="policy-text"><div class="policy-title">系统还原点</div><div class="policy-desc">应用策略前自动创建系统还原点。</div></div><input type="checkbox" class="toggle" checked></div>
+          <div class="policy-row is-warning">
+            <div class="policy-text">
+              <div class="policy-title">Defender 实时扫描暂停<span class="warn-tag">需注意</span></div>
+              <div class="policy-desc">游戏运行时暂停实时防护以减少磁盘争用；退出后自动恢复，期间请勿运行未知程序。</div>
+            </div>
+            <input type="checkbox" class="toggle" checked>
+          </div>
+          <div class="policy-row"><div class="policy-text"><div class="policy-title">Windows 更新延迟</div><div class="policy-desc">游戏时段推迟更新安装，避免重启打断。</div></div><input type="checkbox" class="toggle" checked></div>
+          <div class="policy-row"><div class="policy-text"><div class="policy-title">游戏模式</div><div class="policy-desc">启用 Windows 游戏模式，系统级资源倾斜。</div></div><input type="checkbox" class="toggle"></div>
+          <div class="policy-row"><div class="policy-text"><div class="policy-title">电源计划切换</div><div class="policy-desc">自动切至高性能电源计划，退出后还原。</div></div><input type="checkbox" class="toggle"></div>
+          <div class="policy-row"><div class="policy-text"><div class="policy-title">驱动恢复</div><div class="policy-desc">退出时回滚 GPU 驱动设置至策略前状态。</div></div><input type="checkbox" class="toggle"></div>
+        </div>
+
+      </div>
+    </main>
+  </div>
+</div>
+
+<div class="sandbox-toolbar">
+  <span class="sandbox-toolbar-label">主题</span>
+  <div class="segment-host"><div class="segment-indicator"></div>
+    <button class="segment-item is-checked" data-sandbox-theme="dark">深色</button>
+    <button class="segment-item" data-sandbox-theme="light">浅色</button>
+  </div>
+  <span class="sandbox-toolbar-label">模式</span>
+  <div class="segment-host"><div class="segment-indicator"></div>
+    <button class="segment-item is-checked" data-sandbox-mode="standard">巡航</button>
+    <button class="segment-item" data-sandbox-mode="competitive">竞技</button>
+    <button class="segment-item" data-sandbox-mode="custom">自定义</button>
+  </div>
+  <a href="index.html" style="color: var(--mode-accent); font-size: 10px;">组件展示 →</a>
+</div>
+
+<script src="sandbox.js"></script>
+</body>
+</html>

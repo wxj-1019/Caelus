@@ -1,0 +1,305 @@
+<!DOCTYPE html>
+<html lang="zh-CN" data-theme="dark" data-mode="standard">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Caelus 设计沙盒 · 概览页骨架</title>
+<link rel="stylesheet" href="tokens.css">
+<link rel="stylesheet" href="sandbox.css">
+</head>
+<body>
+
+<div class="aurora" aria-hidden="true">
+  <div class="aurora-blob aurora-blob-1"></div>
+  <div class="aurora-blob aurora-blob-2"></div>
+  <div class="aurora-blob aurora-blob-3"></div>
+</div>
+
+<div class="app-shell">
+  <!-- 标题栏（MainWindow.xaml：36px） -->
+  <header class="titlebar">
+    <div class="titlebar-brand">
+      C A E L U S
+      <span class="titlebar-badge">SANDBOX</span>
+    </div>
+    <div class="titlebar-buttons">
+      <button class="win-btn" title="最小化">−</button>
+      <button class="win-btn" title="最大化">□</button>
+      <button class="win-btn win-btn-close" title="关闭">×</button>
+    </div>
+  </header>
+
+  <div class="app-body">
+    <!-- 侧栏导航（MainWindow.xaml：220px） -->
+    <aside class="sidebar">
+      <div class="sidebar-brand">
+        <p class="brand-name">caelus</p>
+        <p class="brand-sub">游戏环境控制台</p>
+      </div>
+      <nav class="sidebar-nav">
+        <div class="nav-group-label">工作台</div>
+        <button class="nav-item is-checked" data-nav-demo>
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><path d="M12 2l3 7h7l-5.5 4.5L18 21l-6-4-6 4 1.5-7.5L2 9h7z"/></svg>
+          概览
+        </button>
+        <button class="nav-item" data-nav-demo>
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><path d="M4 7l8-4 8 4-8 4-8-4z M4 7v10l8 4 8-4V7"/></svg>
+          游戏库
+        </button>
+
+        <div class="nav-group-label">游戏调优</div>
+        <button class="nav-item" data-nav-demo>
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><path d="M4 8h9 M17 8h3 M4 16h3 M11 16h9 M13 8a2 2 0 1 1 4 0 2 2 0 1 1-4 0 M7 16a2 2 0 1 1 4 0 2 2 0 1 1-4 0"/></svg>
+          优化策略
+        </button>
+        <button class="nav-item" data-nav-demo>
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><path d="M7 5h10a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V7a2 2 0 0 1 2-2z M9 1v4 M15 1v4 M9 19v4 M15 19v4 M1 9h4 M1 15h4 M19 9h4 M19 15h4"/></svg>
+          显卡
+        </button>
+        <button class="nav-item" data-nav-demo>
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><path d="M12 3l7 3v5c0 4.5-3 8.5-7 10-4-1.5-7-5.5-7-10V6z"/></svg>
+          反作弊专项
+        </button>
+
+        <div class="nav-group-label">系统</div>
+        <button class="nav-item" data-nav-demo>
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><path d="M9 12a3 3 0 1 1 6 0 3 3 0 1 1-6 0 M12 2v3 M12 19v3 M2 12h3 M19 12h3 M4.9 4.9l2.1 2.1 M17 17l2.1 2.1 M19.1 4.9L17 7 M7 17l-2.1 2.1"/></svg>
+          系统环境
+        </button>
+        <button class="nav-item" data-nav-demo>
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><path d="M8 6h13 M8 12h13 M8 18h13 M3 6l1 1 2-2 M3 12l1 1 2-2 M3 18l1 1 2-2"/></svg>
+          白名单
+        </button>
+
+        <div class="nav-group-label">诊断</div>
+        <button class="nav-item" data-nav-demo>
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><path d="M3 12h4l3-8 4 16 3-8h4"/></svg>
+          系统体检
+        </button>
+        <button class="nav-item" data-nav-demo>
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><path d="M4 6h16 M4 12h16 M4 18h10"/></svg>
+          日志
+        </button>
+
+        <div class="nav-group-label">性能模式</div>
+        <div style="margin: 0 8px 4px;">
+          <div class="segment-host" style="display: flex; width: 100%;">
+            <div class="segment-indicator"></div>
+            <button class="segment-item is-checked" style="flex: 1;" data-sandbox-mode="standard">巡航</button>
+            <button class="segment-item" style="flex: 1;" data-sandbox-mode="competitive">竞技</button>
+            <button class="segment-item" style="flex: 1;" data-sandbox-mode="custom">自定义</button>
+          </div>
+        </div>
+        <p style="margin: 3px 14px 6px 18px; font-size: 9px; color: var(--text-tertiary);">影响调度、压制与页面中的可编辑项</p>
+      </nav>
+      <div class="sidebar-bottom">
+        <button class="nav-item" data-nav-demo>
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><path d="M3 12a9 9 0 1 1 18 0 9 9 0 1 1-18 0 M12 5v2 M12 17v2 M5 12h2 M17 12h2 M12 12h0.01"/></svg>
+          设置
+        </button>
+        <button class="nav-item" data-nav-demo>
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><path d="M3 12a9 9 0 1 1 18 0 9 9 0 1 1-18 0 M12 11v5 M12 8h0.01"/></svg>
+          关于
+        </button>
+      </div>
+    </aside>
+
+    <!-- 内容区（OverviewView.xaml 骨架） -->
+    <main class="content">
+      <div class="content-inner">
+
+        <div style="margin-bottom: 16px;" class="rise-in rise-in-1">
+          <h1 class="page-header">概览</h1>
+          <p class="page-subtitle">WPF 界面预览与样例数据概览</p>
+        </div>
+
+        <div class="status-badge rise-in rise-in-2" style="width: 100%; justify-content: space-between; margin-bottom: 16px;">
+          <span style="display: inline-flex; align-items: center; gap: 9px;">
+            <span class="pulse-dot"></span>
+            <strong>预览模式</strong>
+            <span class="text-secondary" style="font-size: 11px;">此页由 SampleOverviewSource 提供样例数据，不代表实时系统遥测。</span>
+          </span>
+          <span class="text-tertiary" style="font-size: 11px; margin-left: 20px;">仅供界面预览</span>
+        </div>
+
+        <!-- Hero 卡：CaelusCore + 结论（GlassCard 渐变描边 + 角部光晕） -->
+        <div class="glass-card hero-card rise-in rise-in-3" style="padding: 20px; margin-bottom: 20px;">
+          <div class="hero-glow"></div>
+          <div style="display: grid; grid-template-columns: 148px 24px 1fr; position: relative;">
+            <div style="display: flex; flex-direction: column; align-items: center;">
+              <span class="caelus-core">
+                <span class="core-glow"></span>
+                <svg viewBox="0 0 132 132">
+                  <g class="ring-outer">
+                    <circle cx="66" cy="66" r="56" fill="none" stroke="var(--border-strong)" stroke-width="1" stroke-dasharray="3 7"/>
+                    <circle cx="66" cy="14" r="2.5" fill="var(--accent-primary)"/>
+                  </g>
+                  <g class="ring-mid">
+                    <circle cx="66" cy="66" r="46" fill="none" stroke="var(--accent-primary)" stroke-width="3" stroke-dasharray="72 217" stroke-linecap="round"/>
+                    <circle cx="66" cy="66" r="46" fill="none" stroke="var(--accent-edge)" stroke-width="3" stroke-dasharray="72 217" stroke-linecap="round" transform="rotate(180 66 66)"/>
+                  </g>
+                  <circle cx="66" cy="66" r="36" fill="none" stroke="var(--border-subtle)" stroke-width="4" stroke-dasharray="2 4"/>
+                  <circle cx="66" cy="66" r="30" fill="var(--surface-1)" stroke="var(--accent-edge)" stroke-width="1"/>
+                </svg>
+                <span class="core-center-label">
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="var(--accent-primary)"><path d="M13 2L4 14h6l-1 8 9-12h-6z"/></svg>
+                  <span class="mode-name" data-mode-text>巡航</span>
+                </span>
+              </span>
+              <p class="text-tertiary" style="font-size: 10px; margin: 8px 0 0;">CAELUS CORE</p>
+            </div>
+            <div></div>
+            <div style="display: flex; flex-direction: column; justify-content: center;">
+              <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                <span class="text-tertiary" style="font-size: 10px;">样例结论</span>
+                <span class="status-badge">
+                  <span class="text-tertiary" style="font-size: 10px;">样例模式</span>
+                  <strong class="text-accent" style="font-size: 11px;" data-mode-text>巡航</strong>
+                </span>
+              </div>
+              <p class="hero-title" style="font-size: 24px; font-weight: 600; margin: 0;">系统状态良好，可进入游戏</p>
+              <p class="text-secondary" style="font-size: var(--font-size-caption); margin: 6px 0 0; max-width: 620px;">
+                后台压制已就绪，显卡策略为均衡档。此结论来自样例数据源，仅用于检查排版、换行与长文本表现。
+              </p>
+              <p class="text-tertiary" style="font-size: 11px; margin: 6px 0 0;">上次检查：沙盒加载时（样例）</p>
+              <div style="margin: 10px 0 0 -6px;">
+                <button class="btn btn-ghost">查看诊断详情</button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- 关键指标 -->
+        <div style="margin-bottom: 10px;" class="rise-in rise-in-4">
+          <p class="section-title">关键指标</p>
+          <p class="section-subtitle">以下三项均为预览数据，用于检查数字、趋势和状态样式。</p>
+        </div>
+
+        <div style="display: grid; grid-template-columns: 1fr 2fr; gap: 12px; margin-bottom: 20px;" class="rise-in rise-in-4">
+          <div class="metric-panel card-interactive">
+            <div style="display: flex; justify-content: space-between;">
+              <p class="card-label">GPU 温度</p><p class="text-tertiary" style="font-size: 10px; margin: 0;">样例值</p>
+            </div>
+            <p class="metric-number" style="margin-top: 8px;">62°C</p>
+            <svg height="32" width="100%" viewBox="0 0 100 32" preserveAspectRatio="none" style="margin: 8px 0;">
+              <defs>
+                <linearGradient id="spark-fill" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="0" style="stop-color: var(--accent-primary); stop-opacity: .28;"/>
+                  <stop offset="1" style="stop-color: var(--accent-primary); stop-opacity: 0;"/>
+                </linearGradient>
+              </defs>
+              <polygon fill="url(#spark-fill)" points="0,32 0,22 10,20 20,24 30,18 40,19 50,14 60,16 70,11 80,13 90,9 100,12 100,32"/>
+              <polyline fill="none" stroke="var(--accent-primary)" stroke-width="1.5"
+                points="0,22 10,20 20,24 30,18 40,19 50,14 60,16 70,11 80,13 90,9 100,12"/>
+              <circle cx="97" cy="11" r="2.5" fill="var(--accent-primary)"/>
+            </svg>
+            <div style="height: 3px; border-radius: 2px; background: var(--track); overflow: hidden;">
+              <div class="bar-fill" style="width: 62%; height: 100%; border-radius: 2px; background: var(--success);"></div>
+            </div>
+          </div>
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+            <div class="metric-panel card-interactive">
+              <div style="display: flex; justify-content: space-between;">
+                <p class="card-label">内存占用</p><p class="text-tertiary" style="font-size: 10px; margin: 0;">样例值</p>
+              </div>
+              <p class="metric-number" style="margin-top: 8px;">11.4 GB</p>
+              <p class="text-tertiary" style="font-size: 10px; margin: 8px 0;">来自预览数据源</p>
+              <div style="height: 3px; border-radius: 2px; background: var(--track); overflow: hidden;">
+                <div class="bar-fill" style="width: 71%; height: 100%; border-radius: 2px; background: var(--warning);"></div>
+              </div>
+            </div>
+            <div class="metric-panel card-interactive">
+              <div style="display: flex; justify-content: space-between;">
+                <p class="card-label">后台压制</p><p class="text-tertiary" style="font-size: 10px; margin: 0;">样例值</p>
+              </div>
+              <p class="metric-number" style="margin-top: 8px;">14 项</p>
+              <p class="text-tertiary" style="font-size: 10px; margin: 8px 0;">来自预览数据源</p>
+              <div style="height: 3px; border-radius: 2px; background: var(--track); overflow: hidden;">
+                <div class="bar-fill" style="width: 34%; height: 100%; border-radius: 2px; background: var(--info);"></div>
+              </div>
+            </div>
+            <div class="metric-panel card-interactive">
+              <div style="display: flex; justify-content: space-between;">
+                <p class="card-label">索引暂停</p><p class="text-tertiary" style="font-size: 10px; margin: 0;">样例值</p>
+              </div>
+              <p class="metric-number" style="margin-top: 8px;">已启用</p>
+              <p class="text-tertiary" style="font-size: 10px; margin: 8px 0;">来自预览数据源</p>
+              <div style="height: 3px; border-radius: 2px; background: var(--track); overflow: hidden;">
+                <div class="bar-fill" style="width: 100%; height: 100%; border-radius: 2px; background: var(--success);"></div>
+              </div>
+            </div>
+            <div class="metric-panel card-interactive">
+              <div style="display: flex; justify-content: space-between;">
+                <p class="card-label">白名单进程</p><p class="text-tertiary" style="font-size: 10px; margin: 0;">样例值</p>
+              </div>
+              <p class="metric-number" style="margin-top: 8px;">6 个</p>
+              <p class="text-tertiary" style="font-size: 10px; margin: 8px 0;">来自预览数据源</p>
+              <div style="height: 3px; border-radius: 2px; background: var(--track); overflow: hidden;">
+                <div class="bar-fill" style="width: 20%; height: 100%; border-radius: 2px; background: var(--brand);"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- 底部双卡 -->
+        <div style="display: grid; grid-template-columns: 1.35fr 1fr; gap: 12px; padding-bottom: 16px;" class="rise-in rise-in-5">
+          <div class="settings-group" style="padding: 16px;">
+            <p class="section-title">最近活动</p>
+            <p class="section-subtitle" style="margin-bottom: 12px;">活动流尚未接入；下列内容仅描述当前预览状态。</p>
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+              <span class="card-label">当前模式预览</span>
+              <span style="font-size: 11px;" data-mode-text>巡航</span>
+            </div>
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+              <span class="card-label">样例数据刷新</span>
+              <span class="text-tertiary" style="font-size: 11px;">仅宿主启动或切换模式时</span>
+            </div>
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+              <span class="card-label">真实活动记录</span>
+              <span class="empty-chip">未接入</span>
+            </div>
+          </div>
+          <div class="settings-group" style="padding: 16px;">
+            <p class="section-title">硬件摘要</p>
+            <p class="section-subtitle" style="margin-bottom: 12px;">当前 ViewModel 没有硬件型号绑定。</p>
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+              <span class="card-label">处理器</span>
+              <span class="empty-chip">未绑定</span>
+            </div>
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+              <span class="card-label">图形设备</span>
+              <span class="empty-chip">未绑定</span>
+            </div>
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+              <span class="card-label">内存规格</span>
+              <span class="empty-chip">未绑定</span>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </main>
+  </div>
+</div>
+
+<!-- 沙盒工具条 -->
+<div class="sandbox-toolbar">
+  <span class="sandbox-toolbar-label">主题</span>
+  <div class="segment-host">
+    <div class="segment-indicator"></div>
+    <button class="segment-item is-checked" data-sandbox-theme="dark">深色</button>
+    <button class="segment-item" data-sandbox-theme="light">浅色</button>
+  </div>
+  <span class="sandbox-toolbar-label">模式</span>
+  <div class="segment-host">
+    <div class="segment-indicator"></div>
+    <button class="segment-item is-checked" data-sandbox-mode="standard">巡航</button>
+    <button class="segment-item" data-sandbox-mode="competitive">竞技</button>
+    <button class="segment-item" data-sandbox-mode="custom">自定义</button>
+  </div>
+  <a href="index.html" style="color: var(--mode-accent); font-size: 10px;">组件展示 →</a>
+</div>
+
+<script src="sandbox.js"></script>
+</body>
+</html>

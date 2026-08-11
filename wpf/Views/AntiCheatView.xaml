@@ -5,6 +5,12 @@
   <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
     <StackPanel Margin="0,0,0,16">
 
+      <!-- 页头（规格 §7 5a） -->
+      <StackPanel Margin="0,0,0,12">
+        <TextBlock Text="反作弊专项" Style="{DynamicResource SectionTitle}"/>
+        <TextBlock Text="反作弊兼容性守护" Style="{DynamicResource SectionSubtitle}" Margin="0,3,0,0"/>
+      </StackPanel>
+
       <!-- 总开关卡 -->
       <Border Style="{DynamicResource HeroCardBorder}" Margin="0,0,0,16">
         <DockPanel>

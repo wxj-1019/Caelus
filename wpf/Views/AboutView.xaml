@@ -2,6 +2,12 @@
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
   <StackPanel Margin="0,0,0,16">
+    <!-- 页头（规格 §7 5a） -->
+    <StackPanel Margin="0,0,0,12">
+      <TextBlock Text="关于" Style="{DynamicResource SectionTitle}"/>
+      <TextBlock Text="版本与致谢" Style="{DynamicResource SectionSubtitle}" Margin="0,3,0,0"/>
+    </StackPanel>
+
     <!-- Hero -->
     <Border Style="{DynamicResource HeroCardBorder}" Padding="20" Margin="0,0,0,16">
       <StackPanel Orientation="Horizontal">

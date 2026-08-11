@@ -8,6 +8,9 @@
   <sys:Double x:Key="FontSizeBody">14</sys:Double>
   <sys:Double x:Key="FontSizeCaption">12</sys:Double>
   <sys:Double x:Key="FontSizeMono">13</sys:Double>
+  <sys:Double x:Key="FontSizeSection">26</sys:Double>
+  <sys:Double x:Key="FontSizeHero">48</sys:Double>
+  <sys:Double x:Key="FontSizeMetric">28</sys:Double>
   <sys:Double x:Key="SpaceXs">4</sys:Double>
   <sys:Double x:Key="SpaceSm">8</sys:Double>
   <sys:Double x:Key="SpaceMd">12</sys:Double>

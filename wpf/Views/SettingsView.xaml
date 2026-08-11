@@ -4,6 +4,12 @@
   <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
     <StackPanel Margin="0,0,0,16">
 
+      <!-- 页头（规格 §7 5a） -->
+      <StackPanel Margin="0,0,0,12">
+        <TextBlock Text="设置" Style="{DynamicResource SectionTitle}"/>
+        <TextBlock Text="偏好与恢复" Style="{DynamicResource SectionSubtitle}" Margin="0,3,0,0"/>
+      </StackPanel>
+
       <!-- 分组 1：应用自身 -->
       <TextBlock Text="{Binding AppSectionTitle}" FontSize="{DynamicResource FontSizeBody}"
                  FontWeight="Bold" Foreground="{DynamicResource TextPrimaryBrush}" Margin="0,0,0,8"/>

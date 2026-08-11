@@ -45,6 +45,7 @@ namespace CaelusApp.WpfHost
             }
             AppMode initial = ModeController.LoadPersisted();
             ThemeManager.Apply(this, UiTone.Dark, initial);
+            ThemeManager.TryApplyUserTheme(this);
             Paths.Init();
             var gameCore = new SuppressionCore();
             var gameMode = new GameMode(Paths.Data, gameCore);

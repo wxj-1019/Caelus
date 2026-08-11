@@ -4,6 +4,12 @@
   <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
     <StackPanel Margin="0,0,0,16">
 
+      <!-- 页头（规格 §7 5a） -->
+      <StackPanel Margin="0,0,0,12">
+        <TextBlock Text="系统环境" Style="{DynamicResource SectionTitle}"/>
+        <TextBlock Text="影响游戏表现的系统项" Style="{DynamicResource SectionSubtitle}" Margin="0,3,0,0"/>
+      </StackPanel>
+
       <!-- 内核警告条 -->
       <Border Style="{DynamicResource HeroCardBorder}" Padding="14,10" Margin="0,0,0,16">
         <TextBlock Text="{Binding KernelSection}" FontSize="{DynamicResource FontSizeCaption}"

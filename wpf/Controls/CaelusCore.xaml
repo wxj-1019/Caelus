@@ -1,0 +1,60 @@
+<UserControl x:Class="CaelusApp.WpfHost.Controls.CaelusCore"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             Width="132" Height="132" IsHitTestVisible="False">
+  <Grid>
+    <!-- 品牌辉光底（AccentGlow 径向渐隐；本环境 DropShadowEffect 不可用，用渐变等效） -->
+    <Ellipse Width="120" Height="120" Opacity="0.35">
+      <Ellipse.Fill>
+        <RadialGradientBrush>
+          <GradientStop Color="{DynamicResource AccentGlowColor}" Offset="0"/>
+          <GradientStop Color="#00000000" Offset="0.7"/>
+        </RadialGradientBrush>
+      </Ellipse.Fill>
+    </Ellipse>
+
+    <!-- 外虚线环 + 顶点 Accent 亮点（正转 14s） -->
+    <Grid x:Name="RingOuter">
+      <Ellipse Width="112" Height="112" Stroke="{DynamicResource BorderStrongBrush}"
+               StrokeThickness="1" StrokeDashArray="3 7"/>
+      <Ellipse Width="5" Height="5" Fill="{DynamicResource AccentPrimaryBrush}"
+               VerticalAlignment="Top" Margin="0,8,0,0"/>
+    </Grid>
+
+    <!-- 中双弧环（反转 22s）：渐变弧 + 180° 相位 AccentEdge 弧 -->
+    <Grid x:Name="RingMid">
+      <Ellipse Width="92" Height="92" StrokeThickness="3" StrokeDashArray="72 217" StrokeDashCap="Round">
+        <Ellipse.Stroke>
+          <LinearGradientBrush StartPoint="0,0" EndPoint="1,1">
+            <GradientStop Color="{DynamicResource AccentPrimaryColor}" Offset="0"/>
+            <GradientStop Color="{DynamicResource AccentSecondaryColor}" Offset="1"/>
+          </LinearGradientBrush>
+        </Ellipse.Stroke>
+      </Ellipse>
+      <Ellipse Width="92" Height="92" Stroke="{DynamicResource AccentEdgeBrush}"
+               StrokeThickness="3" StrokeDashArray="72 217" StrokeDashCap="Round"
+               RenderTransformOrigin="0.5,0.5">
+        <Ellipse.RenderTransform>
+          <RotateTransform Angle="180"/>
+        </Ellipse.RenderTransform>
+      </Ellipse>
+    </Grid>
+
+    <!-- 内刻度环（静止） -->
+    <Ellipse Width="72" Height="72" Stroke="{DynamicResource BorderSubtleBrush}"
+             StrokeThickness="4" StrokeDashArray="2 4"/>
+
+    <!-- 中心盘 -->
+    <Ellipse Width="60" Height="60" Fill="{DynamicResource Surface1Brush}"
+             Stroke="{DynamicResource AccentEdgeBrush}" StrokeThickness="1"/>
+
+    <!-- 闪电 + 模式名 -->
+    <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center">
+      <Path Width="20" Height="20" Stretch="Uniform" HorizontalAlignment="Center"
+            Fill="{DynamicResource AccentPrimaryBrush}" Data="{DynamicResource IconBolt}"/>
+      <TextBlock x:Name="ModeLabel" Text="常规" FontSize="9" Margin="0,2,0,0"
+                 HorizontalAlignment="Center"
+                 Foreground="{DynamicResource TextSecondaryBrush}"/>
+    </StackPanel>
+  </Grid>
+</UserControl>

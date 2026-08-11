@@ -853,6 +853,9 @@ namespace CaelusApp
             });
             test("本局统计：宽限期先行还原的进程仍然结账", TestSessionReportCountsSealedProcesses);
             test("文案：源码里引用到的键全部有定义", TestEveryLangKeyIsDefined);
+            test("主题契约：色板档字典 key 完整", TestThemeContractToneFiles);
+            test("主题契约：模式档字典 key 完整", TestThemeContractModeFiles);
+            test("主题契约：校验器正反样例", TestThemeContractValidator);
             test("白名单规则：旧版名称、带版本号路径与精确边界", TestWhitelistRules);
             test("白名单家族：后代仅在 PID 身份一致时保留", TestWhitelistFamilyIdentity);
             test("白名单家族事件：事件顺序与父进程创建时间阻断 PID 继承", TestWhitelistFamilyEvents);

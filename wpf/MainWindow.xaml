@@ -14,15 +14,15 @@
       <RowDefinition Height="*"/>
     </Grid.RowDefinitions>
 
-    <!-- 环境光层：放在第一个使其处于 z 序最底层，跨越两行 -->
+    <!-- 环境光层：z 序最底层，跨越两行 -->
     <controls:AmbientLayer x:Name="Ambient" Grid.RowSpan="2"/>
 
-    <!-- 标题栏 -->
+    <!-- 标题栏（字距用空格手工近似——WPF 无字距 API，规格 §5） -->
     <Border Grid.Row="0" Background="{DynamicResource SurfaceBrush}"
             BorderBrush="{DynamicResource BorderSubtleBrush}" BorderThickness="0,0,0,1"
             MouseLeftButtonDown="TitleBarDrag">
       <DockPanel LastChildFill="False">
-        <TextBlock Text="CAELUS" VerticalAlignment="Center" Margin="14,0,0,0"
+        <TextBlock Text="C A E L U S" VerticalAlignment="Center" Margin="14,0,0,0"
                    Foreground="{DynamicResource TextTertiaryBrush}" FontSize="10"/>
         <Button x:Name="CloseBtn" DockPanel.Dock="Right" Content="X" Width="46"
                 AutomationProperties.Name="关闭窗口"
@@ -41,66 +41,121 @@
         <ColumnDefinition Width="*"/>
       </Grid.ColumnDefinitions>
 
-      <!-- NavRail -->
-      <Border Grid.Column="0" Background="{DynamicResource BackgroundBrush}"
+      <!-- NavRail：图标 + 分组 + 底部固定 -->
+      <Border Grid.Column="0" Background="Transparent"
               BorderBrush="{DynamicResource BorderSubtleBrush}" BorderThickness="0,0,1,0">
-        <StackPanel Margin="0,14,0,0">
-          <TextBlock Text="caelus" FontWeight="Bold" FontSize="16" Margin="18,0,0,20"
-                     Foreground="{DynamicResource TextPrimaryBrush}"/>
-          <RadioButton x:Name="NavOverview" Style="{DynamicResource NavItem}"
-                       Content="概览" IsChecked="True" GroupName="nav" Checked="NavChecked"
-                       AutomationProperties.Name="导航：概览"/>
-          <RadioButton x:Name="NavLibrary" Style="{DynamicResource NavItem}" Content="游戏库" GroupName="nav" Checked="NavChecked"
-                       AutomationProperties.Name="导航：游戏库"/>
-          <RadioButton x:Name="NavPolicy" Style="{DynamicResource NavItem}" Content="优化策略" GroupName="nav" Checked="NavChecked"
-                       AutomationProperties.Name="导航：优化策略"/>
-          <RadioButton x:Name="NavAntiCheat" Style="{DynamicResource NavItem}" Content="反作弊" GroupName="nav" Checked="NavChecked"
-                       AutomationProperties.Name="导航：反作弊"/>
-          <RadioButton x:Name="NavGraphics" Style="{DynamicResource NavItem}" Content="显卡" GroupName="nav" Checked="NavChecked"
-                       AutomationProperties.Name="导航：显卡"/>
-          <RadioButton x:Name="NavEnvironment" Style="{DynamicResource NavItem}" Content="系统环境" GroupName="nav" Checked="NavChecked"
-                       AutomationProperties.Name="导航：系统环境"/>
-          <RadioButton x:Name="NavAudit" Style="{DynamicResource NavItem}" Content="系统体检" GroupName="nav" Checked="NavChecked"
-                       AutomationProperties.Name="导航：系统体检"/>
-          <RadioButton x:Name="NavLog" Style="{DynamicResource NavItem}" Content="日志" GroupName="nav" Checked="NavChecked"
-                       AutomationProperties.Name="导航：日志"/>
-          <RadioButton x:Name="NavWhitelist" Style="{DynamicResource NavItem}" Content="白名单" GroupName="nav" Checked="NavChecked"
-                       AutomationProperties.Name="导航：白名单"/>
-          <RadioButton x:Name="NavSettings" Style="{DynamicResource NavItem}" Content="设置" GroupName="nav" Checked="NavChecked"
-                       AutomationProperties.Name="导航：设置"/>
-          <RadioButton x:Name="NavAbout" Style="{DynamicResource NavItem}" Content="关于" GroupName="nav" Checked="NavChecked"
-                       AutomationProperties.Name="导航：关于"/>
-        </StackPanel>
+        <DockPanel>
+          <!-- 底部固定：设置 / 关于 -->
+          <StackPanel DockPanel.Dock="Bottom" Margin="0,0,0,10">
+            <RadioButton x:Name="NavSettings" Style="{DynamicResource NavItem}" GroupName="nav" Checked="NavChecked"
+                         AutomationProperties.Name="导航：设置">
+              <StackPanel Orientation="Horizontal">
+                <controls:IconView Key="IconSettings" Width="15" Height="15" VerticalAlignment="Center"/>
+                <TextBlock Text="设置" Margin="9,0,0,0" VerticalAlignment="Center"/>
+              </StackPanel>
+            </RadioButton>
+            <RadioButton x:Name="NavAbout" Style="{DynamicResource NavItem}" GroupName="nav" Checked="NavChecked"
+                         AutomationProperties.Name="导航：关于">
+              <StackPanel Orientation="Horizontal">
+                <controls:IconView Key="IconInfo" Width="15" Height="15" VerticalAlignment="Center"/>
+                <TextBlock Text="关于" Margin="9,0,0,0" VerticalAlignment="Center"/>
+              </StackPanel>
+            </RadioButton>
+          </StackPanel>
+
+          <StackPanel Margin="0,14,0,0">
+            <TextBlock Text="caelus" FontWeight="Bold" FontSize="18" Margin="18,0,0,16"
+                       Foreground="{DynamicResource TextPrimaryBrush}"/>
+
+            <TextBlock Text="总览" Style="{DynamicResource NavGroupLabel}"/>
+            <RadioButton x:Name="NavOverview" Style="{DynamicResource NavItem}" IsChecked="True" GroupName="nav" Checked="NavChecked"
+                         AutomationProperties.Name="导航：概览">
+              <StackPanel Orientation="Horizontal">
+                <controls:IconView Key="IconOverview" Width="15" Height="15" VerticalAlignment="Center"/>
+                <TextBlock Text="概览" Margin="9,0,0,0" VerticalAlignment="Center"/>
+              </StackPanel>
+            </RadioButton>
+            <RadioButton x:Name="NavLibrary" Style="{DynamicResource NavItem}" GroupName="nav" Checked="NavChecked"
+                         AutomationProperties.Name="导航：游戏库">
+              <StackPanel Orientation="Horizontal">
+                <controls:IconView Key="IconLibrary" Width="15" Height="15" VerticalAlignment="Center"/>
+                <TextBlock Text="游戏库" Margin="9,0,0,0" VerticalAlignment="Center"/>
+              </StackPanel>
+            </RadioButton>
+            <RadioButton x:Name="NavPolicy" Style="{DynamicResource NavItem}" GroupName="nav" Checked="NavChecked"
+                         AutomationProperties.Name="导航：优化策略">
+              <StackPanel Orientation="Horizontal">
+                <controls:IconView Key="IconPolicy" Width="15" Height="15" VerticalAlignment="Center"/>
+                <TextBlock Text="优化策略" Margin="9,0,0,0" VerticalAlignment="Center"/>
+              </StackPanel>
+            </RadioButton>
+            <RadioButton x:Name="NavAntiCheat" Style="{DynamicResource NavItem}" GroupName="nav" Checked="NavChecked"
+                         AutomationProperties.Name="导航：反作弊专项">
+              <StackPanel Orientation="Horizontal">
+                <controls:IconView Key="IconShield" Width="15" Height="15" VerticalAlignment="Center"/>
+                <TextBlock Text="反作弊专项" Margin="9,0,0,0" VerticalAlignment="Center"/>
+              </StackPanel>
+            </RadioButton>
+            <RadioButton x:Name="NavWhitelist" Style="{DynamicResource NavItem}" GroupName="nav" Checked="NavChecked"
+                         AutomationProperties.Name="导航：白名单">
+              <StackPanel Orientation="Horizontal">
+                <controls:IconView Key="IconWhitelist" Width="15" Height="15" VerticalAlignment="Center"/>
+                <TextBlock Text="白名单" Margin="9,0,0,0" VerticalAlignment="Center"/>
+              </StackPanel>
+            </RadioButton>
+            <RadioButton x:Name="NavLog" Style="{DynamicResource NavItem}" GroupName="nav" Checked="NavChecked"
+                         AutomationProperties.Name="导航：日志">
+              <StackPanel Orientation="Horizontal">
+                <controls:IconView Key="IconLog" Width="15" Height="15" VerticalAlignment="Center"/>
+                <TextBlock Text="日志" Margin="9,0,0,0" VerticalAlignment="Center"/>
+              </StackPanel>
+            </RadioButton>
+
+            <TextBlock Text="硬件与系统" Style="{DynamicResource NavGroupLabel}"/>
+            <RadioButton x:Name="NavGraphics" Style="{DynamicResource NavItem}" GroupName="nav" Checked="NavChecked"
+                         AutomationProperties.Name="导航：显卡">
+              <StackPanel Orientation="Horizontal">
+                <controls:IconView Key="IconGpu" Width="15" Height="15" VerticalAlignment="Center"/>
+                <TextBlock Text="显卡" Margin="9,0,0,0" VerticalAlignment="Center"/>
+              </StackPanel>
+            </RadioButton>
+            <RadioButton x:Name="NavEnvironment" Style="{DynamicResource NavItem}" GroupName="nav" Checked="NavChecked"
+                         AutomationProperties.Name="导航：系统环境">
+              <StackPanel Orientation="Horizontal">
+                <controls:IconView Key="IconEnvironment" Width="15" Height="15" VerticalAlignment="Center"/>
+                <TextBlock Text="系统环境" Margin="9,0,0,0" VerticalAlignment="Center"/>
+              </StackPanel>
+            </RadioButton>
+            <RadioButton x:Name="NavAudit" Style="{DynamicResource NavItem}" GroupName="nav" Checked="NavChecked"
+                         AutomationProperties.Name="导航：系统体检">
+              <StackPanel Orientation="Horizontal">
+                <controls:IconView Key="IconAudit" Width="15" Height="15" VerticalAlignment="Center"/>
+                <TextBlock Text="系统体检" Margin="9,0,0,0" VerticalAlignment="Center"/>
+              </StackPanel>
+            </RadioButton>
+          </StackPanel>
+        </DockPanel>
       </Border>
 
-      <!-- 内容区 -->
-      <Grid Grid.Column="1" Margin="22,18,22,16">
+      <!-- 内容区：瘦页头（仅模式分段）+ 页面宿主 -->
+      <Grid Grid.Column="1" Margin="22,14,22,16">
         <Grid.RowDefinitions>
           <RowDefinition Height="Auto"/>
           <RowDefinition Height="*"/>
         </Grid.RowDefinitions>
 
-        <DockPanel Grid.Row="0" Margin="0,0,0,14">
-          <StackPanel>
-            <TextBlock Text="系统状态" FontSize="{DynamicResource FontSizeDisplay}"
-                       FontWeight="Bold" Foreground="{DynamicResource TextPrimaryBrush}"/>
-            <TextBlock Text="上次检查 2 分钟前" FontSize="{DynamicResource FontSizeCaption}"
-                       Foreground="{DynamicResource TextSecondaryBrush}" Margin="0,2,0,0"/>
+        <Border Grid.Row="0" Style="{DynamicResource SegmentHost}" HorizontalAlignment="Right"
+                Margin="0,0,0,12">
+          <StackPanel Orientation="Horizontal">
+            <RadioButton x:Name="SegStandard" Style="{DynamicResource SegmentItem}" Content="常规"
+                         IsChecked="True" GroupName="mode" Checked="ModeChecked"
+                         AutomationProperties.Name="模式：常规"/>
+            <RadioButton x:Name="SegCompetitive" Style="{DynamicResource SegmentItem}" Content="竞技" GroupName="mode"
+                         Checked="ModeChecked" AutomationProperties.Name="模式：竞技"/>
+            <RadioButton x:Name="SegCustom" Style="{DynamicResource SegmentItem}" Content="自定义" GroupName="mode"
+                         Checked="ModeChecked" AutomationProperties.Name="模式：自定义"/>
           </StackPanel>
-          <!-- 分段控件：模式选择 -->
-          <Border Style="{DynamicResource SegmentHost}" DockPanel.Dock="Right"
-                  VerticalAlignment="Top" HorizontalAlignment="Right">
-            <StackPanel Orientation="Horizontal">
-              <RadioButton x:Name="SegStandard" Style="{DynamicResource SegmentItem}" Content="常规"
-                           IsChecked="True" GroupName="mode" Checked="ModeChecked"
-                           AutomationProperties.Name="模式：常规"/>
-              <RadioButton x:Name="SegCompetitive" Style="{DynamicResource SegmentItem}" Content="竞技" GroupName="mode"
-                           Checked="ModeChecked" AutomationProperties.Name="模式：竞技"/>
-              <RadioButton x:Name="SegCustom" Style="{DynamicResource SegmentItem}" Content="自定义" GroupName="mode"
-                           Checked="ModeChecked" AutomationProperties.Name="模式：自定义"/>
-            </StackPanel>
-          </Border>
-        </DockPanel>
+        </Border>
 
         <ContentControl x:Name="PageHost" Grid.Row="1"/>
       </Grid>

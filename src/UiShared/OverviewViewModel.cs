@@ -16,6 +16,7 @@ namespace CaelusApp
         string MemoryUsedText { get; }
         string ModeText { get; }
         string LastCheckText { get; }
+        System.Collections.Generic.IList<double> TempHistory { get; }
     }
 
     internal sealed class MetricViewModel
@@ -47,6 +48,13 @@ namespace CaelusApp
 
         public ObservableCollection<MetricViewModel> Metrics { get; private set; }
         public RelayCommand ToggleDetailCommand { get; private set; }
+
+        private System.Collections.Generic.IList<double> gpuTempSeries;
+        public System.Collections.Generic.IList<double> GpuTempSeries
+        {
+            get { return gpuTempSeries; }
+            private set { SetProperty(ref gpuTempSeries, value, "GpuTempSeries"); }
+        }
 
         public string ConclusionTitle
         {
@@ -112,6 +120,7 @@ namespace CaelusApp
                 ColorKey = "Info"
             });
             Metrics.Add(MemoryMetric(source));
+            GpuTempSeries = source.TempHistory;
         }
 
         private static MetricViewModel TempMetric(
@@ -164,6 +173,29 @@ namespace CaelusApp
         public string MemoryUsedText { get { return "8.4 GB"; } }
         public string ModeText { get { return modeText; } }
         public string LastCheckText { get { return "上次检查 2 分钟前 · 没有需要处理的问题"; } }
+
+        private System.Collections.Generic.IList<double> tempHistory;
+        public System.Collections.Generic.IList<double> TempHistory
+        {
+            get
+            {
+                if (tempHistory == null)
+                {
+                    var rng = new System.Random(20260811);
+                    var list = new System.Collections.Generic.List<double>(24);
+                    double v = 58;
+                    for (int i = 0; i < 24; i++)
+                    {
+                        v += rng.NextDouble() * 4 - 2;
+                        if (v < 54) v = 54;
+                        if (v > 66) v = 66;
+                        list.Add(v);
+                    }
+                    tempHistory = list;
+                }
+                return tempHistory;
+            }
+        }
 
         // 预览宿主模式切换时更新显示文案（竞技/自定义下示例结论同步变化）
         public void SetMode(AppMode mode)

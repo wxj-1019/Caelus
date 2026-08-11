@@ -7,11 +7,18 @@
   <Grid>
     <Grid.RowDefinitions>
       <RowDefinition Height="Auto"/>
+      <RowDefinition Height="Auto"/>
       <RowDefinition Height="*"/>
     </Grid.RowDefinitions>
 
+    <!-- 页头（规格 §7 5a） -->
+    <StackPanel Grid.Row="0" Margin="0,0,0,12">
+      <TextBlock Text="系统体检" Style="{DynamicResource SectionTitle}"/>
+      <TextBlock Text="一键检查系统健康度" Style="{DynamicResource SectionSubtitle}" Margin="0,3,0,0"/>
+    </StackPanel>
+
     <!-- 顶部按钮条（始终可见，扫描中禁用） -->
-    <StackPanel Grid.Row="0" Orientation="Horizontal" Margin="0,0,0,12">
+    <StackPanel Grid.Row="1" Orientation="Horizontal" Margin="0,0,0,12">
       <Button x:Name="BtnQuick" Style="{DynamicResource PrimaryButton}"
               Content="{Binding QuickText}" Click="OnQuickClick" Margin="0,0,8,0"
               IsEnabled="{Binding ButtonsEnabled}"/>
@@ -29,7 +36,7 @@
     </StackPanel>
 
     <!-- 空闲态：开始按钮 + 引导文案 -->
-    <StackPanel Grid.Row="1" VerticalAlignment="Center" HorizontalAlignment="Center"
+    <StackPanel Grid.Row="2" VerticalAlignment="Center" HorizontalAlignment="Center"
                 Visibility="{Binding IsIdle, Converter={StaticResource BoolVis}}">
       <TextBlock Text="{Binding IdleTitle}" FontSize="{DynamicResource FontSizeTitle}"
                  FontWeight="Bold" Foreground="{DynamicResource TextPrimaryBrush}"
@@ -44,7 +51,7 @@
     </StackPanel>
 
     <!-- 扫描中：进度条 + 阶段文案 -->
-    <StackPanel Grid.Row="1" VerticalAlignment="Center" HorizontalAlignment="Center"
+    <StackPanel Grid.Row="2" VerticalAlignment="Center" HorizontalAlignment="Center"
                 Visibility="{Binding IsScanning, Converter={StaticResource BoolVis}}"
                 MaxWidth="500">
       <ProgressBar Value="{Binding Progress}" Maximum="1" Minimum="0"
@@ -55,7 +62,7 @@
     </StackPanel>
 
     <!-- 结果态：4 分组列表 -->
-    <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto"
+    <ScrollViewer Grid.Row="2" VerticalScrollBarVisibility="Auto"
                   HorizontalScrollBarVisibility="Disabled"
                   Visibility="{Binding HasResult, Converter={StaticResource BoolVis}}">
       <StackPanel Margin="0,0,0,16">

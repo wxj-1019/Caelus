@@ -5,6 +5,12 @@
   <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
     <StackPanel Margin="0,0,0,16">
 
+      <!-- 页头（规格 §7 5a） -->
+      <StackPanel Margin="0,0,0,12">
+        <TextBlock Text="显卡" Style="{DynamicResource SectionTitle}"/>
+        <TextBlock Text="GPU 状态与调优" Style="{DynamicResource SectionSubtitle}" Margin="0,3,0,0"/>
+      </StackPanel>
+
       <!-- ===== 分组 1：逐游戏 NV ===== -->
       <TextBlock Text="{Binding PerGameTitle}" FontSize="{DynamicResource FontSizeBody}"
                  FontWeight="Bold" Foreground="{DynamicResource TextPrimaryBrush}" Margin="0,0,0,8"/>

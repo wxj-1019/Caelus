@@ -1,43 +1,67 @@
 <ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
                     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+
+  <!-- ===== 语义色（沿用浅色版） ===== -->
   <Color x:Key="SuccessColor">#2F9E5F</Color>
   <Color x:Key="WarningColor">#D97706</Color>
   <Color x:Key="DangerColor">#DC2626</Color>
   <Color x:Key="InfoColor">#2563EB</Color>
   <Color x:Key="BrandColor">#D4A847</Color>
+
+  <!-- ===== 表面梯度（浅色：白色 alpha 递进） ===== -->
   <Color x:Key="BackgroundColor">#F5F7F9</Color>
-  <Color x:Key="SurfaceColor">#FFFFFF</Color>
-  <Color x:Key="SurfaceRaisedColor">#FAFBFC</Color>
-  <Color x:Key="BorderColor">#D8E0E6</Color>
-  <Color x:Key="BorderSubtleColor">#E8EDF1</Color>
+  <Color x:Key="Surface0Color">#A6FFFFFF</Color>
+  <Color x:Key="Surface1Color">#BFFFFFFF</Color>
+  <Color x:Key="Surface2Color">#F2FFFFFF</Color>
+
+  <!-- ===== 文字 ===== -->
   <Color x:Key="TextPrimaryColor">#141F29</Color>
   <Color x:Key="TextSecondaryColor">#61727E</Color>
   <Color x:Key="TextTertiaryColor">#848F96</Color>
+
+  <!-- ===== 画刷 ===== -->
   <SolidColorBrush x:Key="SuccessBrush" Color="{StaticResource SuccessColor}"/>
   <SolidColorBrush x:Key="WarningBrush" Color="{StaticResource WarningColor}"/>
   <SolidColorBrush x:Key="DangerBrush" Color="{StaticResource DangerColor}"/>
   <SolidColorBrush x:Key="InfoBrush" Color="{StaticResource InfoColor}"/>
   <SolidColorBrush x:Key="BrandBrush" Color="{StaticResource BrandColor}"/>
   <SolidColorBrush x:Key="BackgroundBrush" Color="{StaticResource BackgroundColor}"/>
-  <SolidColorBrush x:Key="SurfaceBrush" Color="{StaticResource SurfaceColor}"/>
-  <SolidColorBrush x:Key="SurfaceRaisedBrush" Color="{StaticResource SurfaceRaisedColor}"/>
-  <SolidColorBrush x:Key="BorderBrush" Color="{StaticResource BorderColor}"/>
-  <SolidColorBrush x:Key="BorderSubtleBrush" Color="{StaticResource BorderSubtleColor}"/>
+  <SolidColorBrush x:Key="Surface0Brush" Color="{StaticResource Surface0Color}"/>
+  <SolidColorBrush x:Key="Surface1Brush" Color="{StaticResource Surface1Color}"/>
+  <SolidColorBrush x:Key="Surface2Brush" Color="{StaticResource Surface2Color}"/>
   <SolidColorBrush x:Key="TextPrimaryBrush" Color="{StaticResource TextPrimaryColor}"/>
   <SolidColorBrush x:Key="TextSecondaryBrush" Color="{StaticResource TextSecondaryColor}"/>
   <SolidColorBrush x:Key="TextTertiaryBrush" Color="{StaticResource TextTertiaryColor}"/>
-  <!-- 玻璃面板填充（浅色日间磨砂配方） -->
+
+  <!-- ===== 描边体系（浅色用黑色 alpha） ===== -->
+  <SolidColorBrush x:Key="BorderSubtleBrush" Color="#0F000000"/>
+  <SolidColorBrush x:Key="BorderStrongBrush" Color="#1A000000"/>
+  <LinearGradientBrush x:Key="TopHighlightBrush" StartPoint="0,0" EndPoint="1,0">
+    <GradientStop Color="#00FFFFFF" Offset="0"/>
+    <GradientStop Color="#99FFFFFF" Offset="0.5"/>
+    <GradientStop Color="#00FFFFFF" Offset="1"/>
+  </LinearGradientBrush>
+  <LinearGradientBrush x:Key="CardEdgeBrush" StartPoint="0.5,0" EndPoint="0.5,1">
+    <GradientStop Color="#1F000000" Offset="0"/>
+    <GradientStop Color="#0A000000" Offset="0.45"/>
+    <GradientStop Color="#05000000" Offset="1"/>
+  </LinearGradientBrush>
+
+  <!-- ===== 分段控件选中态（浅色：白底深字） ===== -->
+  <SolidColorBrush x:Key="SegSelectedBrush" Color="#FFFFFF"/>
+  <SolidColorBrush x:Key="SegSelectedTextBrush" Color="#141F29"/>
+
+  <!-- ===== 兼容别名层（旧视图/样式引用，逐页精修后回收；勿在新代码中使用） ===== -->
+  <SolidColorBrush x:Key="SurfaceBrush" Color="#FFFFFF"/>
+  <SolidColorBrush x:Key="SurfaceRaisedBrush" Color="#FAFBFC"/>
+  <SolidColorBrush x:Key="BorderBrush" Color="#D8E0E6"/>
   <SolidColorBrush x:Key="GlassNavBrush" Color="#8CFFFFFF"/>
   <SolidColorBrush x:Key="GlassCardBrush" Color="#A6FFFFFF"/>
   <SolidColorBrush x:Key="GlassHeroBrush" Color="#BFFFFFFF"/>
   <SolidColorBrush x:Key="GlassRaisedBrush" Color="#BFFFFFFF"/>
-  <!-- 浅色边框用黑色 alpha：常规 6% / 高层 10% / 内高光白 60% / 轨道黑 8% -->
   <SolidColorBrush x:Key="GlassBorderBrush" Color="#0F000000"/>
   <SolidColorBrush x:Key="GlassBorderHiBrush" Color="#1A000000"/>
   <SolidColorBrush x:Key="InnerHighlightBrush" Color="#99FFFFFF"/>
   <SolidColorBrush x:Key="TrackBrush" Color="#14000000"/>
-  <!-- 环境光强度（浅色 主 16% / 次 10%） -->
-  <sys:Double x:Key="AmbientPrimaryOpacity" xmlns:sys="clr-namespace:System;assembly=mscorlib">0.16</sys:Double>
-  <sys:Double x:Key="AmbientSecondaryOpacity" xmlns:sys="clr-namespace:System;assembly=mscorlib">0.10</sys:Double>
   <SolidColorBrush x:Key="ModeAccentBrush" Color="{DynamicResource ModeAccentOnLightColor}"/>
 </ResourceDictionary>

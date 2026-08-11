@@ -1,15 +1,27 @@
 <UserControl x:Class="CaelusApp.WpfHost.Views.WhitelistView"
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:local="clr-namespace:CaelusApp.WpfHost"
+             xmlns:controls="clr-namespace:CaelusApp.WpfHost.Controls"
              AllowDrop="True" Drop="OnDrop" DragOver="OnDragOver">
   <Grid>
+    <Grid.RowDefinitions>
+      <RowDefinition Height="Auto"/>
+      <RowDefinition Height="*"/>
+    </Grid.RowDefinitions>
     <Grid.ColumnDefinitions>
       <ColumnDefinition Width="*"/>
       <ColumnDefinition Width="200"/>
     </Grid.ColumnDefinitions>
 
+    <!-- 页头（规格 §7 5a） -->
+    <StackPanel Grid.Row="0" Grid.ColumnSpan="2" Margin="0,0,0,12">
+      <TextBlock Text="白名单" Style="{DynamicResource SectionTitle}"/>
+      <TextBlock Text="永不触碰的进程" Style="{DynamicResource SectionSubtitle}" Margin="0,3,0,0"/>
+    </StackPanel>
+
     <!-- 左：列表区 / 空态 -->
-    <Grid Grid.Column="0" Margin="0,0,16,0">
+    <Grid Grid.Row="1" Grid.Column="0" Margin="0,0,16,0">
       <!-- 空态 -->
       <StackPanel x:Name="EmptyPanel" VerticalAlignment="Center" HorizontalAlignment="Center">
         <TextBlock Text="{Binding EmptyTitle}" FontSize="{DynamicResource FontSizeDisplay}"
@@ -45,9 +57,9 @@
                 </TextBlock>
 
                 <!-- 普通条目（IsGroupHeader=false 时显示） -->
-                <Border MouseLeftButtonDown="OnItemClick">
-                  <Border.Style>
-                    <Style TargetType="Border" BasedOn="{StaticResource LibraryItemCard}">
+                <controls:GlassCard Padding="14,10" local:Motion.Lift="True" MouseLeftButtonDown="OnItemClick">
+                  <controls:GlassCard.Style>
+                    <Style TargetType="controls:GlassCard" BasedOn="{StaticResource GlassCard}">
                       <Setter Property="Visibility" Value="Visible"/>
                       <Style.Triggers>
                         <DataTrigger Binding="{Binding IsGroupHeader}" Value="True">
@@ -55,7 +67,7 @@
                         </DataTrigger>
                       </Style.Triggers>
                     </Style>
-                  </Border.Style>
+                  </controls:GlassCard.Style>
                   <DockPanel>
                     <!-- 右：状态点 + 文案 -->
                     <StackPanel DockPanel.Dock="Right" VerticalAlignment="Center" Margin="8,0,0,0">
@@ -108,7 +120,7 @@
                                  TextTrimming="CharacterEllipsis" Margin="0,2,0,0"/>
                     </StackPanel>
                   </DockPanel>
-                </Border>
+                </controls:GlassCard>
               </Grid>
             </DataTemplate>
           </ItemsControl.ItemTemplate>
@@ -117,7 +129,7 @@
     </Grid>
 
     <!-- 右：操作按钮 -->
-    <StackPanel Grid.Column="1">
+    <StackPanel Grid.Row="1" Grid.Column="1">
       <Button Style="{DynamicResource PrimaryButton}" Click="OnPickClick"
               Content="{Binding PickText}" HorizontalAlignment="Stretch" Margin="0,0,0,8"/>
       <Button Style="{DynamicResource PrimaryButton}" Click="OnBrowseClick"

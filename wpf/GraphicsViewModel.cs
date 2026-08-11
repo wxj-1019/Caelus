@@ -193,6 +193,40 @@ namespace CaelusApp
         public string AmdCacheNote { get { return AmdAvailable ? Lang.T("set.acache.n") : Lang.T("set.amd.none"); } }
         public string AmdCacheBtnText { get { return Lang.T("amd.cache.btn"); } }
 
+        // —— 顶部摘要：分段当前值回显 + 启用计数 + 厂商检测 ——
+        public string NvFrlLabel { get { return FrlLabels[NvFrlIndex]; } }
+        public string NvDlssLabel { get { return DlssLabels[NvDlssIndex]; } }
+        public string AmdChillLabel { get { return FrlLabels[AmdChillIndex]; } }
+        public int TotalCount { get { return 12; } }
+        public int EnabledCount
+        {
+            get
+            {
+                int n = 0;
+                if (GpuHighPerf) n++;
+                if (DisableFso) n++;
+                if (NvMaxPerf) n++;
+                if (NvLowLatency) n++;
+                if (NvRebar) n++;
+                if (NvAnselOff) n++;
+                if (NvBattFull) n++;
+                if (NvBgFrl) n++;
+                if (WindowedOpt) n++;
+                if (AmdAntiLag) n++;
+                if (AmdEnhSync) n++;
+                if (AmdRis) n++;
+                return n;
+            }
+        }
+        public string NvStatusText { get { return NvAvailable ? "NVIDIA 已检测" : "NVIDIA 未检测"; } }
+        public string AmdStatusText { get { return AmdAvailable ? "AMD 已检测" : "AMD 未检测"; } }
+        // 分段切换后由视图调用，刷新标题旁的值回显与启用计数
+        internal void NotifySegments()
+        {
+            Raise("NvFrlLabel"); Raise("NvDlssLabel"); Raise("AmdChillLabel");
+            Raise("EnabledCount");
+        }
+
         // —— 索引 ↔ 模式字符串映射（与 WinForms 一致）——
         public static int FrlIndexOf(string mode)
         {

@@ -8,7 +8,7 @@
       <RowDefinition Height="*"/>
     </Grid.RowDefinitions>
 
-    <StackPanel Grid.Row="0" Margin="0,0,0,16">
+    <StackPanel x:Name="ZoneHeader" Grid.Row="0" Margin="0,0,0,16">
       <TextBlock Text="白名单" Style="{DynamicResource PageHeader}"/>
       <TextBlock Text="永不触碰的进程" Style="{DynamicResource PageSubtitle}" Margin="0,4,0,0"/>
     </StackPanel>
@@ -80,7 +80,7 @@
                                  VerticalAlignment="Center" Fill="{DynamicResource BorderSubtleBrush}"/>
                     </Grid>
 
-                    <Border x:Name="RuleRow" Style="{DynamicResource SettingsRow}" Margin="6,2" Padding="12,10">
+                    <Border x:Name="RuleRow" Style="{DynamicResource PolicyRow}" Margin="6,2" Padding="12,10">
                       <Grid>
                         <Grid.ColumnDefinitions>
                           <ColumnDefinition Width="*" MinWidth="120"/>

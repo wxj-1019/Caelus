@@ -10,12 +10,45 @@ namespace CaelusApp.WpfHost.Views
 {
     public partial class GraphicsView : UserControl
     {
-        public GraphicsView() { InitializeComponent(); }
+        // 预览探针（--wpf-shot）注入代表性开关态；生产永不置 true。
+        internal static bool InjectSampleData;
 
-        // SegmentedControl 只发出索引事件；在视图层同步依赖属性以触发现有 TwoWay 绑定。
-        private void OnFrlChanged(object sender, int index) { UpdateSegmentSelection(sender, index); }
-        private void OnDlssChanged(object sender, int index) { UpdateSegmentSelection(sender, index); }
-        private void OnAmdChillChanged(object sender, int index) { UpdateSegmentSelection(sender, index); }
+        public GraphicsView() { InitializeComponent(); Loaded += OnLoaded; }
+
+        private void OnLoaded(object sender, RoutedEventArgs e)
+        {
+            // 预览样例：开启若干 NV 项以呈现代表性态（探针下无真实显卡 API）
+            if (InjectSampleData)
+            {
+                GraphicsViewModel vm = DataContext as GraphicsViewModel;
+                if (vm != null)
+                {
+                    vm.GpuHighPerf = true;
+                    vm.NvMaxPerf = true;
+                    vm.NvLowLatency = true;
+                    vm.NvRebar = true;
+                    vm.NvBattFull = true;
+                    vm.NvBgFrl = true;
+                    vm.WindowedOpt = true;
+                    vm.NotifySegments();
+                }
+            }
+            // 入场 stagger（页头 + 摘要；分组随滚动自然呈现）
+            Motion.RiseIn(ZoneHeader, 40);
+            Motion.RiseIn(ZoneSummary, 100);
+        }
+
+        // SegmentedControl 只发出索引事件；在视图层同步依赖属性以触发现有 TwoWay 绑定，
+        // 并刷新标题旁的值回显。
+        private void OnFrlChanged(object sender, int index) { UpdateSegmentSelection(sender, index); RefreshVm(); }
+        private void OnDlssChanged(object sender, int index) { UpdateSegmentSelection(sender, index); RefreshVm(); }
+        private void OnAmdChillChanged(object sender, int index) { UpdateSegmentSelection(sender, index); RefreshVm(); }
+
+        private void RefreshVm()
+        {
+            GraphicsViewModel vm = DataContext as GraphicsViewModel;
+            if (vm != null) vm.NotifySegments();
+        }
 
         private static void UpdateSegmentSelection(object sender, int index)
         {

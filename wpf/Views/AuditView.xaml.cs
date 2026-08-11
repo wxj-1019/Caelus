@@ -12,6 +12,9 @@ namespace CaelusApp.WpfHost.Views
 {
     public partial class AuditView : UserControl
     {
+        // 预览探针（--wpf-shot）注入代表性结果；生产永不置 true。
+        internal static bool InjectSampleData;
+
         private AuditViewModel vm;
         private DispatcherTimer progressTimer;
         private Stopwatch progressClock;
@@ -36,6 +39,42 @@ namespace CaelusApp.WpfHost.Views
             }
             displayedState = -1;
             UpdateStateVisibility(false);
+
+            // 结果态入场 stagger
+            Motion.RiseIn(ZoneHealth, 40);
+            Motion.RiseIn(ZoneMetrics, 100);
+            Motion.RiseIn(ZoneCapability, 160);
+            Motion.RiseIn(ZoneMachine, 220);
+            Motion.RiseIn(ZonePersistent, 280);
+            Motion.RiseIn(ZoneVerdict, 340);
+        }
+
+        // 预览探针（--wpf-shot）显式调用：填充代表性结果，捕获结果态实机图。
+        // 不依赖 OnLoaded 的静态标志时序（探针下多窗口串扰不可靠）。
+        internal void ApplySampleResult()
+        {
+            AuditViewModel m = DataContext as AuditViewModel;
+            if (m == null || m.CapabilityRows.Count > 0) return;
+            m.CapabilityRows.Add(new AuditRowView("CPU 虚拟化", "已启用", "", "cpu_feature: svm", false));
+            m.CapabilityRows.Add(new AuditRowView("硬件虚拟化 VT-x", "已启用", "", "cpu_feature: vmx", false));
+            m.CapabilityRows.Add(new AuditRowView("系统盘类型", "NVMe SSD", "", "physicaldrive0 · NVMe", false));
+            m.MachineRows.Add(new AuditRowView("处理器", "AMD Ryzen 7 5800X", "8 核 16 线程 · 3.8 GHz", "cpu", false));
+            m.MachineRows.Add(new AuditRowView("图形设备", "NVIDIA RTX 4070", "12 GB VRAM · 驱动 566.14", "gpu", false));
+            m.MachineRows.Add(new AuditRowView("内存", "32 GB DDR4", "3200 MHz · 双通道", "mem", false));
+            m.PersistentRows.Add(new AuditRowView("Xbox Game Bar", "常驻", "游戏覆盖会触发全屏钩子，建议关闭。", "process: GameBar.exe", true));
+            m.PersistentRows.Add(new AuditRowView("GameDVR 后台录制", "常驻", "持续占用磁盘与编码资源，竞技场景建议禁用。", "service: BcastDVRUserService", true));
+            m.PersistentRows.Add(new AuditRowView("MSI Afterburner", "常驻", "", "process: MSIAfterburner.exe", false));
+            m.PersistentRows.Add(new AuditRowView("Riot Client", "常驻", "", "process: RiotClientServices.exe", false));
+            m.VerdictRows.Add(new AuditRowView("后台占用峰值", "偏高 18%", "可在优化策略中开启后台进程压制。", "peak_cpu: 18.4%", true));
+            m.VerdictRows.Add(new AuditRowView("综合评估", "良好", "硬件能力充足，按建议处置后可达 90+。", "score: 82/100", false));
+            m.Progress = 1;
+            m.State = AuditState.Result;
+            m.NotifyHealth();
+            // Loaded 异步派发，PropertyChanged 监听器此时可能尚未挂上——直接同步面板可见性
+            IdlePanel.Visibility = System.Windows.Visibility.Collapsed;
+            ScanningPanel.Visibility = System.Windows.Visibility.Collapsed;
+            ResultPanel.Visibility = System.Windows.Visibility.Visible;
+            UpdateLayout();
         }
 
         private void OnUnloaded(object sender, RoutedEventArgs e)

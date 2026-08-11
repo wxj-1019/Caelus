@@ -27,6 +27,7 @@ namespace CaelusApp
         private string nvProbeText;
         private string amdProbeText;
         private int busy; // 0=空闲，1=占用（Interlocked）
+        private System.DateTime lastCheck;
 
         public AuditViewModel()
         {
@@ -67,7 +68,7 @@ namespace CaelusApp
         public AuditState State
         {
             get { return state; }
-            private set { SetProperty(ref state, value, "State"); RaiseStateBools(); }
+            internal set { SetProperty(ref state, value, "State"); RaiseStateBools(); }
         }
 
         public bool IsIdle { get { return state == AuditState.Idle; } }
@@ -110,6 +111,58 @@ namespace CaelusApp
         public ObservableCollection<AuditRowView> MachineRows { get; private set; }
         public ObservableCollection<AuditRowView> PersistentRows { get; private set; }
         public ObservableCollection<AuditRowView> VerdictRows { get; private set; }
+
+        // —— 健康摘要（结果态顶部）——
+        // 关注项 = 全部警告行数；评分 = 100 - 关注项×6（下限 0）；等级按评分档
+        public int ConcernCount
+        {
+            get
+            {
+                int n = 0;
+                foreach (AuditRowView r in CapabilityRows) if (r.Warn) n++;
+                foreach (AuditRowView r in MachineRows) if (r.Warn) n++;
+                foreach (AuditRowView r in PersistentRows) if (r.Warn) n++;
+                foreach (AuditRowView r in VerdictRows) if (r.Warn) n++;
+                return n;
+            }
+        }
+        public int Score
+        {
+            get { int s = 100 - ConcernCount * 6; return s < 0 ? 0 : s; }
+        }
+        public string HealthLabel
+        {
+            get
+            {
+                int s = Score;
+                if (s >= 85) return "优秀";
+                if (s >= 70) return "良好";
+                return "需优化";
+            }
+        }
+        public bool IsCaution { get { return ConcernCount > 0; } }
+        public bool PersistentHasWarn { get { return AnyWarn(PersistentRows); } }
+        public bool VerdictHasWarn { get { return AnyWarn(VerdictRows); } }
+        public string LastCheckText
+        {
+            get
+            {
+                if (lastCheck == default(System.DateTime)) return "";
+                return "上次体检：" + lastCheck.ToString("HH:mm");
+            }
+        }
+        private static bool AnyWarn(System.Collections.Generic.IEnumerable<AuditRowView> rows)
+        {
+            foreach (AuditRowView r in rows) if (r.Warn) return true;
+            return false;
+        }
+        // 供视图刷新健康绑定（RenderReport 与样例注入后调用）
+        internal void NotifyHealth()
+        {
+            Raise("ConcernCount"); Raise("Score"); Raise("HealthLabel");
+            Raise("IsCaution"); Raise("PersistentHasWarn"); Raise("VerdictHasWarn");
+            Raise("LastCheckText");
+        }
 
         // 启动快速（3s）/ 精确（30s）体检
         public void StartAudit(int windowMs)
@@ -246,6 +299,8 @@ namespace CaelusApp
             FillGroup(MachineRows, report.Machine, null, null);
             FillGroup(PersistentRows, report.Persistent, null, null);
             FillGroup(VerdictRows, report.Verdicts, "AMD 驱动接口", amdProbeText);
+            lastCheck = System.DateTime.Now;
+            NotifyHealth();
             State = AuditState.Result;
         }
 

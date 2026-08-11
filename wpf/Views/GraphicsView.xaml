@@ -1,14 +1,37 @@
 <UserControl x:Class="CaelusApp.WpfHost.Views.GraphicsView"
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-             xmlns:ctl="clr-namespace:CaelusApp.WpfHost.Controls">
+             xmlns:ctl="clr-namespace:CaelusApp.WpfHost.Controls"
+             xmlns:local="clr-namespace:CaelusApp.WpfHost">
   <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
     <StackPanel Margin="0,0,0,16">
 
-      <StackPanel Margin="0,0,0,18">
+      <StackPanel x:Name="ZoneHeader" Margin="0,0,0,18">
         <TextBlock Text="{Binding PageTitle}" Style="{DynamicResource PageHeader}"/>
         <TextBlock Text="{Binding PageSub}" Style="{DynamicResource PageSubtitle}" Margin="0,3,0,0"/>
       </StackPanel>
+
+      <!-- GPU 检测 + 启用计数摘要 -->
+      <Border x:Name="ZoneSummary" Style="{DynamicResource StatusBanner}"
+              Padding="14,12" Margin="0,0,0,18" AutomationProperties.Name="显卡检测摘要">
+        <StackPanel Orientation="Horizontal">
+          <TextBlock Text="{Binding NvStatusText, Mode=OneWay}" FontSize="11" FontWeight="SemiBold"
+                     Foreground="{DynamicResource TextPrimaryBrush}" VerticalAlignment="Center"/>
+          <Rectangle Width="1" Height="22" Margin="16,0" VerticalAlignment="Center"
+                     Fill="{DynamicResource BorderSubtleBrush}"/>
+          <TextBlock FontSize="24" FontWeight="SemiBold" VerticalAlignment="Center"
+                     Foreground="{DynamicResource TextPrimaryBrush}"
+                     Typography.NumeralAlignment="Tabular">
+            <Run Text="{Binding EnabledCount, Mode=OneWay}"/><Run Text="/" Foreground="{DynamicResource TextTertiaryBrush}"/><Run Text="{Binding TotalCount, Mode=OneWay}"/>
+          </TextBlock>
+          <TextBlock Text="项已启用" Margin="8,0,0,0" FontSize="11" VerticalAlignment="Center"
+                     Foreground="{DynamicResource TextSecondaryBrush}"/>
+          <Rectangle Width="1" Height="22" Margin="16,0" VerticalAlignment="Center"
+                     Fill="{DynamicResource BorderSubtleBrush}"/>
+          <TextBlock Text="{Binding AmdStatusText, Mode=OneWay}" FontSize="11"
+                     Foreground="{DynamicResource TextTertiaryBrush}" VerticalAlignment="Center"/>
+        </StackPanel>
+      </Border>
 
       <!-- ===== 分组 1：逐游戏 NV ===== -->
       <TextBlock Text="{Binding PerGameTitle}" FontSize="{DynamicResource FontSizeBody}"
@@ -17,7 +40,7 @@
         <StackPanel>
 
       <!-- GPU 高性能偏好 -->
-      <Border Style="{DynamicResource SettingsRow}">
+      <Border Style="{DynamicResource PolicyRow}">
         <DockPanel>
           <ToggleButton Style="{DynamicResource PolicyToggle}" IsChecked="{Binding GpuHighPerf}"
                         AutomationProperties.Name="{Binding GpuTitle}"
@@ -32,7 +55,7 @@
       </Border>
 
       <!-- 关闭 FSO -->
-      <Border Style="{DynamicResource SettingsRow}">
+      <Border Style="{DynamicResource PolicyRow}">
         <DockPanel>
           <ToggleButton Style="{DynamicResource PolicyToggle}" IsChecked="{Binding DisableFso}"
                         AutomationProperties.Name="{Binding FsoTitle}"
@@ -47,7 +70,7 @@
       </Border>
 
       <!-- NV 最高性能 -->
-      <Border Style="{DynamicResource SettingsRow}">
+      <Border Style="{DynamicResource PolicyRow}">
         <DockPanel>
           <ToggleButton Style="{DynamicResource PolicyToggle}" IsChecked="{Binding NvMaxPerf}"
                         IsEnabled="{Binding NvAvailable}"
@@ -63,7 +86,7 @@
       </Border>
 
       <!-- NV 低延迟 -->
-      <Border Style="{DynamicResource SettingsRow}">
+      <Border Style="{DynamicResource PolicyRow}">
         <DockPanel>
           <ToggleButton Style="{DynamicResource PolicyToggle}" IsChecked="{Binding NvLowLatency}"
                         IsEnabled="{Binding NvAvailable}"
@@ -79,11 +102,15 @@
       </Border>
 
       <!-- NV 帧率上限（5 段）-->
-      <Border Style="{DynamicResource SettingsRow}">
+      <Border Style="{DynamicResource PolicyRow}">
         <StackPanel>
           <StackPanel Orientation="Horizontal">
             <TextBlock Text="{Binding NvFrlTitle}" FontSize="{DynamicResource FontSizeCaption}"
                        FontWeight="Bold" Foreground="{DynamicResource TextPrimaryBrush}" VerticalAlignment="Center"/>
+            <Border Style="{DynamicResource SegValueChip}" Margin="10,0,0,0">
+              <TextBlock Text="{Binding NvFrlLabel, Mode=OneWay}" FontSize="10" FontWeight="SemiBold"
+                         Foreground="{DynamicResource ModeAccentBrush}"/>
+            </Border>
           </StackPanel>
           <TextBlock Text="{Binding NvFrlNote}" FontSize="11"
                      Foreground="{DynamicResource TextSecondaryBrush}" TextWrapping="Wrap" Margin="0,2,0,8"/>
@@ -96,10 +123,16 @@
       </Border>
 
       <!-- NV DLSS（4 段）-->
-      <Border Style="{DynamicResource SettingsRow}">
+      <Border Style="{DynamicResource PolicyRow}">
         <StackPanel>
-          <TextBlock Text="{Binding NvDlssTitle}" FontSize="{DynamicResource FontSizeCaption}"
-                     FontWeight="Bold" Foreground="{DynamicResource TextPrimaryBrush}"/>
+          <StackPanel Orientation="Horizontal">
+            <TextBlock Text="{Binding NvDlssTitle}" FontSize="{DynamicResource FontSizeCaption}"
+                       FontWeight="Bold" Foreground="{DynamicResource TextPrimaryBrush}" VerticalAlignment="Center"/>
+            <Border Style="{DynamicResource SegValueChip}" Margin="10,0,0,0">
+              <TextBlock Text="{Binding NvDlssLabel, Mode=OneWay}" FontSize="10" FontWeight="SemiBold"
+                         Foreground="{DynamicResource ModeAccentBrush}"/>
+            </Border>
+          </StackPanel>
           <TextBlock Text="{Binding NvDlssNote}" FontSize="11"
                      Foreground="{DynamicResource TextSecondaryBrush}" TextWrapping="Wrap" Margin="0,2,0,8"/>
           <ctl:SegmentedControl ItemsSource="{Binding DlssLabels}"
@@ -111,7 +144,7 @@
       </Border>
 
       <!-- NV ReBAR -->
-      <Border Style="{DynamicResource SettingsRow}">
+      <Border Style="{DynamicResource PolicyRow}">
         <DockPanel>
           <ToggleButton Style="{DynamicResource PolicyToggle}" IsChecked="{Binding NvRebar}"
                         IsEnabled="{Binding NvAvailable}"
@@ -127,7 +160,7 @@
       </Border>
 
       <!-- NV Ansel -->
-      <Border Style="{DynamicResource SettingsRow}">
+      <Border Style="{DynamicResource PolicyRow}">
         <DockPanel>
           <ToggleButton Style="{DynamicResource PolicyToggle}" IsChecked="{Binding NvAnselOff}"
                         IsEnabled="{Binding NvAvailable}"
@@ -143,7 +176,7 @@
       </Border>
 
       <!-- NV 电池满血 -->
-      <Border Style="{DynamicResource SettingsRow}">
+      <Border Style="{DynamicResource PolicyRow}">
         <DockPanel>
           <ToggleButton Style="{DynamicResource PolicyToggle}" IsChecked="{Binding NvBattFull}"
                         IsEnabled="{Binding NvAvailable}"
@@ -167,7 +200,7 @@
       <Border Style="{DynamicResource SettingsGroup}">
 
       <!-- 后台硬限帧 -->
-      <Border Style="{DynamicResource SettingsRow}">
+      <Border Style="{DynamicResource PolicyRow}">
         <DockPanel>
           <ToggleButton Style="{DynamicResource PolicyToggle}" IsChecked="{Binding NvBgFrl}"
                         IsEnabled="{Binding NvAvailable}"
@@ -190,7 +223,7 @@
       <Border Style="{DynamicResource SettingsGroup}">
 
       <!-- 窗口化游戏优化 -->
-      <Border Style="{DynamicResource SettingsRow}">
+      <Border Style="{DynamicResource PolicyRow}">
         <DockPanel>
           <ToggleButton Style="{DynamicResource PolicyToggle}" IsChecked="{Binding WindowedOpt}"
                         AutomationProperties.Name="{Binding WindowedOptTitle}"
@@ -213,7 +246,7 @@
         <StackPanel>
 
       <!-- AMD Anti-Lag -->
-      <Border Style="{DynamicResource SettingsRow}">
+      <Border Style="{DynamicResource PolicyRow}">
         <DockPanel>
           <ToggleButton Style="{DynamicResource PolicyToggle}" IsChecked="{Binding AmdAntiLag}"
                         IsEnabled="{Binding AmdAvailable}"
@@ -229,10 +262,16 @@
       </Border>
 
       <!-- AMD Chill 限帧（5 段）-->
-      <Border Style="{DynamicResource SettingsRow}">
+      <Border Style="{DynamicResource PolicyRow}">
         <StackPanel>
-          <TextBlock Text="{Binding AmdChillTitle}" FontSize="{DynamicResource FontSizeCaption}"
-                     FontWeight="Bold" Foreground="{DynamicResource TextPrimaryBrush}"/>
+          <StackPanel Orientation="Horizontal">
+            <TextBlock Text="{Binding AmdChillTitle}" FontSize="{DynamicResource FontSizeCaption}"
+                       FontWeight="Bold" Foreground="{DynamicResource TextPrimaryBrush}" VerticalAlignment="Center"/>
+            <Border Style="{DynamicResource SegValueChip}" Margin="10,0,0,0">
+              <TextBlock Text="{Binding AmdChillLabel, Mode=OneWay}" FontSize="10" FontWeight="SemiBold"
+                         Foreground="{DynamicResource ModeAccentBrush}"/>
+            </Border>
+          </StackPanel>
           <TextBlock Text="{Binding AmdChillNote}" FontSize="11"
                      Foreground="{DynamicResource TextSecondaryBrush}" TextWrapping="Wrap" Margin="0,2,0,8"/>
           <ctl:SegmentedControl ItemsSource="{Binding FrlLabels}"
@@ -244,7 +283,7 @@
       </Border>
 
       <!-- AMD Enhanced Sync -->
-      <Border Style="{DynamicResource SettingsRow}">
+      <Border Style="{DynamicResource PolicyRow}">
         <DockPanel>
           <ToggleButton Style="{DynamicResource PolicyToggle}" IsChecked="{Binding AmdEnhSync}"
                         IsEnabled="{Binding AmdAvailable}"
@@ -260,7 +299,7 @@
       </Border>
 
       <!-- AMD RIS -->
-      <Border Style="{DynamicResource SettingsRow}">
+      <Border Style="{DynamicResource PolicyRow}">
         <DockPanel>
           <ToggleButton Style="{DynamicResource PolicyToggle}" IsChecked="{Binding AmdRis}"
                         IsEnabled="{Binding AmdAvailable}"
@@ -276,7 +315,7 @@
       </Border>
 
       <!-- AMD 着色器缓存重置 -->
-      <Border Style="{DynamicResource SettingsRow}">
+      <Border Style="{DynamicResource PolicyRow}">
         <DockPanel>
           <Button x:Name="BtnAmdCache" Content="{Binding AmdCacheBtnText}" Click="OnAmdCache"
                   Style="{DynamicResource GhostButton}" Padding="12,4"

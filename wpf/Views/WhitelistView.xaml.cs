@@ -28,6 +28,7 @@ namespace CaelusApp.WpfHost.Views
 
         private void OnLoaded(object sender, RoutedEventArgs e)
         {
+            Motion.RiseIn(ZoneHeader, 40);
             WhitelistViewModel next = DataContext as WhitelistViewModel;
             if (vm != next)
             {

@@ -9,7 +9,12 @@ namespace CaelusApp.WpfHost.Views
 {
     public partial class EnvironmentView : UserControl
     {
-        public EnvironmentView() { InitializeComponent(); }
+        public EnvironmentView() { InitializeComponent(); Loaded += OnLoaded; }
+
+        private void OnLoaded(object sender, RoutedEventArgs e)
+        {
+            Motion.RiseIn(ZoneHeader, 40);
+        }
 
         // 开关点击：执行对应 tweak，弹出重启提示
         private void OnToggleClick(object sender, RoutedEventArgs e)

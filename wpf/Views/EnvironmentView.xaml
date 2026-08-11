@@ -4,14 +4,17 @@
   <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
     <StackPanel Margin="0,0,0,16">
 
-      <StackPanel Margin="0,0,0,18">
+      <StackPanel x:Name="ZoneHeader" Margin="0,0,0,18">
         <TextBlock Text="{Binding PageTitle}" Style="{DynamicResource PageHeader}"/>
         <TextBlock Text="{Binding PageSub}" Style="{DynamicResource PageSubtitle}" Margin="0,3,0,0"/>
       </StackPanel>
 
-      <TextBlock Text="{Binding KernelSection}" FontSize="{DynamicResource FontSizeBody}"
-                 FontWeight="Bold" Foreground="{DynamicResource TextPrimaryBrush}"
-                 TextWrapping="Wrap" Margin="0,0,0,8"/>
+      <StackPanel Orientation="Horizontal" Margin="0,0,0,8">
+        <Border Width="30" Height="30" CornerRadius="{DynamicResource RadiusSm}" Background="{DynamicResource AccentSoftBrush}" BorderBrush="{DynamicResource AccentEdgeBrush}" BorderThickness="1" VerticalAlignment="Center" Margin="0,0,12,0">
+          <Viewbox Width="16" Height="16"><Path Data="M9 12a3 3 0 1 1 6 0 3 3 0 1 1-6 0 M12 2v3 M12 19v3 M2 12h3 M19 12h3" Stroke="{DynamicResource ModeAccentBrush}" StrokeThickness="2" StrokeLineJoin="Round"/></Viewbox>
+        </Border>
+        <TextBlock Text="{Binding KernelSection}" FontSize="{DynamicResource FontSizeBody}" FontWeight="SemiBold" Foreground="{DynamicResource TextPrimaryBrush}" VerticalAlignment="Center"/>
+      </StackPanel>
 
       <Border Style="{DynamicResource SettingsGroup}">
       <ItemsControl x:Name="ToggleList" ItemsSource="{Binding Toggles}">
@@ -20,7 +23,7 @@
         </ItemsControl.ItemsPanel>
         <ItemsControl.ItemTemplate>
           <DataTemplate>
-              <Border Style="{DynamicResource SettingsRow}">
+              <Border Style="{DynamicResource PolicyRow}">
               <DockPanel>
                 <ToggleButton Style="{DynamicResource PolicyToggle}"
                               IsChecked="{Binding IsOn, Mode=OneWay}"

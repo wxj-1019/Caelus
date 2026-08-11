@@ -1,7 +1,6 @@
 // @author zenjiro 18967498922@163.com
-// 文件用途 WPF 预览宿主主窗口外壳：标题栏 / NavRail / 内容宿主 / 模式切换
+// 文件用途 WPF 预览宿主主窗口外壳：标题栏 / 工作区导航 / 内容宿主 / 模式切换
 
-using System;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
@@ -26,11 +25,27 @@ namespace CaelusApp.WpfHost
         private readonly WhitelistViewModel whitelistVm;
         private readonly Tamer tamer;
 
+        private readonly OverviewView overviewView;
+        private readonly PolicyView policyView;
+        private readonly LibraryView libraryView;
+        private readonly LogView logView;
+        private readonly AboutView aboutView;
+        private readonly SettingsView settingsView;
+        private readonly AntiCheatView antiCheatView;
+        private readonly EnvironmentView environmentView;
+        private readonly GraphicsView graphicsView;
+        private readonly AuditView auditView;
+        private readonly WhitelistView whitelistView;
+
         public MainWindow() : this(null) { }
 
         internal MainWindow(GameMode gm)
         {
             InitializeComponent();
+            ModePicker.ItemsSource = new System.Collections.Generic.List<string>
+            {
+                "常规", "竞技", "自定义"
+            };
             source = new SampleOverviewSource();
             vm = new OverviewViewModel(source);
             vm.Refresh();
@@ -41,7 +56,6 @@ namespace CaelusApp.WpfHost
             logVm = new LogViewModel();
             logVm.Refresh();
             aboutVm = new AboutViewModel();
-            // 单一 Tamer 实例供设置页（一键恢复）与反作弊页共用。
             tamer = new Tamer(new SuppressionCore());
             settingsVm = new SettingsViewModel(gameMode, tamer);
             antiCheatVm = new AntiCheatViewModel(tamer);
@@ -51,45 +65,70 @@ namespace CaelusApp.WpfHost
             graphicsVm = new GraphicsViewModel(gameMode);
             auditVm = new AuditViewModel();
             whitelistVm = new WhitelistViewModel(gameMode);
+
+            overviewView = new OverviewView { DataContext = vm };
+            policyView = new PolicyView { DataContext = policyVm };
+            libraryView = new LibraryView { DataContext = libraryVm };
+            logView = new LogView { DataContext = logVm };
+            aboutView = new AboutView { DataContext = aboutVm };
+            settingsView = new SettingsView { DataContext = settingsVm };
+            antiCheatView = new AntiCheatView { DataContext = antiCheatVm };
+            environmentView = new EnvironmentView { DataContext = environmentVm };
+            graphicsView = new GraphicsView { DataContext = graphicsVm };
+            auditView = new AuditView { DataContext = auditVm };
+            whitelistView = new WhitelistView { DataContext = whitelistVm };
+
             DataContext = vm;
-            PageHost.Content = new OverviewView { DataContext = vm };
-            Loaded += OnLoadedAmbient;
+            PageHost.Content = overviewView;
         }
 
-        // 启动时应用持久化模式的主题与氛围（无动画）
         internal void ApplyPersistedMode(AppMode mode)
         {
-            if (mode == AppMode.Competitive) SegCompetitive.IsChecked = true;
-            else if (mode == AppMode.Custom) SegCustom.IsChecked = true;
-            else SegStandard.IsChecked = true;
+            ModePicker.SelectedIndex = mode == AppMode.Competitive ? 1
+                : mode == AppMode.Custom ? 2 : 0;
             source.SetMode(mode);
             vm.Refresh();
             policyVm.RefreshLocks();
         }
 
-        private void OnLoadedAmbient(object sender, RoutedEventArgs e)
-        {
-            Ambient.Show();
-        }
-
-        private void ModeChecked(object sender, RoutedEventArgs e)
+        private void ModeChecked(object sender, int index)
         {
             if (!IsLoaded) return;
-            AppMode mode = sender == SegCompetitive ? AppMode.Competitive
-                : sender == SegCustom ? AppMode.Custom : AppMode.Standard;
+            AppMode mode = index == 1 ? AppMode.Competitive
+                : index == 2 ? AppMode.Custom : AppMode.Standard;
             ModeController.SwitchTo(Application.Current, mode, Ambient, source, vm, true);
             gameMode.Preset = ModeController.ToPreset(mode);
             policyVm.RefreshLocks();
+            FrameworkElement current = PageHost.Content as FrameworkElement;
+            if (current != null) Motion.CrossFade(current);
         }
 
         private void TitleBarDrag(object sender, MouseButtonEventArgs e)
         {
+            if (e.ChangedButton != MouseButton.Left) return;
+            if (e.ClickCount == 2)
+            {
+                ToggleMaximized();
+                return;
+            }
             if (e.ButtonState == MouseButtonState.Pressed) DragMove();
         }
 
         private void MinClick(object sender, RoutedEventArgs e)
         {
             WindowState = WindowState.Minimized;
+        }
+
+        private void MaxClick(object sender, RoutedEventArgs e)
+        {
+            ToggleMaximized();
+        }
+
+        private void ToggleMaximized()
+        {
+            WindowState = WindowState == WindowState.Maximized
+                ? WindowState.Normal : WindowState.Maximized;
+            MaxBtn.Content = WindowState == WindowState.Maximized ? "❐" : "□";
         }
 
         private void CloseClick(object sender, RoutedEventArgs e)
@@ -100,53 +139,73 @@ namespace CaelusApp.WpfHost
         private void NavChecked(object sender, RoutedEventArgs e)
         {
             RadioButton rb = sender as RadioButton;
-            if (rb == null || PageHost == null) return;
-            if (rb == NavOverview)
-                PageHost.Content = new OverviewView { DataContext = DataContext };
-            else if (rb == NavPolicy)
-                PageHost.Content = new PolicyView { DataContext = policyVm };
-            else if (rb == NavLibrary)
-                PageHost.Content = new LibraryView { DataContext = libraryVm };
+            if (rb == null || PageHost == null || overviewView == null) return;
+            FrameworkElement next = null;
+            if (rb == NavOverview) next = overviewView;
+            else if (rb == NavPolicy) next = policyView;
+            else if (rb == NavLibrary) next = libraryView;
             else if (rb == NavAntiCheat)
             {
                 antiCheatVm.RefreshStatus();
-                PageHost.Content = new AntiCheatView { DataContext = antiCheatVm };
+                next = antiCheatView;
             }
-            else if (rb == NavGraphics)
-                PageHost.Content = new GraphicsView { DataContext = graphicsVm };
+            else if (rb == NavGraphics) next = graphicsView;
             else if (rb == NavEnvironment)
             {
                 environmentVm.RefreshStatus();
-                PageHost.Content = new EnvironmentView { DataContext = environmentVm };
+                next = environmentView;
             }
-            else if (rb == NavAudit)
-                PageHost.Content = new AuditView { DataContext = auditVm };
-            else if (rb == NavWhitelist)
-                PageHost.Content = new WhitelistView { DataContext = whitelistVm };
+            else if (rb == NavAudit) next = auditView;
+            else if (rb == NavWhitelist) next = whitelistView;
             else if (rb == NavLog)
             {
                 logVm.Refresh();
-                PageHost.Content = new LogView { DataContext = logVm };
+                next = logView;
             }
-            else if (rb == NavSettings)
-                PageHost.Content = new SettingsView { DataContext = settingsVm };
-            else if (rb == NavAbout)
-                PageHost.Content = new AboutView { DataContext = aboutVm };
-            else
-                PageHost.Content = new PlaceholderView();
+            else if (rb == NavSettings) next = settingsView;
+            else if (rb == NavAbout) next = aboutView;
+            if (next == null || PageHost.Content == next) return;
+            PageHost.IsHitTestVisible = false;
+            PageHost.Content = next;
+            PageHost.IsHitTestVisible = true;
+            Motion.Reveal(next);
         }
 
-        // 截图探针：离屏渲染前切到策略页
         internal void NavigateToPolicyForShot()
         {
-            PageHost.Content = new PolicyView { DataContext = policyVm };
-            UpdateLayout();
+            NavigateToForShot("policy");
         }
 
-        // 截图探针：离屏渲染前切到游戏库页
         internal void NavigateToLibraryForShot()
         {
-            PageHost.Content = new LibraryView { DataContext = libraryVm };
+            NavigateToForShot("library");
+        }
+
+        internal void SwitchModeForStress(AppMode mode)
+        {
+            int index = mode == AppMode.Competitive ? 1 : mode == AppMode.Custom ? 2 : 0;
+            ModePicker.SelectedIndex = index;
+            ThemeManager.Apply(Application.Current, ThemeManager.CurrentTone, mode);
+            source.SetMode(mode);
+            vm.Refresh();
+            policyVm.RefreshLocks();
+            FrameworkElement current = PageHost.Content as FrameworkElement;
+            if (current != null) Motion.CrossFade(current);
+        }
+
+        internal void NavigateToForShot(string page)
+        {
+            RadioButton target = page == "library" ? NavLibrary
+                : page == "policy" ? NavPolicy
+                : page == "graphics" ? NavGraphics
+                : page == "anticheat" ? NavAntiCheat
+                : page == "environment" ? NavEnvironment
+                : page == "whitelist" ? NavWhitelist
+                : page == "audit" ? NavAudit
+                : page == "log" ? NavLog
+                : page == "settings" ? NavSettings
+                : page == "about" ? NavAbout : NavOverview;
+            target.IsChecked = true;
             UpdateLayout();
         }
     }

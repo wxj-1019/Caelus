@@ -12,6 +12,9 @@ namespace CaelusApp.WpfHost
         private static ResourceDictionary colors;
         private static ResourceDictionary mode;
         private static ResourceDictionary user;
+        private static ResourceDictionary accessibility;
+        private static readonly System.Collections.Generic.Dictionary<string, ResourceDictionary> cache =
+            new System.Collections.Generic.Dictionary<string, ResourceDictionary>(StringComparer.OrdinalIgnoreCase);
 
         public static UiTone CurrentTone { get; private set; }
         public static AppMode CurrentMode { get; private set; }
@@ -27,20 +30,14 @@ namespace CaelusApp.WpfHost
 
             string colorsUri = tone == UiTone.Light
                 ? "Themes/Colors.Light.xaml" : "Themes/Colors.Dark.xaml";
-            var nextColors = new ResourceDictionary
-            {
-                Source = new Uri(colorsUri, UriKind.Relative)
-            };
+            ResourceDictionary nextColors = DictionaryFor(colorsUri);
             if (colors != null) merged.Remove(colors);
             merged.Add(nextColors);
             colors = nextColors;
             CurrentTone = tone;
 
             string modeUri = modeUriFor(appMode);
-            var nextMode = new ResourceDictionary
-            {
-                Source = new Uri(modeUri, UriKind.Relative)
-            };
+            ResourceDictionary nextMode = DictionaryFor(modeUri);
             if (mode != null) merged.Remove(mode);
             merged.Add(nextMode);
             mode = nextMode;
@@ -53,6 +50,7 @@ namespace CaelusApp.WpfHost
                 merged.Remove(user);
                 merged.Add(user);
             }
+            ApplyAccessibilityOverlay(merged);
 
             // 换槽完成：通知订阅者（CaelusCore 等随模式换肤控件）。user 已重新提升，
             // 订阅者看到的资源状态是最终态。
@@ -60,6 +58,44 @@ namespace CaelusApp.WpfHost
             if (handler != null) handler(null, EventArgs.Empty);
 
             Native.LightModeQuery = () => tone == UiTone.Light;
+        }
+
+        private static ResourceDictionary DictionaryFor(string uri)
+        {
+            ResourceDictionary dictionary;
+            if (cache.TryGetValue(uri, out dictionary)) return dictionary;
+            dictionary = new ResourceDictionary { Source = new Uri(uri, UriKind.Relative) };
+            cache[uri] = dictionary;
+            return dictionary;
+        }
+
+        private static void ApplyAccessibilityOverlay(System.Collections.ObjectModel.Collection<ResourceDictionary> merged)
+        {
+            if (accessibility != null) merged.Remove(accessibility);
+            accessibility = null;
+            if (!SystemParameters.HighContrast) return;
+
+            var overlay = new ResourceDictionary();
+            overlay["BackgroundBrush"] = SystemColors.WindowBrush;
+            overlay["SurfaceBrush"] = SystemColors.ControlBrush;
+            overlay["Surface0Brush"] = SystemColors.ControlBrush;
+            overlay["Surface1Brush"] = SystemColors.ControlBrush;
+            overlay["Surface2Brush"] = SystemColors.ControlDarkBrush;
+            overlay["TextPrimaryBrush"] = SystemColors.WindowTextBrush;
+            overlay["TextSecondaryBrush"] = SystemColors.WindowTextBrush;
+            overlay["TextTertiaryBrush"] = SystemColors.GrayTextBrush;
+            overlay["BorderSubtleBrush"] = SystemColors.ControlTextBrush;
+            overlay["BorderStrongBrush"] = SystemColors.ControlTextBrush;
+            overlay["CardEdgeBrush"] = SystemColors.ControlTextBrush;
+            overlay["GlassNavBrush"] = SystemColors.ControlBrush;
+            overlay["ModeAccentBrush"] = SystemColors.HighlightBrush;
+            overlay["AccentSoftBrush"] = SystemColors.HighlightBrush;
+            overlay["AccentEdgeBrush"] = SystemColors.HighlightTextBrush;
+            overlay["OnAccentBrush"] = SystemColors.HighlightTextBrush;
+            overlay["SegSelectedBrush"] = SystemColors.HighlightBrush;
+            overlay["SegSelectedTextBrush"] = SystemColors.HighlightTextBrush;
+            merged.Add(overlay);
+            accessibility = overlay;
         }
 
         private static string modeUriFor(AppMode appMode)

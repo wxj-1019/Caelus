@@ -1,10 +1,11 @@
 // @author zenjiro 18967498922@163.com
-// 文件用途 游戏库视图：列表+空态+添加/移除按钮+拖放
+// 文件用途 游戏库视图：列表选择、空态、添加/移除、运行态与拖放
 
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Input;
 using CaelusApp.WpfHost.Dialogs;
 
 namespace CaelusApp.WpfHost.Views
@@ -12,37 +13,103 @@ namespace CaelusApp.WpfHost.Views
     public partial class LibraryView : UserControl
     {
         private LibraryViewModel vm;
-        private int selectedIndex = -1;
+        private bool panelStateInitialized;
+        private bool showingEmpty;
+        private bool loadingPanelState;
 
         public LibraryView()
         {
             InitializeComponent();
             Loaded += OnLoaded;
+            Unloaded += OnUnloaded;
         }
 
         private void OnLoaded(object sender, RoutedEventArgs e)
         {
-            vm = DataContext as LibraryViewModel;
-            if (vm != null)
+            LibraryViewModel next = DataContext as LibraryViewModel;
+            if (vm != next)
             {
-                vm.PropertyChanged += OnVmPropertyChanged;
-                UpdatePanelVisibility();
+                DetachViewModel();
+                vm = next;
+                if (vm != null) vm.PropertyChanged += OnVmPropertyChanged;
             }
+
+            loadingPanelState = true;
+            try
+            {
+                if (vm != null)
+                {
+                    vm.ProbeRunning();
+                    GameList.Items.Refresh();
+                }
+                UpdatePanelVisibility(false);
+            }
+            finally
+            {
+                loadingPanelState = false;
+            }
+            UpdateSelectionState();
+        }
+
+        private void OnUnloaded(object sender, RoutedEventArgs e)
+        {
+            DetachViewModel();
+            vm = null;
+            panelStateInitialized = false;
+            GameList.SelectedIndex = -1;
+        }
+
+        private void DetachViewModel()
+        {
+            if (vm != null) vm.PropertyChanged -= OnVmPropertyChanged;
         }
 
         private void OnVmPropertyChanged(object sender, PropertyChangedEventArgs e)
         {
-            if (e.PropertyName == "IsEmpty") UpdatePanelVisibility();
+            if (e.PropertyName == "IsEmpty")
+            {
+                UpdatePanelVisibility(!loadingPanelState);
+                UpdateSelectionState();
+            }
         }
 
-        private void UpdatePanelVisibility()
+        private void UpdatePanelVisibility(bool reveal)
         {
-            if (vm == null) return;
-            EmptyPanel.Visibility = vm.IsEmpty ? Visibility.Visible : Visibility.Collapsed;
-            ListPanel.Visibility = vm.IsEmpty ? Visibility.Collapsed : Visibility.Visible;
+            bool isEmpty = vm == null || vm.IsEmpty;
+            bool changed = !panelStateInitialized || showingEmpty != isEmpty;
+
+            EmptyPanel.Visibility = isEmpty ? Visibility.Visible : Visibility.Collapsed;
+            EmptyPanel.IsHitTestVisible = isEmpty;
+            ListPanel.Visibility = isEmpty ? Visibility.Collapsed : Visibility.Visible;
+            ListPanel.IsHitTestVisible = !isEmpty;
+
+            showingEmpty = isEmpty;
+            if (!panelStateInitialized)
+            {
+                panelStateInitialized = true;
+                return;
+            }
+            if (reveal && changed)
+                Motion.Reveal(isEmpty ? (FrameworkElement)EmptyPanel : ListPanel);
         }
 
-        // 添加按钮
+        private void UpdateSelectionState()
+        {
+            BtnRemove.IsEnabled = vm != null && GameList.SelectedIndex >= 0;
+        }
+
+        private void OnGameSelectionChanged(object sender, SelectionChangedEventArgs e)
+        {
+            UpdateSelectionState();
+        }
+
+        private void OnGameListPreviewKeyDown(object sender, KeyEventArgs e)
+        {
+            if (e.Key != Key.Delete || !BtnRemove.IsEnabled) return;
+            e.Handled = true;
+            RemoveSelected();
+        }
+
         private void OnAddClick(object sender, RoutedEventArgs e)
         {
             if (vm == null) return;
@@ -50,22 +117,32 @@ namespace CaelusApp.WpfHost.Views
             dlg.Owner = Window.GetWindow(this);
             bool? result = dlg.ShowDialog();
             if (result == true && dlg.SelectedHits.Count > 0)
-            {
                 vm.AddScannedGames(dlg.SelectedHits);
-            }
         }
 
-        // 移除按钮（简化：移除第一个——Phase 4 可加选中态）
         private void OnRemoveClick(object sender, RoutedEventArgs e)
         {
-            if (vm == null || vm.Items.Count == 0) return;
-            vm.RemoveAt(0);
+            RemoveSelected();
         }
 
-        // 拖放
+        private void RemoveSelected()
+        {
+            if (vm == null) return;
+            int index = GameList.SelectedIndex;
+            if (index < 0 || index >= vm.Items.Count) return;
+
+            vm.RemoveAt(index);
+            if (vm.Items.Count > 0)
+            {
+                GameList.SelectedIndex = index < vm.Items.Count ? index : vm.Items.Count - 1;
+                GameList.ScrollIntoView(GameList.SelectedItem);
+            }
+            UpdateSelectionState();
+        }
+
         private void OnDragOver(object sender, DragEventArgs e)
         {
-            if (e.Data.GetDataPresent(System.Windows.DataFormats.FileDrop))
+            if (e.Data.GetDataPresent(DataFormats.FileDrop))
                 e.Effects = DragDropEffects.Copy;
             else
                 e.Effects = DragDropEffects.None;
@@ -74,10 +151,10 @@ namespace CaelusApp.WpfHost.Views
 
         private void OnDrop(object sender, DragEventArgs e)
         {
-            if (vm == null) return;
-            if (!e.Data.GetDataPresent(System.Windows.DataFormats.FileDrop)) return;
-            string[] files = (string[])e.Data.GetData(System.Windows.DataFormats.FileDrop);
+            if (vm == null || !e.Data.GetDataPresent(DataFormats.FileDrop)) return;
+            string[] files = e.Data.GetData(DataFormats.FileDrop) as string[];
             if (files == null) return;
+
             List<string> errors = new List<string>();
             foreach (string file in files)
             {

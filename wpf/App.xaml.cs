@@ -2,8 +2,10 @@
 // 文件用途 WPF 预览宿主入口：正常启动与 --wpf-shot 截图探针
 
 using System;
+using System.Diagnostics;
 using System.IO;
 using System.Windows;
+using System.Windows.Threading;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
 
@@ -15,6 +17,7 @@ namespace CaelusApp.WpfHost
 
         protected override void OnExit(ExitEventArgs e)
         {
+            Motion.PolicyChanged -= OnMotionPolicyChanged;
             try
             {
                 if (tray != null) { tray.Visible = false; tray.Dispose(); }
@@ -26,6 +29,7 @@ namespace CaelusApp.WpfHost
         protected override void OnStartup(StartupEventArgs e)
         {
             base.OnStartup(e);
+            Motion.PolicyChanged += OnMotionPolicyChanged;
             // 迭代测试期间的异常观测点（问题解决后评估保留）
             DispatcherUnhandledException += (s, ex) =>
             {
@@ -43,8 +47,15 @@ namespace CaelusApp.WpfHost
                 Shutdown(code);
                 return;
             }
+            if (e.Args.Length >= 2 && e.Args[0] == "--wpf-motion-stress")
+            {
+                int code = RunMotionStress(e.Args[1]);
+                Shutdown(code);
+                return;
+            }
             AppMode initial = ModeController.LoadPersisted();
-            ThemeManager.Apply(this, UiTone.Dark, initial);
+            UiTone tone = Settings.Load("UiLight", false) ? UiTone.Light : UiTone.Dark;
+            ThemeManager.Apply(this, tone, initial);
             ThemeManager.TryApplyUserTheme(this);
             Paths.Init();
             var gameCore = new SuppressionCore();
@@ -55,6 +66,11 @@ namespace CaelusApp.WpfHost
             // 托盘图标延迟到消息循环运行后创建（OnStartup 阶段 Dispatcher 尚未泵消息，
             // 此时创建的 NotifyIcon 不会在通知区域显示）
             Dispatcher.BeginInvoke(new Action(CreateTray));
+        }
+
+        private void OnMotionPolicyChanged(object sender, EventArgs e)
+        {
+            ThemeManager.Apply(this, ThemeManager.CurrentTone, ThemeManager.CurrentMode);
         }
 
         private void CreateTray()
@@ -104,41 +120,15 @@ namespace CaelusApp.WpfHost
                     using (FileStream fs = File.Create(file)) enc.Save(fs);
                     w.Close();
                 }
-                // 策略页截图（巡航深色）
+                // 全部工作区页面的深色常规模式截图。
                 ThemeManager.Apply(this, UiTone.Dark, AppMode.Standard);
-                MainWindow pw = new MainWindow(new GameMode(Paths.Data, new SuppressionCore()));
-                pw.ApplyPersistedMode(AppMode.Standard);
-                pw.WindowStartupLocation = WindowStartupLocation.Manual;
-                pw.Left = -20000; pw.Top = -20000;
-                pw.ShowInTaskbar = false; pw.ShowActivated = false;
-                pw.Show(); pw.UpdateLayout();
-                pw.NavigateToPolicyForShot();
-                Size psize = new Size(1196, 768);
-                pw.Measure(psize); pw.Arrange(new Rect(psize)); pw.UpdateLayout();
-                RenderTargetBitmap prtb = new RenderTargetBitmap(1196, 768, 96, 96, PixelFormats.Pbgra32);
-                prtb.Render(pw);
-                PngBitmapEncoder penc = new PngBitmapEncoder();
-                penc.Frames.Add(BitmapFrame.Create(prtb));
-                string pfile = Path.Combine(dir, "wpf-policy-dark-cruise.png");
-                using (FileStream pfs = File.Create(pfile)) penc.Save(pfs);
-                pw.Close();
-                // 游戏库页截图
-                MainWindow lw = new MainWindow(null);
-                lw.ApplyPersistedMode(AppMode.Standard);
-                lw.WindowStartupLocation = WindowStartupLocation.Manual;
-                lw.Left = -20000; lw.Top = -20000;
-                lw.ShowInTaskbar = false; lw.ShowActivated = false;
-                lw.Show(); lw.UpdateLayout();
-                lw.NavigateToLibraryForShot();
-                Size lsize = new Size(1196, 768);
-                lw.Measure(lsize); lw.Arrange(new Rect(lsize)); lw.UpdateLayout();
-                RenderTargetBitmap lrtb = new RenderTargetBitmap(1196, 768, 96, 96, PixelFormats.Pbgra32);
-                lrtb.Render(lw);
-                PngBitmapEncoder lenc = new PngBitmapEncoder();
-                lenc.Frames.Add(BitmapFrame.Create(lrtb));
-                string lfile = Path.Combine(dir, "wpf-library-dark-cruise.png");
-                using (FileStream lfs = File.Create(lfile)) lenc.Save(lfs);
-                lw.Close();
+                string[] pages = new string[]
+                {
+                    "library", "policy", "graphics", "anticheat", "environment",
+                    "whitelist", "audit", "log", "settings", "about"
+                };
+                for (int i = 0; i < pages.Length; i++)
+                    CapturePage(dir, pages[i]);
                 return 0;
             }
             catch (Exception ex)
@@ -146,6 +136,147 @@ namespace CaelusApp.WpfHost
                 try { File.WriteAllText(Path.Combine(dir, "wpf-shot.error.txt"), ex.ToString()); } catch { }
                 return 1;
             }
+        }
+
+        private int RunMotionStress(string outputPath)
+        {
+            try
+            {
+                Paths.Init();
+                ThemeManager.Apply(this, UiTone.Dark, AppMode.Standard);
+                MainWindow window = new MainWindow(new GameMode(Paths.Data, new SuppressionCore()));
+                window.WindowStartupLocation = WindowStartupLocation.Manual;
+                window.Left = -20000;
+                window.Top = -20000;
+                window.ShowInTaskbar = false;
+                window.ShowActivated = false;
+                window.Show();
+
+                string[] pages = new string[]
+                {
+                    "overview", "library", "policy", "graphics", "anticheat",
+                    "environment", "whitelist", "audit", "log", "settings", "about"
+                };
+
+                // Warm every cached page and theme before taking the baseline.
+                for (int warm = 0; warm < 2; warm++)
+                {
+                    for (int i = 0; i < pages.Length; i++) window.NavigateToForShot(pages[i]);
+                    window.SwitchModeForStress(AppMode.Competitive);
+                    window.SwitchModeForStress(AppMode.Custom);
+                    window.SwitchModeForStress(AppMode.Standard);
+                }
+                window.UpdateLayout();
+                GC.Collect();
+                GC.WaitForPendingFinalizers();
+                GC.Collect();
+
+                Process process = Process.GetCurrentProcess();
+                process.Refresh();
+                long managedStart = GC.GetTotalMemory(true);
+                long privateStart = process.PrivateMemorySize64;
+
+                RunStressRound(window, pages);
+                CollectAfterMotion();
+                process.Refresh();
+                long managedMid = GC.GetTotalMemory(true);
+                long privateMid = process.PrivateMemorySize64;
+
+                RunStressRound(window, pages);
+                CollectAfterMotion();
+                process.Refresh();
+                long managedEnd = GC.GetTotalMemory(true);
+                long privateEnd = process.PrivateMemorySize64;
+
+                string report = "NAVIGATION_SWITCHES_PER_ROUND=110" + Environment.NewLine
+                    + "MODE_SWITCHES_PER_ROUND=30" + Environment.NewLine
+                    + "MANAGED_START_MB=" + Mb(managedStart) + Environment.NewLine
+                    + "MANAGED_ROUND1_MB=" + Mb(managedMid) + Environment.NewLine
+                    + "MANAGED_ROUND2_MB=" + Mb(managedEnd) + Environment.NewLine
+                    + "MANAGED_ROUND1_DELTA_MB=" + Mb(managedMid - managedStart) + Environment.NewLine
+                    + "MANAGED_ROUND2_DELTA_MB=" + Mb(managedEnd - managedMid) + Environment.NewLine
+                    + "PRIVATE_START_MB=" + Mb(privateStart) + Environment.NewLine
+                    + "PRIVATE_ROUND1_MB=" + Mb(privateMid) + Environment.NewLine
+                    + "PRIVATE_ROUND2_MB=" + Mb(privateEnd) + Environment.NewLine
+                    + "PRIVATE_ROUND1_DELTA_MB=" + Mb(privateMid - privateStart) + Environment.NewLine
+                    + "PRIVATE_ROUND2_DELTA_MB=" + Mb(privateEnd - privateMid) + Environment.NewLine;
+                File.WriteAllText(outputPath, report);
+                window.Close();
+                return 0;
+            }
+            catch (Exception ex)
+            {
+                try { File.WriteAllText(outputPath + ".error.txt", ex.ToString()); } catch { }
+                return 1;
+            }
+        }
+
+        private static void RunStressRound(MainWindow window, string[] pages)
+        {
+            for (int round = 0; round < 10; round++)
+                for (int i = 0; i < pages.Length; i++) window.NavigateToForShot(pages[i]);
+            for (int round = 0; round < 10; round++)
+            {
+                window.SwitchModeForStress(AppMode.Competitive);
+                window.SwitchModeForStress(AppMode.Custom);
+                window.SwitchModeForStress(AppMode.Standard);
+            }
+            window.NavigateToForShot("overview");
+            window.SwitchModeForStress(AppMode.Standard);
+            window.UpdateLayout();
+        }
+
+        private static void CollectAfterMotion()
+        {
+            PumpDispatcher(UiMotion.SuccessPopMs + 150);
+            GC.Collect();
+            GC.WaitForPendingFinalizers();
+            GC.Collect();
+        }
+
+        private static string Mb(long bytes)
+        {
+            return (bytes / 1048576.0).ToString("0.0");
+        }
+
+        private static void PumpDispatcher(int milliseconds)
+        {
+            var frame = new DispatcherFrame();
+            var timer = new DispatcherTimer(DispatcherPriority.Background)
+            {
+                Interval = TimeSpan.FromMilliseconds(milliseconds)
+            };
+            timer.Tick += delegate
+            {
+                timer.Stop();
+                frame.Continue = false;
+            };
+            timer.Start();
+            Dispatcher.PushFrame(frame);
+        }
+
+        private void CapturePage(string dir, string page)
+        {
+            MainWindow window = new MainWindow(new GameMode(Paths.Data, new SuppressionCore()));
+            window.ApplyPersistedMode(AppMode.Standard);
+            window.WindowStartupLocation = WindowStartupLocation.Manual;
+            window.Left = -20000;
+            window.Top = -20000;
+            window.ShowInTaskbar = false;
+            window.ShowActivated = false;
+            window.Show();
+            window.NavigateToForShot(page);
+            Size size = new Size(1196, 768);
+            window.Measure(size);
+            window.Arrange(new Rect(size));
+            window.UpdateLayout();
+            RenderTargetBitmap bitmap = new RenderTargetBitmap(1196, 768, 96, 96, PixelFormats.Pbgra32);
+            bitmap.Render(window);
+            PngBitmapEncoder encoder = new PngBitmapEncoder();
+            encoder.Frames.Add(BitmapFrame.Create(bitmap));
+            string file = Path.Combine(dir, "wpf-" + page + "-dark-cruise.png");
+            using (FileStream stream = File.Create(file)) encoder.Save(stream);
+            window.Close();
         }
     }
 }

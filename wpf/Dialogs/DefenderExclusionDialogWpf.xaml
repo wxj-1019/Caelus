@@ -1,0 +1,104 @@
+<Window x:Class="CaelusApp.WpfHost.Dialogs.DefenderExclusionDialogWpf"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        x:ClassModifier="internal"
+        Title="Defender 扫描排除" Width="720" Height="620"
+        WindowStartupLocation="CenterOwner" ResizeMode="CanResize"
+        MinWidth="600" MinHeight="500"
+        Background="{DynamicResource BackgroundBrush}"
+        FontFamily="{DynamicResource FontUi}"
+        PreviewKeyDown="OnWindowKeyDown"
+        AutomationProperties.Name="Defender 扫描排除">
+  <Grid Margin="24,20,24,20">
+    <Grid.RowDefinitions>
+      <RowDefinition Height="Auto"/>
+      <RowDefinition Height="Auto"/>
+      <RowDefinition Height="Auto"/>
+      <RowDefinition Height="*"/>
+      <RowDefinition Height="Auto"/>
+    </Grid.RowDefinitions>
+
+    <StackPanel Grid.Row="0" Margin="0,0,0,16">
+      <TextBlock Text="Defender 扫描排除" Style="{DynamicResource PageHeader}"/>
+      <TextBlock Text="按游戏目录管理实时扫描排除；只移除由 Caelus 添加的项目"
+                 Style="{DynamicResource PageSubtitle}" Margin="0,4,0,0"/>
+    </StackPanel>
+
+    <Border Grid.Row="1" Style="{DynamicResource SettingsGroup}" Margin="0,0,0,12"
+            BorderBrush="{DynamicResource DangerBrush}">
+      <Border Style="{DynamicResource SettingsRow}">
+        <StackPanel>
+          <TextBlock Text="这是拿安全换性能" FontSize="13" FontWeight="SemiBold"
+                     Foreground="{DynamicResource DangerBrush}"/>
+          <TextBlock Text="被排除的目录不再被实时扫描，其中的恶意文件不会被拦截。只排除你信任来源的游戏。"
+                     Margin="0,5,0,0" FontSize="11" TextWrapping="Wrap"
+                     Foreground="{DynamicResource TextSecondaryBrush}"/>
+        </StackPanel>
+      </Border>
+    </Border>
+
+    <Border Grid.Row="2" Style="{DynamicResource StatusBanner}" Margin="0,0,0,12">
+      <DockPanel>
+        <ProgressBar x:Name="BusyIndicator" DockPanel.Dock="Right" Width="92" Height="4"
+                     Margin="12,0,0,0" IsIndeterminate="True" Visibility="Collapsed"
+                     AutomationProperties.Name="Defender 操作进度"/>
+        <TextBlock x:Name="LblStatus" Text="正在读取 Defender 状态…" FontSize="11"
+                   Foreground="{DynamicResource TextSecondaryBrush}" TextWrapping="Wrap"
+                   AutomationProperties.Name="Defender 状态"/>
+      </DockPanel>
+    </Border>
+
+    <Border Grid.Row="3" Style="{DynamicResource SettingsGroup}" Padding="0">
+      <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
+        <ItemsControl x:Name="RowsHost" AutomationProperties.Name="游戏目录排除列表">
+          <ItemsControl.ItemTemplate>
+            <DataTemplate>
+              <Border Style="{DynamicResource SettingsRow}" BorderThickness="0,0,0,1">
+                <Grid>
+                  <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="Auto"/>
+                  </Grid.ColumnDefinitions>
+                  <StackPanel Grid.Column="0" VerticalAlignment="Center">
+                    <TextBlock Text="{Binding Name}" FontSize="12" FontWeight="SemiBold"
+                               Foreground="{DynamicResource TextPrimaryBrush}" TextTrimming="CharacterEllipsis"/>
+                    <TextBlock Text="{Binding Root}" Margin="0,4,0,0" FontSize="10"
+                               FontFamily="{DynamicResource FontMono}"
+                               Foreground="{DynamicResource TextTertiaryBrush}"
+                               TextTrimming="CharacterEllipsis"/>
+                  </StackPanel>
+                  <TextBlock Grid.Column="1" Text="{Binding StateText}" Margin="14,0,12,0"
+                             VerticalAlignment="Center" FontSize="11" FontWeight="SemiBold"
+                             Foreground="{Binding StateBrush}"/>
+                  <ToggleButton Grid.Column="2" IsChecked="{Binding Excluded, Mode=OneWay}"
+                                Style="{DynamicResource PolicyToggle}" VerticalAlignment="Center"
+                                Click="OnToggleClick" Tag="{Binding}"
+                                AutomationProperties.Name="{Binding AutomationName}"/>
+                </Grid>
+              </Border>
+            </DataTemplate>
+          </ItemsControl.ItemTemplate>
+        </ItemsControl>
+      </ScrollViewer>
+    </Border>
+
+    <Grid Grid.Row="4" Margin="0,14,0,0">
+      <Grid.ColumnDefinitions>
+        <ColumnDefinition Width="Auto"/>
+        <ColumnDefinition Width="*"/>
+        <ColumnDefinition Width="Auto"/>
+        <ColumnDefinition Width="Auto"/>
+      </Grid.ColumnDefinitions>
+      <Button Grid.Column="0" x:Name="BtnClearAll" Content="全部取消排除"
+              Click="OnClearAll" Style="{DynamicResource DangerButton}" Padding="14,7"
+              AutomationProperties.Name="取消所有由 Caelus 添加的 Defender 排除"/>
+      <Button Grid.Column="2" x:Name="BtnRefresh" Content="刷新" Click="OnRefresh"
+              Style="{DynamicResource GhostButton}" Padding="14,7" Margin="8,0,0,0"
+              AutomationProperties.Name="刷新 Defender 排除状态"/>
+      <Button Grid.Column="3" Content="关闭" Click="OnClose" IsCancel="True" IsDefault="True"
+              Style="{DynamicResource PrimaryButton}" Padding="18,7" Margin="8,0,0,0"
+              AutomationProperties.Name="关闭 Defender 扫描排除"/>
+    </Grid>
+  </Grid>
+</Window>

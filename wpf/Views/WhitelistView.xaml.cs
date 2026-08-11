@@ -7,54 +7,142 @@ using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
 using Microsoft.Win32;
+using CaelusApp.WpfHost.Dialogs;
 
 namespace CaelusApp.WpfHost.Views
 {
     public partial class WhitelistView : UserControl
     {
         private WhitelistViewModel vm;
+        private WhitelistItemSelected lastRuleSelection;
+        private bool panelStateInitialized;
+        private bool showingEmpty;
+        private bool loadingPanelState;
 
         public WhitelistView()
         {
             InitializeComponent();
             Loaded += OnLoaded;
+            Unloaded += OnUnloaded;
         }
 
         private void OnLoaded(object sender, RoutedEventArgs e)
         {
-            vm = DataContext as WhitelistViewModel;
+            WhitelistViewModel next = DataContext as WhitelistViewModel;
+            if (vm != next)
+            {
+                if (vm != null) vm.PropertyChanged -= OnVmPropertyChanged;
+                vm = next;
+                if (vm != null) vm.PropertyChanged += OnVmPropertyChanged;
+            }
             if (vm == null) return;
-            vm.PropertyChanged += OnVmPropertyChanged;
-            vm.Refresh(false);
-            vm.Refresh(true);
-            UpdatePanelVisibility();
+            loadingPanelState = true;
+            try
+            {
+                vm.Refresh(false);
+                vm.Refresh(true);
+                UpdatePanelVisibility(false);
+            }
+            finally
+            {
+                loadingPanelState = false;
+            }
+        }
+
+        private void OnUnloaded(object sender, RoutedEventArgs e)
+        {
+            if (vm != null) vm.PropertyChanged -= OnVmPropertyChanged;
+            vm = null;
+            lastRuleSelection = null;
+            panelStateInitialized = false;
         }
 
         private void OnVmPropertyChanged(object sender, PropertyChangedEventArgs e)
         {
-            if (e.PropertyName == "IsEmpty") UpdatePanelVisibility();
+            if (e.PropertyName == "IsEmpty") UpdatePanelVisibility(!loadingPanelState);
         }
 
-        private void UpdatePanelVisibility()
+        private void UpdatePanelVisibility(bool reveal)
         {
             if (vm == null) return;
-            EmptyPanel.Visibility = vm.IsEmpty ? Visibility.Visible : Visibility.Collapsed;
-            ListScroll.Visibility = vm.IsEmpty ? Visibility.Collapsed : Visibility.Visible;
+            bool isEmpty = vm.IsEmpty;
+            bool changed = !panelStateInitialized || showingEmpty != isEmpty;
+
+            EmptyPanel.Visibility = isEmpty ? Visibility.Visible : Visibility.Collapsed;
+            EmptyPanel.IsHitTestVisible = isEmpty;
+            RuleList.Visibility = isEmpty ? Visibility.Collapsed : Visibility.Visible;
+            RuleList.IsHitTestVisible = !isEmpty;
+
+            showingEmpty = isEmpty;
+            if (!panelStateInitialized)
+            {
+                panelStateInitialized = true;
+                return;
+            }
+            if (reveal && changed)
+                Motion.Reveal(isEmpty ? (FrameworkElement)EmptyPanel : RuleList);
         }
 
-        // 列表项点击 = 选中
-        private void OnItemClick(object sender, MouseButtonEventArgs e)
+        private void OnRuleSelectionChanged(object sender, SelectionChangedEventArgs e)
         {
             if (vm == null) return;
-            WhitelistItemSelected item = (sender as FrameworkElement).DataContext as WhitelistItemSelected;
-            if (item != null && !item.IsGroupHeader) vm.Selected = item;
+            WhitelistItemSelected item = RuleList.SelectedItem as WhitelistItemSelected;
+            if (item != null && item.IsGroupHeader)
+            {
+                RuleList.SelectedItem = lastRuleSelection;
+                return;
+            }
+            lastRuleSelection = item;
+            vm.Selected = item;
         }
 
-        // 从运行中的程序选 —— Phase 4：暂未实现，弹提示
+        private void OnRuleListPreviewKeyDown(object sender, KeyEventArgs e)
+        {
+            if (e.Key != Key.Up && e.Key != Key.Down) return;
+            int direction = e.Key == Key.Down ? 1 : -1;
+            int index = RuleList.SelectedIndex;
+            if (index < 0) index = direction > 0 ? -1 : RuleList.Items.Count;
+            int next = index + direction;
+            while (next >= 0 && next < RuleList.Items.Count)
+            {
+                WhitelistItemSelected item = RuleList.Items[next] as WhitelistItemSelected;
+                if (item != null && !item.IsGroupHeader)
+                {
+                    RuleList.SelectedIndex = next;
+                    RuleList.ScrollIntoView(item);
+                    ListBoxItem container = RuleList.ItemContainerGenerator.ContainerFromIndex(next) as ListBoxItem;
+                    if (container != null) container.Focus();
+                    e.Handled = true;
+                    return;
+                }
+                next += direction;
+            }
+        }
+
+        private void OnRuleListKeyDown(object sender, KeyEventArgs e)
+        {
+            if (e.Key != Key.Delete || vm == null || !vm.CanRemoveSelected) return;
+            e.Handled = true;
+            RemoveSelected();
+        }
+
+        // 从运行中的程序批量选择，已存在的路径不再列出。
         private void OnPickClick(object sender, RoutedEventArgs e)
         {
-            MessageBox.Show("该功能将在后续版本中支持。", "Caelus",
-                MessageBoxButton.OK, MessageBoxImage.Information);
+            if (vm == null) return;
+            var known = new HashSet<string>(System.StringComparer.OrdinalIgnoreCase);
+            foreach (WhitelistItemSelected item in vm.Items)
+            {
+                if (item == null || item.IsGroupHeader
+                    || item.Kind == WhitelistRuleKind.LegacyName
+                    || string.IsNullOrEmpty(item.Value)) continue;
+                known.Add(item.Value);
+            }
+
+            var dlg = new RunningPickerDialogWpf(known);
+            dlg.Owner = Window.GetWindow(this);
+            if (dlg.ShowDialog() == true && dlg.SelectedPaths.Count > 0)
+                AddFiles(dlg.SelectedPaths);
         }
 
         // 浏览（多选）
@@ -79,8 +167,12 @@ namespace CaelusApp.WpfHost.Views
         // 移除当前选中
         private void OnRemoveClick(object sender, RoutedEventArgs e)
         {
-            if (vm == null) return;
-            if (vm.Selected == null) return;
+            RemoveSelected();
+        }
+
+        private void RemoveSelected()
+        {
+            if (vm == null || vm.Selected == null) return;
             if (vm.Selected.Required)
             {
                 MessageBox.Show(Lang.T("white.required.locked"), "Caelus",

@@ -1,58 +1,88 @@
 <UserControl x:Class="CaelusApp.WpfHost.Views.AboutView"
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
-             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             AutomationProperties.Name="关于 Caelus">
   <StackPanel Margin="0,0,0,16">
-    <!-- 页头（规格 §7 5a） -->
-    <StackPanel Margin="0,0,0,12">
-      <TextBlock Text="关于" Style="{DynamicResource SectionTitle}"/>
-      <TextBlock Text="版本与致谢" Style="{DynamicResource SectionSubtitle}" Margin="0,3,0,0"/>
+    <StackPanel Margin="0,0,0,20">
+      <TextBlock Text="关于" Style="{DynamicResource PageHeader}"/>
+      <TextBlock Text="版本、项目与更新" Style="{DynamicResource PageSubtitle}" Margin="0,4,0,0"/>
     </StackPanel>
 
-    <!-- Hero -->
-    <Border Style="{DynamicResource HeroCardBorder}" Padding="20" Margin="0,0,0,16">
-      <StackPanel Orientation="Horizontal">
-        <TextBlock Text="CAELUS" FontSize="{DynamicResource FontSizeDisplay}" FontWeight="Bold"
-                   Foreground="{DynamicResource ModeAccentBrush}"/>
+    <Grid Margin="2,0,2,24">
+      <Grid.ColumnDefinitions>
+        <ColumnDefinition Width="*"/>
+        <ColumnDefinition Width="Auto"/>
+      </Grid.ColumnDefinitions>
+      <StackPanel Grid.Column="0">
+        <TextBlock Text="CAELUS" FontSize="{DynamicResource FontSizeDisplay}" FontWeight="SemiBold"
+                   Foreground="{DynamicResource TextPrimaryBrush}"/>
+        <TextBlock Text="Windows 性能守护" FontSize="12"
+                   Foreground="{DynamicResource TextSecondaryBrush}" Margin="0,5,0,0"/>
+      </StackPanel>
+      <TextBlock Grid.Column="1" Text="{Binding VersionText}" VerticalAlignment="Center"
+                 FontFamily="{DynamicResource FontMono}" FontSize="12"
+                 Foreground="{DynamicResource ModeAccentBrush}" Margin="24,0,0,0"/>
+    </Grid>
+
+    <Border Style="{DynamicResource SettingsGroup}" Margin="0,0,0,16">
+      <StackPanel>
+        <Border Style="{DynamicResource SettingsRow}" BorderThickness="0,0,0,1">
+          <Grid>
+            <Grid.ColumnDefinitions>
+              <ColumnDefinition Width="96"/>
+              <ColumnDefinition Width="*"/>
+            </Grid.ColumnDefinitions>
+            <TextBlock Grid.Column="0" Text="版本" FontSize="11"
+                       Foreground="{DynamicResource TextSecondaryBrush}"/>
+            <TextBlock Grid.Column="1" Text="{Binding VersionText}" FontSize="12"
+                       Foreground="{DynamicResource TextPrimaryBrush}"/>
+          </Grid>
+        </Border>
+        <Border Style="{DynamicResource SettingsRow}" BorderThickness="0,0,0,1">
+          <Grid>
+            <Grid.ColumnDefinitions>
+              <ColumnDefinition Width="96"/>
+              <ColumnDefinition Width="*"/>
+            </Grid.ColumnDefinitions>
+            <TextBlock Grid.Column="0" Text="作者" FontSize="11"
+                       Foreground="{DynamicResource TextSecondaryBrush}"/>
+            <TextBlock Grid.Column="1" Text="{Binding AuthorText}" FontSize="12"
+                       Foreground="{DynamicResource TextPrimaryBrush}" TextWrapping="Wrap"/>
+          </Grid>
+        </Border>
+        <Border Style="{DynamicResource SettingsRow}">
+          <Grid>
+            <Grid.ColumnDefinitions>
+              <ColumnDefinition Width="96"/>
+              <ColumnDefinition Width="*"/>
+            </Grid.ColumnDefinitions>
+            <TextBlock Grid.Column="0" Text="仓库" FontSize="11"
+                       Foreground="{DynamicResource TextSecondaryBrush}"/>
+            <TextBlock Grid.Column="1" Text="{Binding RepoText}" FontSize="12"
+                       Foreground="{DynamicResource ModeAccentBrush}" TextWrapping="Wrap"/>
+          </Grid>
+        </Border>
       </StackPanel>
     </Border>
 
-    <!-- 信息卡 -->
-    <Border Style="{DynamicResource CardBorder}" Margin="0,0,0,12">
-      <StackPanel>
-        <TextBlock Text="PROJECT // IDENTITY" FontSize="11" FontWeight="Bold"
-                   Foreground="{DynamicResource TextTertiaryBrush}" Margin="0,0,0,10"/>
-        <Grid Margin="0,0,0,6">
-          <Grid.ColumnDefinitions><ColumnDefinition Width="100"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
-          <TextBlock Grid.Column="0" Text="版本" FontSize="12" Foreground="{DynamicResource TextSecondaryBrush}"/>
-          <TextBlock Grid.Column="1" Text="{Binding VersionText}" FontSize="12" Foreground="{DynamicResource TextPrimaryBrush}"/>
-        </Grid>
-        <Grid Margin="0,0,0,6">
-          <Grid.ColumnDefinitions><ColumnDefinition Width="100"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
-          <TextBlock Grid.Column="0" Text="作者" FontSize="12" Foreground="{DynamicResource TextSecondaryBrush}"/>
-          <TextBlock Grid.Column="1" Text="{Binding AuthorText}" FontSize="12" Foreground="{DynamicResource TextPrimaryBrush}"/>
-        </Grid>
-        <Grid Margin="0,0,0,6">
-          <Grid.ColumnDefinitions><ColumnDefinition Width="100"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
-          <TextBlock Grid.Column="0" Text="仓库" FontSize="12" Foreground="{DynamicResource TextSecondaryBrush}"/>
-          <TextBlock Grid.Column="1" Text="{Binding RepoText}" FontSize="12" Foreground="{DynamicResource ModeAccentBrush}"/>
-        </Grid>
-      </StackPanel>
-    </Border>
-
-    <!-- 更新卡 -->
-    <Border Style="{DynamicResource CardBorder}">
-      <StackPanel>
-        <TextBlock Text="{Binding UpdateTitle}" FontSize="{DynamicResource FontSizeBody}" FontWeight="Bold"
-                   Foreground="{DynamicResource TextPrimaryBrush}" Margin="0,0,0,4"/>
-        <TextBlock Text="{Binding UpdateSubText}" FontSize="11"
-                   Foreground="{DynamicResource TextSecondaryBrush}" Margin="0,0,0,10"/>
-        <StackPanel Orientation="Horizontal">
+    <Border Style="{DynamicResource SettingsGroup}">
+      <Border Style="{DynamicResource SettingsRow}">
+        <DockPanel>
           <Button x:Name="BtnCheckUpdate" Content="{Binding CheckUpdateText}" Click="OnCheckUpdate"
-                  Style="{DynamicResource PrimaryButton}" Padding="16,6"/>
-          <TextBlock x:Name="LblUpdateStatus" Text="" FontSize="11" VerticalAlignment="Center" Margin="12,0,0,0"
-                     Foreground="{DynamicResource TextSecondaryBrush}"/>
-        </StackPanel>
-      </StackPanel>
+                  Style="{DynamicResource PrimaryButton}" Padding="14,6"
+                  DockPanel.Dock="Right" VerticalAlignment="Center" Margin="20,0,0,0"
+                  AutomationProperties.Name="检查 Caelus 更新"/>
+          <StackPanel VerticalAlignment="Center">
+            <TextBlock Text="{Binding UpdateTitle}" FontSize="{DynamicResource FontSizeCaption}"
+                       FontWeight="SemiBold" Foreground="{DynamicResource TextPrimaryBrush}"/>
+            <TextBlock Text="{Binding UpdateSubText}" FontSize="11"
+                       Foreground="{DynamicResource TextSecondaryBrush}" TextWrapping="Wrap" Margin="0,3,0,0"/>
+            <TextBlock x:Name="LblUpdateStatus" Text="{Binding UpdateStatus}" FontSize="11"
+                       Foreground="{DynamicResource TextSecondaryBrush}" TextWrapping="Wrap" Margin="0,6,0,0"
+                       AutomationProperties.Name="更新检查状态"/>
+          </StackPanel>
+        </DockPanel>
+      </Border>
     </Border>
   </StackPanel>
 </UserControl>

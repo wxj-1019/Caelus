@@ -10,9 +10,9 @@
 
   <!-- ===== 表面梯度（规格 §3.3：越高越亮；Surface0 近实色半透明叠光晕等效 backdrop-blur） ===== -->
   <Color x:Key="BackgroundColor">#07080D</Color>
-  <Color x:Key="Surface0Color">#B40F121B</Color>
-  <Color x:Key="Surface1Color">#CC161A26</Color>
-  <Color x:Key="Surface2Color">#D91D2230</Color>
+  <Color x:Key="Surface0Color">#D212161F</Color>
+  <Color x:Key="Surface1Color">#E0191E2E</Color>
+  <Color x:Key="Surface2Color">#E8222738</Color>
 
   <!-- ===== 文字（正文对背景对比度 ≥4.5:1） ===== -->
   <Color x:Key="TextPrimaryColor">#F6F8FC</Color>
@@ -34,17 +34,17 @@
   <SolidColorBrush x:Key="TextTertiaryBrush" Color="{StaticResource TextTertiaryColor}"/>
 
   <!-- ===== 描边体系（玻璃 2.0：渐变描边上亮下隐 + 卡顶高光线） ===== -->
-  <SolidColorBrush x:Key="BorderSubtleBrush" Color="#14FFFFFF"/>
-  <SolidColorBrush x:Key="BorderStrongBrush" Color="#2EFFFFFF"/>
+  <SolidColorBrush x:Key="BorderSubtleBrush" Color="#1FFFFFFF"/>
+  <SolidColorBrush x:Key="BorderStrongBrush" Color="#42FFFFFF"/>
   <LinearGradientBrush x:Key="TopHighlightBrush" StartPoint="0,0" EndPoint="1,0">
     <GradientStop Color="#00FFFFFF" Offset="0"/>
     <GradientStop Color="#59FFFFFF" Offset="0.5"/>
     <GradientStop Color="#00FFFFFF" Offset="1"/>
   </LinearGradientBrush>
   <LinearGradientBrush x:Key="CardEdgeBrush" StartPoint="0.5,0" EndPoint="0.5,1">
-    <GradientStop Color="#38FFFFFF" Offset="0"/>
-    <GradientStop Color="#0DFFFFFF" Offset="0.45"/>
-    <GradientStop Color="#05FFFFFF" Offset="1"/>
+    <GradientStop Color="#52FFFFFF" Offset="0"/>
+    <GradientStop Color="#1AFFFFFF" Offset="0.45"/>
+    <GradientStop Color="#0AFFFFFF" Offset="1"/>
   </LinearGradientBrush>
 
   <!-- ===== 分段控件选中态（深色旗舰：浅底深字，规格 §6） ===== -->

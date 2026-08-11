@@ -9,25 +9,25 @@
   <Color x:Key="AuroraSecondaryFadeColor">#00F97316</Color>
   <Color x:Key="AuroraTertiaryColor">#7C2D12</Color>
   <Color x:Key="AuroraTertiaryFadeColor">#007C2D12</Color>
-  <sys:Double x:Key="AuroraPrimaryOpacity">0.26</sys:Double>
-  <sys:Double x:Key="AuroraSecondaryOpacity">0.20</sys:Double>
-  <sys:Double x:Key="AuroraTertiaryOpacity">0.14</sys:Double>
+  <sys:Double x:Key="AuroraPrimaryOpacity">0.42</sys:Double>
+  <sys:Double x:Key="AuroraSecondaryOpacity">0.34</sys:Double>
+  <sys:Double x:Key="AuroraTertiaryOpacity">0.24</sys:Double>
   <sys:Double x:Key="AuroraDriftSeconds">22</sys:Double>
 
-  <!-- 径向渐变画刷：光域中心渐变提前渐隐（Offset 0.55），避免硬边裁剪 -->
-  <RadialGradientBrush x:Key="AmbientPrimaryBrush" Center="0.5,0.5" RadiusX="0.5" RadiusY="0.5">
+  <!-- 径向渐变画刷：光域扩大（Offset 0.72），让光晕覆盖更大区域 -->
+  <RadialGradientBrush x:Key="AmbientPrimaryBrush" Center="0.5,0.5" RadiusX="0.72" RadiusY="0.72">
     <GradientStop Color="{DynamicResource AuroraPrimaryColor}" Offset="0"/>
-    <GradientStop Color="{DynamicResource AuroraPrimaryFadeColor}" Offset="0.55"/>
+    <GradientStop Color="{DynamicResource AuroraPrimaryFadeColor}" Offset="0.72"/>
     <GradientStop Color="{DynamicResource AuroraPrimaryFadeColor}" Offset="1"/>
   </RadialGradientBrush>
-  <RadialGradientBrush x:Key="AmbientSecondaryBrush" Center="0.5,0.5" RadiusX="0.5" RadiusY="0.5">
+  <RadialGradientBrush x:Key="AmbientSecondaryBrush" Center="0.5,0.5" RadiusX="0.68" RadiusY="0.68">
     <GradientStop Color="{DynamicResource AuroraSecondaryColor}" Offset="0"/>
-    <GradientStop Color="{DynamicResource AuroraSecondaryFadeColor}" Offset="0.55"/>
+    <GradientStop Color="{DynamicResource AuroraSecondaryFadeColor}" Offset="0.68"/>
     <GradientStop Color="{DynamicResource AuroraSecondaryFadeColor}" Offset="1"/>
   </RadialGradientBrush>
-  <RadialGradientBrush x:Key="AmbientTertiaryBrush" Center="0.5,0.5" RadiusX="0.5" RadiusY="0.5">
+  <RadialGradientBrush x:Key="AmbientTertiaryBrush" Center="0.5,0.5" RadiusX="0.62" RadiusY="0.62">
     <GradientStop Color="{DynamicResource AuroraTertiaryColor}" Offset="0"/>
-    <GradientStop Color="{DynamicResource AuroraTertiaryFadeColor}" Offset="0.55"/>
+    <GradientStop Color="{DynamicResource AuroraTertiaryFadeColor}" Offset="0.62"/>
     <GradientStop Color="{DynamicResource AuroraTertiaryFadeColor}" Offset="1"/>
   </RadialGradientBrush>
 

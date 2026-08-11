@@ -1,0 +1,12 @@
+<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <!-- 用 .NET 4.8 标准版 PresentationBuildTasks（4.0.15744.551）覆盖 25H2 版（4.8.9221.0）。
+       25H2 版对混合模式 WPF 程序集的方法实现检查误报"没有实现"（MC1000）。 -->
+  <UsingTask TaskName="Microsoft.Build.Tasks.Windows.MarkupCompilePass1" AssemblyFile="$(MSBuildProjectDirectory)\ext\Mc1Wrap.dll" />
+  <UsingTask TaskName="Microsoft.Build.Tasks.Windows.MarkupCompilePass2" AssemblyFile="$(MSBuildProjectDirectory)\ext\PresentationBuildTasks.dll" />
+  <UsingTask TaskName="Microsoft.Build.Tasks.Windows.GenerateTemporaryTargetAssembly" AssemblyFile="$(MSBuildProjectDirectory)\ext\PresentationBuildTasks.dll" />
+  <UsingTask TaskName="Microsoft.Build.Tasks.Windows.UidManager" AssemblyFile="$(MSBuildProjectDirectory)\ext\PresentationBuildTasks.dll" />
+  <UsingTask TaskName="Microsoft.Build.Tasks.Windows.ResourcesGenerator" AssemblyFile="$(MSBuildProjectDirectory)\ext\PresentationBuildTasks.dll" />
+  <UsingTask TaskName="Microsoft.Build.Tasks.Windows.FileClassifier" AssemblyFile="$(MSBuildProjectDirectory)\ext\PresentationBuildTasks.dll" />
+  <UsingTask TaskName="Microsoft.Build.Tasks.Windows.MergeLocalizationDirectives" AssemblyFile="$(MSBuildProjectDirectory)\ext\PresentationBuildTasks.dll" />
+  <UsingTask TaskName="Microsoft.Build.Tasks.Windows.GetWinFXPath" AssemblyFile="$(MSBuildProjectDirectory)\ext\PresentationBuildTasks.dll" />
+</Project>

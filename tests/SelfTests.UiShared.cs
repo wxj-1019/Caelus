@@ -94,20 +94,25 @@ namespace CaelusApp
 
         private static void TestMotionTokens()
         {
-            Eq(250, UiMotion.PageFadeMs);
-            Eq(300, UiMotion.CardExpandMs);
-            Eq(400, UiMotion.NumberRollMs);
-            Eq(200, UiMotion.ToggleMs);
-            Eq(250, UiMotion.ModalMs);
-            Eq(400, UiMotion.SuccessPopMs);
+            Eq(90, UiMotion.ButtonPressMs);
+            Eq(150, UiMotion.ToggleMs);
+            Eq(180, UiMotion.SegmentMs);
+            Eq(180, UiMotion.PageFadeMs);
+            Eq(220, UiMotion.ModeChangeMs);
+            Eq(260, UiMotion.SuccessPopMs);
+            Eq(180, UiMotion.ModalMs);
+            Eq(220, UiMotion.CardExpandMs);
+            Eq(220, UiMotion.NumberRollMs);
         }
 
         private static void TestMotionReducedPolicy()
         {
-            Eq(250, UiMotion.Duration(UiMotion.PageFadeMs, false));
-            Eq(125, UiMotion.Duration(UiMotion.PageFadeMs, true));
+            Eq(180, UiMotion.Duration(UiMotion.PageFadeMs, false));
+            Eq(90, UiMotion.Duration(UiMotion.PageFadeMs, true));
             Eq(true, UiMotion.AllowsOffset(false));
             Eq(false, UiMotion.AllowsOffset(true));
+            Eq(true, UiMotion.AllowsScale(false));
+            Eq(false, UiMotion.AllowsScale(true));
         }
 
         private sealed class ProbeVm : ViewModelBase

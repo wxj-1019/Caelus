@@ -1,163 +1,220 @@
 <UserControl x:Class="CaelusApp.WpfHost.Views.WhitelistView"
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-             xmlns:local="clr-namespace:CaelusApp.WpfHost"
-             xmlns:controls="clr-namespace:CaelusApp.WpfHost.Controls"
              AllowDrop="True" Drop="OnDrop" DragOver="OnDragOver">
   <Grid>
     <Grid.RowDefinitions>
       <RowDefinition Height="Auto"/>
       <RowDefinition Height="*"/>
     </Grid.RowDefinitions>
-    <Grid.ColumnDefinitions>
-      <ColumnDefinition Width="*"/>
-      <ColumnDefinition Width="200"/>
-    </Grid.ColumnDefinitions>
 
-    <!-- 页头（规格 §7 5a） -->
-    <StackPanel Grid.Row="0" Grid.ColumnSpan="2" Margin="0,0,0,12">
-      <TextBlock Text="白名单" Style="{DynamicResource SectionTitle}"/>
-      <TextBlock Text="永不触碰的进程" Style="{DynamicResource SectionSubtitle}" Margin="0,3,0,0"/>
+    <StackPanel Grid.Row="0" Margin="0,0,0,16">
+      <TextBlock Text="白名单" Style="{DynamicResource PageHeader}"/>
+      <TextBlock Text="永不触碰的进程" Style="{DynamicResource PageSubtitle}" Margin="0,4,0,0"/>
     </StackPanel>
 
-    <!-- 左：列表区 / 空态 -->
-    <Grid Grid.Row="1" Grid.Column="0" Margin="0,0,16,0">
-      <!-- 空态 -->
-      <StackPanel x:Name="EmptyPanel" VerticalAlignment="Center" HorizontalAlignment="Center">
-        <TextBlock Text="{Binding EmptyTitle}" FontSize="{DynamicResource FontSizeDisplay}"
-                   FontWeight="Bold" Foreground="{DynamicResource TextTertiaryBrush}"
-                   HorizontalAlignment="Center" Margin="0,0,0,8"/>
-        <TextBlock Text="{Binding EmptyHint}" FontSize="{DynamicResource FontSizeCaption}"
-                   Foreground="{DynamicResource TextSecondaryBrush}"
-                   HorizontalAlignment="Center" TextAlignment="Center"
-                   TextWrapping="Wrap" MaxWidth="400"/>
-      </StackPanel>
+    <Grid Grid.Row="1">
+      <Grid.ColumnDefinitions>
+        <ColumnDefinition Width="*" MinWidth="360"/>
+        <ColumnDefinition Width="16"/>
+        <ColumnDefinition Width="224"/>
+      </Grid.ColumnDefinitions>
 
-      <!-- 列表 -->
-      <ScrollViewer x:Name="ListScroll" VerticalScrollBarVisibility="Auto"
-                    HorizontalScrollBarVisibility="Disabled" Visibility="Collapsed">
-        <ItemsControl ItemsSource="{Binding Items}">
-          <ItemsControl.ItemTemplate>
-            <DataTemplate>
-              <Grid Margin="0,0,0,6">
-                <!-- 分组标题（IsGroupHeader=true 时显示） -->
-                <TextBlock Text="{Binding GroupTitle}" FontSize="11"
-                           FontWeight="Bold" Foreground="{DynamicResource TextTertiaryBrush}"
-                           Margin="6,10,0,6" VerticalAlignment="Center">
-                  <TextBlock.Style>
-                    <Style TargetType="TextBlock">
-                      <Setter Property="Visibility" Value="Collapsed"/>
-                      <Style.Triggers>
-                        <DataTrigger Binding="{Binding IsGroupHeader}" Value="True">
-                          <Setter Property="Visibility" Value="Visible"/>
-                        </DataTrigger>
-                      </Style.Triggers>
-                    </Style>
-                  </TextBlock.Style>
-                </TextBlock>
+      <Border Grid.Column="0" Style="{DynamicResource SettingsGroup}" Padding="0">
+        <Grid>
+          <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+          </Grid.RowDefinitions>
 
-                <!-- 普通条目（IsGroupHeader=false 时显示） -->
-                <controls:GlassCard Padding="14,10" local:Motion.Lift="True" MouseLeftButtonDown="OnItemClick">
-                  <controls:GlassCard.Style>
-                    <Style TargetType="controls:GlassCard" BasedOn="{StaticResource GlassCard}">
-                      <Setter Property="Visibility" Value="Visible"/>
-                      <Style.Triggers>
-                        <DataTrigger Binding="{Binding IsGroupHeader}" Value="True">
-                          <Setter Property="Visibility" Value="Collapsed"/>
-                        </DataTrigger>
-                      </Style.Triggers>
-                    </Style>
-                  </controls:GlassCard.Style>
-                  <DockPanel>
-                    <!-- 右：状态点 + 文案 -->
-                    <StackPanel DockPanel.Dock="Right" VerticalAlignment="Center" Margin="8,0,0,0">
-                      <DockPanel>
-                        <Ellipse DockPanel.Dock="Left" Width="7" Height="7" Margin="0,0,6,0"
-                                 VerticalAlignment="Center">
-                          <Ellipse.Style>
-                            <Style TargetType="Ellipse">
-                              <Setter Property="Fill" Value="{DynamicResource TextTertiaryBrush}"/>
-                              <Style.Triggers>
-                                <DataTrigger Binding="{Binding IsLive}" Value="True">
-                                  <Setter Property="Fill" Value="{DynamicResource SuccessBrush}"/>
-                                </DataTrigger>
-                              </Style.Triggers>
-                            </Style>
-                          </Ellipse.Style>
-                        </Ellipse>
-                        <TextBlock Text="{Binding StateText}" FontSize="11"
-                                   Foreground="{DynamicResource TextSecondaryBrush}"
-                                   VerticalAlignment="Center"/>
-                      </DockPanel>
-                    </StackPanel>
+          <Grid Grid.Row="0" Margin="16,14,16,10">
+            <Grid.ColumnDefinitions>
+              <ColumnDefinition Width="*"/>
+              <ColumnDefinition Width="Auto"/>
+            </Grid.ColumnDefinitions>
+            <StackPanel>
+              <TextBlock Text="用户规则" FontSize="13" FontWeight="SemiBold"
+                         Foreground="{DynamicResource TextPrimaryBrush}"/>
+              <TextBlock Text="你添加的规则，可调整保护范围或删除" Margin="0,3,0,0"
+                         FontSize="11" Foreground="{DynamicResource TextSecondaryBrush}"/>
+            </StackPanel>
+            <TextBlock Grid.Column="1" Text="选择规则后管理" VerticalAlignment="Center"
+                       FontSize="10" Foreground="{DynamicResource TextTertiaryBrush}"/>
+          </Grid>
 
-                    <!-- 右-2：徽标 -->
-                    <Border DockPanel.Dock="Right" VerticalAlignment="Center"
-                            CornerRadius="{DynamicResource RadiusSm}" Padding="8,3" Margin="0,0,10,0"
-                            Background="{DynamicResource GlassNavBrush}"
-                            BorderBrush="{DynamicResource BorderSubtleBrush}" BorderThickness="1">
-                      <TextBlock Text="{Binding Badge}" FontSize="10"
+          <Grid Grid.Row="1">
+            <StackPanel x:Name="EmptyPanel" VerticalAlignment="Center" HorizontalAlignment="Center" Margin="24">
+              <TextBlock Text="{Binding EmptyTitle}" FontSize="{DynamicResource FontSizeDisplay}"
+                         FontWeight="Bold" Foreground="{DynamicResource TextTertiaryBrush}"
+                         HorizontalAlignment="Center" Margin="0,0,0,8"/>
+              <TextBlock Text="{Binding EmptyHint}" FontSize="{DynamicResource FontSizeCaption}"
+                         Foreground="{DynamicResource TextSecondaryBrush}"
+                         HorizontalAlignment="Center" TextAlignment="Center"
+                         TextWrapping="Wrap" MaxWidth="400"/>
+            </StackPanel>
+
+            <ListBox x:Name="RuleList" ItemsSource="{Binding Items}"
+                     SelectedItem="{Binding Selected, Mode=TwoWay}"
+                     ItemContainerStyle="{DynamicResource ListItem}"
+                     Background="Transparent" BorderThickness="0"
+                     ScrollViewer.HorizontalScrollBarVisibility="Disabled"
+                     ScrollViewer.VerticalScrollBarVisibility="Auto"
+                     KeyboardNavigation.DirectionalNavigation="Continue"
+                     SelectionChanged="OnRuleSelectionChanged"
+                     PreviewKeyDown="OnRuleListPreviewKeyDown"
+                     KeyDown="OnRuleListKeyDown"
+                     AutomationProperties.Name="白名单规则"
+                     Visibility="Collapsed">
+              <ListBox.ItemTemplate>
+                <DataTemplate>
+                  <Grid>
+                    <Grid x:Name="GroupHeader" Margin="12,14,12,6" Visibility="Collapsed"
+                          IsHitTestVisible="False">
+                      <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="Auto"/>
+                        <ColumnDefinition Width="*"/>
+                      </Grid.ColumnDefinitions>
+                      <TextBlock Text="{Binding GroupTitle}" FontSize="11" FontWeight="SemiBold"
                                  Foreground="{DynamicResource TextSecondaryBrush}"/>
+                      <Rectangle Grid.Column="1" Height="1" Margin="12,0,0,0"
+                                 VerticalAlignment="Center" Fill="{DynamicResource BorderSubtleBrush}"/>
+                    </Grid>
+
+                    <Border x:Name="RuleRow" Style="{DynamicResource SettingsRow}" Margin="6,2" Padding="12,10">
+                      <Grid>
+                        <Grid.ColumnDefinitions>
+                          <ColumnDefinition Width="*" MinWidth="120"/>
+                          <ColumnDefinition Width="Auto"/>
+                          <ColumnDefinition Width="Auto"/>
+                        </Grid.ColumnDefinitions>
+                        <StackPanel Grid.Column="0" VerticalAlignment="Center">
+                          <TextBlock Text="{Binding Title}" FontSize="{DynamicResource FontSizeCaption}"
+                                     FontWeight="SemiBold" TextTrimming="CharacterEllipsis">
+                            <TextBlock.Style>
+                              <Style TargetType="TextBlock">
+                                <Setter Property="Foreground" Value="{DynamicResource TextPrimaryBrush}"/>
+                                <Style.Triggers>
+                                  <DataTrigger Binding="{Binding Required}" Value="True">
+                                    <Setter Property="Foreground" Value="{DynamicResource TextSecondaryBrush}"/>
+                                  </DataTrigger>
+                                </Style.Triggers>
+                              </Style>
+                            </TextBlock.Style>
+                          </TextBlock>
+                          <TextBlock Text="{Binding Subtitle}" FontSize="10"
+                                     Foreground="{DynamicResource TextTertiaryBrush}"
+                                     TextTrimming="CharacterEllipsis" Margin="0,3,0,0"/>
+                        </StackPanel>
+                        <Border Grid.Column="1" VerticalAlignment="Center" Margin="12,0"
+                                CornerRadius="{DynamicResource RadiusSm}" Padding="8,3"
+                                Background="{DynamicResource GlassNavBrush}"
+                                BorderBrush="{DynamicResource BorderSubtleBrush}" BorderThickness="1">
+                          <TextBlock Text="{Binding Badge}" FontSize="10"
+                                     Foreground="{DynamicResource TextSecondaryBrush}"/>
+                        </Border>
+                        <StackPanel Grid.Column="2" Orientation="Horizontal" VerticalAlignment="Center" MinWidth="86">
+                          <Ellipse Width="7" Height="7" Margin="0,0,6,0" VerticalAlignment="Center">
+                            <Ellipse.Style>
+                              <Style TargetType="Ellipse">
+                                <Setter Property="Fill" Value="{DynamicResource TextTertiaryBrush}"/>
+                                <Style.Triggers>
+                                  <DataTrigger Binding="{Binding IsLive}" Value="True">
+                                    <Setter Property="Fill" Value="{DynamicResource SuccessBrush}"/>
+                                  </DataTrigger>
+                                </Style.Triggers>
+                              </Style>
+                            </Ellipse.Style>
+                          </Ellipse>
+                          <TextBlock Text="{Binding StateText}" FontSize="10"
+                                     Foreground="{DynamicResource TextSecondaryBrush}"
+                                     VerticalAlignment="Center" TextTrimming="CharacterEllipsis"/>
+                        </StackPanel>
+                      </Grid>
                     </Border>
+                  </Grid>
+                  <DataTemplate.Triggers>
+                    <DataTrigger Binding="{Binding IsGroupHeader}" Value="True">
+                      <Setter TargetName="GroupHeader" Property="Visibility" Value="Visible"/>
+                      <Setter TargetName="RuleRow" Property="Visibility" Value="Collapsed"/>
+                    </DataTrigger>
+                  </DataTemplate.Triggers>
+                </DataTemplate>
+              </ListBox.ItemTemplate>
+            </ListBox>
+          </Grid>
+        </Grid>
+      </Border>
 
-                    <!-- 中：标题 + 路径 -->
-                    <StackPanel VerticalAlignment="Center">
-                      <TextBlock Text="{Binding Title}" FontSize="{DynamicResource FontSizeCaption}"
-                                 FontWeight="Bold" TextTrimming="CharacterEllipsis">
-                        <TextBlock.Style>
-                          <Style TargetType="TextBlock">
-                            <Setter Property="Foreground" Value="{DynamicResource TextPrimaryBrush}"/>
-                            <Style.Triggers>
-                              <DataTrigger Binding="{Binding Required}" Value="True">
-                                <Setter Property="Foreground" Value="{DynamicResource TextSecondaryBrush}"/>
-                              </DataTrigger>
-                            </Style.Triggers>
-                          </Style>
-                        </TextBlock.Style>
-                      </TextBlock>
-                      <TextBlock Text="{Binding Subtitle}" FontSize="11"
-                                 Foreground="{DynamicResource TextTertiaryBrush}"
-                                 TextTrimming="CharacterEllipsis" Margin="0,2,0,0"/>
-                    </StackPanel>
-                  </DockPanel>
-                </controls:GlassCard>
-              </Grid>
-            </DataTemplate>
-          </ItemsControl.ItemTemplate>
-        </ItemsControl>
-      </ScrollViewer>
+      <Border Grid.Column="2" Style="{DynamicResource SettingsGroup}" Padding="16">
+        <Grid>
+          <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto"/>
+          </Grid.RowDefinitions>
+          <StackPanel Grid.Row="0">
+            <TextBlock Text="添加规则" FontSize="13" FontWeight="SemiBold"
+                       Foreground="{DynamicResource TextPrimaryBrush}" Margin="0,0,0,10"/>
+            <Button Style="{DynamicResource PrimaryButton}" Click="OnPickClick"
+                    Content="{Binding PickText}" HorizontalAlignment="Stretch"
+                    AutomationProperties.Name="从运行中的程序添加白名单规则"/>
+            <Button Style="{DynamicResource GhostButton}" Click="OnBrowseClick"
+                    Content="{Binding BrowseText}" HorizontalAlignment="Stretch" Margin="0,6,0,0"
+                    AutomationProperties.Name="浏览可执行文件并添加白名单规则"/>
+            <TextBlock Text="{Binding DropHint}" FontSize="10"
+                       Foreground="{DynamicResource TextTertiaryBrush}" TextWrapping="Wrap" Margin="0,10,0,0"/>
+          </StackPanel>
+
+          <Rectangle Grid.Row="1" Height="1" Fill="{DynamicResource BorderSubtleBrush}" Margin="0,16"/>
+
+          <StackPanel Grid.Row="2">
+            <TextBlock Text="所选规则" FontSize="13" FontWeight="SemiBold"
+                       Foreground="{DynamicResource TextPrimaryBrush}"/>
+            <TextBlock Text="{Binding Selected.Title}" FontSize="11" FontWeight="SemiBold"
+                       Foreground="{DynamicResource TextSecondaryBrush}"
+                       TextTrimming="CharacterEllipsis" Margin="0,6,0,2"/>
+            <TextBlock Text="先从左侧选择一条规则" FontSize="10"
+                       Foreground="{DynamicResource TextTertiaryBrush}" Margin="0,4,0,12">
+              <TextBlock.Style>
+                <Style TargetType="TextBlock">
+                  <Setter Property="Visibility" Value="Collapsed"/>
+                  <Style.Triggers>
+                    <DataTrigger Binding="{Binding Selected}" Value="{x:Null}">
+                      <Setter Property="Visibility" Value="Visible"/>
+                    </DataTrigger>
+                  </Style.Triggers>
+                </Style>
+              </TextBlock.Style>
+            </TextBlock>
+            <TextBlock Text="保护范围" FontSize="10"
+                       Foreground="{DynamicResource TextTertiaryBrush}" Margin="0,8,0,6"/>
+            <Button Style="{DynamicResource GhostButton}" Click="OnNarrowClick"
+                    Content="只保护这一个（不含子进程）" HorizontalAlignment="Stretch"
+                    HorizontalContentAlignment="Left" IsEnabled="{Binding CanNarrow}"
+                    AutomationProperties.Name="将所选规则缩窄为仅此程序"/>
+            <Button Style="{DynamicResource GhostButton}" Click="OnWidenClick"
+                    Content="连子进程一起保护" HorizontalAlignment="Stretch"
+                    HorizontalContentAlignment="Left" Margin="0,4,0,0"
+                    IsEnabled="{Binding CanWiden}"
+                    AutomationProperties.Name="将所选规则扩展为应用家族"/>
+            <Button Style="{DynamicResource GhostButton}" Click="OnRemoveClick"
+                    Content="{Binding RemoveText}" HorizontalAlignment="Stretch"
+                    HorizontalContentAlignment="Left" Margin="0,12,0,0"
+                    Foreground="{DynamicResource DangerBrush}"
+                    IsEnabled="{Binding CanRemoveSelected}"
+                    AutomationProperties.Name="删除所选白名单规则"/>
+          </StackPanel>
+
+          <StackPanel Grid.Row="3">
+            <Rectangle Height="1" Fill="{DynamicResource BorderSubtleBrush}" Margin="0,16"/>
+            <Button Click="OnResetClick" Content="{Binding ResetText}"
+                    HorizontalAlignment="Stretch" Foreground="{DynamicResource DangerBrush}"
+                    Style="{DynamicResource GhostButton}"
+                    AutomationProperties.Name="将白名单重置为系统预设"/>
+          </StackPanel>
+        </Grid>
+      </Border>
     </Grid>
-
-    <!-- 右：操作按钮 -->
-    <StackPanel Grid.Row="1" Grid.Column="1">
-      <Button Style="{DynamicResource PrimaryButton}" Click="OnPickClick"
-              Content="{Binding PickText}" HorizontalAlignment="Stretch" Margin="0,0,0,8"/>
-      <Button Style="{DynamicResource PrimaryButton}" Click="OnBrowseClick"
-              Content="{Binding BrowseText}" HorizontalAlignment="Stretch" Margin="0,0,0,8"
-              Opacity="0.85"/>
-      <Button Style="{DynamicResource GhostButton}" Click="OnRemoveClick"
-              Content="{Binding RemoveText}" HorizontalAlignment="Stretch" Margin="0,0,0,8"
-              IsEnabled="{Binding CanRemoveSelected}"/>
-      <Button Style="{DynamicResource GhostButton}" Click="OnNarrowClick"
-              Content="缩窄范围" HorizontalAlignment="Stretch" Margin="0,0,0,8"
-              IsEnabled="{Binding CanNarrow}"/>
-      <Button Style="{DynamicResource GhostButton}" Click="OnWidenClick"
-              Content="扩展为家族" HorizontalAlignment="Stretch" Margin="0,0,0,8"
-              IsEnabled="{Binding CanWiden}"/>
-      <TextBlock Text="{Binding DropHint}" FontSize="11"
-                 Foreground="{DynamicResource TextTertiaryBrush}" TextWrapping="Wrap"
-                 Margin="4,8,4,0"/>
-
-      <Rectangle Height="1" Fill="{DynamicResource BorderSubtleBrush}" Margin="0,16,0,16"/>
-
-      <Button Click="OnResetClick" Content="{Binding ResetText}"
-              HorizontalAlignment="Stretch">
-        <Button.Style>
-          <Style TargetType="Button" BasedOn="{StaticResource PrimaryButton}">
-            <Setter Property="Background" Value="{DynamicResource DangerBrush}"/>
-          </Style>
-        </Button.Style>
-      </Button>
-    </StackPanel>
   </Grid>
 </UserControl>

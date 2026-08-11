@@ -1,5 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="4.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <!-- 必须先于 Microsoft.CSharp.targets 导入：MSBuild 对同名 UsingTask 采用
+       "先注册者生效"规则，后导入的 WinFx.targets（AssemblyName 形式）不会覆盖本文件。 -->
+  <Import Project="$(MSBuildProjectDirectory)\ext\WinFx.Override.targets" />
   <PropertyGroup>
     <Configuration Condition=" '$(Configuration)' == '' ">Release</Configuration>
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
@@ -15,30 +18,42 @@
     <ApplicationIcon Condition="Exists('..\Caelus.ico')">..\Caelus.ico</ApplicationIcon>
     <WarningLevel>4</WarningLevel>
     <Optimize>true</Optimize>
+    <AlwaysCompileMarkupFilesInSeparateDomain>false</AlwaysCompileMarkupFilesInSeparateDomain>
     <!-- No LangVersion: the in-framework csc.exe (4.0.30319) only knows
          ISO-1/2/3/4/5/Default, so the default matches the legacy build.cmd. -->
   </PropertyGroup>
   <ItemGroup>
-    <Reference Include="System" />
-    <Reference Include="System.Core" />
+    <Reference Include="mscorlib">
+      <HintPath>C:\Windows\Microsoft.NET\Framework\v4.0.30319\mscorlib.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="System">
+      <HintPath>C:\Windows\Microsoft.NET\assembly\GAC_MSIL\System\v4.0_4.0.0.0__b77a5c561934e089\System.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="System.Core">
+      <HintPath>C:\Windows\Microsoft.NET\assembly\GAC_MSIL\System.Core\v4.0_4.0.0.0__b77a5c561934e089\System.Core.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
     <Reference Include="System.Drawing" />
     <Reference Include="System.Windows.Forms" />
     <Reference Include="System.Management" />
     <Reference Include="System.Xml" />
-    <Reference Include="System.Xaml">
-      <HintPath>$(WINDIR)\Microsoft.NET\Framework64\v4.0.30319\System.Xaml.dll</HintPath>
-      <Private>False</Private>
-    </Reference>
-    <Reference Include="WindowsBase">
-      <HintPath>$(WINDIR)\Microsoft.NET\Framework64\v4.0.30319\WPF\WindowsBase.dll</HintPath>
-      <Private>False</Private>
-    </Reference>
+    <!-- 编译用标准 4.8 程序集（从官方独立安装包提取，与运行时 GAC 版本无关） -->
     <Reference Include="PresentationCore">
-      <HintPath>$(WINDIR)\Microsoft.NET\Framework64\v4.0.30319\WPF\PresentationCore.dll</HintPath>
+      <HintPath>C:\Windows\Microsoft.NET\assembly\GAC_32\PresentationCore\v4.0_4.0.0.0__31bf3856ad364e35\PresentationCore.dll</HintPath>
       <Private>False</Private>
     </Reference>
     <Reference Include="PresentationFramework">
-      <HintPath>$(WINDIR)\Microsoft.NET\Framework64\v4.0.30319\WPF\PresentationFramework.dll</HintPath>
+      <HintPath>C:\Windows\Microsoft.NET\assembly\GAC_MSIL\PresentationFramework\v4.0_4.0.0.0__31bf3856ad364e35\PresentationFramework.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="System.Xaml">
+      <HintPath>C:\Windows\Microsoft.NET\assembly\GAC_MSIL\System.Xaml\v4.0_4.0.0.0__b77a5c561934e089\System.Xaml.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="WindowsBase">
+      <HintPath>C:\Windows\Microsoft.NET\assembly\GAC_MSIL\WindowsBase\v4.0_4.0.0.0__31bf3856ad364e35\WindowsBase.dll</HintPath>
       <Private>False</Private>
     </Reference>
   </ItemGroup>
@@ -69,6 +84,9 @@
     <Page Include="Views\WhitelistView.xaml" />
     <Page Include="Controls\SegmentedControl.xaml" />
     <Page Include="Dialogs\AddGameDialogWpf.xaml" />
+    <Page Include="Dialogs\RunningPickerDialogWpf.xaml" />
+    <Page Include="Dialogs\DefenderExclusionDialogWpf.xaml" />
+    <Page Include="Dialogs\LolAddonDialogWpf.xaml" />
   </ItemGroup>
   <ItemGroup>
     <Compile Include="ThemeManager.cs" />
@@ -140,8 +158,18 @@
     <Compile Include="AuditViewModel.cs" />
     <Compile Include="WhitelistViewModel.cs" />
     <Compile Include="Dialogs\AddGameDialogWpf.xaml.cs">
-      <DependentUpon>Dialogs\AddGameDialogWpf.xaml</DependentUpon>
+      <DependentUpon>AddGameDialogWpf.xaml</DependentUpon>
     </Compile>
+    <Compile Include="Dialogs\RunningPickerDialogWpf.xaml.cs">
+      <DependentUpon>RunningPickerDialogWpf.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Dialogs\DefenderExclusionDialogWpf.xaml.cs">
+      <DependentUpon>DefenderExclusionDialogWpf.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Dialogs\LolAddonDialogWpf.xaml.cs">
+      <DependentUpon>LolAddonDialogWpf.xaml</DependentUpon>
+    </Compile>
+
     <!-- Link-compile framework-agnostic Core sources so new files auto-enter
          both the legacy (build.cmd) and WPF builds. WinForms-only sources
          (src/Ui, src/Program.cs) are intentionally excluded. -->

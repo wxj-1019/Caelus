@@ -2,6 +2,7 @@
 // 文件用途 WPF 系统体检页：4 个触发按钮 + 扫描中的进度估算驱动
 
 using System;
+using System.ComponentModel;
 using System.Diagnostics;
 using System.Windows;
 using System.Windows.Controls;
@@ -15,6 +16,7 @@ namespace CaelusApp.WpfHost.Views
         private DispatcherTimer progressTimer;
         private Stopwatch progressClock;
         private int progressTotalMs;
+        private int displayedState = -1;
 
         public AuditView()
         {
@@ -25,12 +27,65 @@ namespace CaelusApp.WpfHost.Views
 
         private void OnLoaded(object sender, RoutedEventArgs e)
         {
-            vm = DataContext as AuditViewModel;
+            AuditViewModel next = DataContext as AuditViewModel;
+            if (vm != next)
+            {
+                DetachViewModel();
+                vm = next;
+                if (vm != null) vm.PropertyChanged += OnVmPropertyChanged;
+            }
+            displayedState = -1;
+            UpdateStateVisibility(false);
         }
 
         private void OnUnloaded(object sender, RoutedEventArgs e)
         {
             StopProgressTimer();
+            DetachViewModel();
+            vm = null;
+            displayedState = -1;
+        }
+
+        private void DetachViewModel()
+        {
+            if (vm != null) vm.PropertyChanged -= OnVmPropertyChanged;
+        }
+
+        private void OnVmPropertyChanged(object sender, PropertyChangedEventArgs e)
+        {
+            if (e.PropertyName == "IsIdle"
+                || e.PropertyName == "IsScanning"
+                || e.PropertyName == "HasResult")
+                UpdateStateVisibility(true);
+        }
+
+        private void UpdateStateVisibility(bool reveal)
+        {
+            int state = -1;
+            if (vm != null)
+            {
+                if (vm.IsIdle) state = 0;
+                else if (vm.IsScanning) state = 1;
+                else if (vm.HasResult) state = 2;
+            }
+
+            bool idle = state == 0;
+            bool scanning = state == 1;
+            bool result = state == 2;
+            bool changed = displayedState != state;
+
+            IdlePanel.Visibility = idle ? Visibility.Visible : Visibility.Collapsed;
+            IdlePanel.IsHitTestVisible = idle;
+            ScanningPanel.Visibility = scanning ? Visibility.Visible : Visibility.Collapsed;
+            ScanningPanel.IsHitTestVisible = scanning;
+            ResultPanel.Visibility = result ? Visibility.Visible : Visibility.Collapsed;
+            ResultPanel.IsHitTestVisible = result;
+
+            displayedState = state;
+            if (!reveal || !changed) return;
+            if (idle) Motion.Reveal(IdlePanel);
+            else if (scanning) Motion.Reveal(ScanningPanel);
+            else if (result) Motion.Reveal(ResultPanel);
         }
 
         // 空闲态的「开始体检」按钮 = 快速体检（与 WinForms 一致）

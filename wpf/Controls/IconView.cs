@@ -36,7 +36,8 @@ namespace CaelusApp.WpfHost.Controls
                 EndLineCap = PenLineCap.Round,
                 LineJoin = PenLineJoin.Round
             };
-            pen.Freeze();
+            // DynamicResource-backed theme brushes are not always freezable.
+            if (pen.CanFreeze) pen.Freeze();
             dc.DrawGeometry(null, pen, geo);
             dc.Pop();
         }

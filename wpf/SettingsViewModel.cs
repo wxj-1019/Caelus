@@ -2,6 +2,8 @@
 // 文件用途 WPF 设置页 ViewModel：应用偏好开关状态 + 维护工具文案
 
 using System.Threading;
+using System.Windows;
+using CaelusApp.WpfHost;
 
 namespace CaelusApp
 {
@@ -11,6 +13,7 @@ namespace CaelusApp
         private readonly Tamer tamer;
         private bool autoStart;
         private bool autoHide;
+        private bool lightMode;
         private bool devMode;
         private string shaderStatus;
         private int restoreBusy; // 0=空闲 1=进行中（Interlocked 守护）
@@ -21,6 +24,7 @@ namespace CaelusApp
             this.tamer = tamer;
             autoStart = TaskHelper.TaskExistsCached();
             autoHide = Settings.Load("AutoHideOnGame", false);
+            lightMode = Settings.Load("UiLight", false);
             devMode = Settings.Load("DevModeOn", true);
             shaderStatus = Lang.T("set.shader.n");
         }
@@ -28,6 +32,7 @@ namespace CaelusApp
         // —— 分组标题 ——
         public string AppSectionTitle { get { return Lang.T("sec.app"); } }
         public string MaintSectionTitle { get { return Lang.T("sec.maint"); } }
+        internal GameMode GameMode { get { return gameMode; } }
 
         // —— 开机自启 ——
         public string AutoStartTitle { get { return Lang.T("set.autostart"); } }
@@ -59,6 +64,22 @@ namespace CaelusApp
             {
                 if (!SetProperty(ref autoHide, value, "AutoHide")) return;
                 Settings.Save("AutoHideOnGame", value);
+            }
+        }
+
+        // —— 明暗主题 ——
+        public string LightModeTitle { get { return Lang.T("set.light"); } }
+        public string LightModeNote { get { return Lang.T("set.light.n"); } }
+        public bool LightMode
+        {
+            get { return lightMode; }
+            set
+            {
+                if (!SetProperty(ref lightMode, value, "LightMode")) return;
+                Settings.Save("UiLight", value);
+                if (Application.Current != null)
+                    ThemeManager.Apply(Application.Current,
+                        value ? UiTone.Light : UiTone.Dark, ThemeManager.CurrentMode);
             }
         }
 

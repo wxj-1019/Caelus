@@ -4,12 +4,13 @@
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.ComponentModel;
 using System.IO;
 using System.Linq;
 using System.Threading;
 using System.Windows;
 using System.Windows.Controls;
-using System.Windows.Media;
+using System.Windows.Input;
 
 namespace CaelusApp.WpfHost.Dialogs
 {
@@ -21,6 +22,7 @@ namespace CaelusApp.WpfHost.Dialogs
             public string DisplayName { get; set; }
             public string ExePath { get; set; }
             public string Tag { get; set; }
+            public bool HasTag { get { return !string.IsNullOrEmpty(Tag); } }
             public bool CanCheck { get; set; }
             public string Name { get; set; }
             public string Root { get; set; }
@@ -63,6 +65,9 @@ namespace CaelusApp.WpfHost.Dialogs
 
         private void OnLoaded(object sender, RoutedEventArgs e)
         {
+            FrameworkElement content = Content as FrameworkElement;
+            if (content != null) Motion.Reveal(content);
+            TbFilter.Focus();
             StartScan(null);
         }
 
@@ -84,6 +89,7 @@ namespace CaelusApp.WpfHost.Dialogs
                 catch { hits = new List<ScanHit>(); }
                 Dispatcher.BeginInvoke(new Action(delegate
                 {
+                    if (closed) return;
                     MergeScanResults(hits);
                     BtnDeep.IsEnabled = true;
                     LblInfo.Text = Rows.Count == 0 ? Lang.T("scan.none") : Lang.F("scan.count", Rows.Count, CountCheckable());
@@ -106,16 +112,18 @@ namespace CaelusApp.WpfHost.Dialogs
                 if (exe == null || !known.Add(exe)) continue;
 
                 bool already = existingPaths.Contains(exe);
-                Rows.Add(new ScanRow
+                ScanRow row = new ScanRow
                 {
                     DisplayName = string.IsNullOrEmpty(h.Name) ? Path.GetFileNameWithoutExtension(exe) : h.Name,
                     ExePath = exe,
                     Name = h.Name,
                     Root = h.Root,
-                    Tag = already ? "已在库中" : "",
+                    Tag = already ? Lang.T("scan.already") : "",
                     CanCheck = !already,
                     Checked = false
-                });
+                };
+                row.PropertyChanged += OnRowPropertyChanged;
+                Rows.Add(row);
             }
         }
 
@@ -136,6 +144,7 @@ namespace CaelusApp.WpfHost.Dialogs
         private void OnFilterChanged(object sender, TextChangedEventArgs e)
         {
             string f = TbFilter.Text.Trim();
+            FilterHint.Visibility = f.Length == 0 ? Visibility.Visible : Visibility.Collapsed;
             if (f.Length == 0) { LstGames.ItemsSource = Rows; return; }
             var filtered = new ObservableCollection<ScanRow>();
             foreach (ScanRow r in Rows)
@@ -170,8 +179,9 @@ namespace CaelusApp.WpfHost.Dialogs
                 return;
             }
             // 浏览模式：清空列表只放一条
+            UnsubscribeRows();
             Rows.Clear();
-            Rows.Add(new ScanRow
+            ScanRow row = new ScanRow
             {
                 DisplayName = Path.GetFileNameWithoutExtension(resolved),
                 ExePath = resolved,
@@ -180,7 +190,11 @@ namespace CaelusApp.WpfHost.Dialogs
                 Tag = "",
                 CanCheck = true,
                 Checked = true
-            });
+            };
+            row.PropertyChanged += OnRowPropertyChanged;
+            Rows.Add(row);
+            LstGames.ItemsSource = Rows;
+            LstGames.SelectedItem = row;
             LblInfo.Text = "";
             UpdateAddButton();
         }
@@ -195,21 +209,50 @@ namespace CaelusApp.WpfHost.Dialogs
             StartScan(dlg.SelectedPath);
         }
 
-        private void OnSelectionChanged(object sender, SelectionChangedEventArgs e) { }
+        private void OnSelectionChanged(object sender, SelectionChangedEventArgs e)
+        {
+            UpdateAddButton();
+        }
+
+        private void OnRowCheckedChanged(object sender, RoutedEventArgs e)
+        {
+            UpdateAddButton();
+        }
+
+        private void OnRowPropertyChanged(object sender, PropertyChangedEventArgs e)
+        {
+            if (e.PropertyName == "Checked") UpdateAddButton();
+        }
+
+        private void OnListKeyDown(object sender, KeyEventArgs e)
+        {
+            ScanRow row = LstGames.SelectedItem as ScanRow;
+            if (e.Key == Key.Space && row != null && row.CanCheck)
+            {
+                row.Checked = !row.Checked;
+                e.Handled = true;
+            }
+            else if (e.Key == Key.Enter && BtnAdd.IsEnabled)
+            {
+                OnAccept(null, null);
+                e.Handled = true;
+            }
+        }
 
         private void OnItemDoubleClick(object sender, RoutedEventArgs e)
         {
-            // 双击直接接受当前选中项
-            if (LstGames.SelectedItem is ScanRow)
-            {
-                OnAccept(null, null);
-            }
+            ScanRow row = LstGames.SelectedItem as ScanRow;
+            if (row == null || !row.CanCheck) return;
+            row.Checked = true;
+            OnAccept(null, null);
         }
 
         private void UpdateAddButton()
         {
             int n = 0;
             foreach (ScanRow r in Rows) if (r.Checked && r.CanCheck) n++;
+            ScanRow selected = LstGames.SelectedItem as ScanRow;
+            if (n == 0 && selected != null && selected.CanCheck) n = 1;
             BtnAdd.Content = n > 0 ? Lang.F("scan.add.n", n) : Lang.T("btn.add");
             BtnAdd.IsEnabled = n > 0;
         }
@@ -224,6 +267,17 @@ namespace CaelusApp.WpfHost.Dialogs
                     SelectedHits.Add(new ScanHit { Name = r.Name, Root = r.Root, Exe = r.ExePath });
                 }
             }
+            if (SelectedHits.Count == 0)
+            {
+                ScanRow selected = LstGames.SelectedItem as ScanRow;
+                if (selected != null && selected.CanCheck)
+                    SelectedHits.Add(new ScanHit
+                    {
+                        Name = selected.Name,
+                        Root = selected.Root,
+                        Exe = selected.ExePath
+                    });
+            }
             if (SelectedHits.Count == 0) return;
             closed = true;
             DialogResult = true;
@@ -237,9 +291,16 @@ namespace CaelusApp.WpfHost.Dialogs
             Close();
         }
 
+        private void UnsubscribeRows()
+        {
+            foreach (ScanRow row in Rows)
+                row.PropertyChanged -= OnRowPropertyChanged;
+        }
+
         protected override void OnClosed(EventArgs e)
         {
             closed = true;
+            UnsubscribeRows();
             base.OnClosed(e);
         }
     }

@@ -1,89 +1,179 @@
 <UserControl x:Class="CaelusApp.WpfHost.Views.LibraryView"
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-             xmlns:local="clr-namespace:CaelusApp.WpfHost"
-             xmlns:controls="clr-namespace:CaelusApp.WpfHost.Controls"
-             AllowDrop="True" Drop="OnDrop" DragOver="OnDragOver">
+             AllowDrop="True" Drop="OnDrop" DragOver="OnDragOver"
+             AutomationProperties.Name="游戏库">
   <Grid>
     <Grid.RowDefinitions>
       <RowDefinition Height="Auto"/>
       <RowDefinition Height="*"/>
     </Grid.RowDefinitions>
 
-    <!-- 页头（规格 §7 5a） -->
-    <StackPanel Grid.Row="0" Margin="0,0,0,12">
-      <TextBlock Text="游戏库" Style="{DynamicResource SectionTitle}"/>
-      <TextBlock Text="已纳管的游戏与进程证据" Style="{DynamicResource SectionSubtitle}" Margin="0,3,0,0"/>
+    <StackPanel Grid.Row="0" Margin="0,0,0,18">
+      <TextBlock Text="游戏库" Style="{DynamicResource PageHeader}"/>
+      <TextBlock Text="管理游戏主程序并查看当前运行状态"
+                 Style="{DynamicResource PageSubtitle}" Margin="0,4,0,0"/>
     </StackPanel>
 
-    <!-- 空态（默认可见，code-behind 控制） -->
-    <StackPanel x:Name="EmptyPanel" Grid.Row="1" HorizontalAlignment="Center" VerticalAlignment="Center">
-      <TextBlock Text="{Binding EmptyTitle}" FontSize="{DynamicResource FontSizeDisplay}"
-                 FontWeight="Bold" Foreground="{DynamicResource TextTertiaryBrush}"
-                 HorizontalAlignment="Center" Margin="0,0,0,8"/>
-      <TextBlock Text="{Binding EmptyHint}" FontSize="{DynamicResource FontSizeCaption}"
-                 Foreground="{DynamicResource TextSecondaryBrush}"
-                 HorizontalAlignment="Center" TextAlignment="Center"
-                 TextWrapping="Wrap" MaxWidth="400"/>
-    </StackPanel>
+    <Border x:Name="EmptyPanel" Grid.Row="1" Style="{DynamicResource EmptyState}"
+            MinHeight="300" AllowDrop="True"
+            AutomationProperties.Name="游戏库为空，可添加或拖放游戏"
+            AutomationProperties.HelpText="将游戏主程序拖放到此区域，或使用添加游戏按钮">
+      <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center"
+                  MaxWidth="440" Margin="32">
+        <Border Width="48" Height="48" CornerRadius="6"
+                HorizontalAlignment="Center" Margin="0,0,0,18"
+                Background="{DynamicResource AccentSoftBrush}"
+                BorderBrush="{DynamicResource AccentEdgeBrush}" BorderThickness="1">
+          <Viewbox Width="22" Height="22">
+            <Path Data="{DynamicResource IconLibrary}"
+                  Stroke="{DynamicResource AccentPrimaryBrush}" StrokeThickness="2"
+                  StrokeLineJoin="Round" StrokeStartLineCap="Round" StrokeEndLineCap="Round"/>
+          </Viewbox>
+        </Border>
+        <TextBlock Text="添加你的第一个游戏" FontSize="16" FontWeight="SemiBold"
+                   Foreground="{DynamicResource TextPrimaryBrush}"
+                   HorizontalAlignment="Center" TextAlignment="Center"/>
+        <TextBlock Text="{Binding EmptyHint}" Margin="0,6,0,0"
+                   FontSize="{DynamicResource FontSizeCaption}"
+                   Foreground="{DynamicResource TextSecondaryBrush}"
+                   HorizontalAlignment="Center" TextAlignment="Center" TextWrapping="Wrap"/>
+        <Button Content="{Binding AddButtonText}" Click="OnAddClick"
+                Style="{DynamicResource PrimaryButton}" Padding="18,8" Margin="0,20,0,0"
+                HorizontalAlignment="Center" AutomationProperties.Name="添加游戏"/>
+        <Grid Margin="0,20,0,0" Width="300">
+          <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="*"/>
+            <ColumnDefinition Width="Auto"/>
+            <ColumnDefinition Width="*"/>
+          </Grid.ColumnDefinitions>
+          <Rectangle Grid.Column="0" Height="1" VerticalAlignment="Center"
+                     Fill="{DynamicResource BorderSubtleBrush}"/>
+          <TextBlock Grid.Column="1" Text="或拖放主程序到这里" Margin="12,0"
+                     FontSize="10" Foreground="{DynamicResource TextTertiaryBrush}"/>
+          <Rectangle Grid.Column="2" Height="1" VerticalAlignment="Center"
+                     Fill="{DynamicResource BorderSubtleBrush}"/>
+        </Grid>
+      </StackPanel>
+    </Border>
 
-    <!-- 列表（默认隐藏，code-behind 控制） -->
-    <DockPanel x:Name="ListPanel" Grid.Row="1" Visibility="Collapsed">
-      <!-- 顶部按钮栏 -->
-      <Grid DockPanel.Dock="Top" Margin="0,0,0,12">
-        <Grid.ColumnDefinitions>
-          <ColumnDefinition Width="Auto"/>
-          <ColumnDefinition Width="Auto"/>
-          <ColumnDefinition Width="*"/>
-        </Grid.ColumnDefinitions>
-        <Button Grid.Column="0" Style="{DynamicResource PrimaryButton}" x:Name="BtnAdd"
-                Content="{Binding AddButtonText}" Click="OnAddClick" Margin="0,0,8,0"/>
-        <Button Grid.Column="1" Style="{DynamicResource PrimaryButton}" x:Name="BtnRemove"
-                Content="{Binding RemoveButtonText}" Click="OnRemoveClick" Opacity="0.7"/>
-        <TextBlock Grid.Column="2" Text="{Binding DropHint}" FontSize="11"
-                   Foreground="{DynamicResource TextTertiaryBrush}" TextWrapping="Wrap"
-                   VerticalAlignment="Center" Margin="12,0,0,0" MaxWidth="500"/>
-      </Grid>
+    <Grid x:Name="ListPanel" Grid.Row="1" Visibility="Collapsed">
+      <Grid.RowDefinitions>
+        <RowDefinition Height="Auto"/>
+        <RowDefinition Height="12"/>
+        <RowDefinition Height="*"/>
+      </Grid.RowDefinitions>
 
-      <!-- 游戏列表 -->
-      <ScrollViewer VerticalScrollBarVisibility="Auto">
-        <ItemsControl ItemsSource="{Binding Items}">
-          <ItemsControl.ItemsPanel>
-            <ItemsPanelTemplate><StackPanel/></ItemsPanelTemplate>
-          </ItemsControl.ItemsPanel>
-          <ItemsControl.ItemTemplate>
-            <DataTemplate>
-              <controls:GlassCard Style="{DynamicResource GlassCard}" Padding="14,10"
-                                  local:Motion.Lift="True" Margin="0,0,0,6">
-                <DockPanel>
-                  <!-- 运行状态徽标 -->
-                  <TextBlock DockPanel.Dock="Right" VerticalAlignment="Center" FontSize="11">
-                    <TextBlock.Style>
-                      <Style TargetType="TextBlock">
-                        <Setter Property="Text" Value="{Binding StatusText}"/>
-                        <Setter Property="Foreground" Value="{DynamicResource TextSecondaryBrush}"/>
-                        <Style.Triggers>
-                          <DataTrigger Binding="{Binding IsRunning}" Value="True">
-                            <Setter Property="Foreground" Value="{DynamicResource SuccessBrush}"/>
-                          </DataTrigger>
-                        </Style.Triggers>
-                      </Style>
-                    </TextBlock.Style>
-                  </TextBlock>
-                  <!-- 名称 + 路径 -->
-                  <StackPanel VerticalAlignment="Center">
-                    <TextBlock Text="{Binding Name}" FontSize="{DynamicResource FontSizeCaption}"
-                               FontWeight="Bold" Foreground="{DynamicResource TextPrimaryBrush}"/>
-                    <TextBlock Text="{Binding Path}" FontSize="11"
-                               Foreground="{DynamicResource TextSecondaryBrush}"
-                               TextTrimming="CharacterEllipsis" Margin="0,2,0,0"/>
-                  </StackPanel>
-                </DockPanel>
-              </controls:GlassCard>
-            </DataTemplate>
-          </ItemsControl.ItemTemplate>
-        </ItemsControl>
-      </ScrollViewer>
-    </DockPanel>
+      <Border Grid.Row="0" Style="{DynamicResource SettingsGroup}" Padding="0">
+        <Border Style="{DynamicResource SettingsRow}" Padding="16,12">
+          <Grid>
+            <Grid.ColumnDefinitions>
+              <ColumnDefinition Width="*"/>
+              <ColumnDefinition Width="Auto"/>
+              <ColumnDefinition Width="Auto"/>
+            </Grid.ColumnDefinitions>
+            <StackPanel Grid.Column="0" VerticalAlignment="Center">
+              <TextBlock Text="已纳管游戏" FontSize="13" FontWeight="SemiBold"
+                         Foreground="{DynamicResource TextPrimaryBrush}"/>
+              <TextBlock Text="{Binding DropHint}" Margin="0,3,16,0" FontSize="10"
+                         Foreground="{DynamicResource TextTertiaryBrush}" TextWrapping="Wrap"/>
+            </StackPanel>
+            <Button Grid.Column="1" Content="{Binding AddButtonText}" Click="OnAddClick"
+                    Style="{DynamicResource PrimaryButton}" Padding="14,7" Margin="8,0,0,0"
+                    AutomationProperties.Name="添加游戏"/>
+            <Button Grid.Column="2" x:Name="BtnRemove"
+                    Content="{Binding RemoveButtonText}" Click="OnRemoveClick"
+                    Style="{DynamicResource GhostButton}" Padding="12,7" Margin="6,0,0,0"
+                    Foreground="{DynamicResource DangerBrush}" IsEnabled="False"
+                    AutomationProperties.Name="移除所选游戏"/>
+          </Grid>
+        </Border>
+      </Border>
+
+      <Border Grid.Row="2" Style="{DynamicResource SettingsGroup}" Padding="6">
+        <Grid>
+          <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+          </Grid.RowDefinitions>
+          <Grid Grid.Row="0" Margin="12,8,12,7">
+            <Grid.ColumnDefinitions>
+              <ColumnDefinition Width="*"/>
+              <ColumnDefinition Width="Auto"/>
+            </Grid.ColumnDefinitions>
+            <TextBlock Text="游戏与进程" FontSize="11" FontWeight="SemiBold"
+                       Foreground="{DynamicResource TextSecondaryBrush}"/>
+            <TextBlock Grid.Column="1" Text="方向键选择 · Delete 移除" FontSize="10"
+                       Foreground="{DynamicResource TextTertiaryBrush}"/>
+          </Grid>
+
+          <ListBox Grid.Row="1" x:Name="GameList" ItemsSource="{Binding Items}"
+                   ItemContainerStyle="{DynamicResource ListItem}"
+                   Background="Transparent" BorderThickness="0"
+                   ScrollViewer.HorizontalScrollBarVisibility="Disabled"
+                   ScrollViewer.VerticalScrollBarVisibility="Auto"
+                   KeyboardNavigation.DirectionalNavigation="Continue"
+                   SelectionMode="Single" SelectionChanged="OnGameSelectionChanged"
+                   PreviewKeyDown="OnGameListPreviewKeyDown"
+                   AutomationProperties.Name="已添加的游戏">
+            <ListBox.ItemTemplate>
+              <DataTemplate>
+                <Border Style="{DynamicResource SettingsRow}" Margin="6,2" Padding="12,10"
+                        AutomationProperties.Name="{Binding Name}">
+                  <Grid MinHeight="44">
+                    <Grid.ColumnDefinitions>
+                      <ColumnDefinition Width="*" MinWidth="160"/>
+                      <ColumnDefinition Width="Auto"/>
+                    </Grid.ColumnDefinitions>
+                    <StackPanel Grid.Column="0" VerticalAlignment="Center">
+                      <TextBlock Text="{Binding Name}" FontSize="{DynamicResource FontSizeCaption}"
+                                 FontWeight="SemiBold" Foreground="{DynamicResource TextPrimaryBrush}"
+                                 TextTrimming="CharacterEllipsis"/>
+                      <TextBlock Text="{Binding Path}" FontFamily="{DynamicResource FontMono}"
+                                 FontSize="10" Foreground="{DynamicResource TextTertiaryBrush}"
+                                 TextTrimming="CharacterEllipsis" Margin="0,4,18,0"
+                                 AutomationProperties.Name="{Binding Path}"/>
+                    </StackPanel>
+                    <Border Grid.Column="1" VerticalAlignment="Center" MinWidth="76"
+                            CornerRadius="{DynamicResource RadiusSm}" Padding="9,4"
+                            Background="{DynamicResource GlassNavBrush}"
+                            BorderBrush="{DynamicResource BorderSubtleBrush}" BorderThickness="1">
+                      <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
+                        <Ellipse Width="7" Height="7" Margin="0,0,7,0" VerticalAlignment="Center">
+                          <Ellipse.Style>
+                            <Style TargetType="Ellipse">
+                              <Setter Property="Fill" Value="{DynamicResource TextTertiaryBrush}"/>
+                              <Style.Triggers>
+                                <DataTrigger Binding="{Binding IsRunning}" Value="True">
+                                  <Setter Property="Fill" Value="{DynamicResource SuccessBrush}"/>
+                                </DataTrigger>
+                              </Style.Triggers>
+                            </Style>
+                          </Ellipse.Style>
+                        </Ellipse>
+                        <TextBlock Text="{Binding StatusText}" FontSize="10"
+                                   VerticalAlignment="Center"
+                                   AutomationProperties.Name="{Binding StatusText}">
+                          <TextBlock.Style>
+                            <Style TargetType="TextBlock">
+                              <Setter Property="Foreground" Value="{DynamicResource TextSecondaryBrush}"/>
+                              <Style.Triggers>
+                                <DataTrigger Binding="{Binding IsRunning}" Value="True">
+                                  <Setter Property="Foreground" Value="{DynamicResource SuccessBrush}"/>
+                                </DataTrigger>
+                              </Style.Triggers>
+                            </Style>
+                          </TextBlock.Style>
+                        </TextBlock>
+                      </StackPanel>
+                    </Border>
+                  </Grid>
+                </Border>
+              </DataTemplate>
+            </ListBox.ItemTemplate>
+          </ListBox>
+        </Grid>
+      </Border>
+    </Grid>
   </Grid>
 </UserControl>

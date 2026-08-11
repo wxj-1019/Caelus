@@ -5,7 +5,10 @@
 @echo off
 setlocal
 cd /d "%~dp0"
-set MSB=%WINDIR%\Microsoft.NET\Framework64\v4.0.30319\MSBuild.exe
+rem 25H2 服务更新后 WPF 程序集被原生 AOT 化（64 位侧 PresentationCore=AMD64、
+rem PresentationFramework=32 位混合模式），64 位 MSBuild 的 XAML 编译器无法加载，
+rem 必须用 32 位 MSBuild + 32 位侧程序集（见 Caelus.Wpf.csproj 注释）。
+set MSB=%WINDIR%\Microsoft.NET\Framework\v4.0.30319\MSBuild.exe
 if not exist "%MSB%" (
     echo MSBuild.exe not found - install .NET Framework 4.x
     exit /b 1

@@ -10,9 +10,13 @@ namespace CaelusApp.WpfHost.Views
     {
         public AntiCheatView() { InitializeComponent(); }
 
-        // 段控件选择变化后刷新状态文案
+        // SegmentedControl 只发出索引事件；先同步绑定，再刷新状态文案。
         private void OnLevelChanged(object sender, int index)
         {
+            SegmentedControl control = sender as SegmentedControl;
+            if (control != null && control.SelectedIndex != index)
+                control.SetCurrentValue(SegmentedControl.SelectedIndexProperty, index);
+
             AntiCheatViewModel vm = DataContext as AntiCheatViewModel;
             if (vm != null) vm.RefreshStatus();
         }

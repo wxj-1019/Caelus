@@ -15,17 +15,15 @@ namespace CaelusApp.WpfHost.Views
         private void OnLoaded(object sender, RoutedEventArgs e)
         {
             Motion.FadeIn(this);
-            Motion.Pulse(ReadyDot);
+            Motion.Emphasize(ReadyDot);
         }
 
-        // R2 指标行过滤掉首项（GPU 温度已在大卡聚光灯展示，避免重复）
+        // GPU 温度使用独立指标面板，其余两项由集合视图生成。
         private void OnMetricsFilter(object sender, FilterEventArgs e)
         {
             var vm = DataContext as OverviewViewModel;
             var item = e.Item as MetricViewModel;
-            // 防御性放行（vm/item 为 null 时保守接受，避免过滤异常）
             if (vm == null || item == null) { e.Accepted = true; return; }
-            // 业务过滤：排除首项（GPU 温度已在大卡聚光灯展示）
             e.Accepted = vm.Metrics.IndexOf(item) != 0;
         }
     }

@@ -32,3 +32,6 @@ Caelus.exe.sha256
 # WPF project build output (MSBuild obj/bin from wpf/Caelus.Wpf.csproj)
 wpf/bin/
 wpf/obj/
+# Tooling state and logs (not part of the product)
+.zcode/
+logs/

@@ -49,7 +49,9 @@
              Stroke="{DynamicResource AccentEdgeBrush}" StrokeThickness="1"/>
 
     <!-- 闪电 + 模式名 -->
-    <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center">
+    <StackPanel x:Name="CoreIdentity"
+                VerticalAlignment="Center" HorizontalAlignment="Center"
+                RenderTransformOrigin="0.5,0.5">
       <Path Width="20" Height="20" Stretch="Uniform" HorizontalAlignment="Center"
             Fill="{DynamicResource AccentPrimaryBrush}" Data="{DynamicResource IconBolt}"/>
       <TextBlock x:Name="ModeLabel" Text="常规" FontSize="9" Margin="0,2,0,0"

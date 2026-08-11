@@ -12,10 +12,17 @@ namespace CaelusApp.WpfHost.Views
     {
         public GraphicsView() { InitializeComponent(); }
 
-        // 段控件变化：选择已通过 TwoWay 绑定写回 ViewModel，此处仅保持一致
-        private void OnFrlChanged(object sender, int index) { }
-        private void OnDlssChanged(object sender, int index) { }
-        private void OnAmdChillChanged(object sender, int index) { }
+        // SegmentedControl 只发出索引事件；在视图层同步依赖属性以触发现有 TwoWay 绑定。
+        private void OnFrlChanged(object sender, int index) { UpdateSegmentSelection(sender, index); }
+        private void OnDlssChanged(object sender, int index) { UpdateSegmentSelection(sender, index); }
+        private void OnAmdChillChanged(object sender, int index) { UpdateSegmentSelection(sender, index); }
+
+        private static void UpdateSegmentSelection(object sender, int index)
+        {
+            SegmentedControl control = sender as SegmentedControl;
+            if (control == null || control.SelectedIndex == index) return;
+            control.SetCurrentValue(SegmentedControl.SelectedIndexProperty, index);
+        }
 
         // AMD 着色器缓存重置（后台线程执行）
         private void OnAmdCache(object sender, RoutedEventArgs e)

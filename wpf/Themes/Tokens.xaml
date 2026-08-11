@@ -3,20 +3,25 @@
                     xmlns:sys="clr-namespace:System;assembly=mscorlib">
   <FontFamily x:Key="FontUi">Microsoft YaHei UI</FontFamily>
   <FontFamily x:Key="FontMono">Consolas</FontFamily>
+
+  <!-- Four type levels keep dense utility pages readable without visual noise. -->
   <sys:Double x:Key="FontSizeDisplay">24</sys:Double>
   <sys:Double x:Key="FontSizeTitle">18</sys:Double>
   <sys:Double x:Key="FontSizeBody">14</sys:Double>
   <sys:Double x:Key="FontSizeCaption">12</sys:Double>
-  <sys:Double x:Key="FontSizeMono">13</sys:Double>
-  <sys:Double x:Key="FontSizeSection">26</sys:Double>
-  <sys:Double x:Key="FontSizeHero">48</sys:Double>
-  <sys:Double x:Key="FontSizeMetric">28</sys:Double>
+  <sys:Double x:Key="FontSizeMono">12</sys:Double>
+  <sys:Double x:Key="FontSizeSection">24</sys:Double>
+  <sys:Double x:Key="FontSizeHero">40</sys:Double>
+  <sys:Double x:Key="FontSizeMetric">24</sys:Double>
+
   <sys:Double x:Key="SpaceXs">4</sys:Double>
   <sys:Double x:Key="SpaceSm">8</sys:Double>
   <sys:Double x:Key="SpaceMd">12</sys:Double>
   <sys:Double x:Key="SpaceLg">16</sys:Double>
   <sys:Double x:Key="SpaceXl">24</sys:Double>
+  <sys:Double x:Key="Space2Xl">32</sys:Double>
+
   <CornerRadius x:Key="RadiusSm">6</CornerRadius>
-  <CornerRadius x:Key="RadiusMd">10</CornerRadius>
-  <CornerRadius x:Key="RadiusLg">14</CornerRadius>
+  <CornerRadius x:Key="RadiusMd">8</CornerRadius>
+  <CornerRadius x:Key="RadiusLg">8</CornerRadius>
 </ResourceDictionary>

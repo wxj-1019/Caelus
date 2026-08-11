@@ -5,44 +5,46 @@
   <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
     <StackPanel Margin="0,0,0,16">
 
-      <!-- 页头（规格 §7 5a） -->
-      <StackPanel Margin="0,0,0,12">
-        <TextBlock Text="反作弊专项" Style="{DynamicResource SectionTitle}"/>
-        <TextBlock Text="反作弊兼容性守护" Style="{DynamicResource SectionSubtitle}" Margin="0,3,0,0"/>
+      <StackPanel Margin="0,0,0,18">
+        <TextBlock Text="{Binding PageTitle}" Style="{DynamicResource PageHeader}"/>
+        <TextBlock Text="{Binding PageSub}" Style="{DynamicResource PageSubtitle}" Margin="0,3,0,0"/>
       </StackPanel>
 
-      <!-- 总开关卡 -->
-      <Border Style="{DynamicResource HeroCardBorder}" Margin="0,0,0,16">
-        <DockPanel>
+      <Border Style="{DynamicResource SettingsGroup}" Margin="0,0,0,16">
+        <Border Style="{DynamicResource SettingsRow}">
+          <DockPanel>
           <ToggleButton x:Name="SwMaster" Style="{DynamicResource PolicyToggle}"
                         IsChecked="{Binding MasterOn}"
-                        DockPanel.Dock="Right" VerticalAlignment="Top" Margin="0,2,0,0"/>
+                        AutomationProperties.Name="{Binding MasterTitle}"
+                        DockPanel.Dock="Right" VerticalAlignment="Center" Margin="16,0,0,0"/>
           <StackPanel VerticalAlignment="Center">
             <TextBlock Text="{Binding MasterTitle}" FontSize="{DynamicResource FontSizeCaption}"
                        FontWeight="Bold" Foreground="{DynamicResource TextPrimaryBrush}"/>
             <TextBlock Text="{Binding MasterSub}" FontSize="11"
                        Foreground="{DynamicResource TextSecondaryBrush}" TextWrapping="Wrap" Margin="0,2,0,0"/>
           </StackPanel>
-        </DockPanel>
+          </DockPanel>
+        </Border>
       </Border>
 
       <!-- 分组小标题 -->
       <TextBlock Text="{Binding BoundaryTitle}" FontSize="{DynamicResource FontSizeBody}"
                  FontWeight="Bold" Foreground="{DynamicResource TextPrimaryBrush}" Margin="0,0,0,8"/>
 
-      <!-- 9 个反作弊产品卡片 -->
+      <Border Style="{DynamicResource SettingsGroup}">
       <ItemsControl ItemsSource="{Binding Cards}">
         <ItemsControl.ItemsPanel>
           <ItemsPanelTemplate><StackPanel/></ItemsPanelTemplate>
         </ItemsControl.ItemsPanel>
         <ItemsControl.ItemTemplate>
           <DataTemplate>
-            <Border Style="{DynamicResource PolicyCard}" Margin="0,0,0,6">
+            <Border Style="{DynamicResource SettingsRow}">
               <StackPanel>
                 <DockPanel>
                   <ToggleButton Style="{DynamicResource PolicyToggle}"
                                 IsChecked="{Binding Enabled}"
-                                DockPanel.Dock="Right" VerticalAlignment="Top" Margin="0,2,0,0"/>
+                                AutomationProperties.Name="{Binding Title}"
+                                DockPanel.Dock="Right" VerticalAlignment="Center" Margin="16,0,0,0"/>
                   <StackPanel VerticalAlignment="Center">
                     <TextBlock Text="{Binding Title}" FontSize="{DynamicResource FontSizeCaption}"
                                FontWeight="Bold" Foreground="{DynamicResource TextPrimaryBrush}"
@@ -60,6 +62,7 @@
                   <ctl:SegmentedControl ItemsSource="{Binding RelativeSource={RelativeSource AncestorType=UserControl}, Path=DataContext.LevelLabels}"
                                         SelectedIndex="{Binding LevelIndex, Mode=TwoWay}"
                                         SelectionChanged="OnLevelChanged"
+                                        AutomationProperties.Name="{Binding Title}"
                                         HorizontalAlignment="Left"/>
                 </DockPanel>
               </StackPanel>
@@ -67,6 +70,7 @@
           </DataTemplate>
         </ItemsControl.ItemTemplate>
       </ItemsControl>
+      </Border>
 
     </StackPanel>
   </ScrollViewer>

@@ -193,7 +193,7 @@ namespace CaelusApp.WpfHost
             if (current != null) Motion.CrossFade(current);
         }
 
-        internal void NavigateToForShot(string page)
+        internal FrameworkElement NavigateToForShot(string page)
         {
             RadioButton target = page == "library" ? NavLibrary
                 : page == "policy" ? NavPolicy
@@ -207,6 +207,7 @@ namespace CaelusApp.WpfHost
                 : page == "about" ? NavAbout : NavOverview;
             target.IsChecked = true;
             UpdateLayout();
+            return PageHost.Content as FrameworkElement;
         }
     }
 }

@@ -257,6 +257,11 @@ namespace CaelusApp.WpfHost
 
         private void CapturePage(string dir, string page)
         {
+            // 游戏库/策略/体检在探针下无真实数据，注入样例以捕获实机图（仅此路径生效）
+            Views.LibraryView.InjectSampleData = (page == "library");
+            Views.PolicyView.InjectSampleData = (page == "policy");
+            Views.AuditView.InjectSampleData = (page == "audit");
+            Views.GraphicsView.InjectSampleData = (page == "graphics");
             MainWindow window = new MainWindow(new GameMode(Paths.Data, new SuppressionCore()));
             window.ApplyPersistedMode(AppMode.Standard);
             window.WindowStartupLocation = WindowStartupLocation.Manual;
@@ -265,7 +270,10 @@ namespace CaelusApp.WpfHost
             window.ShowInTaskbar = false;
             window.ShowActivated = false;
             window.Show();
-            window.NavigateToForShot(page);
+            FrameworkElement shown = window.NavigateToForShot(page);
+            // 体检结果态无真实探测数据，导航到位后显式注入样例（避免 OnLoaded 静态标志时序问题）
+            Views.AuditView auditShown = shown as Views.AuditView;
+            if (auditShown != null) auditShown.ApplySampleResult();
             Size size = new Size(1196, 768);
             window.Measure(size);
             window.Arrange(new Rect(size));

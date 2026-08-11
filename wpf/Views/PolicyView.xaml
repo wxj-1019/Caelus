@@ -3,8 +3,9 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              AutomationProperties.Name="优化策略">
   <UserControl.Resources>
+    <BooleanToVisibilityConverter x:Key="BoolVis"/>
     <DataTemplate x:Key="PolicyRowTemplate">
-      <Border Style="{DynamicResource SettingsRow}" BorderThickness="0,0,0,1">
+      <Border Style="{DynamicResource PolicyRow}" BorderThickness="0,0,0,1">
         <DockPanel>
           <ToggleButton Style="{DynamicResource PolicyToggle}"
                         IsChecked="{Binding IsOn}"
@@ -14,16 +15,34 @@
                         VerticalAlignment="Center"
                         Margin="16,0,0,0"/>
           <StackPanel VerticalAlignment="Center">
-            <TextBlock Text="{Binding Title}"
-                       FontSize="{DynamicResource FontSizeCaption}"
-                       FontWeight="SemiBold"
-                       Foreground="{DynamicResource TextPrimaryBrush}"
-                       TextWrapping="Wrap"/>
+            <StackPanel Orientation="Horizontal">
+              <TextBlock Text="{Binding Title}"
+                         FontSize="{DynamicResource FontSizeCaption}"
+                         FontWeight="SemiBold"
+                         Foreground="{DynamicResource TextPrimaryBrush}"
+                         TextWrapping="Wrap"/>
+              <!-- 风险项"需注意"标记（ConfirmKey 非空才显示） -->
+              <Border Style="{DynamicResource WarnTag}" Margin="8,0,0,0"
+                      Visibility="{Binding IsRisky, Converter={StaticResource BoolVis}}">
+                <TextBlock Text="{Binding WarningTag}" FontSize="10"
+                           Foreground="{DynamicResource WarningBrush}"/>
+              </Border>
+            </StackPanel>
             <TextBlock Text="{Binding Description}"
                        FontSize="11"
-                       Foreground="{DynamicResource TextSecondaryBrush}"
                        TextWrapping="Wrap"
-                       Margin="0,3,0,0"/>
+                       Margin="0,3,0,0">
+              <TextBlock.Style>
+                <Style TargetType="TextBlock">
+                  <Setter Property="Foreground" Value="{DynamicResource TextSecondaryBrush}"/>
+                  <Style.Triggers>
+                    <DataTrigger Binding="{Binding IsRisky}" Value="True">
+                      <Setter Property="Foreground" Value="{DynamicResource WarningBrush}"/>
+                    </DataTrigger>
+                  </Style.Triggers>
+                </Style>
+              </TextBlock.Style>
+            </TextBlock>
           </StackPanel>
         </DockPanel>
       </Border>
@@ -32,52 +51,110 @@
 
   <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
     <StackPanel Margin="0,0,0,16">
-      <StackPanel Margin="0,0,0,16">
+      <StackPanel x:Name="ZoneHeader" Margin="0,0,0,16">
         <TextBlock Text="优化策略" Style="{DynamicResource PageHeader}"/>
         <TextBlock Text="调度与压制的生效策略"
                    Style="{DynamicResource PageSubtitle}"
                    Margin="0,4,0,0"/>
       </StackPanel>
 
-      <Border Style="{DynamicResource StatusBanner}"
-              Padding="12,8"
-              Margin="0,0,0,18"
+      <!-- 聚合摘要：N/总数 已启用 + 当前模式脉冲点 -->
+      <Border x:Name="ZoneSummary" Style="{DynamicResource StatusBanner}"
+              Padding="12,10" Margin="0,0,0,18"
               AutomationProperties.Name="策略状态">
-        <TextBlock Text="{Binding HintText}"
-                   FontSize="11"
-                   Foreground="{DynamicResource TextSecondaryBrush}"
-                   TextWrapping="Wrap"/>
+        <StackPanel Orientation="Horizontal">
+          <TextBlock FontSize="24" FontWeight="SemiBold" VerticalAlignment="Center"
+                     Foreground="{DynamicResource TextPrimaryBrush}"
+                     Typography.NumeralAlignment="Tabular">
+            <Run Text="{Binding TotalEnabled, Mode=OneWay}"/><Run Text="/" Foreground="{DynamicResource TextTertiaryBrush}"/><Run Text="{Binding TotalCount, Mode=OneWay}"/>
+          </TextBlock>
+          <TextBlock Text="项已启用" Margin="8,0,0,0" FontSize="11" VerticalAlignment="Center"
+                     Foreground="{DynamicResource TextSecondaryBrush}"/>
+          <Rectangle Width="1" Height="22" Margin="16,0" VerticalAlignment="Center"
+                     Fill="{DynamicResource BorderSubtleBrush}"/>
+          <Ellipse x:Name="SummaryDot" Width="7" Height="7" Margin="0,0,9,0"
+                   VerticalAlignment="Center" Fill="{DynamicResource AccentPrimaryBrush}"/>
+          <TextBlock VerticalAlignment="Center" FontSize="11"
+                     Foreground="{DynamicResource TextSecondaryBrush}">
+            <Run Text="{Binding ModeText, Mode=OneWay}"/><Run Text=" 模式预设 · " Foreground="{DynamicResource TextTertiaryBrush}"/><Run Text="{Binding HintText, Mode=OneWay}" Foreground="{DynamicResource TextTertiaryBrush}"/>
+          </TextBlock>
+        </StackPanel>
       </Border>
 
-      <TextBlock Text="{Binding CoreGroupTitle}"
-                 FontSize="{DynamicResource FontSizeBody}"
-                 FontWeight="SemiBold"
-                 Foreground="{DynamicResource TextPrimaryBrush}"
-                 Margin="0,0,0,8"/>
-      <Border Style="{DynamicResource SettingsGroup}" Margin="0,0,0,18">
-        <ItemsControl ItemsSource="{Binding CoreCards}"
-                      ItemTemplate="{StaticResource PolicyRowTemplate}"/>
-      </Border>
+      <!-- 核心策略 -->
+      <StackPanel x:Name="ZoneCore" Margin="0,0,0,18">
+        <StackPanel Orientation="Horizontal" Margin="0,0,0,8">
+          <Border Width="30" Height="30" CornerRadius="{DynamicResource RadiusSm}"
+                  Background="{DynamicResource AccentSoftBrush}"
+                  BorderBrush="{DynamicResource AccentEdgeBrush}" BorderThickness="1"
+                  VerticalAlignment="Center" Margin="0,0,12,0">
+            <Viewbox Width="16" Height="16">
+              <Path Data="M4 4h16v16h-16z M9 9h6v6h-6z" Stroke="{DynamicResource ModeAccentBrush}" StrokeThickness="2"/>
+            </Viewbox>
+          </Border>
+          <TextBlock Text="{Binding CoreGroupTitle}" FontSize="{DynamicResource FontSizeBody}"
+                     FontWeight="SemiBold" Foreground="{DynamicResource TextPrimaryBrush}"
+                     VerticalAlignment="Center"/>
+          <TextBlock VerticalAlignment="Center" Margin="12,0,0,0" FontSize="11"
+                     Foreground="{DynamicResource TextSecondaryBrush}">
+            <Run Text="{Binding CoreEnabled, Mode=OneWay}" Foreground="{DynamicResource SuccessBrush}" FontWeight="SemiBold"/><Run Text="/"/><Run Text="{Binding CoreTotal, Mode=OneWay}"/><Run Text=" 项已启用"/>
+          </TextBlock>
+        </StackPanel>
+        <Border Style="{DynamicResource SettingsGroup}">
+          <ItemsControl ItemsSource="{Binding CoreCards}"
+                        ItemTemplate="{StaticResource PolicyRowTemplate}"/>
+        </Border>
+      </StackPanel>
 
-      <TextBlock Text="{Binding CustomGroupTitle}"
-                 FontSize="{DynamicResource FontSizeBody}"
-                 FontWeight="SemiBold"
-                 Foreground="{DynamicResource TextPrimaryBrush}"
-                 Margin="0,0,0,8"/>
-      <Border Style="{DynamicResource SettingsGroup}" Margin="0,0,0,18">
-        <ItemsControl ItemsSource="{Binding CustomCards}"
-                      ItemTemplate="{StaticResource PolicyRowTemplate}"/>
-      </Border>
+      <!-- 自定义策略 -->
+      <StackPanel x:Name="ZoneCustom" Margin="0,0,0,18">
+        <StackPanel Orientation="Horizontal" Margin="0,0,0,8">
+          <Border Width="30" Height="30" CornerRadius="{DynamicResource RadiusSm}"
+                  Background="{DynamicResource AccentSoftBrush}"
+                  BorderBrush="{DynamicResource AccentEdgeBrush}" BorderThickness="1"
+                  VerticalAlignment="Center" Margin="0,0,12,0">
+            <Viewbox Width="16" Height="16">
+              <Path Data="M4 6h10 M18 6h2 M4 12h2 M10 12h10 M4 18h14" Stroke="{DynamicResource ModeAccentBrush}" StrokeThickness="2" StrokeStartLineCap="Round" StrokeEndLineCap="Round"/>
+            </Viewbox>
+          </Border>
+          <TextBlock Text="{Binding CustomGroupTitle}" FontSize="{DynamicResource FontSizeBody}"
+                     FontWeight="SemiBold" Foreground="{DynamicResource TextPrimaryBrush}"
+                     VerticalAlignment="Center"/>
+          <TextBlock VerticalAlignment="Center" Margin="12,0,0,0" FontSize="11"
+                     Foreground="{DynamicResource TextSecondaryBrush}">
+            <Run Text="{Binding CustomEnabled, Mode=OneWay}" Foreground="{DynamicResource SuccessBrush}" FontWeight="SemiBold"/><Run Text="/"/><Run Text="{Binding CustomTotal, Mode=OneWay}"/><Run Text=" 项已启用"/>
+          </TextBlock>
+        </StackPanel>
+        <Border Style="{DynamicResource SettingsGroup}">
+          <ItemsControl ItemsSource="{Binding CustomCards}"
+                        ItemTemplate="{StaticResource PolicyRowTemplate}"/>
+        </Border>
+      </StackPanel>
 
-      <TextBlock Text="{Binding ExtraGroupTitle}"
-                 FontSize="{DynamicResource FontSizeBody}"
-                 FontWeight="SemiBold"
-                 Foreground="{DynamicResource TextPrimaryBrush}"
-                 Margin="0,0,0,8"/>
-      <Border Style="{DynamicResource SettingsGroup}">
-        <ItemsControl ItemsSource="{Binding ExtraCards}"
-                      ItemTemplate="{StaticResource PolicyRowTemplate}"/>
-      </Border>
+      <!-- 额外策略 -->
+      <StackPanel x:Name="ZoneExtra">
+        <StackPanel Orientation="Horizontal" Margin="0,0,0,8">
+          <Border Width="30" Height="30" CornerRadius="{DynamicResource RadiusSm}"
+                  Background="{DynamicResource AccentSoftBrush}"
+                  BorderBrush="{DynamicResource AccentEdgeBrush}" BorderThickness="1"
+                  VerticalAlignment="Center" Margin="0,0,12,0">
+            <Viewbox Width="16" Height="16">
+              <Path Data="M12 3l7 3v5c0 4.5-3 8.5-7 10-4-1.5-7-5.5-7-10V6z" Stroke="{DynamicResource ModeAccentBrush}" StrokeThickness="2" StrokeLineJoin="Round"/>
+            </Viewbox>
+          </Border>
+          <TextBlock Text="{Binding ExtraGroupTitle}" FontSize="{DynamicResource FontSizeBody}"
+                     FontWeight="SemiBold" Foreground="{DynamicResource TextPrimaryBrush}"
+                     VerticalAlignment="Center"/>
+          <TextBlock VerticalAlignment="Center" Margin="12,0,0,0" FontSize="11"
+                     Foreground="{DynamicResource TextSecondaryBrush}">
+            <Run Text="{Binding ExtraEnabled, Mode=OneWay}" Foreground="{DynamicResource SuccessBrush}" FontWeight="SemiBold"/><Run Text="/"/><Run Text="{Binding ExtraTotal, Mode=OneWay}"/><Run Text=" 项已启用"/>
+          </TextBlock>
+        </StackPanel>
+        <Border Style="{DynamicResource SettingsGroup}">
+          <ItemsControl ItemsSource="{Binding ExtraCards}"
+                        ItemTemplate="{StaticResource PolicyRowTemplate}"/>
+        </Border>
+      </StackPanel>
     </StackPanel>
   </ScrollViewer>
 </UserControl>

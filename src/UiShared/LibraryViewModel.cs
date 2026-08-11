@@ -23,6 +23,12 @@ namespace CaelusApp
 
         public string StatusText { get { return isRunning ? Lang.T("v15.library.running") : Lang.T("v15.library.ready"); } }
 
+        // 头像首字母：取首个码位（兼容中文）；供游戏行视觉锚点
+        public string Initial
+        {
+            get { return string.IsNullOrEmpty(Name) ? "?" : Name.Substring(0, 1); }
+        }
+
         public LibraryItem(string id, string name, string path)
         {
             Id = id;
@@ -44,6 +50,26 @@ namespace CaelusApp
 
         public bool IsEmpty { get { return Items.Count == 0; } }
 
+        // 计数摘要：已纳管总数 + 运行中数（工具条一眼可见规模）
+        public int TotalCount { get { return Items.Count; } }
+        public int RunningCount
+        {
+            get
+            {
+                int n = 0;
+                foreach (LibraryItem item in Items) if (item.IsRunning) n++;
+                return n;
+            }
+        }
+
+        // 供预览探针注入样例后通知计数绑定刷新（Raise 为 protected，外部无法直接调）
+        internal void NotifyCounts()
+        {
+            Raise("IsEmpty");
+            Raise("TotalCount");
+            Raise("RunningCount");
+        }
+
         public LibraryViewModel(GameMode gm)
         {
             this.gm = gm;
@@ -62,6 +88,8 @@ namespace CaelusApp
                 Items.Add(new LibraryItem(p.Id, name, displayPath));
             }
             Raise("IsEmpty");
+            Raise("TotalCount");
+            Raise("RunningCount");
         }
 
         // 拖放或浏览添加文件（返回错误列表，空=全部成功）
@@ -128,6 +156,7 @@ namespace CaelusApp
 
             foreach (LibraryItem item in Items)
                 item.IsRunning = !string.IsNullOrEmpty(item.Path) && running.Contains(item.Path);
+            Raise("RunningCount");
         }
     }
 }

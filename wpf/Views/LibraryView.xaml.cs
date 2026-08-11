@@ -12,6 +12,9 @@ namespace CaelusApp.WpfHost.Views
 {
     public partial class LibraryView : UserControl
     {
+        // 预览探针（--wpf-shot）注入样例游戏的开关；生产永不置 true。
+        internal static bool InjectSampleData;
+
         private LibraryViewModel vm;
         private bool panelStateInitialized;
         private bool showingEmpty;
@@ -49,6 +52,30 @@ namespace CaelusApp.WpfHost.Views
                 loadingPanelState = false;
             }
             UpdateSelectionState();
+
+            // 预览探针样例注入（仅 --wpf-shot 模式；生产 InjectSampleData 恒为 false）
+            if (InjectSampleData && vm != null && vm.Items.Count == 0)
+            {
+                vm.Items.Add(new LibraryItem("sample-lol", "League of Legends", @"C:\Riot Games\League of Legends\LeagueClient.exe"));
+                vm.Items.Add(new LibraryItem("sample-val", "VALORANT", @"C:\Riot Games\VALORANT\live\VALORANT.exe"));
+                vm.Items.Add(new LibraryItem("sample-cs2", "Counter-Strike 2", @"D:\Steam\steamapps\common\CS2\cs2.exe"));
+                vm.Items.Add(new LibraryItem("sample-genshin", "原神", @"G:\Genshin Impact\GenshinImpact.exe"));
+                vm.Items[0].IsRunning = true;
+                vm.Items[1].IsRunning = true;
+                vm.NotifyCounts();
+                loadingPanelState = true;
+                try { UpdatePanelVisibility(false); } finally { loadingPanelState = false; }
+                GameList.Items.Refresh();
+                GameList.SelectedIndex = 0;
+                UpdateSelectionState();
+            }
+
+            // 入场 stagger（与概览页编排一致）+ 空态主图标呼吸邀请
+            Motion.RiseIn(ZoneHeader, 40);
+            Motion.RiseIn(ZoneToolbar, 100);
+            Motion.RiseIn(ZoneList, 160);
+            Motion.RiseIn(EmptyPanel, 160);
+            Motion.BreathScale(EmptyHeroIcon, 1.0, 1.06, 3);
         }
 
         private void OnUnloaded(object sender, RoutedEventArgs e)

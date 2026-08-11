@@ -10,20 +10,24 @@
     <local:DetailButtonTextConverter x:Key="DetailText"/>
     <local:FractionGridLengthConverter x:Key="FracLen"/>
     <CollectionViewSource x:Key="MetricsRest" Source="{Binding Metrics}" Filter="OnMetricsFilter"/>
+    <!-- 占比条入场生长（Loaded 时 Motion.GrowX） -->
+    <Style x:Key="BarGrowFill" TargetType="Border">
+      <EventSetter Event="Loaded" Handler="OnBarLoaded"/>
+    </Style>
   </UserControl.Resources>
 
   <ScrollViewer VerticalScrollBarVisibility="Auto"
                 HorizontalScrollBarVisibility="Disabled"
                 AutomationProperties.Name="概览预览内容">
     <StackPanel Margin="0,0,0,16">
-      <StackPanel Margin="0,0,0,16">
+      <StackPanel x:Name="ZoneHeader" Margin="0,0,0,16">
         <TextBlock Text="概览" Style="{DynamicResource PageHeader}"/>
         <TextBlock Text="WPF 界面预览与样例数据概览"
                    Style="{DynamicResource PageSubtitle}"
                    Margin="0,4,0,0"/>
       </StackPanel>
 
-      <Border Style="{DynamicResource StatusBadge}"
+      <Border x:Name="ZoneBadge" Style="{DynamicResource StatusBadge}"
               Margin="0,0,0,16"
               AutomationProperties.Name="预览状态：当前显示样例数据，不代表实时遥测">
         <DockPanel>
@@ -54,8 +58,7 @@
         </DockPanel>
       </Border>
 
-      <Border Style="{DynamicResource SettingsGroup}"
-              Padding="20"
+      <controls:GlassCard x:Name="ZoneHero" Style="{DynamicResource HeroGlassCard}"
               Margin="0,0,0,20"
               AutomationProperties.Name="样例主状态与模式">
         <Grid>
@@ -98,7 +101,8 @@
                          Foreground="{DynamicResource TextTertiaryBrush}"/>
             </DockPanel>
 
-            <TextBlock Text="{Binding ConclusionTitle}"
+            <TextBlock x:Name="ConclusionTitleText"
+                       Text="{Binding ConclusionTitle}"
                        FontSize="24"
                        FontWeight="SemiBold"
                        Foreground="{DynamicResource TextPrimaryBrush}"
@@ -137,9 +141,9 @@
             </Border>
           </StackPanel>
         </Grid>
-      </Border>
+      </controls:GlassCard>
 
-      <StackPanel Margin="0,0,0,10">
+      <StackPanel x:Name="ZoneMetricsLabel" Margin="0,0,0,10">
         <TextBlock Text="关键指标"
                    FontSize="{DynamicResource FontSizeBody}"
                    FontWeight="SemiBold"
@@ -150,7 +154,7 @@
                    Foreground="{DynamicResource TextSecondaryBrush}"/>
       </StackPanel>
 
-      <Grid Margin="0,0,0,20">
+      <Grid x:Name="ZoneMetrics" Margin="0,0,0,20">
         <Grid.ColumnDefinitions>
           <ColumnDefinition Width="*"/>
           <ColumnDefinition Width="12"/>
@@ -160,6 +164,7 @@
         <Border Grid.Column="0"
                 Style="{DynamicResource MetricPanel}"
                 Padding="16"
+                local:Motion.Lift="True"
                 AutomationProperties.Name="GPU 温度样例指标">
           <Grid>
             <Grid.RowDefinitions>
@@ -193,7 +198,7 @@
                 <ColumnDefinition Width="{Binding Metrics[0].Fraction, Converter={StaticResource FracLen}, ConverterParameter=rest}"/>
               </Grid.ColumnDefinitions>
               <Border Grid.ColumnSpan="2" CornerRadius="2" Background="{DynamicResource TrackBrush}"/>
-              <Border Grid.Column="0" CornerRadius="2"
+              <Border Grid.Column="0" CornerRadius="2" Style="{StaticResource BarGrowFill}"
                       Background="{Binding Metrics[0].ColorKey, Converter={StaticResource KeyBrush}}"/>
             </Grid>
           </Grid>
@@ -213,6 +218,7 @@
               <Border Style="{DynamicResource MetricPanel}"
                       Padding="16"
                       Margin="0,0,12,0"
+                      local:Motion.Lift="True"
                       AutomationProperties.Name="{Binding Label}">
                 <Grid>
                   <Grid.RowDefinitions>
@@ -246,7 +252,7 @@
                       <ColumnDefinition Width="{Binding Fraction, Converter={StaticResource FracLen}, ConverterParameter=rest}"/>
                     </Grid.ColumnDefinitions>
                     <Border Grid.ColumnSpan="2" CornerRadius="2" Background="{DynamicResource TrackBrush}"/>
-                    <Border Grid.Column="0" CornerRadius="2"
+                    <Border Grid.Column="0" CornerRadius="2" Style="{StaticResource BarGrowFill}"
                             Background="{Binding ColorKey, Converter={StaticResource KeyBrush}}"/>
                   </Grid>
                 </Grid>
@@ -256,7 +262,7 @@
         </ItemsControl>
       </Grid>
 
-      <Grid>
+      <Grid x:Name="ZoneBottom">
         <Grid.ColumnDefinitions>
           <ColumnDefinition Width="1.35*"/>
           <ColumnDefinition Width="12"/>
@@ -311,10 +317,10 @@
               <TextBlock Text="真实活动记录"
                          FontSize="11"
                          Foreground="{DynamicResource TextSecondaryBrush}"/>
-              <TextBlock Grid.Column="1"
-                         Text="未接入"
-                         FontSize="11"
-                         Foreground="{DynamicResource TextTertiaryBrush}"/>
+              <ContentControl Grid.Column="1" Style="{DynamicResource EmptyChip}">
+                <TextBlock Text="未接入"
+                           FontSize="10"
+                           Foreground="{DynamicResource TextTertiaryBrush}"/></ContentControl>
             </Grid>
           </StackPanel>
         </Border>
@@ -334,20 +340,20 @@
                        Foreground="{DynamicResource TextSecondaryBrush}"
                        TextWrapping="Wrap"/>
             <DockPanel Margin="0,0,0,8">
-              <TextBlock Text="未绑定" DockPanel.Dock="Right"
-                         FontSize="11" Foreground="{DynamicResource TextTertiaryBrush}"/>
+              <ContentControl DockPanel.Dock="Right" Style="{DynamicResource EmptyChip}">
+                <TextBlock Text="未绑定" FontSize="10" Foreground="{DynamicResource TextTertiaryBrush}"/></ContentControl>
               <TextBlock Text="处理器" FontSize="11"
                          Foreground="{DynamicResource TextSecondaryBrush}"/>
             </DockPanel>
             <DockPanel Margin="0,0,0,8">
-              <TextBlock Text="未绑定" DockPanel.Dock="Right"
-                         FontSize="11" Foreground="{DynamicResource TextTertiaryBrush}"/>
+              <ContentControl DockPanel.Dock="Right" Style="{DynamicResource EmptyChip}">
+                <TextBlock Text="未绑定" FontSize="10" Foreground="{DynamicResource TextTertiaryBrush}"/></ContentControl>
               <TextBlock Text="图形设备" FontSize="11"
                          Foreground="{DynamicResource TextSecondaryBrush}"/>
             </DockPanel>
             <DockPanel>
-              <TextBlock Text="未绑定" DockPanel.Dock="Right"
-                         FontSize="11" Foreground="{DynamicResource TextTertiaryBrush}"/>
+              <ContentControl DockPanel.Dock="Right" Style="{DynamicResource EmptyChip}">
+                <TextBlock Text="未绑定" FontSize="10" Foreground="{DynamicResource TextTertiaryBrush}"/></ContentControl>
               <TextBlock Text="内存规格" FontSize="11"
                          Foreground="{DynamicResource TextSecondaryBrush}"/>
             </DockPanel>

@@ -1,6 +1,7 @@
 <UserControl x:Class="CaelusApp.WpfHost.Views.LibraryView"
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:local="clr-namespace:CaelusApp.WpfHost"
              AllowDrop="True" Drop="OnDrop" DragOver="OnDragOver"
              AutomationProperties.Name="游戏库">
   <Grid>
@@ -9,19 +10,19 @@
       <RowDefinition Height="*"/>
     </Grid.RowDefinitions>
 
-    <StackPanel Grid.Row="0" Margin="0,0,0,18">
+    <StackPanel x:Name="ZoneHeader" Grid.Row="0" Margin="0,0,0,18">
       <TextBlock Text="游戏库" Style="{DynamicResource PageHeader}"/>
       <TextBlock Text="管理游戏主程序并查看当前运行状态"
                  Style="{DynamicResource PageSubtitle}" Margin="0,4,0,0"/>
     </StackPanel>
 
-    <Border x:Name="EmptyPanel" Grid.Row="1" Style="{DynamicResource EmptyState}"
+    <ContentControl x:Name="EmptyPanel" Grid.Row="1" Style="{DynamicResource DropZoneEmpty}"
             MinHeight="300" AllowDrop="True"
             AutomationProperties.Name="游戏库为空，可添加或拖放游戏"
             AutomationProperties.HelpText="将游戏主程序拖放到此区域，或使用添加游戏按钮">
       <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center"
                   MaxWidth="440" Margin="32">
-        <Border Width="48" Height="48" CornerRadius="6"
+        <Border x:Name="EmptyHeroIcon" Width="48" Height="48" CornerRadius="6"
                 HorizontalAlignment="Center" Margin="0,0,0,18"
                 Background="{DynamicResource AccentSoftBrush}"
                 BorderBrush="{DynamicResource AccentEdgeBrush}" BorderThickness="1">
@@ -55,7 +56,7 @@
                      Fill="{DynamicResource BorderSubtleBrush}"/>
         </Grid>
       </StackPanel>
-    </Border>
+    </ContentControl>
 
     <Grid x:Name="ListPanel" Grid.Row="1" Visibility="Collapsed">
       <Grid.RowDefinitions>
@@ -64,7 +65,7 @@
         <RowDefinition Height="*"/>
       </Grid.RowDefinitions>
 
-      <Border Grid.Row="0" Style="{DynamicResource SettingsGroup}" Padding="0">
+      <Border x:Name="ZoneToolbar" Grid.Row="0" Style="{DynamicResource SettingsGroup}" Padding="0">
         <Border Style="{DynamicResource SettingsRow}" Padding="16,12">
           <Grid>
             <Grid.ColumnDefinitions>
@@ -73,8 +74,21 @@
               <ColumnDefinition Width="Auto"/>
             </Grid.ColumnDefinitions>
             <StackPanel Grid.Column="0" VerticalAlignment="Center">
-              <TextBlock Text="已纳管游戏" FontSize="13" FontWeight="SemiBold"
-                         Foreground="{DynamicResource TextPrimaryBrush}"/>
+              <!-- 计数摘要：已纳管 N · 运行中 M（运行数 success 绿） -->
+              <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                <TextBlock Text="{Binding TotalCount}" FontSize="24" FontWeight="SemiBold"
+                           Foreground="{DynamicResource TextPrimaryBrush}"
+                           Typography.NumeralAlignment="Tabular"/>
+                <TextBlock Text=" 已纳管" Margin="0,0,16,0" FontSize="11" VerticalAlignment="Center"
+                           Foreground="{DynamicResource TextSecondaryBrush}"/>
+                <Rectangle Width="1" Height="16" VerticalAlignment="Center"
+                           Fill="{DynamicResource BorderSubtleBrush}"/>
+                <TextBlock Text="{Binding RunningCount}" Margin="16,0,0,0" FontSize="24" FontWeight="SemiBold"
+                           Foreground="{DynamicResource SuccessBrush}"
+                           Typography.NumeralAlignment="Tabular"/>
+                <TextBlock Text=" 运行中" FontSize="11" VerticalAlignment="Center"
+                           Foreground="{DynamicResource TextSecondaryBrush}"/>
+              </StackPanel>
               <TextBlock Text="{Binding DropHint}" Margin="0,3,16,0" FontSize="10"
                          Foreground="{DynamicResource TextTertiaryBrush}" TextWrapping="Wrap"/>
             </StackPanel>
@@ -90,7 +104,7 @@
         </Border>
       </Border>
 
-      <Border Grid.Row="2" Style="{DynamicResource SettingsGroup}" Padding="6">
+      <Border x:Name="ZoneList" Grid.Row="2" Style="{DynamicResource SettingsGroup}" Padding="6">
         <Grid>
           <Grid.RowDefinitions>
             <RowDefinition Height="Auto"/>
@@ -119,13 +133,21 @@
             <ListBox.ItemTemplate>
               <DataTemplate>
                 <Border Style="{DynamicResource SettingsRow}" Margin="6,2" Padding="12,10"
+                        local:Motion.Lift="True"
                         AutomationProperties.Name="{Binding Name}">
                   <Grid MinHeight="44">
                     <Grid.ColumnDefinitions>
+                      <ColumnDefinition Width="Auto"/>
                       <ColumnDefinition Width="*" MinWidth="160"/>
                       <ColumnDefinition Width="Auto"/>
                     </Grid.ColumnDefinitions>
-                    <StackPanel Grid.Column="0" VerticalAlignment="Center">
+                    <!-- 首字母头像（视觉锚点） -->
+                    <Border Grid.Column="0" Style="{DynamicResource GameAvatar}" Margin="0,0,14,0">
+                      <TextBlock Text="{Binding Initial}" FontSize="15" FontWeight="SemiBold"
+                                 Foreground="{DynamicResource ModeAccentBrush}"
+                                 HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                    </Border>
+                    <StackPanel Grid.Column="1" VerticalAlignment="Center">
                       <TextBlock Text="{Binding Name}" FontSize="{DynamicResource FontSizeCaption}"
                                  FontWeight="SemiBold" Foreground="{DynamicResource TextPrimaryBrush}"
                                  TextTrimming="CharacterEllipsis"/>
@@ -134,10 +156,7 @@
                                  TextTrimming="CharacterEllipsis" Margin="0,4,18,0"
                                  AutomationProperties.Name="{Binding Path}"/>
                     </StackPanel>
-                    <Border Grid.Column="1" VerticalAlignment="Center" MinWidth="76"
-                            CornerRadius="{DynamicResource RadiusSm}" Padding="9,4"
-                            Background="{DynamicResource GlassNavBrush}"
-                            BorderBrush="{DynamicResource BorderSubtleBrush}" BorderThickness="1">
+                    <Border Grid.Column="2" Style="{DynamicResource StatusChip}">
                       <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
                         <Ellipse Width="7" Height="7" Margin="0,0,7,0" VerticalAlignment="Center">
                           <Ellipse.Style>

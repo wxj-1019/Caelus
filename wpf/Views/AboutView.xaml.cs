@@ -10,7 +10,12 @@ namespace CaelusApp.WpfHost.Views
 {
     public partial class AboutView : UserControl
     {
-        public AboutView() { InitializeComponent(); }
+        public AboutView() { InitializeComponent(); Loaded += OnLoaded; }
+
+        private void OnLoaded(object sender, RoutedEventArgs e)
+        {
+            Motion.RiseIn(ZoneHeader, 40);
+        }
 
         private void OnCheckUpdate(object sender, RoutedEventArgs e)
         {

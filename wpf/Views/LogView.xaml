@@ -8,7 +8,7 @@
       <RowDefinition Height="*"/>
     </Grid.RowDefinitions>
 
-    <StackPanel Grid.Row="0" Margin="0,0,0,16">
+    <StackPanel x:Name="ZoneHeader" Grid.Row="0" Margin="0,0,0,16">
       <TextBlock Text="日志" Style="{DynamicResource PageHeader}"/>
       <TextBlock Text="运行记录与诊断" Style="{DynamicResource PageSubtitle}" Margin="0,4,0,0"/>
     </StackPanel>

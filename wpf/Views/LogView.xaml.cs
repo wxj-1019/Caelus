@@ -8,7 +8,12 @@ namespace CaelusApp.WpfHost.Views
 {
     public partial class LogView : UserControl
     {
-        public LogView() { InitializeComponent(); }
+        public LogView() { InitializeComponent(); Loaded += OnLoaded; }
+
+        private void OnLoaded(object sender, RoutedEventArgs e)
+        {
+            Motion.RiseIn(ZoneHeader, 40);
+        }
 
         private void OnOpenLog(object sender, RoutedEventArgs e)
         {

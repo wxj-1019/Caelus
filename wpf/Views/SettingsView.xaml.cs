@@ -283,7 +283,7 @@ namespace CaelusApp.WpfHost.Dialogs
             Border warning = new Border { Margin = new Thickness(0, 0, 0, 12) };
             DialogUi.Style(warning, "SettingsGroup");
             warning.SetResourceReference(Border.BorderBrushProperty, "DangerBrush");
-            Border warningRow = new Border(); DialogUi.Style(warningRow, "SettingsRow");
+            Border warningRow = new Border(); DialogUi.Style(warningRow, "PolicyRow");
             StackPanel warningText = new StackPanel();
             warningText.Children.Add(DialogUi.Text(Lang.T("def.warn.title"), 13,
                 DialogUi.Brush("DangerBrush", Brushes.Firebrick)));
@@ -337,7 +337,7 @@ namespace CaelusApp.WpfHost.Dialogs
         private DataTemplate BuildRowTemplate()
         {
             FrameworkElementFactory border = new FrameworkElementFactory(typeof(Border));
-            border.SetResourceReference(FrameworkElement.StyleProperty, "SettingsRow");
+            border.SetResourceReference(FrameworkElement.StyleProperty, "PolicyRow");
             border.SetValue(Border.BorderThicknessProperty, new Thickness(0, 0, 0, 1));
             FrameworkElementFactory grid = new FrameworkElementFactory(typeof(DockPanel));
             grid.SetValue(FrameworkElement.MarginProperty, new Thickness(0));
@@ -669,7 +669,7 @@ namespace CaelusApp.WpfHost.Dialogs
             header.Children.Add(title); header.Children.Add(subtitle); Grid.SetRow(header, 0); root.Children.Add(header);
 
             Border note = new Border { Margin = new Thickness(0, 0, 0, 12) }; DialogUi.Style(note, "SettingsGroup");
-            Border noteRow = new Border(); DialogUi.Style(noteRow, "SettingsRow");
+            Border noteRow = new Border(); DialogUi.Style(noteRow, "PolicyRow");
             noteRow.Child = DialogUi.Text(Lang.T("addon.desc"), 11,
                 DialogUi.Brush("TextSecondaryBrush", Brushes.Gray));
             note.Child = noteRow; Grid.SetRow(note, 1); root.Children.Add(note);
@@ -727,7 +727,7 @@ namespace CaelusApp.WpfHost.Dialogs
         private DataTemplate BuildCandidateTemplate()
         {
             FrameworkElementFactory border = new FrameworkElementFactory(typeof(Border));
-            border.SetResourceReference(FrameworkElement.StyleProperty, "SettingsRow");
+            border.SetResourceReference(FrameworkElement.StyleProperty, "PolicyRow");
             FrameworkElementFactory grid = new FrameworkElementFactory(typeof(DockPanel));
             FrameworkElementFactory panel = new FrameworkElementFactory(typeof(StackPanel));
             FrameworkElementFactory name = new FrameworkElementFactory(typeof(TextBlock));

@@ -3,7 +3,7 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              AutomationProperties.Name="关于 Caelus">
   <StackPanel Margin="0,0,0,16">
-    <StackPanel Margin="0,0,0,20">
+    <StackPanel x:Name="ZoneHeader" Margin="0,0,0,20">
       <TextBlock Text="关于" Style="{DynamicResource PageHeader}"/>
       <TextBlock Text="版本、项目与更新" Style="{DynamicResource PageSubtitle}" Margin="0,4,0,0"/>
     </StackPanel>
@@ -26,7 +26,7 @@
 
     <Border Style="{DynamicResource SettingsGroup}" Margin="0,0,0,16">
       <StackPanel>
-        <Border Style="{DynamicResource SettingsRow}" BorderThickness="0,0,0,1">
+        <Border Style="{DynamicResource PolicyRow}" BorderThickness="0,0,0,1">
           <Grid>
             <Grid.ColumnDefinitions>
               <ColumnDefinition Width="96"/>
@@ -38,7 +38,7 @@
                        Foreground="{DynamicResource TextPrimaryBrush}"/>
           </Grid>
         </Border>
-        <Border Style="{DynamicResource SettingsRow}" BorderThickness="0,0,0,1">
+        <Border Style="{DynamicResource PolicyRow}" BorderThickness="0,0,0,1">
           <Grid>
             <Grid.ColumnDefinitions>
               <ColumnDefinition Width="96"/>
@@ -50,7 +50,7 @@
                        Foreground="{DynamicResource TextPrimaryBrush}" TextWrapping="Wrap"/>
           </Grid>
         </Border>
-        <Border Style="{DynamicResource SettingsRow}">
+        <Border Style="{DynamicResource PolicyRow}">
           <Grid>
             <Grid.ColumnDefinitions>
               <ColumnDefinition Width="96"/>
@@ -66,7 +66,7 @@
     </Border>
 
     <Border Style="{DynamicResource SettingsGroup}">
-      <Border Style="{DynamicResource SettingsRow}">
+      <Border Style="{DynamicResource PolicyRow}">
         <DockPanel>
           <Button x:Name="BtnCheckUpdate" Content="{Binding CheckUpdateText}" Click="OnCheckUpdate"
                   Style="{DynamicResource PrimaryButton}" Padding="14,6"

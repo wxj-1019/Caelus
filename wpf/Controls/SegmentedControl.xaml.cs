@@ -9,10 +9,13 @@ using System.Windows.Controls;
 using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Media.Animation;
+using System.Windows.Media.Effects;
 using System.Windows.Threading;
 
 namespace CaelusApp.WpfHost.Controls
 {
+    public delegate void SegmentSelectionChangedEventHandler(object sender, int index);
+
     public partial class SegmentedControl : UserControl
     {
         public static readonly DependencyProperty ItemsSourceProperty =
@@ -34,7 +37,7 @@ namespace CaelusApp.WpfHost.Controls
             set { SetValue(SelectedIndexProperty, value); }
         }
 
-        public event EventHandler<int> SelectionChanged;
+        public event SegmentSelectionChangedEventHandler SelectionChanged;
 
         private bool updatingSelection;
         private bool indicatorInitialized;
@@ -92,7 +95,7 @@ namespace CaelusApp.WpfHost.Controls
                 {
                     if (updatingSelection) return;
                     SetCurrentValue(SelectedIndexProperty, index);
-                    EventHandler<int> handler = SelectionChanged;
+                    SegmentSelectionChangedEventHandler handler = SelectionChanged;
                     if (handler != null) handler(this, index);
                 };
                 ItemsHost.Items.Add(button);
@@ -155,19 +158,42 @@ namespace CaelusApp.WpfHost.Controls
             }
 
             double current = IndicatorTranslate.X;
-            var animation = new DoubleAnimation(current, target,
+            double targetWidth = button.ActualWidth;
+
+            // 液态动画：X 平滑位移 + 宽度先伸展后收拢（像液体被推到目标位置）
+            var xAnim = new DoubleAnimation(current, target,
                 TimeSpan.FromMilliseconds(UiMotion.SegmentMs))
             {
                 EasingFunction = new CubicEase { EasingMode = EasingMode.EaseOut },
                 FillBehavior = FillBehavior.Stop
             };
-            animation.Completed += delegate
+            xAnim.Completed += delegate
             {
                 IndicatorTranslate.BeginAnimation(TranslateTransform.XProperty, null);
                 IndicatorTranslate.X = target;
             };
-            IndicatorTranslate.BeginAnimation(TranslateTransform.XProperty, animation,
+            IndicatorTranslate.BeginAnimation(TranslateTransform.XProperty, xAnim,
                 HandoffBehavior.SnapshotAndReplace);
+
+            // 宽度液态：0% 原宽 → 30% 伸展 1.35x（朝目标方向拉长）→ 100% 收拢回目标宽
+            var wAnim = new DoubleAnimationUsingKeyFrames
+            {
+                Duration = TimeSpan.FromMilliseconds(UiMotion.SegmentMs),
+                FillBehavior = FillBehavior.Stop
+            };
+            wAnim.KeyFrames.Add(new LinearDoubleKeyFrame(targetWidth, KeyTime.FromPercent(0)));
+            wAnim.KeyFrames.Add(new EasingDoubleKeyFrame(targetWidth * 1.35, KeyTime.FromPercent(0.3),
+                new CubicEase { EasingMode = EasingMode.EaseOut }));
+            wAnim.KeyFrames.Add(new EasingDoubleKeyFrame(targetWidth, KeyTime.FromPercent(1),
+                new CubicEase { EasingMode = EasingMode.EaseInOut }));
+            wAnim.Completed += delegate
+            {
+                SelectionIndicator.BeginAnimation(WidthProperty, null);
+                SelectionIndicator.Width = targetWidth;
+            };
+            SelectionIndicator.BeginAnimation(WidthProperty, wAnim,
+                HandoffBehavior.SnapshotAndReplace);
+
             indicatorInitialized = true;
         }
 
@@ -185,7 +211,7 @@ namespace CaelusApp.WpfHost.Controls
             if (next != SelectedIndex)
             {
                 SetCurrentValue(SelectedIndexProperty, next);
-                EventHandler<int> handler = SelectionChanged;
+                SegmentSelectionChangedEventHandler handler = SelectionChanged;
                 if (handler != null) handler(this, next);
             }
             RadioButton button = ItemsHost.Items[next] as RadioButton;

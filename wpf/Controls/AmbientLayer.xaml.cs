@@ -15,10 +15,63 @@ namespace CaelusApp.WpfHost.Controls
         // frontVisible=true 表示 Front 组当前可见
         private bool frontVisible;
         private bool driftStarted;
+        private Window hostWindow;
 
         public AmbientLayer()
         {
             InitializeComponent();
+            Loaded += OnLoaded;
+            Unloaded += OnUnloaded;
+            IsVisibleChanged += OnIsVisibleChanged;
+        }
+
+        private void OnLoaded(object sender, RoutedEventArgs e)
+        {
+            Motion.PolicyChanged += OnMotionPolicyChanged;
+            AttachWindow(Window.GetWindow(this));
+            UpdateDriftState();
+        }
+
+        private void OnUnloaded(object sender, RoutedEventArgs e)
+        {
+            Motion.PolicyChanged -= OnMotionPolicyChanged;
+            StopDrift();
+            AttachWindow(null);
+        }
+
+        private void OnMotionPolicyChanged(object sender, EventArgs e)
+        {
+            // ThemeManager 会先换入高对比覆盖资源；重新套用当前静态透明度后再决定是否漂移。
+            Show();
+            UpdateDriftState();
+        }
+
+        private void OnIsVisibleChanged(object sender, DependencyPropertyChangedEventArgs e)
+        {
+            UpdateDriftState();
+        }
+
+        private void OnWindowActivityChanged(object sender, EventArgs e)
+        {
+            UpdateDriftState();
+        }
+
+        private void AttachWindow(Window window)
+        {
+            if (hostWindow == window) return;
+            if (hostWindow != null)
+            {
+                hostWindow.Activated -= OnWindowActivityChanged;
+                hostWindow.Deactivated -= OnWindowActivityChanged;
+                hostWindow.StateChanged -= OnWindowActivityChanged;
+            }
+            hostWindow = window;
+            if (hostWindow != null)
+            {
+                hostWindow.Activated += OnWindowActivityChanged;
+                hostWindow.Deactivated += OnWindowActivityChanged;
+                hostWindow.StateChanged += OnWindowActivityChanged;
+            }
         }
 
         // 立即显示当前主题的氛围（启动时用，无动画）
@@ -32,7 +85,7 @@ namespace CaelusApp.WpfHost.Controls
             BackSecondary.Opacity = 0;
             BackTertiary.Opacity = 0;
             frontVisible = true;
-            StartDrift();
+            UpdateDriftState();
         }
 
         // 模式切换后的氛围过渡：后组绑定新画刷淡入，前组淡出
@@ -78,7 +131,10 @@ namespace CaelusApp.WpfHost.Controls
 
         private static double Target(string opacityKey)
         {
-            return (double)Application.Current.FindResource(opacityKey);
+            double value = (double)Application.Current.FindResource(opacityKey);
+            // 浅色主题下光晕收敛：vibrancy 是隐约衬底，不是色块（macOS 式克制）
+            if (ThemeManager.CurrentTone == UiTone.Light) value *= 0.45;
+            return value;
         }
 
         private static void FadeTo(Ellipse el, double target, int ms)
@@ -88,13 +144,20 @@ namespace CaelusApp.WpfHost.Controls
             el.BeginAnimation(UIElement.OpacityProperty, anim);
         }
 
-        // 漂移：只动 RenderTransform（渲染线程，开销极低）；
-        // 截图探针（Motion.Enabled=false）与系统降级时不启动
+        // 漂移：只动 RenderTransform；窗口失活/最小化/辅助模式时立即停掉 animation clock。
+        private void UpdateDriftState()
+        {
+            bool shouldDrift = IsLoaded && IsVisible && hostWindow != null
+                && hostWindow.IsActive && hostWindow.WindowState != WindowState.Minimized
+                && Motion.Enabled && !Motion.Reduced;
+            if (!shouldDrift) { StopDrift(); return; }
+            StartDrift();
+        }
+
         private void StartDrift()
         {
             if (driftStarted) return;
             driftStarted = true;
-            if (!Motion.Enabled || Motion.Reduced) return;
             double s = (double)Application.Current.FindResource("AuroraDriftSeconds");
             BeginDrift(FrontPrimary, 40, 30, s, 0);
             BeginDrift(FrontSecondary, -46, 26, s * 1.23, s * 0.3);
@@ -102,6 +165,37 @@ namespace CaelusApp.WpfHost.Controls
             BeginDrift(BackPrimary, 40, 30, s, 0);
             BeginDrift(BackSecondary, -46, 26, s * 1.23, s * 0.3);
             BeginDrift(BackTertiary, 36, -28, s * 0.85, s * 0.6);
+        }
+
+        private void StopDrift()
+        {
+            if (!driftStarted) return;
+            StopDrift(FrontPrimary); StopDrift(FrontSecondary); StopDrift(FrontTertiary);
+            StopDrift(BackPrimary); StopDrift(BackSecondary); StopDrift(BackTertiary);
+            driftStarted = false;
+        }
+
+        private static void StopDrift(Ellipse el)
+        {
+            TransformGroup group = el.RenderTransform as TransformGroup;
+            if (group == null) return;
+            foreach (Transform child in group.Children)
+            {
+                TranslateTransform tt = child as TranslateTransform;
+                if (tt != null)
+                {
+                    tt.BeginAnimation(TranslateTransform.XProperty, null);
+                    tt.BeginAnimation(TranslateTransform.YProperty, null);
+                    tt.X = 0; tt.Y = 0;
+                }
+                ScaleTransform st = child as ScaleTransform;
+                if (st != null)
+                {
+                    st.BeginAnimation(ScaleTransform.ScaleXProperty, null);
+                    st.BeginAnimation(ScaleTransform.ScaleYProperty, null);
+                    st.ScaleX = 1; st.ScaleY = 1;
+                }
+            }
         }
 
         private static void BeginDrift(Ellipse el, double dx, double dy, double seconds, double beginDelay)

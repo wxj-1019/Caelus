@@ -4,6 +4,7 @@
 using System;
 using System.IO;
 using System.Windows;
+using System.Windows.Media;
 
 namespace CaelusApp.WpfHost
 {
@@ -87,13 +88,42 @@ namespace CaelusApp.WpfHost
             overlay["BorderSubtleBrush"] = SystemColors.ControlTextBrush;
             overlay["BorderStrongBrush"] = SystemColors.ControlTextBrush;
             overlay["CardEdgeBrush"] = SystemColors.ControlTextBrush;
+            overlay["TopHighlightBrush"] = System.Windows.Media.Brushes.Transparent;
             overlay["GlassNavBrush"] = SystemColors.ControlBrush;
             overlay["ModeAccentBrush"] = SystemColors.HighlightBrush;
+            overlay["AccentGradientBrush"] = SystemColors.HighlightBrush;
+            overlay["AccentPrimaryBrush"] = SystemColors.HighlightBrush;
+            overlay["AccentSecondaryBrush"] = SystemColors.HighlightBrush;
+            overlay["AccentGlowColor"] = System.Windows.Media.Colors.Transparent;
+            overlay["ButtonSheenColor"] = System.Windows.Media.Colors.Transparent;
             overlay["AccentSoftBrush"] = SystemColors.HighlightBrush;
             overlay["AccentEdgeBrush"] = SystemColors.HighlightTextBrush;
             overlay["OnAccentBrush"] = SystemColors.HighlightTextBrush;
+            overlay["SuccessBrush"] = SystemColors.WindowTextBrush;
+            overlay["WarningBrush"] = SystemColors.WindowTextBrush;
+            overlay["DangerBrush"] = SystemColors.WindowTextBrush;
+            overlay["InfoBrush"] = SystemColors.WindowTextBrush;
+            overlay["SuccessSoftBrush"] = SystemColors.ControlBrush;
+            overlay["SuccessEdgeBrush"] = SystemColors.ControlTextBrush;
+            overlay["WarningSoftBrush"] = SystemColors.ControlBrush;
+            overlay["WarningEdgeBrush"] = SystemColors.ControlTextBrush;
+            overlay["DangerSoftBrush"] = SystemColors.ControlBrush;
+            overlay["DangerEdgeBrush"] = SystemColors.ControlTextBrush;
+            overlay["InfoSoftBrush"] = SystemColors.ControlBrush;
+            overlay["InfoEdgeBrush"] = SystemColors.ControlTextBrush;
+            overlay["NeutralSoftBrush"] = SystemColors.ControlBrush;
+            overlay["NeutralEdgeBrush"] = SystemColors.ControlTextBrush;
+            overlay["TrackBrush"] = SystemColors.ControlDarkBrush;
+            overlay["ScrollTrackBrush"] = SystemColors.ControlBrush;
+            overlay["ScrollThumbBrush"] = SystemColors.ControlTextBrush;
+            overlay["ScrollThumbHoverBrush"] = SystemColors.HighlightBrush;
             overlay["SegSelectedBrush"] = SystemColors.HighlightBrush;
             overlay["SegSelectedTextBrush"] = SystemColors.HighlightTextBrush;
+            overlay["HeroTitleOnDarkBrush"] = SystemColors.WindowTextBrush;
+            overlay["HeroTitleOnLightBrush"] = SystemColors.WindowTextBrush;
+            overlay["AuroraPrimaryOpacity"] = 0.0;
+            overlay["AuroraSecondaryOpacity"] = 0.0;
+            overlay["AuroraTertiaryOpacity"] = 0.0;
             merged.Add(overlay);
             accessibility = overlay;
         }

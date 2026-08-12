@@ -1,29 +1,36 @@
 <ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
                     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
 
-  <!-- ===== 语义色（沿用浅色版） ===== -->
-  <Color x:Key="SuccessColor">#2F9E5F</Color>
-  <Color x:Key="WarningColor">#D97706</Color>
-  <Color x:Key="DangerColor">#DC2626</Color>
-  <Color x:Key="InfoColor">#2563EB</Color>
+  <!-- ===== 语义色（Apple system colors · Light，文本安全取深化变体） ===== -->
+  <Color x:Key="SuccessColor">#248A3D</Color>
+  <Color x:Key="WarningColor">#C93400</Color>
+  <Color x:Key="DangerColor">#D70015</Color>
+  <Color x:Key="InfoColor">#0066CC</Color>
   <Color x:Key="BrandColor">#D4A847</Color>
 
   <!-- ===== 语义柔色（浅色用深语义色低 alpha，保证白底可辨） ===== -->
-  <SolidColorBrush x:Key="SuccessSoftBrush" Color="#2F9E5F24"/>
-  <SolidColorBrush x:Key="SuccessEdgeBrush" Color="#2F9E5F54"/>
-  <SolidColorBrush x:Key="WarningSoftBrush" Color="#D9770624"/>
-  <SolidColorBrush x:Key="WarningEdgeBrush" Color="#D9770654"/>
+  <SolidColorBrush x:Key="SuccessSoftBrush" Color="#18248A3D"/>
+  <SolidColorBrush x:Key="SuccessEdgeBrush" Color="#4D248A3D"/>
+  <SolidColorBrush x:Key="WarningSoftBrush" Color="#18C93400"/>
+  <SolidColorBrush x:Key="WarningEdgeBrush" Color="#4DC93400"/>
+  <SolidColorBrush x:Key="DangerSoftBrush" Color="#14D70015"/>
+  <SolidColorBrush x:Key="DangerEdgeBrush" Color="#47D70015"/>
+  <SolidColorBrush x:Key="InfoSoftBrush" Color="#140066CC"/>
+  <SolidColorBrush x:Key="InfoEdgeBrush" Color="#470066CC"/>
+  <SolidColorBrush x:Key="NeutralSoftBrush" Color="#0A000000"/>
+  <SolidColorBrush x:Key="NeutralEdgeBrush" Color="#1F000000"/>
 
-  <!-- ===== 表面梯度（浅色：白色 alpha 递进） ===== -->
-  <Color x:Key="BackgroundColor">#F5F7F9</Color>
-  <Color x:Key="Surface0Color">#A6FFFFFF</Color>
-  <Color x:Key="Surface1Color">#BFFFFFFF</Color>
+  <!-- ===== 表面梯度（macOS 浅色：#F5F5F7 底 + 白色 alpha 递进卡片；背景 92% 不透明透出 Acrylic） ===== -->
+  <Color x:Key="BackgroundColor">#EBF5F5F7</Color>
+  <Color x:Key="Surface0Color">#B3FFFFFF</Color>
+  <Color x:Key="Surface1Color">#CCFFFFFF</Color>
   <Color x:Key="Surface2Color">#F2FFFFFF</Color>
 
-  <!-- ===== 文字 ===== -->
-  <Color x:Key="TextPrimaryColor">#141F29</Color>
-  <Color x:Key="TextSecondaryColor">#61727E</Color>
-  <Color x:Key="TextTertiaryColor">#848F96</Color>
+  <!-- ===== 文字（Apple Light：#1D1D1F + 60%/55% 黑；tertiary 55% 保证小字可读） ===== -->
+  <Color x:Key="TextPrimaryColor">#1D1D1F</Color>
+  <Color x:Key="TextSecondaryColor">#993C3C43</Color>
+  <Color x:Key="TextTertiaryColor">#8C3C3C43</Color>
+  <Color x:Key="ButtonSheenColor">#59FFFFFF</Color>
 
   <!-- ===== 画刷 ===== -->
   <SolidColorBrush x:Key="SuccessBrush" Color="{StaticResource SuccessColor}"/>
@@ -39,35 +46,40 @@
   <SolidColorBrush x:Key="TextSecondaryBrush" Color="{StaticResource TextSecondaryColor}"/>
   <SolidColorBrush x:Key="TextTertiaryBrush" Color="{StaticResource TextTertiaryColor}"/>
 
-  <!-- ===== 描边体系（浅色用黑色 alpha） ===== -->
-  <SolidColorBrush x:Key="BorderSubtleBrush" Color="#0F000000"/>
-  <SolidColorBrush x:Key="BorderStrongBrush" Color="#1A000000"/>
+  <!-- ===== 描边体系（浅色用黑色 alpha 发丝线） ===== -->
+  <SolidColorBrush x:Key="BorderSubtleBrush" Color="#1F000000"/>
+  <SolidColorBrush x:Key="BorderStrongBrush" Color="#26000000"/>
   <LinearGradientBrush x:Key="TopHighlightBrush" StartPoint="0,0" EndPoint="1,0">
     <GradientStop Color="#00FFFFFF" Offset="0"/>
     <GradientStop Color="#99FFFFFF" Offset="0.5"/>
     <GradientStop Color="#00FFFFFF" Offset="1"/>
   </LinearGradientBrush>
   <LinearGradientBrush x:Key="CardEdgeBrush" StartPoint="0.5,0" EndPoint="0.5,1">
-    <GradientStop Color="#1F000000" Offset="0"/>
+    <GradientStop Color="#1A000000" Offset="0"/>
     <GradientStop Color="#0A000000" Offset="0.45"/>
     <GradientStop Color="#05000000" Offset="1"/>
   </LinearGradientBrush>
 
-  <!-- ===== 分段控件选中态（浅色：白底深字） ===== -->
+  <!-- ===== 分段控件选中态（macOS 浅色：白滑块 + 深字） ===== -->
   <SolidColorBrush x:Key="SegSelectedBrush" Color="#FFFFFF"/>
-  <SolidColorBrush x:Key="SegSelectedTextBrush" Color="#141F29"/>
+  <SolidColorBrush x:Key="SegSelectedTextBrush" Color="#1D1D1F"/>
+
+  <!-- ===== 滚动条（macOS 悬浮 overlay：无轨道，胶囊 thumb；常态 32% 黑，hover 45% 加深，拖动用模式色） ===== -->
+  <SolidColorBrush x:Key="ScrollTrackBrush" Color="Transparent"/>
+  <SolidColorBrush x:Key="ScrollThumbBrush" Color="#52000000"/>
+  <SolidColorBrush x:Key="ScrollThumbHoverBrush" Color="#73000000"/>
 
   <!-- ===== 兼容别名层（旧视图/样式引用，逐页精修后回收；勿在新代码中使用） ===== -->
-  <SolidColorBrush x:Key="SurfaceBrush" Color="#FFFFFF"/>
-  <SolidColorBrush x:Key="SurfaceRaisedBrush" Color="#FAFBFC"/>
-  <SolidColorBrush x:Key="BorderBrush" Color="#D8E0E6"/>
-  <SolidColorBrush x:Key="GlassNavBrush" Color="#8CFFFFFF"/>
-  <SolidColorBrush x:Key="GlassCardBrush" Color="#A6FFFFFF"/>
-  <SolidColorBrush x:Key="GlassHeroBrush" Color="#BFFFFFFF"/>
-  <SolidColorBrush x:Key="GlassRaisedBrush" Color="#BFFFFFFF"/>
-  <SolidColorBrush x:Key="GlassBorderBrush" Color="#0F000000"/>
-  <SolidColorBrush x:Key="GlassBorderHiBrush" Color="#1A000000"/>
-  <SolidColorBrush x:Key="InnerHighlightBrush" Color="#99FFFFFF"/>
-  <SolidColorBrush x:Key="TrackBrush" Color="#14000000"/>
+  <SolidColorBrush x:Key="SurfaceBrush" Color="#F2ECECEF"/>
+  <SolidColorBrush x:Key="SurfaceRaisedBrush" Color="#FFFFFF"/>
+  <SolidColorBrush x:Key="BorderBrush" Color="#E0E0E3"/>
+  <SolidColorBrush x:Key="GlassNavBrush" Color="#B3FFFFFF"/>
+  <SolidColorBrush x:Key="GlassCardBrush" Color="#D9FFFFFF"/>
+  <SolidColorBrush x:Key="GlassHeroBrush" Color="#E6FFFFFF"/>
+  <SolidColorBrush x:Key="GlassRaisedBrush" Color="#F2FFFFFF"/>
+  <SolidColorBrush x:Key="GlassBorderBrush" Color="#14000000"/>
+  <SolidColorBrush x:Key="GlassBorderHiBrush" Color="#1F000000"/>
+  <SolidColorBrush x:Key="InnerHighlightBrush" Color="#BFFFFFFF"/>
+  <SolidColorBrush x:Key="TrackBrush" Color="#12000000"/>
   <SolidColorBrush x:Key="ModeAccentBrush" Color="{DynamicResource ModeAccentOnLightColor}"/>
 </ResourceDictionary>

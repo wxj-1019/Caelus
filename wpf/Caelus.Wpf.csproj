@@ -94,7 +94,9 @@
     <Compile Include="PolicyRuntime.cs" />
     <Compile Include="Converters.cs" />
     <Compile Include="Motion.cs" />
+    <Compile Include="Spotlight.cs" />
     <Compile Include="Controls\IconView.cs" />
+    <Compile Include="Controls\SparkleLayer.cs" />
     <Compile Include="Controls\Sparkline.cs" />
     <Compile Include="Controls\ProgressRing.cs" />
     <Compile Include="Controls\GlassCard.cs" />

@@ -1,17 +1,18 @@
 <ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
                     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
                     xmlns:sys="clr-namespace:System;assembly=mscorlib">
-  <FontFamily x:Key="FontUi">Microsoft YaHei UI</FontFamily>
+  <!-- 苹果式字体链：拉丁/数字走 Segoe UI Variable（≈SF Pro 气质），中文回落雅黑（≈PingFang） -->
+  <FontFamily x:Key="FontUi">Segoe UI Variable Text, Microsoft YaHei UI</FontFamily>
   <FontFamily x:Key="FontMono">Consolas</FontFamily>
 
-  <!-- Four type levels keep dense utility pages readable without visual noise. -->
+  <!-- 字号四阶：苹果桌面层级克制，展示位不再超大 -->
   <sys:Double x:Key="FontSizeDisplay">24</sys:Double>
-  <sys:Double x:Key="FontSizeTitle">18</sys:Double>
+  <sys:Double x:Key="FontSizeTitle">17</sys:Double>
   <sys:Double x:Key="FontSizeBody">14</sys:Double>
   <sys:Double x:Key="FontSizeCaption">12</sys:Double>
   <sys:Double x:Key="FontSizeMono">12</sys:Double>
-  <sys:Double x:Key="FontSizeSection">24</sys:Double>
-  <sys:Double x:Key="FontSizeHero">40</sys:Double>
+  <sys:Double x:Key="FontSizeSection">22</sys:Double>
+  <sys:Double x:Key="FontSizeHero">32</sys:Double>
   <sys:Double x:Key="FontSizeMetric">24</sys:Double>
 
   <sys:Double x:Key="SpaceXs">4</sys:Double>
@@ -21,7 +22,8 @@
   <sys:Double x:Key="SpaceXl">24</sys:Double>
   <sys:Double x:Key="Space2Xl">32</sys:Double>
 
+  <!-- macOS 连续圆角近似：小控件 6 / 卡片分组 10 / Hero 大卡 14 -->
   <CornerRadius x:Key="RadiusSm">6</CornerRadius>
-  <CornerRadius x:Key="RadiusMd">8</CornerRadius>
-  <CornerRadius x:Key="RadiusLg">8</CornerRadius>
+  <CornerRadius x:Key="RadiusMd">10</CornerRadius>
+  <CornerRadius x:Key="RadiusLg">14</CornerRadius>
 </ResourceDictionary>

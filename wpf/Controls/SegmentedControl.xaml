@@ -15,7 +15,7 @@
       </Border>
       <ControlTemplate.Triggers>
         <Trigger Property="IsChecked" Value="True">
-          <Setter Property="Foreground" Value="{DynamicResource ModeAccentBrush}"/>
+          <Setter Property="Foreground" Value="{DynamicResource SegSelectedTextBrush}"/>
           <Setter Property="FontWeight" Value="SemiBold"/>
         </Trigger>
         <Trigger Property="IsMouseOver" Value="True">
@@ -26,14 +26,19 @@
   </UserControl.Resources>
 
   <Border Style="{DynamicResource SegmentHost}">
-    <Grid x:Name="LayoutHost" ClipToBounds="True">
+    <Grid x:Name="LayoutHost">
       <Border x:Name="SelectionIndicator"
               HorizontalAlignment="Left"
               VerticalAlignment="Stretch"
-              Background="{DynamicResource AccentSoftBrush}"
-              CornerRadius="{DynamicResource RadiusSm}"
+              Background="{DynamicResource ModeAccentBrush}"
+              CornerRadius="{DynamicResource RadiusMd}"
               IsHitTestVisible="False"
               Visibility="Hidden">
+        <Border.Effect>
+          <!-- uiverse.io 风格浮起阴影：深色主题下用白色半透明（下方微光=浮起感），
+               黑色阴影在暗背景上不可见 -->
+          <DropShadowEffect x:Name="IndicatorShadow" BlurRadius="8" ShadowDepth="4" Direction="270" Opacity="0.5" Color="#FFFFFF"/>
+        </Border.Effect>
         <Border.RenderTransform>
           <TranslateTransform x:Name="IndicatorTranslate"/>
         </Border.RenderTransform>

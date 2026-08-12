@@ -2,6 +2,7 @@
 // 文件用途 WPF 动效执行：Apple 式连续反馈、生命周期和系统策略降级
 
 using System;
+using System.Collections.Generic;
 using System.ComponentModel;
 using System.Windows;
 using System.Windows.Controls;
@@ -15,7 +16,17 @@ namespace CaelusApp.WpfHost
     internal static class Motion
     {
         public static bool Enabled = true;
-        private const int InfiniteFps = 8;
+        private const int InfiniteFps = 15;
+        private static readonly List<WeakReference> pulseTargets = new List<WeakReference>();
+        private static readonly List<ScaleBreathTarget> scaleBreathTargets = new List<ScaleBreathTarget>();
+
+        private sealed class ScaleBreathTarget
+        {
+            public WeakReference Element;
+            public double From;
+            public double To;
+            public int Seconds;
+        }
 
         public static event EventHandler PolicyChanged;
 
@@ -34,11 +45,45 @@ namespace CaelusApp.WpfHost
             get { return SystemParameters.HighContrast; }
         }
 
+        // .NET 4 参考程序集不含 LiveSetting；支持该 UIA API 的系统上用反射启用，旧系统安全降级。
+        public static void SetPoliteLiveSetting(DependencyObject element)
+        {
+            if (element == null) return;
+            try
+            {
+                Type propertiesType = typeof(System.Windows.Automation.AutomationProperties);
+                System.Reflection.MethodInfo setter = propertiesType.GetMethod("SetLiveSetting");
+                if (setter == null) return;
+                Type enumType = setter.GetParameters()[1].ParameterType;
+                object polite = Enum.Parse(enumType, "Polite");
+                setter.Invoke(null, new object[] { element, polite });
+            }
+            catch { }
+        }
+
         private static void OnSystemParametersChanged(object sender, PropertyChangedEventArgs e)
         {
             if (e.PropertyName != "ClientAreaAnimation" && e.PropertyName != "HighContrast") return;
+            RefreshInfiniteAnimations();
             EventHandler handler = PolicyChanged;
             if (handler != null) handler(null, EventArgs.Empty);
+        }
+
+        private static void RefreshInfiniteAnimations()
+        {
+            for (int i = pulseTargets.Count - 1; i >= 0; i--)
+            {
+                UIElement element = pulseTargets[i].Target as UIElement;
+                if (element == null) { pulseTargets.RemoveAt(i); continue; }
+                StartBreathPulse(element);
+            }
+            for (int i = scaleBreathTargets.Count - 1; i >= 0; i--)
+            {
+                FrameworkElement element = scaleBreathTargets[i].Element.Target as FrameworkElement;
+                if (element == null) { scaleBreathTargets.RemoveAt(i); continue; }
+                ScaleBreathTarget target = scaleBreathTargets[i];
+                StartBreathScale(element, target.From, target.To, target.Seconds);
+            }
         }
 
         public static void Throttle(DoubleAnimation anim)
@@ -54,13 +99,15 @@ namespace CaelusApp.WpfHost
         public static void Reveal(FrameworkElement element)
         {
             if (element == null) return;
+            // 从当前 Opacity 开始，避免已可见元素重复调用时闪黑
+            double fromOpacity = element.Opacity;
             element.Opacity = 1;
             TranslateTransform translate = TranslateOf(element);
             translate.X = 0;
             if (!Enabled) return;
 
             int ms = UiMotion.Duration(UiMotion.PageFadeMs, Reduced);
-            Animate(element, UIElement.OpacityProperty, 0, 1, ms);
+            Animate(element, UIElement.OpacityProperty, fromOpacity, 1, ms);
             if (UiMotion.AllowsOffset(Reduced))
                 Animate(translate, TranslateTransform.XProperty, 4, 0, ms);
         }
@@ -87,15 +134,18 @@ namespace CaelusApp.WpfHost
         public static void RiseIn(FrameworkElement element, int delayMs)
         {
             if (element == null) return;
-            if (!Enabled)
+            if (!Enabled || Reduced)
             {
+                element.BeginAnimation(UIElement.OpacityProperty, null);
                 element.Opacity = 1;
+                TranslateTransform settled = TranslateOf(element);
+                settled.BeginAnimation(TranslateTransform.YProperty, null);
+                settled.Y = 0;
                 return;
             }
-            int ms = UiMotion.Duration(UiMotion.PageFadeMs, Reduced);
+            int ms = UiMotion.PageFadeMs;
             element.Opacity = 0;
             AnimateDelayed(element, UIElement.OpacityProperty, 0, 1, ms, delayMs);
-            if (!UiMotion.AllowsOffset(Reduced)) return;
             TranslateTransform translate = TranslateOf(element);
             translate.Y = 10;
             AnimateDelayed(translate, TranslateTransform.YProperty, 10, 0, ms, delayMs);
@@ -104,18 +154,37 @@ namespace CaelusApp.WpfHost
         // 占比条入场生长：左端点为原点 scaleX 0→1（reduced 时直接满宽）
         public static void GrowX(FrameworkElement element, int delayMs)
         {
-            if (element == null || !Enabled) return;
+            if (element == null) return;
             ScaleTransform scale = ScaleOf(element);
             element.RenderTransformOrigin = new Point(0, 0.5);
+            if (!Enabled || Reduced)
+            {
+                scale.BeginAnimation(ScaleTransform.ScaleXProperty, null);
+                scale.ScaleX = 1;
+                return;
+            }
             scale.ScaleX = 0;
-            AnimateDelayed(scale, ScaleTransform.ScaleXProperty, 0, 1,
-                UiMotion.Duration(800, Reduced), delayMs);
+            AnimateDelayed(scale, ScaleTransform.ScaleXProperty, 0, 1, 800, delayMs);
         }
 
         // 状态点呼吸脉冲：2s 往返透明度，无限动画按惯例限帧 8fps
         public static void BreathPulse(UIElement element)
         {
             if (element == null) return;
+            RegisterPulse(element);
+            StartBreathPulse(element);
+        }
+
+        private static void RegisterPulse(UIElement element)
+        {
+            foreach (WeakReference reference in pulseTargets)
+                if (ReferenceEquals(reference.Target, element)) return;
+            pulseTargets.Add(new WeakReference(element));
+        }
+
+        private static void StartBreathPulse(UIElement element)
+        {
+            element.BeginAnimation(UIElement.OpacityProperty, null);
             if (!Enabled || Reduced)
             {
                 element.Opacity = 1;
@@ -134,8 +203,36 @@ namespace CaelusApp.WpfHost
         // 缩放呼吸（空态主图标邀请感）：fromScale↔toScale 往返，居中缩放
         public static void BreathScale(FrameworkElement element, double fromScale, double toScale, int seconds)
         {
-            if (element == null || !Enabled || Reduced) return;
+            if (element == null) return;
+            RegisterScaleBreath(element, fromScale, toScale, seconds);
+            StartBreathScale(element, fromScale, toScale, seconds);
+        }
+
+        private static void RegisterScaleBreath(FrameworkElement element, double fromScale, double toScale, int seconds)
+        {
+            foreach (ScaleBreathTarget target in scaleBreathTargets)
+            {
+                if (!ReferenceEquals(target.Element.Target, element)) continue;
+                target.From = fromScale; target.To = toScale; target.Seconds = seconds;
+                return;
+            }
+            scaleBreathTargets.Add(new ScaleBreathTarget
+            {
+                Element = new WeakReference(element), From = fromScale, To = toScale, Seconds = seconds
+            });
+        }
+
+        private static void StartBreathScale(FrameworkElement element, double fromScale, double toScale, int seconds)
+        {
             ScaleTransform scale = ScaleOf(element);
+            scale.BeginAnimation(ScaleTransform.ScaleXProperty, null);
+            scale.BeginAnimation(ScaleTransform.ScaleYProperty, null);
+            if (!Enabled || Reduced)
+            {
+                scale.ScaleX = 1;
+                scale.ScaleY = 1;
+                return;
+            }
             var animation = new DoubleAnimation(fromScale, toScale, TimeSpan.FromSeconds(seconds))
             {
                 AutoReverse = true,
@@ -200,6 +297,7 @@ namespace CaelusApp.WpfHost
             {
                 button.PreviewMouseLeftButtonDown += OnPressDown;
                 button.PreviewMouseLeftButtonUp += OnPressUp;
+                button.MouseEnter += OnPressEnter;
                 button.MouseLeave += OnPressLeave;
                 button.PreviewKeyDown += OnPressKeyDown;
                 button.PreviewKeyUp += OnPressKeyUp;
@@ -208,6 +306,7 @@ namespace CaelusApp.WpfHost
             {
                 button.PreviewMouseLeftButtonDown -= OnPressDown;
                 button.PreviewMouseLeftButtonUp -= OnPressUp;
+                button.MouseEnter -= OnPressEnter;
                 button.MouseLeave -= OnPressLeave;
                 button.PreviewKeyDown -= OnPressKeyDown;
                 button.PreviewKeyUp -= OnPressKeyUp;
@@ -216,6 +315,32 @@ namespace CaelusApp.WpfHost
 
         private static void OnPressDown(object sender, MouseButtonEventArgs e) { PressTo((FrameworkElement)sender, 0.98); }
         private static void OnPressUp(object sender, MouseButtonEventArgs e) { PressTo((FrameworkElement)sender, 1); }
+        private static void OnPressEnter(object sender, MouseEventArgs e)
+        {
+            ButtonBase button = sender as ButtonBase;
+            if (button == null || !Enabled || Reduced) return;
+            button.ApplyTemplate();
+            FrameworkElement sheen = button.Template.FindName("sheen", button) as FrameworkElement;
+            if (sheen == null) return; // Ghost/Danger/WindowButton 没有扫光层
+            TranslateTransform translate = sheen.RenderTransform as TranslateTransform;
+            if (translate == null) return;
+            translate.BeginAnimation(TranslateTransform.XProperty, null);
+            sheen.BeginAnimation(UIElement.OpacityProperty, null);
+            translate.X = -200;
+            sheen.Opacity = 0;
+
+            var move = new DoubleAnimation(-200, 360, TimeSpan.FromMilliseconds(700))
+            {
+                EasingFunction = new CubicEase { EasingMode = EasingMode.EaseOut }
+            };
+            var fade = new DoubleAnimationUsingKeyFrames();
+            fade.KeyFrames.Add(new LinearDoubleKeyFrame(0, TimeSpan.Zero));
+            fade.KeyFrames.Add(new LinearDoubleKeyFrame(1, TimeSpan.FromMilliseconds(120)));
+            fade.KeyFrames.Add(new LinearDoubleKeyFrame(1, TimeSpan.FromMilliseconds(500)));
+            fade.KeyFrames.Add(new LinearDoubleKeyFrame(0, TimeSpan.FromMilliseconds(700)));
+            translate.BeginAnimation(TranslateTransform.XProperty, move, HandoffBehavior.SnapshotAndReplace);
+            sheen.BeginAnimation(UIElement.OpacityProperty, fade, HandoffBehavior.SnapshotAndReplace);
+        }
         private static void OnPressLeave(object sender, MouseEventArgs e) { PressTo((FrameworkElement)sender, 1); }
         private static void OnPressKeyDown(object sender, KeyEventArgs e)
         {

@@ -1,5 +1,5 @@
 // @author zenjiro 18967498922@163.com
-// 文件用途 WPF 设置页 ViewModel：应用偏好开关状态 + 维护工具文案
+// 文件用途 WPF 设置页 ViewModel：应用偏好、维护状态与页面反馈
 
 using System.Threading;
 using System.Windows;
@@ -16,6 +16,9 @@ namespace CaelusApp
         private bool lightMode;
         private bool devMode;
         private string shaderStatus;
+        private string pageFeedback = "";
+        private string pageFeedbackKind = "Info";
+        private bool shaderBusy;
         private int restoreBusy; // 0=空闲 1=进行中（Interlocked 守护）
 
         public SettingsViewModel(GameMode gameMode, Tamer tamer)
@@ -33,6 +36,19 @@ namespace CaelusApp
         public string AppSectionTitle { get { return Lang.T("sec.app"); } }
         public string MaintSectionTitle { get { return Lang.T("sec.maint"); } }
         internal GameMode GameMode { get { return gameMode; } }
+        public string PreferenceSummary
+        {
+            get
+            {
+                int enabled = (autoStart ? 1 : 0) + (autoHide ? 1 : 0) + (lightMode ? 1 : 0);
+                return enabled == 0 ? "当前未启用自动化偏好" : "已启用 " + enabled + " 项应用偏好";
+            }
+        }
+        public string DevSummary { get { return devMode ? "开发模式已开启，可编辑自定义编译进程。" : "开发模式已关闭，自定义编译进程保持只读。"; } }
+        public string PageFeedback { get { return pageFeedback; } private set { SetProperty(ref pageFeedback, value, "PageFeedback"); } }
+        public string PageFeedbackKind { get { return pageFeedbackKind; } private set { SetProperty(ref pageFeedbackKind, value, "PageFeedbackKind"); } }
+        public bool IsDevCustomEnabled { get { return devMode; } }
+        public bool IsShaderBusy { get { return shaderBusy; } set { SetProperty(ref shaderBusy, value, "IsShaderBusy"); } }
 
         // —— 开机自启 ——
         public string AutoStartTitle { get { return Lang.T("set.autostart"); } }
@@ -47,10 +63,12 @@ namespace CaelusApp
                 if (rc != 0)
                 {
                     Logger.Log("开机自启任务操作失败 rc=" + rc);
-                    // 回滚到真实状态
                     autoStart = TaskHelper.TaskExists();
                     Raise("AutoStart");
+                    ShowFeedback("开机自启设置未能保存，已恢复为实际状态。", "Warning");
                 }
+                else ShowFeedback("开机自启偏好已保存。", "Success");
+                Raise("PreferenceSummary");
             }
         }
 
@@ -64,6 +82,8 @@ namespace CaelusApp
             {
                 if (!SetProperty(ref autoHide, value, "AutoHide")) return;
                 Settings.Save("AutoHideOnGame", value);
+                ShowFeedback("自动收起偏好已保存。", "Success");
+                Raise("PreferenceSummary");
             }
         }
 
@@ -80,6 +100,8 @@ namespace CaelusApp
                 if (Application.Current != null)
                     ThemeManager.Apply(Application.Current,
                         value ? UiTone.Light : UiTone.Dark, ThemeManager.CurrentMode);
+                ShowFeedback("主题偏好已保存。", "Success");
+                Raise("PreferenceSummary");
             }
         }
 
@@ -93,6 +115,9 @@ namespace CaelusApp
             {
                 if (!SetProperty(ref devMode, value, "DevMode")) return;
                 Settings.Save("DevModeOn", value);
+                Raise("IsDevCustomEnabled");
+                Raise("DevSummary");
+                ShowFeedback(value ? "开发模式已开启。" : "开发模式已关闭，自定义编译进程已锁定。", "Success");
             }
         }
 
@@ -101,7 +126,11 @@ namespace CaelusApp
         public string DevCustomNote { get { return Lang.T("set.dev.custom.n"); } }
         public string DevCustomSaveText { get { return Lang.T("set.dev.custom.save"); } }
         public string DevCustomInitial { get { return BuildCatalog.CustomList; } }
-        public void SaveDevCustom(string text) { BuildCatalog.CustomList = text ?? ""; }
+        public void SaveDevCustom(string text)
+        {
+            BuildCatalog.CustomList = text ?? "";
+            ShowFeedback("自定义编译进程已保存。", "Success");
+        }
 
         // —— 维护：一键恢复 ——
         public string RestoreTitle { get { return Lang.T("v15.restore.title"); } }
@@ -110,7 +139,7 @@ namespace CaelusApp
         public bool IsRestoreBusy
         {
             get { return Interlocked.CompareExchange(ref restoreBusy, 0, 0) != 0; }
-            set { Interlocked.Exchange(ref restoreBusy, value ? 1 : 0); }
+            set { Interlocked.Exchange(ref restoreBusy, value ? 1 : 0); Raise("IsRestoreBusy"); }
         }
 
         // 执行一键恢复（在后台线程调用）。返回各计数，由 UI 层组装提示。
@@ -153,12 +182,17 @@ namespace CaelusApp
 
         // —— 维护：着色器缓存 ——
         public string ShaderTitle { get { return Lang.T("btn.shader"); } }
-        public string ShaderNote { get { return Lang.T("set.shader.n"); } }
         public string ShaderText { get { return Lang.T("btn.clean"); } }
         public string ShaderStatus
         {
             get { return shaderStatus; }
             set { SetProperty(ref shaderStatus, value, "ShaderStatus"); }
+        }
+
+        public void ShowFeedback(string text, string kind)
+        {
+            PageFeedbackKind = string.IsNullOrEmpty(kind) ? "Info" : kind;
+            PageFeedback = text ?? "";
         }
 
         // —— 版本信息 ——

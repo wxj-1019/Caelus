@@ -3,6 +3,8 @@
 
 using System;
 using System.Collections.ObjectModel;
+using System.Collections.Specialized;
+using System.ComponentModel;
 using System.Diagnostics;
 
 namespace CaelusApp
@@ -18,12 +20,15 @@ namespace CaelusApp
         public bool IsRunning
         {
             get { return isRunning; }
-            set { SetProperty(ref isRunning, value, "IsRunning"); }
+            set
+            {
+                if (SetProperty(ref isRunning, value, "IsRunning"))
+                    Raise("StatusText");
+            }
         }
 
         public string StatusText { get { return isRunning ? Lang.T("v15.library.running") : Lang.T("v15.library.ready"); } }
 
-        // 头像首字母：取首个码位（兼容中文）；供游戏行视觉锚点
         public string Initial
         {
             get { return string.IsNullOrEmpty(Name) ? "?" : Name.Substring(0, 1); }
@@ -40,6 +45,8 @@ namespace CaelusApp
     internal sealed class LibraryViewModel : ViewModelBase
     {
         private readonly GameMode gm;
+        private string feedbackText = "";
+        private string feedbackKind = "Info";
 
         public ObservableCollection<LibraryItem> Items { get; private set; }
         public string EmptyTitle { get { return "CAELUS LIBRARY"; } }
@@ -47,10 +54,18 @@ namespace CaelusApp
         public string AddButtonText { get { return Lang.T("v15.library.add"); } }
         public string RemoveButtonText { get { return Lang.T("btn.remove"); } }
         public string DropHint { get { return Lang.T("v15.library.drop"); } }
+        public string FeedbackText { get { return feedbackText; } }
+        public string FeedbackKind { get { return feedbackKind; } }
+
+        internal void SetFeedback(string text, string kind)
+        {
+            feedbackKind = string.IsNullOrEmpty(kind) ? "Info" : kind;
+            feedbackText = text ?? "";
+            Raise("FeedbackKind");
+            Raise("FeedbackText");
+        }
 
         public bool IsEmpty { get { return Items.Count == 0; } }
-
-        // 计数摘要：已纳管总数 + 运行中数（工具条一眼可见规模）
         public int TotalCount { get { return Items.Count; } }
         public int RunningCount
         {
@@ -62,7 +77,6 @@ namespace CaelusApp
             }
         }
 
-        // 供预览探针注入样例后通知计数绑定刷新（Raise 为 protected，外部无法直接调）
         internal void NotifyCounts()
         {
             Raise("IsEmpty");
@@ -74,6 +88,21 @@ namespace CaelusApp
         {
             this.gm = gm;
             Items = new ObservableCollection<LibraryItem>();
+            Items.CollectionChanged += OnItemsCollectionChanged;
+        }
+
+        private void OnItemsCollectionChanged(object sender, NotifyCollectionChangedEventArgs e)
+        {
+            if (e.OldItems != null)
+                foreach (LibraryItem item in e.OldItems) item.PropertyChanged -= OnItemPropertyChanged;
+            if (e.NewItems != null)
+                foreach (LibraryItem item in e.NewItems) item.PropertyChanged += OnItemPropertyChanged;
+            NotifyCounts();
+        }
+
+        private void OnItemPropertyChanged(object sender, PropertyChangedEventArgs e)
+        {
+            if (e.PropertyName == "IsRunning") Raise("RunningCount");
         }
 
         public void Refresh()
@@ -87,12 +116,9 @@ namespace CaelusApp
                     name = System.IO.Path.GetFileNameWithoutExtension(displayPath);
                 Items.Add(new LibraryItem(p.Id, name, displayPath));
             }
-            Raise("IsEmpty");
-            Raise("TotalCount");
-            Raise("RunningCount");
+            NotifyCounts();
         }
 
-        // 拖放或浏览添加文件（返回错误列表，空=全部成功）
         public string AddFile(string file)
         {
             string error;
@@ -101,7 +127,6 @@ namespace CaelusApp
             return error;
         }
 
-        // 批量添加扫描结果
         public int AddScannedGames(System.Collections.Generic.IList<ScanHit> hits)
         {
             string lastError;
@@ -117,9 +142,7 @@ namespace CaelusApp
             Refresh();
         }
 
-        // 运行态探测：检查游戏 exe 是否有对应进程在运行。
-        // 与 WinForms 版一致，用 Native.OpenProcess + Native.ImagePath 取进程映像路径，
-        // 避开 Process.MainModule 对提权进程抛异常的问题。
+        // 与 WinForms 版一致，使用映像路径而不是 MainModule，兼容提权进程。
         public void ProbeRunning()
         {
             if (Items.Count == 0) return;
@@ -128,7 +151,11 @@ namespace CaelusApp
             {
                 if (!string.IsNullOrEmpty(item.Path)) wanted.Add(item.Path);
             }
-            if (wanted.Count == 0) { foreach (LibraryItem item in Items) item.IsRunning = false; return; }
+            if (wanted.Count == 0)
+            {
+                foreach (LibraryItem item in Items) item.IsRunning = false;
+                return;
+            }
 
             var running = new System.Collections.Generic.HashSet<string>(System.StringComparer.OrdinalIgnoreCase);
             Process[] all = null;
@@ -139,14 +166,13 @@ namespace CaelusApp
                 {
                     try
                     {
-                        if (proc.SessionId == 0) continue; // 跳过系统会话
+                        if (proc.SessionId == 0) continue;
                         IntPtr h = Native.OpenProcess(Native.PROCESS_QUERY_LIMITED_INFORMATION, false, proc.Id);
-                        if (h == System.IntPtr.Zero) continue;
+                        if (h == IntPtr.Zero) continue;
                         string image;
                         try { image = Native.ImagePath(h); }
                         finally { Native.CloseHandle(h); }
-                        if (!string.IsNullOrEmpty(image) && wanted.Contains(image))
-                            running.Add(image);
+                        if (!string.IsNullOrEmpty(image) && wanted.Contains(image)) running.Add(image);
                     }
                     catch { }
                 }

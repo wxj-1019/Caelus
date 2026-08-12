@@ -18,6 +18,7 @@ namespace CaelusApp.WpfHost.Views
         private bool panelStateInitialized;
         private bool showingEmpty;
         private bool loadingPanelState;
+        private bool isDropActive;
 
         public WhitelistView()
         {
@@ -29,6 +30,8 @@ namespace CaelusApp.WpfHost.Views
         private void OnLoaded(object sender, RoutedEventArgs e)
         {
             Motion.RiseIn(ZoneHeader, 40);
+            Motion.RiseIn(ZoneLeft, 100);
+            Motion.RiseIn(ZoneRight, 160);
             WhitelistViewModel next = DataContext as WhitelistViewModel;
             if (vm != next)
             {
@@ -40,7 +43,6 @@ namespace CaelusApp.WpfHost.Views
             loadingPanelState = true;
             try
             {
-                vm.Refresh(false);
                 vm.Refresh(true);
                 UpdatePanelVisibility(false);
             }
@@ -56,6 +58,7 @@ namespace CaelusApp.WpfHost.Views
             vm = null;
             lastRuleSelection = null;
             panelStateInitialized = false;
+            SetDropActive(false);
         }
 
         private void OnVmPropertyChanged(object sender, PropertyChangedEventArgs e)
@@ -125,6 +128,16 @@ namespace CaelusApp.WpfHost.Views
             if (e.Key != Key.Delete || vm == null || !vm.CanRemoveSelected) return;
             e.Handled = true;
             RemoveSelected();
+        }
+
+        private void OnRuleListPreviewMouseRightButtonDown(object sender, MouseButtonEventArgs e)
+        {
+            DependencyObject source = e.OriginalSource as DependencyObject;
+            ListBoxItem item = ItemsControl.ContainerFromElement(RuleList, source) as ListBoxItem;
+            if (item == null) return;
+            WhitelistItemSelected rule = item.DataContext as WhitelistItemSelected;
+            if (rule == null || rule.IsGroupHeader) return;
+            RuleList.SelectedItem = rule;
         }
 
         // 从运行中的程序批量选择，已存在的路径不再列出。
@@ -218,18 +231,30 @@ namespace CaelusApp.WpfHost.Views
         // 拖放
         private void OnDragOver(object sender, DragEventArgs e)
         {
-            if (e.Data.GetDataPresent(DataFormats.FileDrop))
-                e.Effects = DragDropEffects.Copy;
-            else
-                e.Effects = DragDropEffects.None;
+            bool isFileDrop = e.Data.GetDataPresent(DataFormats.FileDrop);
+            e.Effects = isFileDrop ? DragDropEffects.Copy : DragDropEffects.None;
+            SetDropActive(isFileDrop);
             e.Handled = true;
+        }
+
+        private void OnDragLeave(object sender, DragEventArgs e)
+        {
+            SetDropActive(false);
+        }
+
+        private void SetDropActive(bool active)
+        {
+            if (isDropActive == active) return;
+            isDropActive = active;
+            DropOverlay.Visibility = active ? Visibility.Visible : Visibility.Collapsed;
+            if (active) Motion.Reveal(DropOverlay);
         }
 
         private void OnDrop(object sender, DragEventArgs e)
         {
-            if (vm == null) return;
-            if (!e.Data.GetDataPresent(DataFormats.FileDrop)) return;
-            string[] files = (string[])e.Data.GetData(DataFormats.FileDrop);
+            SetDropActive(false);
+            if (vm == null || !e.Data.GetDataPresent(DataFormats.FileDrop)) return;
+            string[] files = e.Data.GetData(DataFormats.FileDrop) as string[];
             if (files == null) return;
             AddFiles(files);
         }

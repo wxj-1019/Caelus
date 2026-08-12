@@ -1,6 +1,7 @@
 // @author zenjiro 18967498922@163.com
 // 文件用途 策略页运行时 ViewModel：绑定 WPF 视图，读写 GameMode 属性
 
+using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Windows;
 
@@ -25,8 +26,13 @@ namespace CaelusApp.WpfHost
         public string Title { get { return displayTitle; } }
         public string Description { get { return item.Description; } }
         public string PropertyName { get { return item.PropertyName; } }
+        public string LockNote { get { return isLocked ? "此项由当前模式控制，切换到自定义模式后可调整。" : string.Empty; } }
+        public string ToggleAutomationName
+        {
+            get { return isLocked ? item.Title + "，由当前模式控制" : item.Title; }
+        }
 
-        // 风险项：开启前需确认（ConfirmKey 非空）→ 行内显示警示标记 + 描述变色
+        // 风险项：开启前需确认（ConfirmKey 非空）→ 行内保留警示标记，说明文字保持次级色。
         public bool IsRisky { get { return !string.IsNullOrEmpty(item.ConfirmKey); } }
         public string WarningTag { get { return "需注意"; } }
 
@@ -38,18 +44,27 @@ namespace CaelusApp.WpfHost
             get { return isOn; }
             set
             {
-                if (isLocked) return;
-                // 开启前确认（仅冻结开关）
+                if (value == isOn) return;
+                if (isLocked)
+                {
+                    ReassertToggleState();
+                    return;
+                }
+                // 绑定已先改变 ToggleButton 的视觉态；取消时主动重发旧值，确保可靠回滚。
                 if (value && !string.IsNullOrEmpty(item.ConfirmKey))
                 {
                     MessageBoxResult r = MessageBox.Show(Lang.T(item.ConfirmKey), "Caelus",
                         MessageBoxButton.OKCancel, MessageBoxImage.Warning);
-                    if (r != MessageBoxResult.OK) return;
+                    if (r != MessageBoxResult.OK)
+                    {
+                        ReassertToggleState();
+                        return;
+                    }
                 }
                 if (SetProperty(ref isOn, value, "IsOn"))
                 {
                     PolicyViewModel.SetProperty(gm, item.PropertyName, value);
-                    var toggled = Toggled;
+                    System.Action toggled = Toggled;
                     if (toggled != null) toggled();
                 }
             }
@@ -64,6 +79,8 @@ namespace CaelusApp.WpfHost
                 {
                     UpdateDisplayTitle();
                     Raise("IsEnabled");
+                    Raise("LockNote");
+                    Raise("ToggleAutomationName");
                 }
             }
         }
@@ -80,11 +97,22 @@ namespace CaelusApp.WpfHost
             }
         }
 
+        private void ReassertToggleState()
+        {
+            System.Windows.Application app = System.Windows.Application.Current;
+            if (app != null && app.Dispatcher != null)
+            {
+                app.Dispatcher.BeginInvoke(new System.Action(delegate { Raise("IsOn"); }));
+            }
+            else
+            {
+                Raise("IsOn");
+            }
+        }
+
         private void UpdateDisplayTitle()
         {
-            string t = item.Title;
-            if (isLocked) t = t + " · " + Lang.T("v14.preset.forced");
-            displayTitle = t;
+            displayTitle = item.Title;
             Raise("Title");
         }
     }
@@ -125,6 +153,10 @@ namespace CaelusApp.WpfHost
         public string CoreGroupTitle { get; private set; }
         public string CustomGroupTitle { get; private set; }
         public string ExtraGroupTitle { get; private set; }
+        public List<string> GroupLabels
+        {
+            get { return new List<string> { "核心", "自定义", "额外" }; }
+        }
 
         // 当前模式名（摘要显示）；随 RefreshLocks（模式切换）刷新
         public string ModeText
@@ -136,6 +168,12 @@ namespace CaelusApp.WpfHost
                 if (p == PerformancePreset.Custom) return "自定义";
                 return "巡航";
             }
+        }
+        public string ModeBadgeText { get { return ModeText + "模式"; } }
+        public string ModeAutomationName { get { return "当前策略模式：" + ModeText; } }
+        public string SummaryAutomationName
+        {
+            get { return "策略状态：" + TotalCount + " 项中 " + TotalEnabled + " 项已启用，当前为" + ModeText + "模式"; }
         }
         public ObservableCollection<PolicyCardViewModel> CoreCards { get; private set; }
         public ObservableCollection<PolicyCardViewModel> CustomCards { get; private set; }
@@ -164,6 +202,7 @@ namespace CaelusApp.WpfHost
             Raise("CustomTotal"); Raise("CustomEnabled");
             Raise("ExtraTotal"); Raise("ExtraEnabled");
             Raise("TotalCount"); Raise("TotalEnabled");
+            Raise("SummaryAutomationName");
         }
 
         public void RefreshLocks()
@@ -187,6 +226,8 @@ namespace CaelusApp.WpfHost
             foreach (PolicyCardViewModel card in CoreCards) card.RefreshFromGameMode();
             foreach (PolicyCardViewModel card in ExtraCards) card.RefreshFromGameMode();
             Raise("ModeText");
+            Raise("ModeBadgeText");
+            Raise("ModeAutomationName");
             NotifyCounts();
         }
     }

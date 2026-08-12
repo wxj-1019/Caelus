@@ -38,15 +38,8 @@ namespace CaelusApp.WpfHost.Views
                 if (vm != null) vm.PropertyChanged += OnVmPropertyChanged;
             }
             displayedState = -1;
-            UpdateStateVisibility(false);
+            UpdateStateVisibility(vm != null && vm.HasResult);
 
-            // 结果态入场 stagger
-            Motion.RiseIn(ZoneHealth, 40);
-            Motion.RiseIn(ZoneMetrics, 100);
-            Motion.RiseIn(ZoneCapability, 160);
-            Motion.RiseIn(ZoneMachine, 220);
-            Motion.RiseIn(ZonePersistent, 280);
-            Motion.RiseIn(ZoneVerdict, 340);
         }
 
         // 预览探针（--wpf-shot）显式调用：填充代表性结果，捕获结果态实机图。
@@ -124,7 +117,15 @@ namespace CaelusApp.WpfHost.Views
             if (!reveal || !changed) return;
             if (idle) Motion.Reveal(IdlePanel);
             else if (scanning) Motion.Reveal(ScanningPanel);
-            else if (result) Motion.Reveal(ResultPanel);
+            else if (result)
+            {
+                Motion.RiseIn(ZoneHealth, 40);
+                Motion.RiseIn(ZoneMetrics, 100);
+                Motion.RiseIn(ZoneCapability, 160);
+                Motion.RiseIn(ZoneMachine, 220);
+                Motion.RiseIn(ZonePersistent, 280);
+                Motion.RiseIn(ZoneVerdict, 340);
+            }
         }
 
         // 空闲态的「开始体检」按钮 = 快速体检（与 WinForms 一致）

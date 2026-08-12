@@ -22,47 +22,50 @@ namespace CaelusApp.WpfHost.Views
     {
         private static volatile bool shaderCleaning;
 
-        public SettingsView() { InitializeComponent(); }
+        public SettingsView()
+        {
+            InitializeComponent();
+            Loaded += OnLoaded;
+        }
+
+        private void OnLoaded(object sender, RoutedEventArgs e)
+        {
+            Motion.RiseIn(ZoneHeader, 40);
+            Motion.RiseIn(ZoneSummary, 90);
+            Motion.RiseIn(ZoneApp, 140);
+            Motion.RiseIn(ZoneDev, 190);
+            Motion.RiseIn(ZoneMaint, 240);
+            Motion.RiseIn(ZoneDanger, 290);
+        }
 
         private void OnDevSave(object sender, RoutedEventArgs e)
         {
             SettingsViewModel vm = DataContext as SettingsViewModel;
-            if (vm == null) return;
+            if (vm == null || !vm.IsDevCustomEnabled) return;
             vm.SaveDevCustom(TbDevCustom.Text);
-            BtnDevSave.Content = Lang.T("set.dev.custom.saved");
-            Dispatcher.BeginInvoke(new Action(delegate
-            {
-                BtnDevSave.Content = Lang.T("set.dev.custom.save");
-            }), System.Windows.Threading.DispatcherPriority.Background, null);
-            ThreadPool.QueueUserWorkItem(delegate
-            {
-                Thread.Sleep(1500);
-                Dispatcher.BeginInvoke(new Action(delegate
-                {
-                    BtnDevSave.Content = Lang.T("set.dev.custom.save");
-                }));
-            });
+            Motion.Emphasize(PageFeedbackBanner);
         }
 
         private void OnRestore(object sender, RoutedEventArgs e)
         {
             SettingsViewModel vm = DataContext as SettingsViewModel;
             if (vm == null || vm.IsRestoreBusy) return;
+            string ask = "确定恢复所有已记录的系统项吗？\r\n\r\n这会退出当前优化状态，并尝试撤销 Caelus 记录的相关修改。";
+            if (MessageBox.Show(ask, CaelusApp.App.DisplayName, MessageBoxButton.YesNo,
+                    MessageBoxImage.Warning, MessageBoxResult.No) != MessageBoxResult.Yes) return;
             vm.IsRestoreBusy = true;
-            BtnRestore.IsEnabled = false;
+            vm.ShowFeedback("正在恢复所有已记录项，请勿关闭应用。", "Info");
             ThreadPool.QueueUserWorkItem(delegate
             {
                 bool completed; int failed; int attempted;
                 vm.RestoreAll(out completed, out failed, out attempted);
                 Dispatcher.BeginInvoke(new Action(delegate
                 {
-                    BtnRestore.IsEnabled = true;
                     vm.IsRestoreBusy = false;
                     string message = Lang.T(completed ? "panic.done" : "panic.timeout");
-                    if (!completed)
-                        message += "\r\n\r\n" + Lang.F("panic.failedcount", failed, attempted);
-                    MessageBox.Show(message, CaelusApp.App.DisplayName, MessageBoxButton.OK,
-                        completed ? MessageBoxImage.Information : MessageBoxImage.Warning);
+                    if (!completed) message += " " + Lang.F("panic.failedcount", failed, attempted);
+                    vm.ShowFeedback(message, completed ? "Success" : "Warning");
+                    Motion.Emphasize(PageFeedbackBanner);
                 }));
             });
         }
@@ -112,24 +115,44 @@ namespace CaelusApp.WpfHost.Views
             }
             if (MessageBox.Show(Lang.T("shader.confirm"), "Caelus",
                     MessageBoxButton.OKCancel, MessageBoxImage.Warning) != MessageBoxResult.OK) return;
-            BtnShader.IsEnabled = false;
             shaderCleaning = true;
+            vm.IsShaderBusy = true;
             vm.ShaderStatus = Lang.T("shader.busy");
+            vm.ShowFeedback("正在清理着色器缓存，请稍候。", "Info");
             ThreadPool.QueueUserWorkItem(delegate
             {
-                CacheSweep.Result cr = ShaderCache.Clean();
-                long left = ShaderCache.MeasureBytes();
-                Logger.Log("着色器缓存清理：释放 " + CacheSweep.FmtBytes(cr.FreedBytes)
-                    + (cr.FailedFiles > 0 ? "，" + cr.FailedFiles + " 个文件被占用已跳过" : ""));
-                shaderCleaning = false;
+                CacheSweep.Result cr = null;
+                long left = 0;
+                string failure = null;
+                try
+                {
+                    cr = ShaderCache.Clean();
+                    left = ShaderCache.MeasureBytes();
+                    Logger.Log("着色器缓存清理：释放 " + CacheSweep.FmtBytes(cr.FreedBytes)
+                        + (cr.FailedFiles > 0 ? "，" + cr.FailedFiles + " 个文件被占用已跳过" : ""));
+                }
+                catch (Exception ex)
+                {
+                    failure = ex.Message;
+                    Logger.LogFailure("WPF 着色器缓存清理", ex);
+                }
+                finally { shaderCleaning = false; }
                 Dispatcher.BeginInvoke(new Action(delegate
                 {
-                    BtnShader.IsEnabled = true;
-                    vm.ShaderStatus = CacheSweep.FmtBytes(left);
-                    string msg = Lang.F("shader.freed", CacheSweep.FmtBytes(cr.FreedBytes))
-                        + (cr.FailedFiles > 0 ? "\r\n" + Lang.F("shader.skip", cr.FailedFiles) : "")
-                        + "\r\n\r\n" + Lang.T("shader.note");
-                    MessageBox.Show(msg, "Caelus", MessageBoxButton.OK, MessageBoxImage.Information);
+                    vm.IsShaderBusy = false;
+                    if (cr == null)
+                    {
+                        vm.ShaderStatus = Lang.T("shader.note");
+                        vm.ShowFeedback("着色器缓存清理失败：" + (failure ?? "未知错误"), "Error");
+                    }
+                    else
+                    {
+                        vm.ShaderStatus = CacheSweep.FmtBytes(left);
+                        string msg = Lang.F("shader.freed", CacheSweep.FmtBytes(cr.FreedBytes))
+                            + (cr.FailedFiles > 0 ? " " + Lang.F("shader.skip", cr.FailedFiles) : "");
+                        vm.ShowFeedback(msg, cr.FailedFiles > 0 ? "Warning" : "Success");
+                    }
+                    Motion.Emphasize(PageFeedbackBanner);
                 }));
             });
         }

@@ -8,6 +8,9 @@ namespace CaelusApp
     internal sealed class GraphicsViewModel : ViewModelBase
     {
         private readonly GameMode gameMode;
+        private bool amdCacheBusy;
+        private string amdCacheFeedback = string.Empty;
+        private bool amdCacheError;
 
         public GraphicsViewModel(GameMode gameMode) { this.gameMode = gameMode; }
 
@@ -16,15 +19,18 @@ namespace CaelusApp
         public string PageSub { get { return Lang.T("v16.graphics.sub"); } }
 
         // —— 分组标题 ——
-        public string PerGameTitle { get { return Lang.T("sec.pergame"); } }
+        public string PerGameTitle { get { return "通用逐游戏"; } }
+        public string NvidiaTitle { get { return "NVIDIA 驱动"; } }
         public string SessionTitle { get { return Lang.T("sec.gfx.session"); } }
-        public string PresentTitle { get { return Lang.T("sec.graphics.present"); } }
+        public string PresentTitle { get { return "Windows 呈现"; } }
         public string AmdTitle { get { return Lang.T("sec.amd"); } }
 
         // —— 可用性 ——
         public bool NvAvailable { get { return NvApi.Available; } }
+        public bool NvUnavailable { get { return !NvAvailable; } }
         public bool DlssAvailable { get { return NvApi.Available && NvDrsTweaks.DlssOverrideSupported(); } }
         public bool AmdAvailable { get { return AdlxTweaks.Available; } }
+        public bool AmdUnavailable { get { return !AmdAvailable; } }
 
         // —— 段标签 ——
         public List<string> FrlLabels
@@ -46,18 +52,28 @@ namespace CaelusApp
             }
         }
 
-        // —— 逐游戏 NV 项（GPU 高性能 / FSO）——
+        // —— 通用逐游戏项 ——
         public bool GpuHighPerf
         {
             get { return gameMode.GpuHighPerf; }
-            set { gameMode.GpuHighPerf = value; }
+            set
+            {
+                if (gameMode.GpuHighPerf == value) return;
+                gameMode.GpuHighPerf = value;
+                NotifyToggle("GpuHighPerf");
+            }
         }
         public string GpuTitle { get { return Lang.T("set.gpu"); } }
         public string GpuNote { get { return Lang.T("set.gpu.n"); } }
         public bool DisableFso
         {
             get { return gameMode.DisableFso; }
-            set { gameMode.DisableFso = value; }
+            set
+            {
+                if (gameMode.DisableFso == value) return;
+                gameMode.DisableFso = value;
+                NotifyToggle("DisableFso");
+            }
         }
         public string FsoTitle { get { return Lang.T("set.fso"); } }
         public string FsoNote { get { return Lang.T("set.fso.n"); } }
@@ -66,7 +82,12 @@ namespace CaelusApp
         public bool NvMaxPerf
         {
             get { return gameMode.NvMaxPerf; }
-            set { gameMode.NvMaxPerf = value; }
+            set
+            {
+                if (gameMode.NvMaxPerf == value) return;
+                gameMode.NvMaxPerf = value;
+                NotifyToggle("NvMaxPerf");
+            }
         }
         public string NvMaxTitle { get { return Lang.T("set.nvmax"); } }
         public string NvMaxNote { get { return NvAvailable ? Lang.T("set.nvmax.n") : Lang.T("set.nv.none"); } }
@@ -74,25 +95,42 @@ namespace CaelusApp
         public bool NvLowLatency
         {
             get { return gameMode.NvLowLatency; }
-            set { gameMode.NvLowLatency = value; }
+            set
+            {
+                if (gameMode.NvLowLatency == value) return;
+                gameMode.NvLowLatency = value;
+                NotifyToggle("NvLowLatency");
+            }
         }
         public string NvLowLatTitle { get { return Lang.T("set.nvll"); } }
         public string NvLowLatNote { get { return NvAvailable ? Lang.T("set.nvll.n") : Lang.T("set.nv.none"); } }
 
-        // FRL 段
         public int NvFrlIndex
         {
             get { return FrlIndexOf(gameMode.NvFrlMode); }
-            set { gameMode.NvFrlMode = FrlModeOf(value); }
+            set
+            {
+                string mode = FrlModeOf(value);
+                if (gameMode.NvFrlMode == mode) return;
+                gameMode.NvFrlMode = mode;
+                Raise("NvFrlIndex");
+                Raise("NvFrlLabel");
+            }
         }
         public string NvFrlTitle { get { return Lang.T("set.nvfrl"); } }
         public string NvFrlNote { get { return NvAvailable ? Lang.T("set.nvfrl.n") : Lang.T("set.nv.none"); } }
 
-        // DLSS 段
         public int NvDlssIndex
         {
             get { return DlssIndexOf(gameMode.NvDlssMode); }
-            set { gameMode.NvDlssMode = DlssModeOf(value); }
+            set
+            {
+                string mode = DlssModeOf(value);
+                if (gameMode.NvDlssMode == mode) return;
+                gameMode.NvDlssMode = mode;
+                Raise("NvDlssIndex");
+                Raise("NvDlssLabel");
+            }
         }
         public string NvDlssTitle { get { return Lang.T("set.nvdlss"); } }
         public string NvDlssNote
@@ -107,7 +145,12 @@ namespace CaelusApp
         public bool NvRebar
         {
             get { return gameMode.NvRebar; }
-            set { gameMode.NvRebar = value; }
+            set
+            {
+                if (gameMode.NvRebar == value) return;
+                gameMode.NvRebar = value;
+                NotifyToggle("NvRebar");
+            }
         }
         public string NvRebarTitle { get { return Lang.T("set.nvrebar"); } }
         public string NvRebarNote { get { return NvAvailable ? Lang.T("set.nvrebar.n") : Lang.T("set.nv.none"); } }
@@ -115,7 +158,12 @@ namespace CaelusApp
         public bool NvAnselOff
         {
             get { return gameMode.NvAnselOff; }
-            set { gameMode.NvAnselOff = value; }
+            set
+            {
+                if (gameMode.NvAnselOff == value) return;
+                gameMode.NvAnselOff = value;
+                NotifyToggle("NvAnselOff");
+            }
         }
         public string NvAnselTitle { get { return Lang.T("set.nvansel"); } }
         public string NvAnselNote { get { return NvAvailable ? Lang.T("set.nvansel.n") : Lang.T("set.nv.none"); } }
@@ -123,7 +171,12 @@ namespace CaelusApp
         public bool NvBattFull
         {
             get { return gameMode.NvBattFull; }
-            set { gameMode.NvBattFull = value; }
+            set
+            {
+                if (gameMode.NvBattFull == value) return;
+                gameMode.NvBattFull = value;
+                NotifyToggle("NvBattFull");
+            }
         }
         public string NvBattTitle { get { return Lang.T("set.nvbatt"); } }
         public string NvBattNote { get { return NvAvailable ? Lang.T("set.nvbatt.n") : Lang.T("set.nv.none"); } }
@@ -132,12 +185,17 @@ namespace CaelusApp
         public bool NvBgFrl
         {
             get { return gameMode.NvBgFrl; }
-            set { gameMode.NvBgFrl = value; }
+            set
+            {
+                if (gameMode.NvBgFrl == value) return;
+                gameMode.NvBgFrl = value;
+                NotifyToggle("NvBgFrl");
+            }
         }
         public string NvBgTitle { get { return Lang.T("set.nvbg"); } }
         public string NvBgNote { get { return NvAvailable ? Lang.T("set.nvbg.n") : Lang.T("set.nv.none"); } }
 
-        // —— 呈现项 ——
+        // —— Windows 呈现项 ——
         public bool WindowedOpt
         {
             get { return WindowedOptTweak.EnabledByCaelus || WindowedOptTweak.CurrentlyOn(); }
@@ -150,6 +208,7 @@ namespace CaelusApp
                         System.Windows.MessageBoxButton.OK, System.Windows.MessageBoxImage.Warning);
                 }
                 Raise("WindowedOpt");
+                NotifyEnabledCount();
             }
         }
         public string WindowedOptTitle { get { return Lang.T("set.winopt"); } }
@@ -159,7 +218,12 @@ namespace CaelusApp
         public bool AmdAntiLag
         {
             get { return gameMode.AmdAntiLag; }
-            set { gameMode.AmdAntiLag = value; }
+            set
+            {
+                if (gameMode.AmdAntiLag == value) return;
+                gameMode.AmdAntiLag = value;
+                NotifyToggle("AmdAntiLag");
+            }
         }
         public string AmdAlagTitle { get { return Lang.T("set.alag"); } }
         public string AmdAlagNote { get { return AmdAvailable ? Lang.T("set.alag.n") : Lang.T("set.amd.none"); } }
@@ -167,7 +231,14 @@ namespace CaelusApp
         public int AmdChillIndex
         {
             get { return FrlIndexOf(gameMode.AmdChillMode); }
-            set { gameMode.AmdChillMode = FrlModeOf(value); }
+            set
+            {
+                string mode = FrlModeOf(value);
+                if (gameMode.AmdChillMode == mode) return;
+                gameMode.AmdChillMode = mode;
+                Raise("AmdChillIndex");
+                Raise("AmdChillLabel");
+            }
         }
         public string AmdChillTitle { get { return Lang.T("set.achill"); } }
         public string AmdChillNote { get { return AmdAvailable ? Lang.T("set.achill.n") : Lang.T("set.amd.none"); } }
@@ -175,7 +246,12 @@ namespace CaelusApp
         public bool AmdEnhSync
         {
             get { return gameMode.AmdEnhSync; }
-            set { gameMode.AmdEnhSync = value; }
+            set
+            {
+                if (gameMode.AmdEnhSync == value) return;
+                gameMode.AmdEnhSync = value;
+                NotifyToggle("AmdEnhSync");
+            }
         }
         public string AmdEsyncTitle { get { return Lang.T("set.aesync"); } }
         public string AmdEsyncNote { get { return AmdAvailable ? Lang.T("set.aesync.n") : Lang.T("set.amd.none"); } }
@@ -183,15 +259,53 @@ namespace CaelusApp
         public bool AmdRis
         {
             get { return gameMode.AmdRis; }
-            set { gameMode.AmdRis = value; }
+            set
+            {
+                if (gameMode.AmdRis == value) return;
+                gameMode.AmdRis = value;
+                NotifyToggle("AmdRis");
+            }
         }
         public string AmdRisTitle { get { return Lang.T("set.aris"); } }
         public string AmdRisNote { get { return AmdAvailable ? Lang.T("set.aris.n") : Lang.T("set.amd.none"); } }
 
-        // —— AMD 着色器缓存重置按钮 ——
+        // —— AMD 着色器缓存重置状态 ——
         public string AmdCacheTitle { get { return Lang.T("set.acache"); } }
         public string AmdCacheNote { get { return AmdAvailable ? Lang.T("set.acache.n") : Lang.T("set.amd.none"); } }
-        public string AmdCacheBtnText { get { return Lang.T("amd.cache.btn"); } }
+        public bool AmdCacheBusy { get { return amdCacheBusy; } }
+        public bool AmdCacheCanRun { get { return AmdAvailable && !amdCacheBusy; } }
+        public string AmdCacheBtnText { get { return amdCacheBusy ? "正在重置…" : Lang.T("amd.cache.btn"); } }
+        public string AmdCacheFeedback { get { return amdCacheFeedback; } }
+        public bool HasAmdCacheFeedback { get { return !string.IsNullOrEmpty(amdCacheFeedback); } }
+        public bool AmdCacheError { get { return amdCacheError; } }
+
+        internal bool BeginAmdCacheReset()
+        {
+            if (!AmdCacheCanRun) return false;
+            amdCacheBusy = true;
+            amdCacheFeedback = "正在清理着色器缓存，请稍候…";
+            amdCacheError = false;
+            NotifyAmdCacheState();
+            return true;
+        }
+
+        internal void CompleteAmdCacheReset(bool ok)
+        {
+            amdCacheBusy = false;
+            amdCacheError = !ok;
+            amdCacheFeedback = ok ? Lang.T("amd.cache.done") : Lang.T("amd.cache.fail");
+            NotifyAmdCacheState();
+        }
+
+        private void NotifyAmdCacheState()
+        {
+            Raise("AmdCacheBusy");
+            Raise("AmdCacheCanRun");
+            Raise("AmdCacheBtnText");
+            Raise("AmdCacheFeedback");
+            Raise("HasAmdCacheFeedback");
+            Raise("AmdCacheError");
+        }
 
         // —— 顶部摘要：分段当前值回显 + 启用计数 + 厂商检测 ——
         public string NvFrlLabel { get { return FrlLabels[NvFrlIndex]; } }
@@ -218,13 +332,36 @@ namespace CaelusApp
                 return n;
             }
         }
-        public string NvStatusText { get { return NvAvailable ? "NVIDIA 已检测" : "NVIDIA 未检测"; } }
-        public string AmdStatusText { get { return AmdAvailable ? "AMD 已检测" : "AMD 未检测"; } }
-        // 分段切换后由视图调用，刷新标题旁的值回显与启用计数
+        public string EnabledSummaryText
+        {
+            get { return TotalCount + " 个开关中 " + EnabledCount + " 个开启"; }
+        }
+        public string SummaryAutomationName { get { return "显卡优化状态：" + EnabledSummaryText; } }
+        public string NvStatusText { get { return NvAvailable ? "NVIDIA 可用" : "NVIDIA 不可用"; } }
+        public string AmdStatusText { get { return AmdAvailable ? "AMD 可用" : "AMD 不可用"; } }
+        public string NvUnavailableText { get { return "未检测到可用的 NVIDIA 驱动，NVIDIA 与相关会话设置已收起。"; } }
+        public string AmdUnavailableText { get { return "未检测到可用的 AMD 驱动，AMD 详细设置已收起。"; } }
+
+        private void NotifyToggle(string propertyName)
+        {
+            Raise(propertyName);
+            NotifyEnabledCount();
+        }
+
+        private void NotifyEnabledCount()
+        {
+            Raise("EnabledCount");
+            Raise("EnabledSummaryText");
+            Raise("SummaryAutomationName");
+        }
+
+        // 分段切换后由视图调用，兼容现有视图事件并刷新值回显。
         internal void NotifySegments()
         {
-            Raise("NvFrlLabel"); Raise("NvDlssLabel"); Raise("AmdChillLabel");
-            Raise("EnabledCount");
+            Raise("NvFrlLabel");
+            Raise("NvDlssLabel");
+            Raise("AmdChillLabel");
+            NotifyEnabledCount();
         }
 
         // —— 索引 ↔ 模式字符串映射（与 WinForms 一致）——

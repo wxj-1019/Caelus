@@ -1,5 +1,5 @@
 // @author zenjiro 18967498922@163.com
-// 文件用途 WPF 系统环境页 ViewModel：11 项内核/驱动开关的当前状态与执行逻辑
+// 文件用途 WPF 系统环境页 ViewModel：11 项系统开关的分组、可用性、风险、重启与行内状态
 
 using System;
 using System.Collections.Generic;
@@ -12,90 +12,112 @@ namespace CaelusApp
 
         public EnvironmentViewModel(GameMode gameMode) { this.gameMode = gameMode; }
 
-        // —— 标题区 ——
+        // —— 标题与分区 ——
         public string PageTitle { get { return Lang.T("nav.env"); } }
-        public string PageSub { get { return Lang.T("v16.env.sub"); } }
-        public string KernelSection { get { return Lang.T("sec.env.kernel"); } }
+        public string PageSub { get { return "按生效范围整理系统底层设置。改动均可在本页恢复，只有标记“需重启”的项目需要重启。"; } }
+        public string GraphicsSection { get { return "图形呈现"; } }
+        public string SecuritySection { get { return "安全与内核"; } }
+        public string InterruptSection { get { return "中断与设备"; } }
+        public string NetworkSection { get { return "网络与守护"; } }
 
-        // —— 11 项开关卡片 ——
+        // 保留聚合列表供既有刷新入口使用，同时向视图暴露四个语义分组。
         public List<EnvToggle> Toggles { get; private set; }
+        public List<EnvToggle> GraphicsToggles { get; private set; }
+        public List<EnvToggle> SecurityToggles { get; private set; }
+        public List<EnvToggle> InterruptToggles { get; private set; }
+        public List<EnvToggle> NetworkToggles { get; private set; }
 
         public void BuildToggles()
         {
             Toggles = new List<EnvToggle>();
-            // HAGS
-            Toggles.Add(new EnvToggle("hags",
+            GraphicsToggles = new List<EnvToggle>();
+            SecurityToggles = new List<EnvToggle>();
+            InterruptToggles = new List<EnvToggle>();
+            NetworkToggles = new List<EnvToggle>();
+
+            Add(GraphicsToggles, new EnvToggle("hags",
                 Lang.T("set.hags"), Lang.T("set.hags.n"),
                 () => HagsTweak.EnabledByCaelus || HagsTweak.CurrentlyOn(),
-                on => { bool ok = on ? HagsTweak.Enable() : HagsTweak.Disable(); return ok; },
-                "hags.reboot"));
-            // VBS（简化：仅 Disable/Restore）
-            Toggles.Add(new EnvToggle("vbs",
-                Lang.T("set.vbs"), VbsDesc(),
-                () => VbsTweak.DisabledByCaelus,
-                on => { bool ok = on ? VbsTweak.Disable() : VbsTweak.Restore(); return ok; },
-                (Func<bool, string>)(on => on ? "vbs.done" : "vbs.restored")));
-            // MPO
-            Toggles.Add(new EnvToggle("mpo",
+                on => on ? HagsTweak.Enable() : HagsTweak.Disable(),
+                "hags.reboot", true, false, null, null));
+
+            Add(GraphicsToggles, new EnvToggle("mpo",
                 Lang.T("set.mpo"), Lang.T("set.mpo.n"),
                 () => MpoTweak.DisabledByCaelus || MpoTweak.CurrentlyDisabled(),
-                on => { bool ok = on ? MpoTweak.Disable() : MpoTweak.Restore(); return ok; },
-                "mpo.reboot"));
-            // GPU 中断亲和
-            Toggles.Add(new EnvToggle("irqaffinity",
+                on => on ? MpoTweak.Disable() : MpoTweak.Restore(),
+                "mpo.reboot", true, false, null, null));
+
+            Add(SecurityToggles, new EnvToggle("vbs",
+                Lang.T("set.vbs"), VbsDesc(),
+                () => VbsTweak.DisabledByCaelus,
+                on => on ? VbsTweak.Disable() : VbsTweak.Restore(),
+                (Func<bool, string>)(on => on ? "vbs.done" : "vbs.restored"),
+                true, true, null, VbsDesc));
+
+            Add(InterruptToggles, new EnvToggle("irqaffinity",
                 Lang.T("set.irqaffinity"), Lang.T("set.irqaffinity.n"),
                 () => InterruptAffinityTweak.EnabledByCaelus,
-                on => { bool ok = on ? InterruptAffinityTweak.Enable() : InterruptAffinityTweak.Disable(); return ok; },
-                "irqaffinity.reboot"));
-            // 网络亲和
-            Toggles.Add(new EnvToggle("netaffinity",
-                Lang.T("set.netaffinity"), Lang.T("set.netaffinity.n"),
-                () => NetworkAffinityTweak.EnabledByCaelus,
-                on => { bool ok = on ? NetworkAffinityTweak.Enable(gameMode.GetProfiles()) : NetworkAffinityTweak.Disable(); return ok; },
-                "netaffinity.reboot"));
-            // USB 中断亲和
-            Toggles.Add(new EnvToggle("usbaffinity",
+                on => on ? InterruptAffinityTweak.Enable() : InterruptAffinityTweak.Disable(),
+                "irqaffinity.reboot", true, false, null, null));
+
+            Add(InterruptToggles, new EnvToggle("usbaffinity",
                 Lang.T("set.usbaffinity"), Lang.T("set.usbaffinity.n"),
                 () => UsbInterruptAffinityTweak.EnabledByCaelus,
-                on => { bool ok = on ? UsbInterruptAffinityTweak.Enable() : UsbInterruptAffinityTweak.Disable(); return ok; },
-                "irqaffinity.reboot"));
-            // 游戏模式守护
-            Toggles.Add(new EnvToggle("gmguard",
-                Lang.T("set.gmguard"), Lang.T("set.gmguard.n"),
-                () => GameModeGuard.EnabledByCaelus,
-                on => { bool ok = on ? GameModeGuard.Enable() : GameModeGuard.Restore(); return ok; },
-                null));
-            // Nagle
-            Toggles.Add(new EnvToggle("nagle",
-                Lang.T("set.nagle"), Lang.T("set.nagle.n"),
-                () => NagleTweak.EnabledByCaelus,
-                on => { bool ok = on ? NagleTweak.Enable() : NagleTweak.Restore(); return ok; },
-                "nagle.applied"));
-            // 网络限流值校正
-            Toggles.Add(new EnvToggle("netthrottle",
-                Lang.T("set.netthrottle"), Lang.T("set.netthrottle.n") + "\r\n" + NetTweak.Describe(),
-                () => NetTweak.RepairedByCaelus,
-                on => { bool ok = on ? NetTweak.Repair() : NetTweak.Restore(); return ok; },
-                null));
-            // 设备电源
-            Toggles.Add(new EnvToggle("devpower",
-                Lang.T("set.devpower"), Lang.T("set.devpower.n"),
-                () => DevicePowerTweak.EnabledByCaelus,
-                on => { bool ok = on ? DevicePowerTweak.Enable() : DevicePowerTweak.Restore(); return ok; },
-                null));
-            // MSI
-            Toggles.Add(new EnvToggle("msi",
+                on => on ? UsbInterruptAffinityTweak.Enable() : UsbInterruptAffinityTweak.Disable(),
+                "irqaffinity.reboot", true, false, null, null));
+
+            Add(InterruptToggles, new EnvToggle("msi",
                 Lang.T("set.msi"), MsiDesc(),
                 () => MsiModeTweak.EnabledByCaelus,
-                on => { bool ok = on ? MsiModeTweak.Enable() : MsiModeTweak.Restore(); return ok; },
-                "irqaffinity.reboot"));
+                on => on ? MsiModeTweak.Enable() : MsiModeTweak.Restore(),
+                "irqaffinity.reboot", true, false,
+                () => MsiModeTweak.EnabledByCaelus || MsiModeTweak.Disabled().Count > 0,
+                MsiDesc));
+
+            Add(InterruptToggles, new EnvToggle("devpower",
+                Lang.T("set.devpower"), Lang.T("set.devpower.n"),
+                () => DevicePowerTweak.EnabledByCaelus,
+                on => on ? DevicePowerTweak.Enable() : DevicePowerTweak.Restore(),
+                null, false, false, null, null));
+
+            Add(NetworkToggles, new EnvToggle("netaffinity",
+                Lang.T("set.netaffinity"), Lang.T("set.netaffinity.n"),
+                () => NetworkAffinityTweak.EnabledByCaelus,
+                on => on ? NetworkAffinityTweak.Enable(gameMode.GetProfiles()) : NetworkAffinityTweak.Disable(),
+                "netaffinity.reboot", true, false, null, null));
+
+            Add(NetworkToggles, new EnvToggle("gmguard",
+                Lang.T("set.gmguard"), Lang.T("set.gmguard.n"),
+                () => GameModeGuard.EnabledByCaelus,
+                on => on ? GameModeGuard.Enable() : GameModeGuard.Restore(),
+                null, false, false, null, null));
+
+            Add(NetworkToggles, new EnvToggle("nagle",
+                Lang.T("set.nagle"), Lang.T("set.nagle.n"),
+                () => NagleTweak.EnabledByCaelus,
+                on => on ? NagleTweak.Enable() : NagleTweak.Restore(),
+                (Func<bool, string>)(on => on ? "nagle.applied" : null),
+                false, false, null, null));
+
+            Add(NetworkToggles, new EnvToggle("netthrottle",
+                Lang.T("set.netthrottle"), NetThrottleDesc(),
+                () => NetTweak.RepairedByCaelus,
+                on => on ? NetTweak.Repair() : NetTweak.Restore(),
+                null, true, false,
+                () => NetTweak.NeedsRepair() || NetTweak.RepairedByCaelus,
+                NetThrottleDesc));
         }
 
-        // 刷新全部开关的当前状态（导航进入时调用）
         public void RefreshStatus()
         {
             if (Toggles == null) return;
             foreach (EnvToggle t in Toggles) t.Refresh();
+        }
+
+        private void Add(List<EnvToggle> group, EnvToggle item)
+        {
+            group.Add(item);
+            Toggles.Add(item);
         }
 
         private static string VbsDesc()
@@ -113,25 +135,37 @@ namespace CaelusApp
 
         private static string MsiDesc()
         {
-            bool msiIdle = MsiModeTweak.Disabled().Count == 0 && !MsiModeTweak.EnabledByCaelus;
-            return msiIdle ? Lang.T("msi.none") : Lang.T("set.msi.n");
+            bool idle = MsiModeTweak.Disabled().Count == 0 && !MsiModeTweak.EnabledByCaelus;
+            return idle ? Lang.T("msi.none") : Lang.T("set.msi.n");
+        }
+
+        private static string NetThrottleDesc()
+        {
+            return Lang.T("set.netthrottle.n") + "\r\n" + NetTweak.Describe();
         }
     }
 
-    // 单个环境开关项
+    // 单个环境开关项。可用性探针缺失时采用安全默认“可用”，不虚构硬件结论。
     internal sealed class EnvToggle : ViewModelBase
     {
         private readonly string id;
         private readonly string title;
-        private readonly string desc;
+        private string desc;
         private readonly Func<bool> readState;
         private readonly Func<bool, bool> apply;
-        // 完成提示的 lang key；为 null 表示不弹提示。也可能是带条件：Func<bool,string>
         private readonly object hintKey;
+        private readonly Func<bool> readAvailability;
+        private readonly Func<string> readDescription;
         private bool isOn;
+        private bool isEnabled;
+        private bool availabilityKnown;
+        private string feedbackText;
+        private string feedbackKind = "Success";
 
         public EnvToggle(string id, string title, string desc,
-            Func<bool> readState, Func<bool, bool> apply, object hintKey)
+            Func<bool> readState, Func<bool, bool> apply, object hintKey,
+            bool requiresRestart, bool isRisky, Func<bool> readAvailability,
+            Func<string> readDescription)
         {
             this.id = id;
             this.title = title;
@@ -139,37 +173,131 @@ namespace CaelusApp
             this.readState = readState;
             this.apply = apply;
             this.hintKey = hintKey;
-            this.isOn = SafeRead();
+            this.readAvailability = readAvailability;
+            this.readDescription = readDescription;
+            RequiresRestart = requiresRestart;
+            IsRisky = isRisky;
+            feedbackText = "";
+            isOn = SafeRead();
+            isEnabled = SafeAvailability();
         }
 
         public string Id { get { return id; } }
         public string Title { get { return title; } }
         public string Desc { get { return desc; } }
+        public bool RequiresRestart { get; private set; }
+        public bool IsRisky { get; private set; }
+        public string RestartText { get { return "需重启"; } }
+        public string RiskText { get { return "风险"; } }
 
         public bool IsOn
         {
             get { return isOn; }
-            set { isOn = value; Raise("IsOn"); }
+            private set { SetProperty(ref isOn, value, "IsOn"); }
         }
 
-        // 执行 tweak 并返回提示文案的 lang key（null = 不提示，空串 = 操作失败）
-        public string Apply(bool on)
+        public bool IsEnabled
         {
-            bool ok = false;
+            get { return isEnabled; }
+            private set
+            {
+                if (SetProperty(ref isEnabled, value, "IsEnabled"))
+                    Raise("AvailabilityText");
+            }
+        }
+
+        public string AvailabilityText
+        {
+            get
+            {
+                if (!availabilityKnown) return "当前状态不可确认";
+                if (IsEnabled) return "可用";
+                if (id == "msi") return "本机无可调整设备";
+                if (id == "netthrottle") return "当前值正常，无需调整";
+                return "当前不可用";
+            }
+        }
+
+        public string StateText { get { return IsOn ? "已开启" : "已关闭"; } }
+
+        public string FeedbackText
+        {
+            get { return feedbackText; }
+            private set { SetProperty(ref feedbackText, value, "FeedbackText"); }
+        }
+
+        public string FeedbackKind
+        {
+            get { return feedbackKind; }
+            private set { SetProperty(ref feedbackKind, value, "FeedbackKind"); }
+        }
+
+        // 返回 false 代表执行失败；成功/失败文案写入 FeedbackText + FeedbackKind，由视图行内呈现。
+        public bool Apply(bool on)
+        {
+            bool ok;
             try { ok = apply(on); }
             catch { ok = false; }
-            // 重读真实状态
-            IsOn = SafeRead();
-            if (!ok) return "";
-            return ResolveHint(on);
+
+            Refresh();
+            if (!ok)
+            {
+                FeedbackKind = "Error";
+                FeedbackText = Lang.T("winopt.failed");
+                return false;
+            }
+
+            string hint = ResolveHint(on);
+            FeedbackKind = "Success";
+            FeedbackText = string.IsNullOrEmpty(hint)
+                ? "已应用 · " + StateText
+                : Lang.T(hint);
+            return true;
         }
 
-        public void Refresh() { IsOn = SafeRead(); }
+        public void Refresh()
+        {
+            IsOn = SafeRead();
+            IsEnabled = SafeAvailability();
+            if (readDescription != null)
+            {
+                string next;
+                try { next = readDescription(); }
+                catch { next = desc; }
+                if (next != desc)
+                {
+                    desc = next;
+                    Raise("Desc");
+                }
+            }
+            Raise("StateText");
+            Raise("AvailabilityText");
+        }
 
         private bool SafeRead()
         {
             try { return readState(); }
             catch { return false; }
+        }
+
+        private bool SafeAvailability()
+        {
+            if (readAvailability == null)
+            {
+                availabilityKnown = true;
+                return true;
+            }
+            try
+            {
+                bool available = readAvailability();
+                availabilityKnown = true;
+                return available;
+            }
+            catch
+            {
+                availabilityKnown = false;
+                return false;
+            }
         }
 
         private string ResolveHint(bool on)

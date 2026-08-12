@@ -1,87 +1,184 @@
-<UserControl x:Class="CaelusApp.WpfHost.Views.AntiCheatView"
+﻿<UserControl x:Class="CaelusApp.WpfHost.Views.AntiCheatView"
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:ctl="clr-namespace:CaelusApp.WpfHost.Controls"
-             xmlns:local="clr-namespace:CaelusApp.WpfHost">
+             xmlns:local="clr-namespace:CaelusApp.WpfHost"
+             AutomationProperties.Name="反作弊专项">
+  <UserControl.Resources>
+    <BooleanToVisibilityConverter x:Key="BoolVis"/>
+    <Style x:Key="AcStatusBadge" TargetType="Border" BasedOn="{StaticResource StatusBadge}">
+      <Setter Property="Padding" Value="9,3"/>
+      <Setter Property="Background" Value="{DynamicResource Surface1Brush}"/>
+      <Setter Property="BorderBrush" Value="{DynamicResource BorderSubtleBrush}"/>
+      <Style.Triggers>
+        <DataTrigger Binding="{Binding StatusKind}" Value="Success">
+          <Setter Property="Background" Value="{DynamicResource SuccessSoftBrush}"/>
+          <Setter Property="BorderBrush" Value="{DynamicResource SuccessEdgeBrush}"/>
+        </DataTrigger>
+        <DataTrigger Binding="{Binding StatusKind}" Value="Warning">
+          <Setter Property="Background" Value="{DynamicResource WarningSoftBrush}"/>
+          <Setter Property="BorderBrush" Value="{DynamicResource WarningEdgeBrush}"/>
+        </DataTrigger>
+      </Style.Triggers>
+    </Style>
+    <Style x:Key="AcStatusText" TargetType="TextBlock">
+      <Setter Property="FontSize" Value="10"/>
+      <Setter Property="FontWeight" Value="SemiBold"/>
+      <Setter Property="Foreground" Value="{DynamicResource TextTertiaryBrush}"/>
+      <Style.Triggers>
+        <DataTrigger Binding="{Binding StatusKind}" Value="Success">
+          <Setter Property="Foreground" Value="{DynamicResource SuccessBrush}"/>
+        </DataTrigger>
+        <DataTrigger Binding="{Binding StatusKind}" Value="Info">
+          <Setter Property="Foreground" Value="{DynamicResource InfoBrush}"/>
+        </DataTrigger>
+        <DataTrigger Binding="{Binding StatusKind}" Value="Warning">
+          <Setter Property="Foreground" Value="{DynamicResource WarningBrush}"/>
+        </DataTrigger>
+      </Style.Triggers>
+    </Style>
+  </UserControl.Resources>
+
   <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
     <StackPanel Margin="0,0,0,16">
-
-      <StackPanel x:Name="ZoneHeader" Margin="0,0,0,18">
+      <StackPanel x:Name="ZoneHeader" Margin="0,0,0,16">
         <TextBlock Text="{Binding PageTitle}" Style="{DynamicResource PageHeader}"/>
         <TextBlock Text="{Binding PageSub}" Style="{DynamicResource PageSubtitle}" Margin="0,3,0,0"/>
       </StackPanel>
 
-      <Border Style="{DynamicResource SettingsGroup}" Margin="0,0,0,16">
-        <Border Style="{DynamicResource PolicyRow}">
-          <DockPanel>
-          <ToggleButton x:Name="SwMaster" Style="{DynamicResource PolicyToggle}"
-                        IsChecked="{Binding MasterOn}"
-                        AutomationProperties.Name="{Binding MasterTitle}"
-                        DockPanel.Dock="Right" VerticalAlignment="Center" Margin="16,0,0,0"/>
-          <StackPanel VerticalAlignment="Center">
-            <TextBlock Text="{Binding MasterTitle}" FontSize="{DynamicResource FontSizeCaption}"
-                       FontWeight="Bold" Foreground="{DynamicResource TextPrimaryBrush}"/>
-            <TextBlock Text="{Binding MasterSub}" FontSize="11"
-                       Foreground="{DynamicResource TextSecondaryBrush}" TextWrapping="Wrap" Margin="0,2,0,0"/>
+      <!-- 顶部总开关与运行摘要 -->
+      <Border x:Name="ZoneSummary" Style="{DynamicResource StatusBanner}"
+              Padding="14,12" Margin="0,0,0,16" AutomationProperties.Name="反作弊压制状态摘要">
+        <Grid>
+          <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="*"/>
+            <ColumnDefinition Width="Auto"/>
+          </Grid.ColumnDefinitions>
+          <StackPanel Grid.Column="0">
+            <StackPanel Orientation="Horizontal">
+              <TextBlock FontSize="24" FontWeight="SemiBold" Foreground="{DynamicResource TextPrimaryBrush}"
+                         Typography.NumeralAlignment="Tabular" VerticalAlignment="Center">
+                <Run Text="{Binding EnabledGroupCount, Mode=OneWay}"/><Run Text="/" Foreground="{DynamicResource TextTertiaryBrush}"/><Run Text="{Binding TotalGroupCount, Mode=OneWay}"/>
+              </TextBlock>
+              <TextBlock Text="个分组已启用" Margin="8,0,0,0" FontSize="11"
+                         Foreground="{DynamicResource TextSecondaryBrush}" VerticalAlignment="Center"/>
+              <Rectangle Width="1" Height="22" Margin="16,0" Fill="{DynamicResource BorderSubtleBrush}" VerticalAlignment="Center"/>
+              <TextBlock FontSize="11" Foreground="{DynamicResource TextSecondaryBrush}" VerticalAlignment="Center">
+                <Run Text="实际压制 "/><Run Text="{Binding SuppressedProcessCount, Mode=OneWay}" FontWeight="SemiBold" Foreground="{DynamicResource SuccessBrush}"/>
+                <Run Text=" · 检测运行"/><Run Text="{Binding RunningProcessCount, Mode=OneWay}" FontWeight="SemiBold"/>
+              </TextBlock>
+            </StackPanel>
+            <TextBlock Text="{Binding MasterStateText, Mode=OneWay}" Margin="0,4,0,0" FontSize="11">
+              <TextBlock.Style>
+                <Style TargetType="TextBlock">
+                  <Setter Property="Foreground" Value="{DynamicResource TextSecondaryBrush}"/>
+                  <Style.Triggers>
+                    <DataTrigger Binding="{Binding MasterOn}" Value="False">
+                      <Setter Property="Foreground" Value="{DynamicResource WarningBrush}"/>
+                    </DataTrigger>
+                  </Style.Triggers>
+                </Style>
+              </TextBlock.Style>
+            </TextBlock>
           </StackPanel>
-          </DockPanel>
-        </Border>
+          <ToggleButton x:Name="SwMaster" Grid.Column="1" Style="{DynamicResource PolicyToggle}"
+                        IsChecked="{Binding MasterOn}" Checked="OnMasterChanged" Unchecked="OnMasterChanged"
+                        AutomationProperties.Name="{Binding MasterTitle}"
+                        VerticalAlignment="Center" Margin="20,0,0,0"/>
+        </Grid>
       </Border>
 
-      <!-- 分组小标题 -->
-      <StackPanel Orientation="Horizontal" Margin="0,0,0,8">
-        <Border Width="30" Height="30" CornerRadius="{DynamicResource RadiusSm}"
-                Background="{DynamicResource AccentSoftBrush}" BorderBrush="{DynamicResource AccentEdgeBrush}"
-                BorderThickness="1" VerticalAlignment="Center" Margin="0,0,12,0">
-          <Viewbox Width="16" Height="16">
-            <Path Data="M12 3l7 3v5c0 4.5-3 8.5-7 10-4-1.5-7-5.5-7-10V6z" Stroke="{DynamicResource ModeAccentBrush}" StrokeThickness="2" StrokeLineJoin="Round"/>
-          </Viewbox>
-        </Border>
-        <TextBlock Text="{Binding BoundaryTitle}" FontSize="{DynamicResource FontSizeBody}"
-                   FontWeight="SemiBold" Foreground="{DynamicResource TextPrimaryBrush}" VerticalAlignment="Center"/>
+      <Border x:Name="ZonePause" Margin="0,0,0,16">
+        <Border.Style>
+          <Style TargetType="Border" BasedOn="{StaticResource StatusBanner}">
+            <Setter Property="Visibility" Value="Collapsed"/>
+            <Setter Property="Background" Value="{DynamicResource WarningSoftBrush}"/>
+            <Setter Property="BorderBrush" Value="{DynamicResource WarningEdgeBrush}"/>
+            <Style.Triggers>
+              <DataTrigger Binding="{Binding MasterOn}" Value="False">
+                <Setter Property="Visibility" Value="Visible"/>
+              </DataTrigger>
+            </Style.Triggers>
+          </Style>
+        </Border.Style>
+        <DockPanel>
+          <ctl:IconView Key="IconInfo" Width="16" Height="16" Foreground="{DynamicResource WarningBrush}"
+                        DockPanel.Dock="Left" Margin="0,0,10,0" VerticalAlignment="Center"/>
+          <TextBlock Text="{Binding PauseNoticeText, Mode=OneWay}" FontSize="11"
+                     Foreground="{DynamicResource WarningBrush}" TextWrapping="Wrap"/>
+        </DockPanel>
+      </Border>
+
+      <StackPanel x:Name="ZoneMaster" Margin="0,0,0,16">
+        <StackPanel Orientation="Horizontal" Margin="0,0,0,8">
+          <Border Width="30" Height="30" CornerRadius="{DynamicResource RadiusSm}"
+                  Background="{DynamicResource AccentSoftBrush}" BorderBrush="{DynamicResource AccentEdgeBrush}"
+                  BorderThickness="1" VerticalAlignment="Center" Margin="0,0,12,0">
+            <ctl:IconView Key="IconShield" Width="16" Height="16" Foreground="{DynamicResource ModeAccentBrush}"
+                          HorizontalAlignment="Center" VerticalAlignment="Center"/>
+          </Border>
+          <StackPanel VerticalAlignment="Center">
+            <TextBlock Text="{Binding MasterTitle}" FontSize="{DynamicResource FontSizeBody}"
+                       FontWeight="SemiBold" Foreground="{DynamicResource TextPrimaryBrush}"/>
+            <TextBlock Text="{Binding MasterSub}" FontSize="11" Foreground="{DynamicResource TextSecondaryBrush}"
+                       TextWrapping="Wrap" Margin="0,2,0,0"/>
+          </StackPanel>
+        </StackPanel>
       </StackPanel>
 
-      <Border Style="{DynamicResource SettingsGroup}">
-      <ItemsControl ItemsSource="{Binding Cards}">
-        <ItemsControl.ItemsPanel>
-          <ItemsPanelTemplate><StackPanel/></ItemsPanelTemplate>
-        </ItemsControl.ItemsPanel>
-        <ItemsControl.ItemTemplate>
-          <DataTemplate>
-            <Border Style="{DynamicResource PolicyRow}">
-              <StackPanel>
-                <DockPanel>
-                  <ToggleButton Style="{DynamicResource PolicyToggle}"
-                                IsChecked="{Binding Enabled}"
-                                AutomationProperties.Name="{Binding Title}"
-                                DockPanel.Dock="Right" VerticalAlignment="Center" Margin="16,0,0,0"/>
-                  <StackPanel VerticalAlignment="Center">
-                    <TextBlock Text="{Binding Title}" FontSize="{DynamicResource FontSizeCaption}"
-                               FontWeight="Bold" Foreground="{DynamicResource TextPrimaryBrush}"
-                               TextWrapping="Wrap"/>
-                    <TextBlock Text="{Binding Desc}" FontSize="11"
-                               Foreground="{DynamicResource TextSecondaryBrush}"
-                               TextWrapping="Wrap" Margin="0,2,0,0"/>
-                  </StackPanel>
-                </DockPanel>
-                <DockPanel Margin="0,8,0,0">
-                  <TextBlock Text="{Binding Status}" FontSize="11"
-                             Foreground="{DynamicResource ModeAccentBrush}"
-                             VerticalAlignment="Center" DockPanel.Dock="Right"
-                             HorizontalAlignment="Right"/>
-                  <ctl:SegmentedControl ItemsSource="{Binding RelativeSource={RelativeSource AncestorType=UserControl}, Path=DataContext.LevelLabels}"
-                                        SelectedIndex="{Binding LevelIndex, Mode=TwoWay}"
-                                        SelectionChanged="OnLevelChanged"
-                                        AutomationProperties.Name="{Binding Title}"
-                                        HorizontalAlignment="Left"/>
-                </DockPanel>
-              </StackPanel>
-            </Border>
-          </DataTemplate>
-        </ItemsControl.ItemTemplate>
-      </ItemsControl>
-      </Border>
+      <StackPanel x:Name="ZoneGroups">
+        <StackPanel Orientation="Horizontal" Margin="0,0,0,8">
+          <TextBlock Text="{Binding BoundaryTitle}" FontSize="{DynamicResource FontSizeBody}"
+                     FontWeight="SemiBold" Foreground="{DynamicResource TextPrimaryBrush}" VerticalAlignment="Center"/>
+        </StackPanel>
 
+        <Border Style="{DynamicResource SettingsGroup}">
+          <ItemsControl ItemsSource="{Binding Cards}">
+            <ItemsControl.ItemsPanel>
+              <ItemsPanelTemplate><StackPanel/></ItemsPanelTemplate>
+            </ItemsControl.ItemsPanel>
+            <ItemsControl.ItemTemplate>
+              <DataTemplate>
+                <Border Style="{DynamicResource PolicyRow}" BorderThickness="0,0,0,1">
+                  <StackPanel>
+                    <DockPanel>
+                      <ToggleButton Style="{DynamicResource PolicyToggle}" IsChecked="{Binding Enabled}"
+                                    Click="OnGroupChanged" AutomationProperties.Name="{Binding Title}"
+                                    DockPanel.Dock="Right" VerticalAlignment="Center" Margin="16,0,0,0"/>
+                      <StackPanel VerticalAlignment="Center">
+                        <StackPanel Orientation="Horizontal">
+                          <TextBlock Text="{Binding Title}" FontSize="{DynamicResource FontSizeCaption}"
+                                     FontWeight="SemiBold" Foreground="{DynamicResource TextPrimaryBrush}"
+                                     TextWrapping="Wrap"/>
+                          <Border Style="{StaticResource AcStatusBadge}" Margin="9,0,0,0">
+                            <TextBlock Text="{Binding Status}" Style="{StaticResource AcStatusText}"/>
+                          </Border>
+                        </StackPanel>
+                        <TextBlock Text="{Binding Desc}" FontSize="11" Foreground="{DynamicResource TextSecondaryBrush}"
+                                   TextWrapping="Wrap" Margin="0,3,0,0"/>
+                      </StackPanel>
+                    </DockPanel>
+                    <Grid Margin="0,8,0,0">
+                      <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="Auto"/>
+                        <ColumnDefinition Width="*"/>
+                      </Grid.ColumnDefinitions>
+                      <ctl:SegmentedControl Grid.Column="0"
+                                            ItemsSource="{Binding RelativeSource={RelativeSource AncestorType=UserControl}, Path=DataContext.LevelLabels}"
+                                            SelectedIndex="{Binding LevelIndex, Mode=TwoWay}"
+                                            SelectionChanged="OnLevelChanged"
+                                            AutomationProperties.Name="{Binding Title}" HorizontalAlignment="Left"/>
+                      <TextBlock Grid.Column="1" Text="{Binding ProcessText}" ToolTip="{Binding ProcessText}"
+                                 Margin="14,0,0,0" FontSize="10" Foreground="{DynamicResource TextTertiaryBrush}"
+                                 TextTrimming="CharacterEllipsis" VerticalAlignment="Center"/>
+                    </Grid>
+                  </StackPanel>
+                </Border>
+              </DataTemplate>
+            </ItemsControl.ItemTemplate>
+          </ItemsControl>
+        </Border>
+      </StackPanel>
     </StackPanel>
   </ScrollViewer>
 </UserControl>

@@ -14,36 +14,83 @@
     </StackPanel>
 
     <Border Grid.Row="1" Style="{DynamicResource CardBorder}" Padding="0" ClipToBounds="True">
-      <Grid>
+      <Grid x:Name="ZoneLog">
         <Grid.RowDefinitions>
+          <RowDefinition Height="Auto"/>
           <RowDefinition Height="Auto"/>
           <RowDefinition Height="*"/>
         </Grid.RowDefinitions>
 
         <Border Grid.Row="0" BorderBrush="{DynamicResource BorderSubtleBrush}"
                 BorderThickness="0,0,0,1" Padding="12,8">
-          <DockPanel LastChildFill="True">
-            <StackPanel DockPanel.Dock="Right" Orientation="Horizontal">
+          <Grid>
+            <Grid.ColumnDefinitions>
+              <ColumnDefinition Width="*"/>
+              <ColumnDefinition Width="Auto"/>
+            </Grid.ColumnDefinitions>
+            <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+              <TextBlock Text="运行记录" FontSize="11" Foreground="{DynamicResource TextTertiaryBrush}"/>
+              <Border Style="{DynamicResource NeutralStatusBadge}" Padding="8,3" Margin="8,0,0,0">
+                <TextBlock Text="{Binding SummaryText}" FontSize="10" Foreground="{DynamicResource TextSecondaryBrush}"/>
+              </Border>
+            </StackPanel>
+            <WrapPanel Grid.Column="1" Orientation="Horizontal">
+              <TextBlock Text="跟随最新" FontSize="10" Foreground="{DynamicResource TextSecondaryBrush}"
+                         VerticalAlignment="Center" Margin="0,0,7,0"/>
+              <ToggleButton x:Name="SwFollow" Style="{DynamicResource PolicyToggle}" IsChecked="True"
+                            VerticalAlignment="Center" Margin="0,0,10,0"
+                            AutomationProperties.Name="跟随最新日志"/>
+              <TextBox x:Name="TbFilter" Width="150" Text="{Binding FilterText, UpdateSourceTrigger=PropertyChanged}"
+                       Style="{DynamicResource InputBox}" Padding="8,4" Margin="0,0,8,0"
+                       ToolTip="筛选当前显示的日志" AutomationProperties.Name="筛选运行日志"/>
+              <Button x:Name="BtnRefresh" Content="{Binding RefreshText}" Click="OnRefreshLog"
+                      Style="{DynamicResource GhostButton}" Padding="10,5" Margin="0,0,8,0"
+                      AutomationProperties.Name="刷新运行日志"/>
               <Button x:Name="BtnOpen" Content="{Binding OpenLogText}" Click="OnOpenLog"
                       Style="{DynamicResource GhostButton}" Padding="10,5"
                       AutomationProperties.Name="打开日志文件"/>
               <Button x:Name="BtnClear" Content="{Binding ClearLogText}" Click="OnClearLog"
                       Style="{DynamicResource DangerButton}" Padding="10,5" Margin="8,0,0,0"
-                      AutomationProperties.Name="清除运行日志"/>
-            </StackPanel>
-            <TextBlock Text="实时记录" VerticalAlignment="Center"
-                       FontSize="11" Foreground="{DynamicResource TextTertiaryBrush}"/>
-          </DockPanel>
+                      IsEnabled="{Binding CanClear}" AutomationProperties.Name="清除运行日志"/>
+            </WrapPanel>
+          </Grid>
         </Border>
 
-        <TextBox x:Name="TbLog" Grid.Row="1" IsReadOnly="True"
-                 Background="Transparent" BorderThickness="0" Padding="14,12"
-                 Foreground="{DynamicResource TextSecondaryBrush}"
-                 FontFamily="{DynamicResource FontMono}" FontSize="12"
-                 VerticalContentAlignment="Top"
-                 VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Auto"
-                 TextWrapping="NoWrap" Text="{Binding LogText, Mode=OneWay}"
-                 AutomationProperties.Name="运行日志内容"/>
+        <Border Grid.Row="1" Margin="12,10,12,0">
+          <Border.Style>
+            <Style TargetType="Border" BasedOn="{StaticResource StatusBanner}">
+              <Setter Property="Visibility" Value="Visible"/>
+              <Setter Property="Background" Value="{DynamicResource InfoSoftBrush}"/>
+              <Setter Property="BorderBrush" Value="{DynamicResource InfoEdgeBrush}"/>
+              <Style.Triggers>
+                <DataTrigger Binding="{Binding FeedbackText}" Value=""><Setter Property="Visibility" Value="Collapsed"/></DataTrigger>
+                <DataTrigger Binding="{Binding FeedbackKind}" Value="Success"><Setter Property="Background" Value="{DynamicResource SuccessSoftBrush}"/><Setter Property="BorderBrush" Value="{DynamicResource SuccessEdgeBrush}"/></DataTrigger>
+                <DataTrigger Binding="{Binding FeedbackKind}" Value="Error"><Setter Property="Background" Value="{DynamicResource DangerSoftBrush}"/><Setter Property="BorderBrush" Value="{DynamicResource DangerEdgeBrush}"/></DataTrigger>
+              </Style.Triggers>
+            </Style>
+          </Border.Style>
+          <TextBlock Text="{Binding FeedbackText}" FontSize="11" Foreground="{DynamicResource TextSecondaryBrush}" TextWrapping="Wrap"/>
+        </Border>
+
+        <Grid Grid.Row="2">
+          <TextBox x:Name="TbLog" IsReadOnly="True" Background="Transparent" BorderThickness="0" Padding="14,12"
+                   Foreground="{DynamicResource TextSecondaryBrush}" FontFamily="{DynamicResource FontMono}" FontSize="12"
+                   VerticalContentAlignment="Top" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Auto"
+                   TextWrapping="NoWrap" Text="{Binding LogText, Mode=OneWay}" AutomationProperties.Name="运行日志内容">
+            <TextBox.Style>
+              <Style TargetType="TextBox"><Setter Property="Visibility" Value="Visible"/><Style.Triggers><DataTrigger Binding="{Binding HasVisibleLog}" Value="False"><Setter Property="Visibility" Value="Collapsed"/></DataTrigger></Style.Triggers></Style>
+            </TextBox.Style>
+          </TextBox>
+          <Border x:Name="EmptyPanel" Margin="14">
+            <Border.Style>
+              <Style TargetType="Border" BasedOn="{StaticResource EmptyState}"><Setter Property="Visibility" Value="Collapsed"/><Style.Triggers><DataTrigger Binding="{Binding HasVisibleLog}" Value="False"><Setter Property="Visibility" Value="Visible"/></DataTrigger></Style.Triggers></Style>
+            </Border.Style>
+            <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center" MaxWidth="360" Margin="24">
+              <TextBlock Text="{Binding EmptyTitle}" FontSize="15" FontWeight="SemiBold" Foreground="{DynamicResource TextPrimaryBrush}" TextAlignment="Center"/>
+              <TextBlock Text="{Binding EmptyHint}" FontSize="11" Foreground="{DynamicResource TextSecondaryBrush}" TextWrapping="Wrap" TextAlignment="Center" Margin="0,6,0,0"/>
+            </StackPanel>
+          </Border>
+        </Grid>
       </Grid>
     </Border>
   </Grid>

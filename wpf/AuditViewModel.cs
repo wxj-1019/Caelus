@@ -27,6 +27,7 @@ namespace CaelusApp
         private string nvProbeText;
         private string amdProbeText;
         private int busy; // 0=空闲，1=占用（Interlocked）
+        private bool hasResultData;
         private System.DateTime lastCheck;
 
         public AuditViewModel()
@@ -52,6 +53,9 @@ namespace CaelusApp
         public string PreciseText { get { return Lang.T("audit.precise"); } }
         public string NvProbeText { get { return Lang.T("audit.nvprobe"); } }
         public string AmdProbeText { get { return Lang.T("audit.amdprobe"); } }
+        public string NvUnavailableReason { get { return NvAvailable ? "" : Lang.T("audit.nv.unavailable"); } }
+        public string AmdUnavailableReason { get { return AmdAvailable ? "" : Lang.T("audit.amd.unavailable"); } }
+        public string ScoreMethodText { get { return "评分从 100 分起算，每项需关注内容扣 6 分，最低为 0 分。"; } }
 
         // —— 结果分组标题 ——
         public string CapabilityTitle { get { return Lang.T("audit.sec.capability"); } }
@@ -63,6 +67,8 @@ namespace CaelusApp
         // —— 探测按钮可用性 ——
         public bool NvAvailable { get { try { return NvApi.Available; } catch { return false; } } }
         public bool AmdAvailable { get { try { return AdlxTweaks.Available; } catch { return false; } } }
+        public bool NvProbeEnabled { get { return buttonsEnabled && NvAvailable; } }
+        public bool AmdProbeEnabled { get { return buttonsEnabled && AmdAvailable; } }
 
         // —— 状态绑定 ——
         public AuditState State
@@ -74,12 +80,22 @@ namespace CaelusApp
         public bool IsIdle { get { return state == AuditState.Idle; } }
         public bool IsScanning { get { return state == AuditState.Scanning; } }
         public bool HasResult { get { return state == AuditState.Result; } }
+        public bool HasResultData { get { return hasResultData; } }
+        public bool ShowResultTools { get { return state == AuditState.Result; } }
 
         private void RaiseStateBools()
         {
             Raise("IsIdle");
             Raise("IsScanning");
             Raise("HasResult");
+            Raise("ShowResultTools");
+        }
+
+        private void SetHasResultData(bool value)
+        {
+            if (hasResultData == value) return;
+            hasResultData = value;
+            Raise("HasResultData");
         }
 
         public double Progress
@@ -103,7 +119,14 @@ namespace CaelusApp
         public bool ButtonsEnabled
         {
             get { return buttonsEnabled; }
-            set { SetProperty(ref buttonsEnabled, value, "ButtonsEnabled"); }
+            set
+            {
+                if (SetProperty(ref buttonsEnabled, value, "ButtonsEnabled"))
+                {
+                    Raise("NvProbeEnabled");
+                    Raise("AmdProbeEnabled");
+                }
+            }
         }
 
         // —— 结果行集合 ——
@@ -159,6 +182,7 @@ namespace CaelusApp
         // 供视图刷新健康绑定（RenderReport 与样例注入后调用）
         internal void NotifyHealth()
         {
+            SetHasResultData(true);
             Raise("ConcernCount"); Raise("Score"); Raise("HealthLabel");
             Raise("IsCaution"); Raise("PersistentHasWarn"); Raise("VerdictHasWarn");
             Raise("LastCheckText");
@@ -279,11 +303,8 @@ namespace CaelusApp
                 if (report == null)
                 {
                     StatusText = Lang.T("audit.failed");
-                    if (State != AuditState.Result)
-                    {
-                        State = AuditState.Idle;
-                        UpdatePhaseText();
-                    }
+                    State = hasResultData ? AuditState.Result : AuditState.Idle;
+                    UpdatePhaseText();
                     return;
                 }
                 StatusText = "";
@@ -301,6 +322,7 @@ namespace CaelusApp
             FillGroup(VerdictRows, report.Verdicts, "AMD 驱动接口", amdProbeText);
             lastCheck = System.DateTime.Now;
             NotifyHealth();
+            SetHasResultData(true);
             State = AuditState.Result;
         }
 

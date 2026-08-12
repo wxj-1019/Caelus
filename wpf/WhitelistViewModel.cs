@@ -15,6 +15,7 @@ namespace CaelusApp
         private readonly GameMode gm;
         private WhitelistItemSelected selected;
         private int busy; // 深查占位 0/1（Interlocked）
+        private int userRuleCount;
 
         public WhitelistViewModel(GameMode gm)
         {
@@ -67,7 +68,8 @@ namespace CaelusApp
             }
         }
 
-        public bool IsEmpty { get { return Items.Count == 0; } }
+        // 空态只看用户自建规则；内置必需规则不应遮掉“添加第一条规则”的任务入口。
+        public bool IsEmpty { get { return userRuleCount == 0; } }
 
         public bool CanRemoveSelected
         {
@@ -127,6 +129,7 @@ namespace CaelusApp
             foreach (WhitelistRuleView v in views)
                 (v.Required ? required : user).Add(v);
 
+            userRuleCount = user.Count;
             WhitelistItemSelected reselect = null;
             foreach (WhitelistRuleView v in user)
             {
@@ -275,6 +278,29 @@ namespace CaelusApp
         public WhitelistRuleKind Kind { get { return view != null ? view.Rule.Kind : WhitelistRuleKind.LegacyName; } }
         public bool Required { get { return view != null && view.Required; } }
         public int CurrentMatches { get { return view != null ? view.CurrentMatches : 0; } }
+        public string InspectorValue { get { return string.IsNullOrEmpty(Value) ? "—" : Value; } }
+        public string RuleTypeText
+        {
+            get
+            {
+                if (Kind == WhitelistRuleKind.ApplicationFamily) return Lang.T("white.badge.family");
+                if (Kind == WhitelistRuleKind.ExactPath) return Lang.T("white.badge.only");
+                return Lang.T("white.badge.name");
+            }
+        }
+        public string MatchCountText
+        {
+            get
+            {
+                if (Required) return Lang.T("white.required.badge");
+                if (CurrentMatches < 0) return Lang.T("white.matches.pending");
+                return CurrentMatches + " 个运行进程";
+            }
+        }
+        public string LockReason
+        {
+            get { return Required ? Lang.T("white.required.locked") : ""; }
+        }
 
         public string Title { get { return title; } set { SetProperty(ref title, value, "Title"); } }
         public string Subtitle { get { return subtitle; } set { SetProperty(ref subtitle, value, "Subtitle"); } }

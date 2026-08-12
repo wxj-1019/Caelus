@@ -33,9 +33,16 @@ namespace CaelusApp.WpfHost.Views
                     vm.NotifySegments();
                 }
             }
-            // 入场 stagger（页头 + 摘要；分组随滚动自然呈现）
+            // 入场 stagger（页头 + 摘要 + 五个分区）
+            SetPoliteLiveSetting(ZoneSummary);
+            SetPoliteLiveSetting(AmdCacheFeedback);
             Motion.RiseIn(ZoneHeader, 40);
             Motion.RiseIn(ZoneSummary, 100);
+            Motion.RiseIn(ZoneGeneral, 160);
+            Motion.RiseIn(ZoneNvidia, 220);
+            Motion.RiseIn(ZoneSession, 280);
+            Motion.RiseIn(ZonePresent, 340);
+            Motion.RiseIn(ZoneAmd, 400);
         }
 
         // SegmentedControl 只发出索引事件；在视图层同步依赖属性以触发现有 TwoWay 绑定，
@@ -57,10 +64,31 @@ namespace CaelusApp.WpfHost.Views
             control.SetCurrentValue(SegmentedControl.SelectedIndexProperty, index);
         }
 
-        // AMD 着色器缓存重置（后台线程执行）
+        private static void SetPoliteLiveSetting(DependencyObject element)
+        {
+            // .NET 4 参考程序集不含 LiveSetting；在支持该 UIA API 的系统上反射启用。
+            try
+            {
+                System.Type propertiesType = typeof(System.Windows.Automation.AutomationProperties);
+                System.Reflection.MethodInfo setter = propertiesType.GetMethod("SetLiveSetting");
+                if (setter == null) return;
+                System.Type settingType = setter.GetParameters()[1].ParameterType;
+                object polite = System.Enum.Parse(settingType, "Polite");
+                setter.Invoke(null, new object[] { element, polite });
+            }
+            catch
+            {
+                // 旧版系统缺少 live region API 时保留 AutomationProperties.Name。
+            }
+        }
+
+        // AMD 着色器缓存重置（后台线程执行，状态在行内反馈）
         private void OnAmdCache(object sender, RoutedEventArgs e)
         {
-            BtnAmdCache.IsEnabled = false;
+            GraphicsViewModel vm = DataContext as GraphicsViewModel;
+            if (vm == null || !vm.BeginAmdCacheReset()) return;
+            Motion.Emphasize(AmdCacheFeedback);
+
             ThreadPool.QueueUserWorkItem(delegate
             {
                 int done;
@@ -69,10 +97,8 @@ namespace CaelusApp.WpfHost.Views
                 catch { done = 0; }
                 Dispatcher.BeginInvoke(new System.Action(delegate
                 {
-                    BtnAmdCache.IsEnabled = AdlxTweaks.Available;
-                    MessageBox.Show(ok ? Lang.T("amd.cache.done") : Lang.T("amd.cache.fail"),
-                        "Caelus", MessageBoxButton.OK,
-                        ok ? MessageBoxImage.Information : MessageBoxImage.Warning);
+                    vm.CompleteAmdCacheReset(ok);
+                    Motion.Emphasize(AmdCacheFeedback);
                 }));
             });
         }

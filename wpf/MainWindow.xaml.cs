@@ -128,21 +128,24 @@ namespace CaelusApp.WpfHost
             IntPtr hwnd = new WindowInteropHelper(this).Handle;
             HwndSource source = HwndSource.FromHwnd(hwnd);
             if (source != null) source.AddHook(WndProc);
-            // Win11 22H2+：2 = DWMSBT_MAINWINDOW（Mica 类主窗口材质）；高对比度下切实体背景。
-            ApplyBackdrop(hwnd);
+            // Win11 22H2+：窗口圆角（DWMWCP_ROUND）+ Mica 主窗口材质（DWMSBT_MAINWINDOW）。
+            // 两者都要求 AllowsTransparency=False（layered 窗口不参与 DWM 形状与材质）。
+            ApplyWindowChrome(hwnd);
         }
 
         private void OnMotionPolicyChanged(object sender, EventArgs e)
         {
             if (!IsInitialized) return;
-            ApplyBackdrop(new WindowInteropHelper(this).Handle);
+            ApplyWindowChrome(new WindowInteropHelper(this).Handle);
         }
 
-        private static void ApplyBackdrop(IntPtr hwnd)
+        private static void ApplyWindowChrome(IntPtr hwnd)
         {
             if (hwnd == IntPtr.Zero) return;
             try
             {
+                int corner = 2; // DWMWCP_ROUND：系统级圆角，最大化时 DWM 自动方角
+                DwmSetWindowAttribute(hwnd, 33, ref corner, sizeof(int));
                 int backdrop = Motion.HighContrast ? 1 : 2; // DWMSBT_NONE / DWMSBT_MAINWINDOW
                 DwmSetWindowAttribute(hwnd, 38, ref backdrop, sizeof(int));
             }

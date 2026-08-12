@@ -280,7 +280,7 @@ namespace CaelusApp.WpfHost
                 translate.Y = 0;
                 return;
             }
-            Animate(translate, TranslateTransform.YProperty, translate.Y, y, UiMotion.PageFadeMs);
+            Animate(translate, TranslateTransform.YProperty, translate.Y, y, UiMotion.ButtonPressMs);
         }
 
         public static readonly DependencyProperty PressProperty = DependencyProperty.RegisterAttached(

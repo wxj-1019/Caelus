@@ -27,10 +27,6 @@
   <Style x:Key="HeroCardBorder" TargetType="Border" BasedOn="{StaticResource CardBorder}">
     <Setter Property="Background" Value="{DynamicResource Surface1Brush}"/>
   </Style>
-  <Style x:Key="PolicyCard" TargetType="Border" BasedOn="{StaticResource CardBorder}">
-    <Setter Property="Padding" Value="16,12"/>
-  </Style>
-  <Style x:Key="LibraryItemCard" TargetType="Border" BasedOn="{StaticResource PolicyCard}"/>
 
   <Style x:Key="SettingsGroup" TargetType="Border">
     <Setter Property="Background" Value="{DynamicResource Surface0Brush}"/>
@@ -595,8 +591,6 @@
       </DataTrigger>
     </Style.Triggers>
   </Style>
-
-  <!-- DropZoneEmpty：空态拖放区（Surface0 底 + 内嵌虚线投放暗示） -->
   <Style x:Key="DropZoneEmpty" TargetType="ContentControl">
     <Setter Property="Template">
       <Setter.Value>
@@ -655,7 +649,7 @@
       </DataTrigger>
       <MultiDataTrigger>
         <MultiDataTrigger.Conditions>
-          <Condition Property="IsMouseOver" Value="True"/>
+          <Condition Binding="{Binding IsMouseOver, RelativeSource={RelativeSource Self}}" Value="True"/>
           <Condition Binding="{Binding Warn}" Value="True"/>
         </MultiDataTrigger.Conditions>
         <Setter Property="Background" Value="{DynamicResource WarningEdgeBrush}"/>
@@ -688,8 +682,6 @@
     <Setter Property="FontSize" Value="11"/>
     <Setter Property="Foreground" Value="{DynamicResource TextSecondaryBrush}"/>
   </Style>
-  <Style x:Key="SectionTitle" TargetType="TextBlock" BasedOn="{StaticResource PageHeader}"/>
-  <Style x:Key="SectionSubtitle" TargetType="TextBlock" BasedOn="{StaticResource PageSubtitle}"/>
 
   <Style x:Key="ScrollThumb" TargetType="Thumb">
     <Setter Property="Background" Value="{DynamicResource ScrollThumbBrush}"/>

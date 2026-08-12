@@ -4,9 +4,12 @@
         xmlns:controls="clr-namespace:CaelusApp.WpfHost.Controls"
         Title="Caelus" Width="1196" Height="768" MinWidth="980" MinHeight="640"
         WindowStartupLocation="CenterScreen"
-        WindowStyle="None" AllowsTransparency="True" ResizeMode="CanResize"
+        WindowStyle="None" AllowsTransparency="False" ResizeMode="CanResize"
         Background="{DynamicResource BackgroundBrush}"
         FontFamily="{DynamicResource FontUi}">
+  <!-- 窗口圆角由 DWM 提供（DWMWA_WINDOW_CORNER_PREFERENCE=ROUND，见 OnSourceInitialized）：
+       系统级裁剪无直角残留、最大化自动方角、保留系统阴影、四角无点击穿透。
+       需 AllowsTransparency=False 才能让 DWM 圆角与 Mica 材质（DWMSBT_MAINWINDOW）同时生效。 -->
   <Grid>
     <Grid.RowDefinitions>
       <RowDefinition Height="36"/>

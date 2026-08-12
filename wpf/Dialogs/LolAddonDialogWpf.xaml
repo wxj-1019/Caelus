@@ -70,12 +70,21 @@
           <RowDefinition Height="Auto"/>
           <RowDefinition Height="*"/>
         </Grid.RowDefinitions>
-        <TextBlock Grid.Row="0" Text="检查结果" Margin="10,8,10,6"
-                   FontSize="13" FontWeight="SemiBold" Foreground="{DynamicResource TextPrimaryBrush}"/>
+        <Grid Grid.Row="0" Margin="10,8,10,6">
+          <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="*"/>
+            <ColumnDefinition Width="Auto"/>
+          </Grid.ColumnDefinitions>
+          <TextBlock Text="将处理的全部候选项" FontSize="13" FontWeight="SemiBold"
+                     Foreground="{DynamicResource TextPrimaryBrush}"/>
+          <TextBlock Grid.Column="1" Text="列表仅供确认范围" FontSize="10"
+                     Foreground="{DynamicResource TextTertiaryBrush}" VerticalAlignment="Center"/>
+        </Grid>
         <ListBox Grid.Row="1" x:Name="LstCandidates" Background="Transparent" BorderThickness="0"
                  ItemContainerStyle="{DynamicResource ListItem}"
                  ScrollViewer.HorizontalScrollBarVisibility="Disabled"
-                 AutomationProperties.Name="可删除的附加层项目">
+                 AutomationProperties.Name="将被统一处理的附加层候选项"
+                 AutomationProperties.HelpText="列表仅用于确认范围；删除操作会处理全部安全候选项">
           <ListBox.ItemTemplate>
             <DataTemplate>
               <Border Style="{DynamicResource SettingsRow}">

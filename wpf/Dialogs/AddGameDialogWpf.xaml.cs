@@ -10,6 +10,7 @@ using System.Linq;
 using System.Threading;
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Data;
 using System.Windows.Input;
 
 namespace CaelusApp.WpfHost.Dialogs
@@ -39,16 +40,21 @@ namespace CaelusApp.WpfHost.Dialogs
         internal List<ScanHit> SelectedHits { get; private set; }
 
         private readonly HashSet<string> existingPaths;
+        private readonly ICollectionView rowsView;
         private volatile bool closed;
         private Thread scanThread;
+        private int scanVersion;
 
         // existingLibraryItems 用于传入已有游戏（标记 Already）
         internal AddGameDialogWpf(System.Collections.Generic.IEnumerable<LibraryItem> existingLibraryItems)
         {
             InitializeComponent();
             Rows = new ObservableCollection<ScanRow>();
-            LstGames.ItemsSource = Rows;
+            rowsView = CollectionViewSource.GetDefaultView(Rows);
+            rowsView.Filter = FilterRow;
+            LstGames.ItemsSource = rowsView;
             SelectedHits = new List<ScanHit>();
+            Motion.SetPoliteLiveSetting(LblInfo);
 
             existingPaths = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
             if (existingLibraryItems != null)
@@ -73,7 +79,11 @@ namespace CaelusApp.WpfHost.Dialogs
 
         private void StartScan(string deepRoot)
         {
+            int version = ++scanVersion;
+            BtnBrowse.IsEnabled = false;
             BtnDeep.IsEnabled = false;
+            BtnSelectAll.IsEnabled = false;
+            ScanProgress.Visibility = Visibility.Visible;
             LblInfo.Text = Lang.T(deepRoot == null ? "scan.busy" : "scan.busy.deep");
             closed = false;
 
@@ -83,15 +93,18 @@ namespace CaelusApp.WpfHost.Dialogs
                 try
                 {
                     hits = deepRoot == null
-                        ? GameScan.RunManifests(() => closed)
-                        : GameScan.Run(deepRoot, () => closed, null);
+                        ? GameScan.RunManifests(() => closed || version != scanVersion)
+                        : GameScan.Run(deepRoot, () => closed || version != scanVersion, null);
                 }
                 catch { hits = new List<ScanHit>(); }
                 Dispatcher.BeginInvoke(new Action(delegate
                 {
-                    if (closed) return;
+                    if (closed || version != scanVersion) return;
                     MergeScanResults(hits);
+                    rowsView.Refresh();
+                    BtnBrowse.IsEnabled = true;
                     BtnDeep.IsEnabled = true;
+                    ScanProgress.Visibility = Visibility.Collapsed;
                     LblInfo.Text = Rows.Count == 0 ? Lang.T("scan.none") : Lang.F("scan.count", Rows.Count, CountCheckable());
                     UpdateAddButton();
                 }));
@@ -141,26 +154,38 @@ namespace CaelusApp.WpfHost.Dialogs
             return n;
         }
 
+        private bool FilterRow(object item)
+        {
+            ScanRow row = item as ScanRow;
+            if (row == null) return false;
+            string needle = TbFilter == null ? "" : TbFilter.Text.Trim();
+            return needle.Length == 0
+                || row.DisplayName.IndexOf(needle, StringComparison.CurrentCultureIgnoreCase) >= 0
+                || row.ExePath.IndexOf(needle, StringComparison.OrdinalIgnoreCase) >= 0;
+        }
+
         private void OnFilterChanged(object sender, TextChangedEventArgs e)
         {
+            if (rowsView == null) return;
             string f = TbFilter.Text.Trim();
             FilterHint.Visibility = f.Length == 0 ? Visibility.Visible : Visibility.Collapsed;
-            if (f.Length == 0) { LstGames.ItemsSource = Rows; return; }
-            var filtered = new ObservableCollection<ScanRow>();
-            foreach (ScanRow r in Rows)
-            {
-                if (r.DisplayName.IndexOf(f, StringComparison.CurrentCultureIgnoreCase) >= 0
-                    || r.ExePath.IndexOf(f, StringComparison.OrdinalIgnoreCase) >= 0)
-                    filtered.Add(r);
-            }
-            LstGames.ItemsSource = filtered;
+            rowsView.Refresh();
+            UpdateAddButton();
         }
 
         private void OnSelectAll(object sender, RoutedEventArgs e)
         {
             bool anyUnchecked = false;
-            foreach (ScanRow r in Rows) if (r.CanCheck && !r.Checked) { anyUnchecked = true; break; }
-            foreach (ScanRow r in Rows) if (r.CanCheck) r.Checked = anyUnchecked;
+            foreach (object item in rowsView)
+            {
+                ScanRow row = item as ScanRow;
+                if (row != null && row.CanCheck && !row.Checked) { anyUnchecked = true; break; }
+            }
+            foreach (object item in rowsView)
+            {
+                ScanRow row = item as ScanRow;
+                if (row != null && row.CanCheck) row.Checked = anyUnchecked;
+            }
             UpdateAddButton();
         }
 
@@ -169,7 +194,7 @@ namespace CaelusApp.WpfHost.Dialogs
             var dlg = new Microsoft.Win32.OpenFileDialog();
             dlg.Title = Lang.T("ofd.game");
             dlg.Filter = Lang.T("ofd.filter");
-            dlg.CheckFileExists = false;
+            dlg.CheckFileExists = true;
             if (dlg.ShowDialog() != true) return;
             string resolved, error;
             if (!GameExecutableResolver.TryResolve(dlg.FileName, out resolved, out error))
@@ -193,7 +218,7 @@ namespace CaelusApp.WpfHost.Dialogs
             };
             row.PropertyChanged += OnRowPropertyChanged;
             Rows.Add(row);
-            LstGames.ItemsSource = Rows;
+            rowsView.Refresh();
             LstGames.SelectedItem = row;
             LblInfo.Text = "";
             UpdateAddButton();
@@ -243,18 +268,27 @@ namespace CaelusApp.WpfHost.Dialogs
         {
             ScanRow row = LstGames.SelectedItem as ScanRow;
             if (row == null || !row.CanCheck) return;
-            row.Checked = true;
-            OnAccept(null, null);
+            row.Checked = !row.Checked;
         }
 
         private void UpdateAddButton()
         {
             int n = 0;
             foreach (ScanRow r in Rows) if (r.Checked && r.CanCheck) n++;
-            ScanRow selected = LstGames.SelectedItem as ScanRow;
-            if (n == 0 && selected != null && selected.CanCheck) n = 1;
             BtnAdd.Content = n > 0 ? Lang.F("scan.add.n", n) : Lang.T("btn.add");
             BtnAdd.IsEnabled = n > 0;
+
+            bool hasVisible = false;
+            bool allVisibleChecked = true;
+            foreach (object item in rowsView)
+            {
+                ScanRow row = item as ScanRow;
+                if (row == null || !row.CanCheck) continue;
+                hasVisible = true;
+                if (!row.Checked) allVisibleChecked = false;
+            }
+            BtnSelectAll.IsEnabled = hasVisible && ScanProgress.Visibility != Visibility.Visible;
+            BtnSelectAll.Content = hasVisible && allVisibleChecked ? "取消全选" : "全选";
         }
 
         private void OnAccept(object sender, RoutedEventArgs e)
@@ -266,17 +300,6 @@ namespace CaelusApp.WpfHost.Dialogs
                 {
                     SelectedHits.Add(new ScanHit { Name = r.Name, Root = r.Root, Exe = r.ExePath });
                 }
-            }
-            if (SelectedHits.Count == 0)
-            {
-                ScanRow selected = LstGames.SelectedItem as ScanRow;
-                if (selected != null && selected.CanCheck)
-                    SelectedHits.Add(new ScanHit
-                    {
-                        Name = selected.Name,
-                        Root = selected.Root,
-                        Exe = selected.ExePath
-                    });
             }
             if (SelectedHits.Count == 0) return;
             closed = true;

@@ -7,7 +7,8 @@
         Background="{DynamicResource BackgroundBrush}"
         FontFamily="{DynamicResource FontUi}"
         ResizeMode="CanResize" MinWidth="560" MinHeight="440"
-        AutomationProperties.Name="选择运行中的程序">
+        AutomationProperties.Name="选择运行中的程序"
+        PreviewKeyDown="OnWindowKeyDown">
   <Grid Margin="24,20,24,20">
     <Grid.RowDefinitions>
       <RowDefinition Height="Auto"/>
@@ -84,10 +85,25 @@
                           Checked="OnRowCheckedChanged" Unchecked="OnRowCheckedChanged"
                           AutomationProperties.Name="{Binding Title}"
                           AutomationProperties.HelpText="{Binding Path}"/>
-                <Image Grid.Column="1" Source="{Binding Icon}" Width="28" Height="28"
-                       Margin="0,0,12,0" VerticalAlignment="Center"
-                       Stretch="Uniform" SnapsToDevicePixels="True"
-                       AutomationProperties.Name="程序图标"/>
+                <Grid Grid.Column="1" Width="28" Height="28" Margin="0,0,12,0" VerticalAlignment="Center">
+                  <Border CornerRadius="6" Background="{DynamicResource AccentSoftBrush}"
+                          BorderBrush="{DynamicResource AccentEdgeBrush}" BorderThickness="1">
+                    <Border.Style>
+                      <Style TargetType="Border">
+                        <Setter Property="Visibility" Value="Collapsed"/>
+                        <Style.Triggers>
+                          <DataTrigger Binding="{Binding Icon}" Value="{x:Null}">
+                            <Setter Property="Visibility" Value="Visible"/>
+                          </DataTrigger>
+                        </Style.Triggers>
+                      </Style>
+                    </Border.Style>
+                    <TextBlock Text="{Binding Initial}" HorizontalAlignment="Center" VerticalAlignment="Center"
+                               FontSize="11" FontWeight="SemiBold" Foreground="{DynamicResource ModeAccentBrush}"/>
+                  </Border>
+                  <Image Source="{Binding Icon}" Stretch="Uniform" SnapsToDevicePixels="True"
+                         AutomationProperties.Name="程序图标"/>
+                </Grid>
                 <StackPanel Grid.Column="2" VerticalAlignment="Center">
                   <TextBlock Text="{Binding Title}" FontWeight="SemiBold"
                              Foreground="{DynamicResource TextPrimaryBrush}" FontSize="12"
@@ -112,15 +128,19 @@
         <ColumnDefinition Width="*"/>
         <ColumnDefinition Width="Auto"/>
         <ColumnDefinition Width="Auto"/>
+        <ColumnDefinition Width="Auto"/>
       </Grid.ColumnDefinitions>
       <TextBlock Grid.Column="0" x:Name="LblInfo" Text="正在看有哪些程序开着…"
                  FontSize="11" Foreground="{DynamicResource TextSecondaryBrush}"
                  TextWrapping="Wrap" VerticalAlignment="Center"
                  AutomationProperties.Name="扫描状态"/>
-      <Button Grid.Column="1" Content="取消" Click="OnCancel" IsCancel="True"
-              Style="{DynamicResource GhostButton}" Padding="14,7" Margin="12,0,0,0"
+      <Button Grid.Column="1" x:Name="BtnRefresh" Content="刷新" Click="OnRefresh"
+              Style="{DynamicResource GhostButton}" Padding="12,7" Margin="12,0,0,0"
+              AutomationProperties.Name="刷新运行中的程序"/>
+      <Button Grid.Column="2" Content="取消" Click="OnCancel" IsCancel="True"
+              Style="{DynamicResource GhostButton}" Padding="14,7" Margin="8,0,0,0"
               AutomationProperties.Name="取消选择运行中的程序"/>
-      <Button Grid.Column="2" x:Name="BtnAdd" Content="加入白名单" Click="OnAccept"
+      <Button Grid.Column="3" x:Name="BtnAdd" Content="加入白名单" Click="OnAccept"
               Padding="18,7" Margin="8,0,0,0" IsEnabled="False" IsDefault="True"
               Style="{DynamicResource PrimaryButton}"
               AutomationProperties.Name="把所选程序加入白名单"/>

@@ -25,6 +25,14 @@ namespace CaelusApp.WpfHost.Dialogs
             public long Memory { get; set; }
             public int Count { get; set; }
             public BitmapSource Icon { get; set; }
+            public string Initial
+            {
+                get
+                {
+                    return string.IsNullOrEmpty(Title) ? "?"
+                        : Title.Substring(0, 1).ToUpperInvariant();
+                }
+            }
 
             public string Detail
             {
@@ -47,6 +55,7 @@ namespace CaelusApp.WpfHost.Dialogs
         private readonly ObservableCollection<Entry> all;
         private readonly ObservableCollection<Entry> shown;
         private volatile bool closed;
+        private bool scanning;
 
         internal List<string> SelectedPaths { get; private set; }
 
@@ -65,6 +74,7 @@ namespace CaelusApp.WpfHost.Dialogs
             shown = new ObservableCollection<Entry>();
             SelectedPaths = new List<string>();
             LstPrograms.ItemsSource = shown;
+            Motion.SetPoliteLiveSetting(LblInfo);
             Loaded += OnLoaded;
         }
 
@@ -78,9 +88,14 @@ namespace CaelusApp.WpfHost.Dialogs
 
         private void BeginScan()
         {
+            if (scanning) return;
+            scanning = true;
+            var selectedBefore = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+            foreach (Entry entry in all) if (entry.Checked) selectedBefore.Add(entry.Path);
             LblInfo.Text = Lang.T("white.pick.busy");
             BtnSelectAll.IsEnabled = false;
             BtnAdd.IsEnabled = false;
+            BtnRefresh.IsEnabled = false;
 
             Thread thread = new Thread(delegate()
             {
@@ -91,15 +106,17 @@ namespace CaelusApp.WpfHost.Dialogs
                 Dispatcher.BeginInvoke(new Action(delegate
                 {
                     if (closed) return;
+                    UnsubscribeEntries();
                     all.Clear();
                     foreach (Entry entry in found)
                     {
+                        entry.Checked = selectedBefore.Contains(entry.Path);
                         entry.PropertyChanged += OnEntryPropertyChanged;
                         all.Add(entry);
                     }
+                    scanning = false;
+                    BtnRefresh.IsEnabled = true;
                     ApplyFilter();
-                    LblInfo.Text = all.Count == 0
-                        ? Lang.T("white.pick.none") : Lang.F("white.pick.count", all.Count);
                     UpdateSelectionState();
                     if (shown.Count > 0)
                     {
@@ -290,18 +307,38 @@ namespace CaelusApp.WpfHost.Dialogs
         private void UpdateSelectionState()
         {
             if (all == null || shown == null) return;
-            int selected = 0;
+            int selected = 0, shownSelected = 0;
             foreach (Entry entry in all) if (entry.Checked) selected++;
+            foreach (Entry entry in shown) if (entry.Checked) shownSelected++;
             BtnAdd.Content = selected > 0
                 ? Lang.F("white.pick.add.n", selected) : Lang.T("white.pick.add");
-            BtnAdd.IsEnabled = selected > 0;
-            BtnSelectAll.IsEnabled = shown.Count > 0;
+            BtnAdd.IsEnabled = selected > 0 && !scanning;
+            BtnSelectAll.IsEnabled = shown.Count > 0 && !scanning;
             bool allShownChecked = shown.Count > 0;
             foreach (Entry entry in shown)
             {
                 if (!entry.Checked) { allShownChecked = false; break; }
             }
             BtnSelectAll.Content = allShownChecked ? "取消全选" : "全选";
+            if (!scanning)
+            {
+                int hiddenSelected = selected - shownSelected;
+                LblInfo.Text = all.Count == 0 ? Lang.T("white.pick.none")
+                    : "显示 " + shown.Count + " / 共 " + all.Count + " · 已选 " + selected
+                    + (hiddenSelected > 0 ? "（其中 " + hiddenSelected + " 项被筛选隐藏）" : "");
+            }
+        }
+
+        private void OnRefresh(object sender, RoutedEventArgs e)
+        {
+            BeginScan();
+        }
+
+        private void OnWindowKeyDown(object sender, KeyEventArgs e)
+        {
+            if (e.Key != Key.F5 || scanning) return;
+            BeginScan();
+            e.Handled = true;
         }
 
         private void OnAccept(object sender, RoutedEventArgs e)
@@ -331,6 +368,7 @@ namespace CaelusApp.WpfHost.Dialogs
         protected override void OnClosed(EventArgs e)
         {
             closed = true;
+            scanning = false;
             UnsubscribeEntries();
             base.OnClosed(e);
         }

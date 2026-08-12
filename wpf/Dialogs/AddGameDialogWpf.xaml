@@ -56,8 +56,12 @@
           </Grid.ColumnDefinitions>
           <TextBlock Text="扫描结果" FontSize="13" FontWeight="SemiBold"
                      Foreground="{DynamicResource TextPrimaryBrush}"/>
-          <TextBlock Grid.Column="1" Text="空格勾选 · 回车添加" FontSize="10"
-                     Foreground="{DynamicResource TextTertiaryBrush}" VerticalAlignment="Center"/>
+          <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
+            <ProgressBar x:Name="ScanProgress" Width="72" Height="3" Margin="0,0,10,0"
+                         IsIndeterminate="True" Visibility="Collapsed"/>
+            <TextBlock Text="空格勾选 · 双击切换 · 回车添加" FontSize="10"
+                       Foreground="{DynamicResource TextTertiaryBrush}" VerticalAlignment="Center"/>
+          </StackPanel>
         </Grid>
 
         <ListBox Grid.Row="1" x:Name="LstGames" Background="Transparent" BorderThickness="0"

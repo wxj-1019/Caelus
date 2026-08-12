@@ -86,6 +86,16 @@ namespace CaelusApp.WpfHost
             // Aurora 氛围层启动显示（App 启动时已换槽主题资源；ModeController 负责后续切换过渡）
             Loaded += delegate { Ambient.Show(); };
             Motion.PolicyChanged += OnMotionPolicyChanged;
+            // 主题/模式换槽统一过渡：ModeChanged 在每次 ThemeManager.Apply（模式或深浅主题）后触发，
+            // 在此集中 CrossFade 内容，替代各调用点的零散 CrossFade（含深浅主题切换这一原缺口）。
+            ThemeManager.ModeChanged += OnThemeChanged;
+        }
+
+        private void OnThemeChanged(object sender, System.EventArgs e)
+        {
+            if (!IsLoaded) return;
+            FrameworkElement current = PageHost.Content as FrameworkElement;
+            if (current != null) Motion.CrossFade(current);
         }
 
         internal void ApplyPersistedMode(AppMode mode)
@@ -105,8 +115,7 @@ namespace CaelusApp.WpfHost
             ModeController.SwitchTo(Application.Current, mode, Ambient, source, vm, true);
             gameMode.Preset = ModeController.ToPreset(mode);
             policyVm.RefreshLocks();
-            FrameworkElement current = PageHost.Content as FrameworkElement;
-            if (current != null) Motion.CrossFade(current);
+            // 内容 CrossFade 由 OnThemeChanged 集中处理（ModeChanged 在 SwitchTo→Apply 后触发）
         }
 
         private void TitleBarDrag(object sender, MouseButtonEventArgs e)
@@ -155,6 +164,7 @@ namespace CaelusApp.WpfHost
         protected override void OnClosed(EventArgs e)
         {
             Motion.PolicyChanged -= OnMotionPolicyChanged;
+            ThemeManager.ModeChanged -= OnThemeChanged;
             base.OnClosed(e);
         }
 
@@ -332,8 +342,7 @@ namespace CaelusApp.WpfHost
             source.SetMode(mode);
             vm.Refresh();
             policyVm.RefreshLocks();
-            FrameworkElement current = PageHost.Content as FrameworkElement;
-            if (current != null) Motion.CrossFade(current);
+            // 内容 CrossFade 由 OnThemeChanged 集中处理
         }
 
         internal FrameworkElement NavigateToForShot(string page)

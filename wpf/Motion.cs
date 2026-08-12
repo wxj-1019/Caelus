@@ -141,6 +141,11 @@ namespace CaelusApp.WpfHost
                 TranslateTransform settled = TranslateOf(element);
                 settled.BeginAnimation(TranslateTransform.YProperty, null);
                 settled.Y = 0;
+                ScaleTransform settledScale = ScaleOf(element);
+                settledScale.BeginAnimation(ScaleTransform.ScaleXProperty, null);
+                settledScale.BeginAnimation(ScaleTransform.ScaleYProperty, null);
+                settledScale.ScaleX = 1;
+                settledScale.ScaleY = 1;
                 return;
             }
             int ms = UiMotion.PageFadeMs;
@@ -148,7 +153,14 @@ namespace CaelusApp.WpfHost
             AnimateDelayed(element, UIElement.OpacityProperty, 0, 1, ms, delayMs);
             TranslateTransform translate = TranslateOf(element);
             translate.Y = 10;
-            AnimateDelayed(translate, TranslateTransform.YProperty, 10, 0, ms, delayMs);
+            // 位移走弹簧曲线（轻微过冲回正 = iOS 入场手感）；opacity 仍走标准减速
+            AnimateSpringDelayed(translate, TranslateTransform.YProperty, 10, 0, ms, delayMs);
+            // 轻微缩放落定（0.96→1，标准减速不过冲）= 材质感入场；reduced 时上方已置 1
+            ScaleTransform scale = ScaleOf(element);
+            scale.ScaleX = 0.96;
+            scale.ScaleY = 0.96;
+            AnimateDelayed(scale, ScaleTransform.ScaleXProperty, 0.96, 1, ms, delayMs);
+            AnimateDelayed(scale, ScaleTransform.ScaleYProperty, 0.96, 1, ms, delayMs);
         }
 
         // 占比条入场生长：左端点为原点 scaleX 0→1（reduced 时直接满宽）
@@ -266,21 +278,29 @@ namespace CaelusApp.WpfHost
             }
         }
 
-        private static void OnLiftEnter(object sender, MouseEventArgs e) { LiftTo((UIElement)sender, -2); }
-        private static void OnLiftLeave(object sender, MouseEventArgs e) { LiftTo((UIElement)sender, 0); }
+        private static void OnLiftEnter(object sender, MouseEventArgs e) { LiftTo((UIElement)sender, -2, 1.02); }
+        private static void OnLiftLeave(object sender, MouseEventArgs e) { LiftTo((UIElement)sender, 0, 1.0); }
 
-        private static void LiftTo(UIElement element, double y)
+        // 悬停：上浮 y px + 轻微放大 scale（90ms 减速，平滑过渡）。reduced 时直接复位。
+        private static void LiftTo(UIElement element, double y, double scale)
         {
             FrameworkElement fe = element as FrameworkElement;
             if (fe == null) return;
             TranslateTransform translate = TranslateOf(fe);
+            ScaleTransform sc = ScaleOf(fe);
             if (!Enabled || Reduced)
             {
                 translate.BeginAnimation(TranslateTransform.YProperty, null);
                 translate.Y = 0;
+                sc.BeginAnimation(ScaleTransform.ScaleXProperty, null);
+                sc.BeginAnimation(ScaleTransform.ScaleYProperty, null);
+                sc.ScaleX = 1;
+                sc.ScaleY = 1;
                 return;
             }
             Animate(translate, TranslateTransform.YProperty, translate.Y, y, UiMotion.ButtonPressMs);
+            Animate(sc, ScaleTransform.ScaleXProperty, sc.ScaleX, scale, UiMotion.ButtonPressMs);
+            Animate(sc, ScaleTransform.ScaleYProperty, sc.ScaleY, scale, UiMotion.ButtonPressMs);
         }
 
         public static readonly DependencyProperty PressProperty = DependencyProperty.RegisterAttached(
@@ -479,9 +499,22 @@ namespace CaelusApp.WpfHost
 
         private static DoubleAnimation BuildAnimation(double from, double to, int milliseconds)
         {
+            // QuinticEase EaseOut：比 CubicEase 更陡的"快起长收"，接近 iOS 默认减速曲线，
+            // 让入场/交互动画更有苹果质感；无过冲，对占比条/缩放等也安全。
             return new DoubleAnimation(from, to, TimeSpan.FromMilliseconds(milliseconds))
             {
-                EasingFunction = new CubicEase { EasingMode = EasingMode.EaseOut },
+                EasingFunction = new QuinticEase { EasingMode = EasingMode.EaseOut },
+                FillBehavior = FillBehavior.Stop
+            };
+        }
+
+        // 弹性回弹变体：仅用于入场位移（RiseIn 的 translate），轻微过冲后回正 = iOS 弹簧手感。
+        // 不用于 opacity（过冲被 clamp 无意义）与占比条（过冲宽度显怪）。
+        private static DoubleAnimation BuildSpringAnimation(double from, double to, int milliseconds)
+        {
+            return new DoubleAnimation(from, to, TimeSpan.FromMilliseconds(milliseconds))
+            {
+                EasingFunction = new BackEase { Amplitude = 0.3, EasingMode = EasingMode.EaseOut },
                 FillBehavior = FillBehavior.Stop
             };
         }
@@ -516,6 +549,26 @@ namespace CaelusApp.WpfHost
                 return;
             }
             DoubleAnimation animation = BuildAnimation(from, to, milliseconds);
+            if (delayMs > 0) animation.BeginTime = TimeSpan.FromMilliseconds(delayMs);
+            animation.Completed += delegate
+            {
+                target.BeginAnimation(property, null);
+                target.SetValue(property, to);
+            };
+            target.BeginAnimation(property, animation, HandoffBehavior.SnapshotAndReplace);
+        }
+
+        // 弹性版（入场位移用）：BuildSpringAnimation 轻微过冲后回正
+        private static void AnimateSpringDelayed(Animatable target, DependencyProperty property,
+            double from, double to, int milliseconds, int delayMs)
+        {
+            if (!Enabled || milliseconds <= 0)
+            {
+                target.BeginAnimation(property, null);
+                target.SetValue(property, to);
+                return;
+            }
+            DoubleAnimation animation = BuildSpringAnimation(from, to, milliseconds);
             if (delayMs > 0) animation.BeginTime = TimeSpan.FromMilliseconds(delayMs);
             animation.Completed += delegate
             {

@@ -128,6 +128,15 @@
 
       <StackPanel x:Name="ZoneGroups">
         <StackPanel Orientation="Horizontal" Margin="0,0,0,8">
+          <Border Width="30" Height="30" CornerRadius="{DynamicResource RadiusSm}"
+                  Background="{DynamicResource AccentSoftBrush}"
+                  BorderBrush="{DynamicResource AccentEdgeBrush}" BorderThickness="1"
+                  VerticalAlignment="Center" Margin="0,0,12,0">
+            <Viewbox Width="16" Height="16">
+              <Path Data="M12 3l7 3v5c0 4.5-3 8.5-7 10-4-1.5-7-5.5-7-10V6z"
+                    Stroke="{DynamicResource ModeAccentBrush}" StrokeThickness="2" StrokeLineJoin="Round"/>
+            </Viewbox>
+          </Border>
           <TextBlock Text="{Binding BoundaryTitle}" FontSize="{DynamicResource FontSizeBody}"
                      FontWeight="SemiBold" Foreground="{DynamicResource TextPrimaryBrush}" VerticalAlignment="Center"/>
         </StackPanel>

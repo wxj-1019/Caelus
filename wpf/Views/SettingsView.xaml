@@ -38,7 +38,18 @@
       </Border>
 
       <StackPanel x:Name="ZoneApp">
-        <TextBlock Text="{Binding AppSectionTitle}" FontSize="{DynamicResource FontSizeBody}" FontWeight="SemiBold" Foreground="{DynamicResource TextPrimaryBrush}" Margin="0,0,0,3"/>
+        <StackPanel Orientation="Horizontal" Margin="0,0,0,8">
+          <Border Width="28" Height="28" CornerRadius="{DynamicResource RadiusSm}"
+                  Background="{DynamicResource AccentSoftBrush}" BorderBrush="{DynamicResource AccentEdgeBrush}"
+                  BorderThickness="1" VerticalAlignment="Center" Margin="0,0,10,0">
+            <Viewbox Width="15" Height="15">
+              <Path Data="M3 12a9 9 0 1 1 18 0 9 9 0 1 1-18 0 M12 5v2 M12 17v2 M5 12h2 M17 12h2"
+                    Stroke="{DynamicResource ModeAccentBrush}" StrokeThickness="2" StrokeLineJoin="Round"/>
+            </Viewbox>
+          </Border>
+          <TextBlock Text="{Binding AppSectionTitle}" FontSize="{DynamicResource FontSizeBody}"
+                     FontWeight="SemiBold" Foreground="{DynamicResource TextPrimaryBrush}" VerticalAlignment="Center"/>
+        </StackPanel>
         <TextBlock Text="启动、窗口和外观偏好会立即保存。" FontSize="10" Foreground="{DynamicResource TextTertiaryBrush}" Margin="0,0,0,8"/>
         <Border Style="{DynamicResource SettingsGroup}" Margin="0,0,0,16">
           <StackPanel>
@@ -50,7 +61,18 @@
       </StackPanel>
 
       <StackPanel x:Name="ZoneDev">
-        <TextBlock Text="开发" FontSize="{DynamicResource FontSizeBody}" FontWeight="SemiBold" Foreground="{DynamicResource TextPrimaryBrush}" Margin="0,0,0,3"/>
+        <StackPanel Orientation="Horizontal" Margin="0,0,0,8">
+          <Border Width="28" Height="28" CornerRadius="{DynamicResource RadiusSm}"
+                  Background="{DynamicResource AccentSoftBrush}" BorderBrush="{DynamicResource AccentEdgeBrush}"
+                  BorderThickness="1" VerticalAlignment="Center" Margin="0,0,10,0">
+            <Viewbox Width="15" Height="15">
+              <Path Data="M9.5 2L2 9.5 4.5 12l5-5 2.5 2.5L22 2z M2 22h20"
+                    Stroke="{DynamicResource ModeAccentBrush}" StrokeThickness="2" StrokeStartLineCap="Round" StrokeEndLineCap="Round" StrokeLineJoin="Round"/>
+            </Viewbox>
+          </Border>
+          <TextBlock Text="开发" FontSize="{DynamicResource FontSizeBody}"
+                     FontWeight="SemiBold" Foreground="{DynamicResource TextPrimaryBrush}" VerticalAlignment="Center"/>
+        </StackPanel>
         <TextBlock Text="仅在调试自定义构建识别时启用。" FontSize="10" Foreground="{DynamicResource TextTertiaryBrush}" Margin="0,0,0,8"/>
         <Border Style="{DynamicResource SettingsGroup}" Margin="0,0,0,16">
           <StackPanel>
@@ -61,7 +83,18 @@
       </StackPanel>
 
       <StackPanel x:Name="ZoneMaint">
-        <TextBlock Text="{Binding MaintSectionTitle}" FontSize="{DynamicResource FontSizeBody}" FontWeight="SemiBold" Foreground="{DynamicResource TextPrimaryBrush}" Margin="0,0,0,3"/>
+        <StackPanel Orientation="Horizontal" Margin="0,0,0,8">
+          <Border Width="28" Height="28" CornerRadius="{DynamicResource RadiusSm}"
+                  Background="{DynamicResource AccentSoftBrush}" BorderBrush="{DynamicResource AccentEdgeBrush}"
+                  BorderThickness="1" VerticalAlignment="Center" Margin="0,0,10,0">
+            <Viewbox Width="15" Height="15">
+              <Path Data="M12 3l7 3v5c0 4.5-3 8.5-7 10-4-1.5-7-5.5-7-10V6z"
+                    Stroke="{DynamicResource ModeAccentBrush}" StrokeThickness="2" StrokeLineJoin="Round"/>
+            </Viewbox>
+          </Border>
+          <TextBlock Text="{Binding MaintSectionTitle}" FontSize="{DynamicResource FontSizeBody}"
+                     FontWeight="SemiBold" Foreground="{DynamicResource TextPrimaryBrush}" VerticalAlignment="Center"/>
+        </StackPanel>
         <TextBlock Text="维护操作保持原有范围，执行状态会显示在当前页面。" FontSize="10" Foreground="{DynamicResource TextTertiaryBrush}" Margin="0,0,0,8"/>
         <Border Style="{DynamicResource SettingsGroup}" Margin="0,0,0,16">
           <StackPanel>

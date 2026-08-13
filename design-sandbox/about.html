@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="zh-CN" data-theme="dark" data-mode="standard">
+<head>
+<meta charset="UTF-8">
+<title>Caelus 设计沙盒 · 关于</title>
+<link rel="stylesheet" href="tokens.css">
+<link rel="stylesheet" href="sandbox.css">
+</head>
+<body>
+<div class="aurora" aria-hidden="true">
+  <div class="aurora-blob aurora-blob-1"></div><div class="aurora-blob aurora-blob-2"></div><div class="aurora-blob aurora-blob-3"></div>
+</div>
+<div class="app-shell">
+  <header class="titlebar"><div class="titlebar-brand">C A E L U S <span class="titlebar-badge">SANDBOX</span></div><div class="titlebar-buttons"><button class="win-btn">−</button><button class="win-btn">□</button><button class="win-btn win-btn-close">×</button></div></header>
+  <div class="app-body">
+    <aside class="sidebar">
+      <div class="sidebar-brand"><p class="brand-name">caelus</p><p class="brand-sub">游戏环境控制台</p></div>
+      <nav class="sidebar-nav">
+        <div class="nav-group-label">工作台</div><button class="nav-item" data-nav-demo>概览</button><button class="nav-item" data-nav-demo>游戏库</button>
+        <div class="nav-group-label">游戏调优</div><button class="nav-item" data-nav-demo>优化策略</button><button class="nav-item" data-nav-demo>显卡</button><button class="nav-item" data-nav-demo>反作弊专项</button>
+        <div class="nav-group-label">系统</div><button class="nav-item" data-nav-demo>系统环境</button><button class="nav-item" data-nav-demo>白名单</button>
+        <div class="nav-group-label">诊断</div><button class="nav-item" data-nav-demo>系统体检</button><button class="nav-item" data-nav-demo>日志</button>
+        <div class="nav-group-label">性能模式</div><div style="margin:0 8px 4px"><div class="segment-host" style="display:flex;width:100%"><div class="segment-indicator"></div><button class="segment-item is-checked" style="flex:1" data-sandbox-mode="standard">巡航</button><button class="segment-item" style="flex:1" data-sandbox-mode="competitive">竞技</button><button class="segment-item" style="flex:1" data-sandbox-mode="custom">自定义</button></div></div>
+      </nav>
+      <div class="sidebar-bottom"><button class="nav-item" data-nav-demo>设置</button><button class="nav-item is-checked" data-nav-demo>关于</button></div>
+    </aside>
+    <main class="content"><div class="content-inner">
+
+      <div style="margin-bottom:16px" class="rise-in rise-in-1">
+        <h1 class="page-header">关于</h1><p class="page-subtitle">版本、项目与更新</p>
+      </div>
+
+      <div class="settings-group rise-in rise-in-2" style="margin-bottom:18px">
+        <div class="policy-row" style="padding:20px 24px;flex-direction:column;gap:10px;align-items:center;text-align:center">
+          <div style="font-size:28px;font-weight:700;color:var(--text-primary);letter-spacing:.08em">C A E L U S</div>
+          <div class="text-secondary" style="font-size:13px">游戏环境控制台</div>
+          <div class="text-tertiary" style="font-size:11px">v1.8.0 · 2026-08-14</div>
+        </div>
+      </div>
+
+      <div class="settings-group rise-in rise-in-3" style="margin-bottom:18px">
+        <div class="policy-row"><div style="flex:1"><div class="card-label">版本</div><div style="font-size:14px;color:var(--text-primary);font-weight:600;margin-top:4px">1.8.0 (2026-08-14)</div></div></div>
+        <div class="policy-row"><div style="flex:1"><div class="card-label">作者</div><div style="font-size:14px;color:var(--text-primary);font-weight:600;margin-top:4px">zenjiro</div><div class="text-tertiary" style="font-size:11px;margin-top:2px">18967498922@163.com</div></div></div>
+        <div class="policy-row"><div style="flex:1"><div class="card-label">仓库</div><div style="font-size:14px;margin-top:4px"><a href="https://github.com/wxj-1019/Caelus" style="color:var(--mode-accent);text-decoration:none">github.com/wxj-1019/Caelus</a></div></div></div>
+        <div class="policy-row"><div style="flex:1"><div class="card-label">框架</div><div style="font-size:14px;color:var(--text-primary);margin-top:4px">WPF (.NET Framework 4.0) · Aurora Bento 视觉系统</div></div></div>
+      </div>
+
+      <div class="settings-group rise-in rise-in-4">
+        <div style="padding:16px;border-bottom:1px solid var(--border-subtle)">
+          <div class="section-title">版本更新</div>
+          <div class="card-label" style="margin-top:4px">检查是否有新版本可用</div>
+        </div>
+        <div class="policy-row" style="justify-content:center;padding:16px">
+          <button class="btn btn-primary">检查更新</button>
+        </div>
+      </div>
+
+    </div></main>
+  </div>
+</div>
+<div class="sandbox-toolbar">
+  <span class="sandbox-toolbar-label">主题</span><div class="segment-host"><div class="segment-indicator"></div><button class="segment-item is-checked" data-sandbox-theme="dark">深色</button><button class="segment-item" data-sandbox-theme="light">浅色</button></div>
+  <span class="sandbox-toolbar-label">模式</span><div class="segment-host"><div class="segment-indicator"></div><button class="segment-item is-checked" data-sandbox-mode="standard">巡航</button><button class="segment-item" data-sandbox-mode="competitive">竞技</button><button class="segment-item" data-sandbox-mode="custom">自定义</button></div>
+</div>
+<script src="sandbox.js"></script>
+</body>
+</html>

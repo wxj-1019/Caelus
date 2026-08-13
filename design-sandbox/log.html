@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="zh-CN" data-theme="dark" data-mode="standard">
+<head>
+<meta charset="UTF-8">
+<title>Caelus 设计沙盒 · 日志</title>
+<link rel="stylesheet" href="tokens.css">
+<link rel="stylesheet" href="sandbox.css">
+</head>
+<body>
+<div class="aurora" aria-hidden="true">
+  <div class="aurora-blob aurora-blob-1"></div><div class="aurora-blob aurora-blob-2"></div><div class="aurora-blob aurora-blob-3"></div>
+</div>
+<div class="app-shell">
+  <header class="titlebar"><div class="titlebar-brand">C A E L U S <span class="titlebar-badge">SANDBOX</span></div><div class="titlebar-buttons"><button class="win-btn">−</button><button class="win-btn">□</button><button class="win-btn win-btn-close">×</button></div></header>
+  <div class="app-body">
+    <aside class="sidebar">
+      <div class="sidebar-brand"><p class="brand-name">caelus</p><p class="brand-sub">游戏环境控制台</p></div>
+      <nav class="sidebar-nav">
+        <div class="nav-group-label">工作台</div><button class="nav-item" data-nav-demo>概览</button><button class="nav-item" data-nav-demo>游戏库</button>
+        <div class="nav-group-label">游戏调优</div><button class="nav-item" data-nav-demo>优化策略</button><button class="nav-item" data-nav-demo>显卡</button><button class="nav-item" data-nav-demo>反作弊专项</button>
+        <div class="nav-group-label">系统</div><button class="nav-item" data-nav-demo>系统环境</button><button class="nav-item" data-nav-demo>白名单</button>
+        <div class="nav-group-label">诊断</div><button class="nav-item" data-nav-demo>系统体检</button><button class="nav-item is-checked" data-nav-demo>日志</button>
+        <div class="nav-group-label">性能模式</div><div style="margin:0 8px 4px"><div class="segment-host" style="display:flex;width:100%"><div class="segment-indicator"></div><button class="segment-item is-checked" style="flex:1" data-sandbox-mode="standard">巡航</button><button class="segment-item" style="flex:1" data-sandbox-mode="competitive">竞技</button><button class="segment-item" style="flex:1" data-sandbox-mode="custom">自定义</button></div></div>
+      </nav>
+      <div class="sidebar-bottom"><button class="nav-item" data-nav-demo>设置</button><button class="nav-item" data-nav-demo>关于</button></div>
+    </aside>
+    <main class="content"><div class="content-inner" style="height:calc(100vh - 84px);display:flex;flex-direction:column">
+      <div style="margin-bottom:16px" class="rise-in rise-in-1">
+        <h1 class="page-header">日志</h1><p class="page-subtitle">运行记录与诊断</p>
+      </div>
+      <div class="card rise-in rise-in-2" style="flex:1;display:flex;flex-direction:column;padding:0;overflow:hidden">
+        <div style="padding:10px 14px;border-bottom:1px solid var(--border-subtle);display:flex;justify-content:space-between;align-items:center">
+          <span class="card-label">实时记录</span>
+          <div style="display:flex;gap:8px"><button class="btn btn-ghost" style="padding:5px 10px">打开日志文件</button><button class="btn btn-danger" style="padding:5px 10px">清除日志</button></div>
+        </div>
+        <div style="flex:1;padding:14px;overflow-y:auto;font-family:var(--font-mono);font-size:12px;line-height:1.6;color:var(--text-secondary)">
+          <div><span class="text-tertiary" style="font-size:10px">01:15:02</span> <span class="text-accent">[INFO]</span> 主题已切换：深色 × 巡航</div>
+          <div><span class="text-tertiary" style="font-size:10px">01:15:03</span> <span class="text-accent">[INFO]</span> Aurora 氛围层启动（三环漂移 26s）</div>
+          <div><span class="text-tertiary" style="font-size:10px">01:15:03</span> <span class="text-accent">[INFO]</span> SparkleLayer 已启动（8fps 节流）</div>
+          <div><span class="text-tertiary" style="font-size:10px">01:15:04</span> <span class="text-accent">[INFO]</span> 反作弊总开关：已开启</div>
+          <div><span class="text-tertiary" style="font-size:10px">01:15:04</span> <span style="color:var(--success)">[OK]</span> ACE 反作弊：已检测到进程，自动分配保护</div>
+          <div><span class="text-tertiary" style="font-size:10px">01:15:04</span> <span style="color:var(--success)">[OK]</span> 腾讯安全 TP：已检测到进程，保护等级=均衡</div>
+          <div><span class="text-tertiary" style="font-size:10px">01:15:05</span> <span class="text-accent">[INFO]</span> 优化策略加载：巡航预设（21 项，12 已启用）</div>
+          <div><span class="text-tertiary" style="font-size:10px">01:15:06</span> <span class="text-accent">[INFO]</span> GPU: NVIDIA RTX 4070 · 驱动 566.14</div>
+          <div><span class="text-tertiary" style="font-size:10px">01:15:06</span> <span class="text-accent">[INFO]</span> 温度传感器就绪，Sparkline 面积填充已启用</div>
+          <div><span class="text-tertiary" style="font-size:10px">01:15:07</span> <span style="color:var(--warning)">[WARN]</span> 后台占用峰值 18%（偏高，建议开启后台压制）</div>
+          <div><span class="text-tertiary" style="font-size:10px">01:15:07</span> <span class="text-accent">[INFO]</span> 系统体检就绪（快速 3s / 精确 30s）</div>
+          <div><span class="text-tertiary" style="font-size:10px">01:15:08</span> <span style="color:var(--success)">[OK]</span> Spotlight 聚光已挂载到 3 类卡片 + NavItem</div>
+        </div>
+      </div>
+    </div></main>
+  </div>
+</div>
+<div class="sandbox-toolbar">
+  <span class="sandbox-toolbar-label">主题</span><div class="segment-host"><div class="segment-indicator"></div><button class="segment-item is-checked" data-sandbox-theme="dark">深色</button><button class="segment-item" data-sandbox-theme="light">浅色</button></div>
+  <span class="sandbox-toolbar-label">模式</span><div class="segment-host"><div class="segment-indicator"></div><button class="segment-item is-checked" data-sandbox-mode="standard">巡航</button><button class="segment-item" data-sandbox-mode="competitive">竞技</button><button class="segment-item" data-sandbox-mode="custom">自定义</button></div>
+</div>
+<script src="sandbox.js"></script>
+</body>
+</html>

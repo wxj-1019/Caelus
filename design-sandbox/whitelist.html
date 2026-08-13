@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="zh-CN" data-theme="dark" data-mode="standard">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Caelus 设计沙盒 · 白名单</title>
+<link rel="stylesheet" href="tokens.css">
+<link rel="stylesheet" href="sandbox.css">
+<style>
+/* 白名单双栏布局 */
+.wl-layout { display: grid; grid-template-columns: 1fr 260px; gap: 16px; min-height: calc(100vh - 140px); }
+.wl-left, .wl-right { background: var(--surface-0); border: 1px solid var(--border-subtle); border-radius: var(--radius-md); overflow: hidden; }
+.wl-header { padding: 14px 16px; border-bottom: 1px solid var(--border-subtle); }
+.wl-header h3 { font-size: 13px; font-weight: 600; margin: 0; }
+.wl-header p { font-size: 11px; color: var(--text-secondary); margin: 3px 0 0; }
+.wl-header .hint { font-size: 10px; color: var(--text-tertiary); }
+.wl-list { padding: 6px; }
+.wl-group { font-size: 11px; font-weight: 600; color: var(--text-secondary); padding: 12px 12px 6px; display: flex; align-items: center; gap: 12px; }
+.wl-group::after { content: ""; flex: 1; height: 1px; background: var(--border-subtle); }
+.wl-rule { display: grid; grid-template-columns: 1fr auto auto; align-items: center; gap: 12px; padding: 10px 12px; border-radius: var(--radius-sm); cursor: pointer; border: 1px solid transparent; transition: background .18s, border-color .18s; }
+.wl-rule:hover { background: var(--surface-1); border-color: var(--border-strong); }
+.wl-rule.is-selected { background: var(--accent-soft); border-color: var(--accent-edge); }
+.wl-rule .rule-title { font-size: 12px; font-weight: 600; color: var(--text-primary); }
+.wl-rule .rule-sub { font-size: 10px; color: var(--text-tertiary); font-family: var(--font-mono); margin-top: 3px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.wl-rule .rule-badge { font-size: 10px; color: var(--text-secondary); background: var(--surface-1); border: 1px solid var(--border-subtle); border-radius: var(--radius-sm); padding: 2px 7px; }
+.wl-rule .rule-status { display: flex; align-items: center; gap: 6px; }
+.wl-rule .rule-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--text-tertiary); }
+.wl-rule .rule-dot.is-live { background: var(--success); }
+.wl-right { padding: 16px; display: flex; flex-direction: column; gap: 0; }
+.wl-right h3 { font-size: 13px; font-weight: 600; margin: 0 0 10px; }
+.wl-right .field-label { font-size: 10px; color: var(--text-tertiary); margin: 12px 0 3px; }
+.wl-right .field-value { font-size: 11px; color: var(--text-secondary); word-break: break-all; }
+.wl-right .field-value.mono { font-family: var(--font-mono); }
+.wl-right .divider { height: 1px; background: var(--border-subtle); margin: 14px 0; }
+</style>
+</head>
+<body>
+
+<div class="aurora" aria-hidden="true">
+  <div class="aurora-blob aurora-blob-1"></div>
+  <div class="aurora-blob aurora-blob-2"></div>
+  <div class="aurora-blob aurora-blob-3"></div>
+</div>
+
+<div class="app-shell">
+  <header class="titlebar">
+    <div class="titlebar-brand">C A E L U S <span class="titlebar-badge">SANDBOX</span></div>
+    <div class="titlebar-buttons">
+      <button class="win-btn">−</button><button class="win-btn">□</button><button class="win-btn win-btn-close">×</button>
+    </div>
+  </header>
+
+  <div class="app-body">
+    <aside class="sidebar">
+      <div class="sidebar-brand"><p class="brand-name">caelus</p><p class="brand-sub">游戏环境控制台</p></div>
+      <nav class="sidebar-nav">
+        <div class="nav-group-label">工作台</div>
+        <button class="nav-item" data-nav-demo><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><path d="M12 2l3 7h7l-5.5 4.5L18 21l-6-4-6 4 1.5-7.5L2 9h7z"/></svg>概览</button>
+        <button class="nav-item" data-nav-demo><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><path d="M4 7l8-4 8 4-8 4-8-4z M4 7v10l8 4 8-4V7"/></svg>游戏库</button>
+        <div class="nav-group-label">游戏调优</div>
+        <button class="nav-item" data-nav-demo><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><path d="M4 8h9 M17 8h3 M4 16h3 M11 16h9"/></svg>优化策略</button>
+        <button class="nav-item" data-nav-demo><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><path d="M7 5h10a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V7a2 2 0 0 1 2-2z"/></svg>显卡</button>
+        <button class="nav-item" data-nav-demo><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><path d="M12 3l7 3v5c0 4.5-3 8.5-7 10-4-1.5-7-5.5-7-10V6z"/></svg>反作弊专项</button>
+        <div class="nav-group-label">系统</div>
+        <button class="nav-item" data-nav-demo><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><path d="M9 12a3 3 0 1 1 6 0 3 3 0 1 1-6 0"/></svg>系统环境</button>
+        <button class="nav-item is-checked" data-nav-demo><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><path d="M8 6h13 M8 12h13 M8 18h13"/></svg>白名单</button>
+        <div class="nav-group-label">诊断</div>
+        <button class="nav-item" data-nav-demo><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><path d="M3 12h4l3-8 4 16 3-8h4"/></svg>系统体检</button>
+        <button class="nav-item" data-nav-demo><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><path d="M4 6h16 M4 12h16 M4 18h10"/></svg>日志</button>
+        <div class="nav-group-label">性能模式</div>
+        <div style="margin: 0 8px 4px;">
+          <div class="segment-host" style="display: flex; width: 100%;">
+            <div class="segment-indicator"></div>
+            <button class="segment-item is-checked" style="flex: 1;" data-sandbox-mode="standard">巡航</button>
+            <button class="segment-item" style="flex: 1;" data-sandbox-mode="competitive">竞技</button>
+            <button class="segment-item" style="flex: 1;" data-sandbox-mode="custom">自定义</button>
+          </div>
+        </div>
+      </nav>
+      <div class="sidebar-bottom">
+        <button class="nav-item" data-nav-demo><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><path d="M3 12a9 9 0 1 1 18 0 9 9 0 1 1-18 0"/></svg>设置</button>
+        <button class="nav-item" data-nav-demo><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><path d="M3 12a9 9 0 1 1 18 0 9 9 0 1 1-18 0"/></svg>关于</button>
+      </div>
+    </aside>
+
+    <main class="content">
+      <div class="content-inner">
+
+        <div style="margin-bottom: 16px;" class="rise-in rise-in-1">
+          <h1 class="page-header">白名单</h1>
+          <p class="page-subtitle">永不触碰的进程</p>
+        </div>
+
+        <div class="wl-layout rise-in rise-in-2">
+          <!-- 左栏：规则列表 -->
+          <div class="wl-left">
+            <div class="wl-header" style="display:flex; justify-content:space-between; align-items:flex-start;">
+              <div><h3>用户规则</h3><p>你添加的规则，可调整保护范围或删除</p></div>
+              <span class="hint" style="align-self:center;">右键或检查器管理</span>
+            </div>
+            <div class="wl-list">
+              <div class="wl-group">系统保护</div>
+              <div class="wl-rule is-selected">
+                <div><div class="rule-title">CaelusWpf.exe</div><div class="rule-sub">C:\Caelus\CaelusWpf.exe</div></div>
+                <span class="rule-badge">单文件</span>
+                <div class="rule-status"><span class="rule-dot"></span><span style="font-size:10px;color:var(--text-secondary);">空闲</span></div>
+              </div>
+              <div class="wl-rule">
+                <div><div class="rule-title">explorer.exe</div><div class="rule-sub">C:\Windows\explorer.exe</div></div>
+                <span class="rule-badge">单文件</span>
+                <div class="rule-status"><span class="rule-dot is-live"></span><span style="font-size:10px;color:var(--text-secondary);">运行中</span></div>
+              </div>
+
+              <div class="wl-group">游戏进程</div>
+              <div class="wl-rule">
+                <div><div class="rule-title">LeagueClient.exe</div><div class="rule-sub">C:\Riot Games\League of Legends\LeagueClient.exe</div></div>
+                <span class="rule-badge">目录</span>
+                <div class="rule-status"><span class="rule-dot is-live"></span><span style="font-size:10px;color:var(--text-secondary);">运行中</span></div>
+              </div>
+              <div class="wl-rule">
+                <div><div class="rule-title">RiotClientServices.exe</div><div class="rule-sub">C:\Riot Games\Riot Client\RiotClientServices.exe</div></div>
+                <span class="rule-badge">单文件</span>
+                <div class="rule-status"><span class="rule-dot is-live"></span><span style="font-size:10px;color:var(--text-secondary);">运行中</span></div>
+              </div>
+              <div class="wl-rule">
+                <div><div class="rule-title">valorant.exe</div><div class="rule-sub">C:\Riot Games\VALORANT\live\valorant.exe</div></div>
+                <span class="rule-badge">单文件</span>
+                <div class="rule-status"><span class="rule-dot"></span><span style="font-size:10px;color:var(--text-secondary);">空闲</span></div>
+              </div>
+
+              <div class="wl-group">工具</div>
+              <div class="wl-rule">
+                <div><div class="rule-title">MSIAfterburner.exe</div><div class="rule-sub">C:\Program Files (x86)\MSI Afterburner\MSIAfterburner.exe</div></div>
+                <span class="rule-badge">单文件</span>
+                <div class="rule-status"><span class="rule-dot is-live"></span><span style="font-size:10px;color:var(--text-secondary);">运行中</span></div>
+              </div>
+            </div>
+          </div>
+
+          <!-- 右栏：操作与检查器 -->
+          <div class="wl-right">
+            <h3>添加规则</h3>
+            <button class="btn btn-primary" style="width:100%;">选运行中的程序</button>
+            <button class="btn btn-ghost" style="width:100%; margin-top:6px;">浏览可执行文件</button>
+            <p class="text-tertiary" style="font-size: 10px; margin: 10px 0 0;">或把 .exe 拖到窗口左侧列表中</p>
+            <div class="divider"></div>
+            <h3>所选规则</h3>
+            <div class="field-label">路径或规则值</div>
+            <div class="field-value mono">C:\Caelus\CaelusWpf.exe</div>
+            <div class="field-label">规则类型</div>
+            <div class="field-value">单文件（精确匹配）</div>
+            <div class="field-label">当前匹配</div>
+            <div class="field-value">1 个进程</div>
+            <div class="field-label">保护范围</div>
+            <div style="margin-top: 6px;">
+              <button class="btn btn-ghost" style="width:100%; text-align:left;">只保护这一个（不含子进程）</button>
+              <button class="btn btn-ghost" style="width:100%; text-align:left; margin-top:4px;">连子进程一起保护</button>
+            </div>
+            <button class="btn btn-danger" style="width:100%; margin-top: 14px;">删除规则</button>
+          </div>
+        </div>
+
+      </div>
+    </main>
+  </div>
+</div>
+
+<div class="sandbox-toolbar">
+  <span class="sandbox-toolbar-label">主题</span>
+  <div class="segment-host"><div class="segment-indicator"></div>
+    <button class="segment-item is-checked" data-sandbox-theme="dark">深色</button>
+    <button class="segment-item" data-sandbox-theme="light">浅色</button>
+  </div>
+  <span class="sandbox-toolbar-label">模式</span>
+  <div class="segment-host"><div class="segment-indicator"></div>
+    <button class="segment-item is-checked" data-sandbox-mode="standard">巡航</button>
+    <button class="segment-item" data-sandbox-mode="competitive">竞技</button>
+    <button class="segment-item" data-sandbox-mode="custom">自定义</button>
+  </div>
+  <a href="index.html" style="color: var(--mode-accent); font-size: 10px;">组件展示 →</a>
+</div>
+
+<script src="sandbox.js"></script>
+</body>
+</html>

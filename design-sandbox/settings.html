@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="zh-CN" data-theme="dark" data-mode="standard">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Caelus 设计沙盒 · 设置</title>
+<link rel="stylesheet" href="tokens.css">
+<link rel="stylesheet" href="sandbox.css">
+</head>
+<body>
+<div class="aurora" aria-hidden="true">
+  <div class="aurora-blob aurora-blob-1"></div>
+  <div class="aurora-blob aurora-blob-2"></div>
+  <div class="aurora-blob aurora-blob-3"></div>
+</div>
+<div class="app-shell">
+  <header class="titlebar">
+    <div class="titlebar-brand">C A E L U S <span class="titlebar-badge">SANDBOX</span></div>
+    <div class="titlebar-buttons"><button class="win-btn">−</button><button class="win-btn">□</button><button class="win-btn win-btn-close">×</button></div>
+  </header>
+  <div class="app-body">
+    <aside class="sidebar">
+      <div class="sidebar-brand"><p class="brand-name">caelus</p><p class="brand-sub">游戏环境控制台</p></div>
+      <nav class="sidebar-nav">
+        <div class="nav-group-label">工作台</div>
+        <button class="nav-item" data-nav-demo><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2l3 7h7l-5.5 4.5L18 21l-6-4-6 4 1.5-7.5L2 9h7z"/></svg>概览</button>
+        <button class="nav-item" data-nav-demo><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 7l8-4 8 4-8 4-8-4z M4 7v10l8 4 8-4V7"/></svg>游戏库</button>
+        <div class="nav-group-label">游戏调优</div>
+        <button class="nav-item" data-nav-demo>优化策略</button>
+        <button class="nav-item" data-nav-demo>显卡</button>
+        <button class="nav-item" data-nav-demo>反作弊专项</button>
+        <div class="nav-group-label">系统</div>
+        <button class="nav-item" data-nav-demo>系统环境</button>
+        <button class="nav-item" data-nav-demo>白名单</button>
+        <div class="nav-group-label">诊断</div>
+        <button class="nav-item" data-nav-demo>系统体检</button>
+        <button class="nav-item" data-nav-demo>日志</button>
+        <div class="nav-group-label">性能模式</div>
+        <div style="margin:0 8px 4px;"><div class="segment-host" style="display:flex;width:100%;"><div class="segment-indicator"></div><button class="segment-item is-checked" style="flex:1" data-sandbox-mode="standard">巡航</button><button class="segment-item" style="flex:1" data-sandbox-mode="competitive">竞技</button><button class="segment-item" style="flex:1" data-sandbox-mode="custom">自定义</button></div></div>
+      </nav>
+      <div class="sidebar-bottom">
+        <button class="nav-item is-checked" data-nav-demo>设置</button>
+        <button class="nav-item" data-nav-demo>关于</button>
+      </div>
+    </aside>
+    <main class="content"><div class="content-inner">
+
+      <div style="margin-bottom:16px" class="rise-in rise-in-1">
+        <h1 class="page-header">设置</h1>
+        <p class="page-subtitle">应用行为、开发工具与维护</p>
+      </div>
+
+      <div class="policy-group-header rise-in rise-in-2"><span class="group-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 12a9 9 0 1 1 18 0 9 9 0 1 1-18 0 M12 5v2 M12 17v2 M5 12h2 M17 12h2"/></svg></span><h2>应用行为</h2></div>
+      <div class="settings-group rise-in rise-in-2" style="margin-bottom:18px">
+        <div class="policy-row"><div class="policy-text"><div class="policy-title">开机自启</div><div class="policy-desc">Windows 登录时自动启动 Caelus 并最小化到托盘。</div></div><input type="checkbox" class="toggle" checked></div>
+        <div class="policy-row"><div class="policy-text"><div class="policy-title">检测到游戏自动收起</div><div class="policy-desc">游戏启动后自动最小化到托盘，退出游戏时恢复。</div></div><input type="checkbox" class="toggle" checked></div>
+        <div class="policy-row"><div class="policy-text"><div class="policy-title">亮色主题</div><div class="policy-desc">默认深色；开启后切换为浅色配色。</div></div><input type="checkbox" class="toggle"></div>
+      </div>
+
+      <div class="policy-group-header rise-in rise-in-3"><span class="group-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2v4 M12 18v4 M2 12h4 M18 12h4"/></svg></span><h2>开发工具</h2></div>
+      <div class="settings-group rise-in rise-in-3" style="margin-bottom:18px">
+        <div class="policy-row"><div class="policy-text"><div class="policy-title">开发模式</div><div class="policy-desc">启用后显示自定义编译进程列表、调试日志等高级选项。</div></div><input type="checkbox" class="toggle" checked></div>
+        <div class="policy-row" style="flex-direction:column;gap:8px;">
+          <div class="policy-title">自定义编译进程</div>
+          <input class="input" type="text" value="cl.exe; csc.exe; msbuild.exe; dotnet.exe" style="width:100%; font-family:var(--font-mono); font-size:11px;">
+          <div class="policy-desc">以分号分隔；编译器进程运行时自动进入开发模式。</div>
+          <div><button class="btn btn-ghost">保存</button></div>
+        </div>
+      </div>
+
+      <div class="policy-group-header rise-in rise-in-4"><span class="group-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3l7 3v5c0 4.5-3 8.5-7 10-4-1.5-7-5.5-7-10V6z"/></svg></span><h2>维护</h2></div>
+      <div class="settings-group rise-in rise-in-4">
+        <div class="policy-row"><div class="policy-text"><div class="policy-title">Defender 实时扫描排除</div><div class="policy-desc">将 Caelus 安装目录添加到 Windows Defender 排除列表，降低 CPU 干扰。</div></div><button class="btn btn-ghost">打开排除设置</button></div>
+        <div class="policy-row"><div class="policy-text"><div class="policy-title">LOL 附加层清理</div><div class="policy-desc">删除 League of Legends 旧版遗留的着色器附加层文件。</div></div><button class="btn btn-ghost">打开清理工具</button></div>
+      </div>
+
+    </div></main>
+  </div>
+</div>
+<div class="sandbox-toolbar">
+  <span class="sandbox-toolbar-label">主题</span><div class="segment-host"><div class="segment-indicator"></div><button class="segment-item is-checked" data-sandbox-theme="dark">深色</button><button class="segment-item" data-sandbox-theme="light">浅色</button></div>
+  <span class="sandbox-toolbar-label">模式</span><div class="segment-host"><div class="segment-indicator"></div><button class="segment-item is-checked" data-sandbox-mode="standard">巡航</button><button class="segment-item" data-sandbox-mode="competitive">竞技</button><button class="segment-item" data-sandbox-mode="custom">自定义</button></div>
+  <a href="index.html" style="color:var(--mode-accent);font-size:10px">组件展示 →</a>
+</div>
+<script src="sandbox.js"></script>
+</body>
+</html>

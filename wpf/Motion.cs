@@ -150,7 +150,17 @@ namespace CaelusApp.WpfHost
             }
             int ms = UiMotion.PageFadeMs;
             element.Opacity = 0;
-            AnimateDelayed(element, UIElement.OpacityProperty, 0, 1, ms, delayMs);
+            // 入场期间禁用交互，防止用户在动画进行中点击穿透
+            element.IsHitTestVisible = false;
+            DoubleAnimation fadeIn = BuildAnimation(0, 1, ms);
+            if (delayMs > 0) fadeIn.BeginTime = TimeSpan.FromMilliseconds(delayMs);
+            fadeIn.Completed += delegate
+            {
+                element.BeginAnimation(UIElement.OpacityProperty, null);
+                element.Opacity = 1;
+                element.IsHitTestVisible = true;
+            };
+            element.BeginAnimation(UIElement.OpacityProperty, fadeIn, HandoffBehavior.SnapshotAndReplace);
             TranslateTransform translate = TranslateOf(element);
             translate.Y = 10;
             // 位移走弹簧曲线（轻微过冲回正 = iOS 入场手感）；opacity 仍走标准减速

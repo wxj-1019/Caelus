@@ -10,9 +10,17 @@
   <sys:Double x:Key="FontSizeTitle">17</sys:Double>
   <sys:Double x:Key="FontSizeBody">14</sys:Double>
   <sys:Double x:Key="FontSizeCaption">12</sys:Double>
-  <!-- 辅助小字：介于 Caption(12) 与 Mono(10) 之间，全站备注/说明/状态文字（113 处 XAML 引用） -->
+  <!-- 辅助小字：介于 Caption(12) 与 Mono(10) 之间，全站备注/说明/状态文字 -->
   <sys:Double x:Key="FontSizeSmall">11</sys:Double>
+  <!-- 极小编注：mono 路径/徽章/行尾说明/状态 chip 等最细层级文字 -->
+  <sys:Double x:Key="FontSizeXs">10</sys:Double>
+  <!-- 区域小标题：分组标头/设置页区域标题 -->
+  <sys:Double x:Key="FontSizeRegion">13</sys:Double>
+  <!-- 极微文字：模式标签/Tooltip 辅助 -->
+  <sys:Double x:Key="FontSizeMicro">9</sys:Double>
   <sys:Double x:Key="FontSizeMono">12</sys:Double>
+  <!-- 空态与拖放遮罩标题：主操作引导的醒目标题 -->
+  <sys:Double x:Key="FontSizeEmpty">16</sys:Double>
   <sys:Double x:Key="FontSizeSection">22</sys:Double>
   <sys:Double x:Key="FontSizeHero">32</sys:Double>
   <sys:Double x:Key="FontSizeMetric">24</sys:Double>

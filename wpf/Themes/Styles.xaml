@@ -610,11 +610,12 @@
     </Setter>
   </Style>
 
-  <!-- PolicyRow：策略行（SettingsRow 基础上 + 悬停浅底） -->
+  <!-- PolicyRow：策略行（SettingsRow 基础上 + 悬停浅底 + 边框提亮） -->
   <Style x:Key="PolicyRow" TargetType="Border" BasedOn="{StaticResource SettingsRow}">
     <Style.Triggers>
       <Trigger Property="IsMouseOver" Value="True">
         <Setter Property="Background" Value="{DynamicResource Surface1Brush}"/>
+        <Setter Property="BorderBrush" Value="{DynamicResource BorderStrongBrush}"/>
       </Trigger>
     </Style.Triggers>
   </Style>

@@ -336,6 +336,7 @@ namespace CaelusApp.WpfHost.Dialogs
 
         private void OnWindowKeyDown(object sender, KeyEventArgs e)
         {
+            if (e.Key == Key.Escape) { Close(); e.Handled = true; return; }
             if (e.Key != Key.F5 || scanning) return;
             BeginScan();
             e.Handled = true;
@@ -370,6 +371,7 @@ namespace CaelusApp.WpfHost.Dialogs
             closed = true;
             scanning = false;
             UnsubscribeEntries();
+            try { var w = Owner; if (w != null) w.Focus(); } catch { }
             base.OnClosed(e);
         }
 

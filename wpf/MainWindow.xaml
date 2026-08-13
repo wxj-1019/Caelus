@@ -34,7 +34,7 @@
                 CornerRadius="{DynamicResource RadiusSm}"
                 Background="{DynamicResource Surface2Brush}"
                 BorderBrush="{DynamicResource BorderSubtleBrush}" BorderThickness="1">
-          <TextBlock Text="WPF PREVIEW" FontSize="9" Foreground="{DynamicResource TextTertiaryBrush}"/>
+          <TextBlock Text="WPF PREVIEW" FontSize="{DynamicResource FontSizeMicro}" Foreground="{DynamicResource TextTertiaryBrush}"/>
         </Border>
 
         <!-- 居中窗口标题 -->
@@ -84,7 +84,7 @@
           <StackPanel DockPanel.Dock="Top" Margin="18,18,18,10">
             <TextBlock Text="caelus" FontSize="18" FontWeight="SemiBold"
                        Foreground="{DynamicResource TextPrimaryBrush}"/>
-            <TextBlock Text="游戏环境控制台" FontSize="10" Margin="0,3,0,0"
+            <TextBlock Text="游戏环境控制台" FontSize="{DynamicResource FontSizeXs}" Margin="0,3,0,0"
                        Foreground="{DynamicResource TextTertiaryBrush}"/>
           </StackPanel>
 
@@ -183,7 +183,7 @@
                                          SelectedIndex="0" SelectionChanged="ModeChecked"
                                          AutomationProperties.Name="全局性能模式"/>
               <TextBlock Text="影响调度、压制与页面中的可编辑项" Margin="18,3,14,6"
-                         FontSize="9" Foreground="{DynamicResource TextTertiaryBrush}" TextWrapping="Wrap"/>
+                         FontSize="{DynamicResource FontSizeMicro}" Foreground="{DynamicResource TextTertiaryBrush}" TextWrapping="Wrap"/>
             </StackPanel>
           </ScrollViewer>
         </DockPanel>

@@ -599,7 +599,7 @@ namespace CaelusApp.WpfHost.Dialogs
             if (e.Key == Key.Escape) { Close(); e.Handled = true; }
             else if (e.Key == Key.F5) { RefreshState(); e.Handled = true; }
         }
-        protected override void OnClosed(EventArgs e) { closed = true; base.OnClosed(e); }
+        protected override void OnClosed(EventArgs e) { closed = true; try { var w = Owner; if (w != null) w.Focus(); } catch { } base.OnClosed(e); }
     }
 
     internal partial class LolAddonDialogWpf : Window
@@ -923,6 +923,6 @@ namespace CaelusApp.WpfHost.Dialogs
             else if (e.Key == Key.F5 && busy == 0) { Inspect(null); e.Handled = true; }
         }
         private void OnClose(object sender, RoutedEventArgs e) { Close(); }
-        protected override void OnClosed(EventArgs e) { closed = true; base.OnClosed(e); }
+        protected override void OnClosed(EventArgs e) { closed = true; try { var w = Owner; if (w != null) w.Focus(); } catch { } base.OnClosed(e); }
     }
 }

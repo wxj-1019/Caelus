@@ -29,7 +29,8 @@
   <!-- ===== 文字（Apple Light：#1D1D1F + 60%/55% 黑；tertiary 55% 保证小字可读） ===== -->
   <Color x:Key="TextPrimaryColor">#1D1D1F</Color>
   <Color x:Key="TextSecondaryColor">#993C3C43</Color>
-  <Color x:Key="TextTertiaryColor">#8C3C3C43</Color>
+  <!-- P0 修复：原 #8C3C3C43（alpha 55%）在白底对比度≈3.2:1，不达 WCAG AA 4.5:1；改用实色 #78787C（≈4.5:1） -->
+  <Color x:Key="TextTertiaryColor">#78787C</Color>
   <Color x:Key="ButtonSheenColor">#59FFFFFF</Color>
 
   <!-- ===== 画刷 ===== -->

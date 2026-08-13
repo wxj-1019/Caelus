@@ -249,6 +249,11 @@ namespace CaelusApp.WpfHost.Dialogs
             if (e.PropertyName == "Checked") UpdateAddButton();
         }
 
+        private void OnWindowKeyDown(object sender, KeyEventArgs e)
+        {
+            if (e.Key == Key.Escape) { Close(); e.Handled = true; }
+        }
+
         private void OnListKeyDown(object sender, KeyEventArgs e)
         {
             ScanRow row = LstGames.SelectedItem as ScanRow;
@@ -324,6 +329,7 @@ namespace CaelusApp.WpfHost.Dialogs
         {
             closed = true;
             UnsubscribeRows();
+            try { var w = Owner; if (w != null) w.Focus(); } catch { }
             base.OnClosed(e);
         }
     }

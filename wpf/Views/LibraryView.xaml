@@ -51,7 +51,7 @@
                 </Style.Triggers>
               </Style>
             </Border.Style>
-            <TextBlock Text="{Binding FeedbackText}" FontSize="11" Foreground="{DynamicResource TextSecondaryBrush}" TextWrapping="Wrap" AutomationProperties.Name="{Binding FeedbackText}"/>
+            <TextBlock Text="{Binding FeedbackText}" FontSize="{DynamicResource FontSizeSmall}" Foreground="{DynamicResource TextSecondaryBrush}" TextWrapping="Wrap" AutomationProperties.Name="{Binding FeedbackText}"/>
           </Border>
           <Grid Margin="0,20,0,0" Width="300">
             <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
@@ -96,13 +96,13 @@
               </Style.Triggers>
             </Style>
           </Border.Style>
-          <TextBlock Text="{Binding FeedbackText}" FontSize="11" Foreground="{DynamicResource TextSecondaryBrush}" TextWrapping="Wrap" AutomationProperties.Name="{Binding FeedbackText}"/>
+          <TextBlock Text="{Binding FeedbackText}" FontSize="{DynamicResource FontSizeSmall}" Foreground="{DynamicResource TextSecondaryBrush}" TextWrapping="Wrap" AutomationProperties.Name="{Binding FeedbackText}"/>
         </Border>
 
         <Border x:Name="ZoneList" Grid.Row="3" Style="{DynamicResource SettingsGroup}" Padding="6">
           <Grid>
             <Grid.RowDefinitions><RowDefinition Height="Auto"/><RowDefinition Height="*"/></Grid.RowDefinitions>
-            <Grid Grid.Row="0" Margin="12,8,12,7"><Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions><TextBlock Text="游戏与进程" FontSize="11" FontWeight="SemiBold" Foreground="{DynamicResource TextSecondaryBrush}"/><TextBlock Grid.Column="1" Text="方向键选择 · Delete 移除" FontSize="10" Foreground="{DynamicResource TextTertiaryBrush}"/></Grid>
+            <Grid Grid.Row="0" Margin="12,8,12,7"><Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions><TextBlock Text="游戏与进程" FontSize="{DynamicResource FontSizeSmall}" FontWeight="SemiBold" Foreground="{DynamicResource TextSecondaryBrush}"/><TextBlock Grid.Column="1" Text="方向键选择 · Delete 移除" FontSize="10" Foreground="{DynamicResource TextTertiaryBrush}"/></Grid>
             <ListBox Grid.Row="1" x:Name="GameList" ItemsSource="{Binding Items}" ItemContainerStyle="{DynamicResource ListItem}" Background="Transparent" BorderThickness="0" ScrollViewer.HorizontalScrollBarVisibility="Disabled" ScrollViewer.VerticalScrollBarVisibility="Auto" KeyboardNavigation.DirectionalNavigation="Continue" SelectionMode="Single" SelectionChanged="OnGameSelectionChanged" PreviewKeyDown="OnGameListPreviewKeyDown" AutomationProperties.Name="已添加的游戏">
               <ListBox.ItemTemplate>
                 <DataTemplate>
@@ -121,7 +121,7 @@
       </Grid>
 
       <Border x:Name="DropOverlay" Background="{DynamicResource AccentSoftBrush}" BorderBrush="{DynamicResource AccentPrimaryBrush}" BorderThickness="2" CornerRadius="{DynamicResource RadiusSm}" Visibility="Collapsed" IsHitTestVisible="False">
-        <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center"><TextBlock Text="松开以添加游戏主程序" FontSize="16" FontWeight="SemiBold" Foreground="{DynamicResource TextPrimaryBrush}" HorizontalAlignment="Center"/><TextBlock Text="仅支持 .exe 文件" Margin="0,6,0,0" FontSize="11" Foreground="{DynamicResource TextSecondaryBrush}" HorizontalAlignment="Center"/></StackPanel>
+        <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center"><TextBlock Text="松开以添加游戏主程序" FontSize="16" FontWeight="SemiBold" Foreground="{DynamicResource TextPrimaryBrush}" HorizontalAlignment="Center"/><TextBlock Text="仅支持 .exe 文件" Margin="0,6,0,0" FontSize="{DynamicResource FontSizeSmall}" Foreground="{DynamicResource TextSecondaryBrush}" HorizontalAlignment="Center"/></StackPanel>
       </Border>
     </Grid>
   </Grid>

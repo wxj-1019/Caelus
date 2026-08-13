@@ -60,7 +60,7 @@
               </TextBlock.Style>
             </TextBlock>
             <TextBlock Text="{Binding Note}"
-                       FontSize="11"
+                       FontSize="{DynamicResource FontSizeSmall}"
                        FontWeight="SemiBold"
                        Foreground="{DynamicResource TextSecondaryBrush}"
                        TextWrapping="Wrap"
@@ -114,7 +114,7 @@
               Padding="12,8"
               AutomationProperties.Name="体检状态">
         <TextBlock Text="{Binding StatusText}"
-                   FontSize="11"
+                   FontSize="{DynamicResource FontSizeSmall}"
                    Foreground="{DynamicResource TextSecondaryBrush}"
                    TextWrapping="Wrap"
                    AutomationProperties.Name="{Binding StatusText}"/>
@@ -211,7 +211,7 @@
                   </Style>
                 </TextBlock.Style>
               </TextBlock>
-              <TextBlock Margin="8,0,0,0" FontSize="11" VerticalAlignment="Center"
+              <TextBlock Margin="8,0,0,0" FontSize="{DynamicResource FontSizeSmall}" VerticalAlignment="Center"
                          Foreground="{DynamicResource TextSecondaryBrush}"
                          Text="{Binding HealthLabel, Mode=OneWay}"/>
               <Rectangle Width="1" Height="28" Margin="16,0" VerticalAlignment="Center"
@@ -228,11 +228,11 @@
                   </Style>
                 </Ellipse.Style>
               </Ellipse>
-              <TextBlock VerticalAlignment="Center" FontSize="11">
+              <TextBlock VerticalAlignment="Center" FontSize="{DynamicResource FontSizeSmall}">
                 <Run Text="{Binding ConcernCount, Mode=OneWay}"/><Run Text=" 项需关注" Foreground="{DynamicResource TextSecondaryBrush}"/>
               </TextBlock>
               <TextBlock Text="{Binding LastCheckText, Mode=OneWay}" Margin="14,0,0,0"
-                         FontSize="11" VerticalAlignment="Center"
+                         FontSize="{DynamicResource FontSizeSmall}" VerticalAlignment="Center"
                          Foreground="{DynamicResource TextTertiaryBrush}"/>
               </WrapPanel>
               <TextBlock Text="{Binding ScoreMethodText}" FontSize="10" Foreground="{DynamicResource TextTertiaryBrush}" TextWrapping="Wrap" Margin="0,6,0,0"/>
@@ -245,7 +245,7 @@
                 <TextBlock Text="{Binding CapabilityRows.Count}"
                            Style="{DynamicResource MetricNumber}"/>
                 <TextBlock Text="{Binding CapabilityTitle}"
-                           FontSize="11"
+                           FontSize="{DynamicResource FontSizeSmall}"
                            Foreground="{DynamicResource TextSecondaryBrush}"
                            TextWrapping="Wrap"
                            Margin="0,4,0,0"/>
@@ -256,7 +256,7 @@
                 <TextBlock Text="{Binding MachineRows.Count}"
                            Style="{DynamicResource MetricNumber}"/>
                 <TextBlock Text="{Binding MachineTitle}"
-                           FontSize="11"
+                           FontSize="{DynamicResource FontSizeSmall}"
                            Foreground="{DynamicResource TextSecondaryBrush}"
                            TextWrapping="Wrap"
                            Margin="0,4,0,0"/>
@@ -287,7 +287,7 @@
                   </TextBlock.Style>
                 </TextBlock>
                 <TextBlock Text="{Binding PersistentTitle}"
-                           FontSize="11"
+                           FontSize="{DynamicResource FontSizeSmall}"
                            Foreground="{DynamicResource TextSecondaryBrush}"
                            TextWrapping="Wrap"
                            Margin="0,4,0,0"/>
@@ -318,7 +318,7 @@
                   </TextBlock.Style>
                 </TextBlock>
                 <TextBlock Text="{Binding VerdictTitle}"
-                           FontSize="11"
+                           FontSize="{DynamicResource FontSizeSmall}"
                            Foreground="{DynamicResource TextSecondaryBrush}"
                            TextWrapping="Wrap"
                            Margin="0,4,0,0"/>
@@ -338,7 +338,7 @@
               </Border>
               <TextBlock Text="{Binding CapabilityTitle, Mode=OneWay}" FontSize="{DynamicResource FontSizeBody}"
                          FontWeight="SemiBold" Foreground="{DynamicResource TextPrimaryBrush}" VerticalAlignment="Center"/>
-              <TextBlock VerticalAlignment="Center" Margin="12,0,0,0" FontSize="11"
+              <TextBlock VerticalAlignment="Center" Margin="12,0,0,0" FontSize="{DynamicResource FontSizeSmall}"
                          Foreground="{DynamicResource TextSecondaryBrush}">
                 <Run Text="{Binding CapabilityRows.Count, Mode=OneWay}"/><Run Text=" 项"/>
               </TextBlock>
@@ -361,7 +361,7 @@
               </Border>
               <TextBlock Text="{Binding MachineTitle, Mode=OneWay}" FontSize="{DynamicResource FontSizeBody}"
                          FontWeight="SemiBold" Foreground="{DynamicResource TextPrimaryBrush}" VerticalAlignment="Center"/>
-              <TextBlock VerticalAlignment="Center" Margin="12,0,0,0" FontSize="11"
+              <TextBlock VerticalAlignment="Center" Margin="12,0,0,0" FontSize="{DynamicResource FontSizeSmall}"
                          Foreground="{DynamicResource TextSecondaryBrush}">
                 <Run Text="{Binding MachineRows.Count, Mode=OneWay}"/><Run Text=" 项"/>
               </TextBlock>
@@ -384,7 +384,7 @@
               </Border>
               <TextBlock Text="{Binding PersistentTitle, Mode=OneWay}" FontSize="{DynamicResource FontSizeBody}"
                          FontWeight="SemiBold" Foreground="{DynamicResource TextPrimaryBrush}" VerticalAlignment="Center"/>
-              <TextBlock VerticalAlignment="Center" Margin="12,0,0,0" FontSize="11"
+              <TextBlock VerticalAlignment="Center" Margin="12,0,0,0" FontSize="{DynamicResource FontSizeSmall}"
                          Foreground="{DynamicResource TextSecondaryBrush}">
                 <Run Text="{Binding PersistentRows.Count, Mode=OneWay}"/><Run Text=" 项"/>
               </TextBlock>
@@ -407,7 +407,7 @@
               </Border>
               <TextBlock Text="{Binding VerdictTitle, Mode=OneWay}" FontSize="{DynamicResource FontSizeBody}"
                          FontWeight="SemiBold" Foreground="{DynamicResource TextPrimaryBrush}" VerticalAlignment="Center"/>
-              <TextBlock VerticalAlignment="Center" Margin="12,0,0,0" FontSize="11"
+              <TextBlock VerticalAlignment="Center" Margin="12,0,0,0" FontSize="{DynamicResource FontSizeSmall}"
                          Foreground="{DynamicResource TextSecondaryBrush}">
                 <Run Text="{Binding VerdictRows.Count, Mode=OneWay}"/><Run Text=" 项"/>
               </TextBlock>

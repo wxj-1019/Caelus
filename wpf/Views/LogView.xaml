@@ -29,7 +29,7 @@
               <ColumnDefinition Width="Auto"/>
             </Grid.ColumnDefinitions>
             <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
-              <TextBlock Text="运行记录" FontSize="11" Foreground="{DynamicResource TextTertiaryBrush}"/>
+              <TextBlock Text="运行记录" FontSize="{DynamicResource FontSizeSmall}" Foreground="{DynamicResource TextTertiaryBrush}"/>
               <Border Style="{DynamicResource NeutralStatusBadge}" Padding="8,3" Margin="8,0,0,0">
                 <TextBlock Text="{Binding SummaryText}" FontSize="10" Foreground="{DynamicResource TextSecondaryBrush}"/>
               </Border>
@@ -69,7 +69,7 @@
               </Style.Triggers>
             </Style>
           </Border.Style>
-          <TextBlock Text="{Binding FeedbackText}" FontSize="11" Foreground="{DynamicResource TextSecondaryBrush}" TextWrapping="Wrap"/>
+          <TextBlock Text="{Binding FeedbackText}" FontSize="{DynamicResource FontSizeSmall}" Foreground="{DynamicResource TextSecondaryBrush}" TextWrapping="Wrap"/>
         </Border>
 
         <Grid Grid.Row="2">
@@ -87,7 +87,7 @@
             </Border.Style>
             <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center" MaxWidth="360" Margin="24">
               <TextBlock Text="{Binding EmptyTitle}" FontSize="15" FontWeight="SemiBold" Foreground="{DynamicResource TextPrimaryBrush}" TextAlignment="Center"/>
-              <TextBlock Text="{Binding EmptyHint}" FontSize="11" Foreground="{DynamicResource TextSecondaryBrush}" TextWrapping="Wrap" TextAlignment="Center" Margin="0,6,0,0"/>
+              <TextBlock Text="{Binding EmptyHint}" FontSize="{DynamicResource FontSizeSmall}" Foreground="{DynamicResource TextSecondaryBrush}" TextWrapping="Wrap" TextAlignment="Center" Margin="0,6,0,0"/>
             </StackPanel>
           </Border>
         </Grid>

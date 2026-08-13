@@ -35,7 +35,7 @@
                      DockPanel.Dock="Right"
                      Margin="20,0,0,0"
                      VerticalAlignment="Center"
-                     FontSize="11"
+                     FontSize="{DynamicResource FontSizeSmall}"
                      Foreground="{DynamicResource TextTertiaryBrush}"/>
           <StackPanel Orientation="Horizontal">
             <Ellipse x:Name="ReadyDot"
@@ -51,7 +51,7 @@
             <TextBlock Text="此页由 SampleOverviewSource 提供样例数据，不代表实时系统遥测。"
                        Margin="12,0,0,0"
                        VerticalAlignment="Center"
-                       FontSize="11"
+                       FontSize="{DynamicResource FontSizeSmall}"
                        Foreground="{DynamicResource TextSecondaryBrush}"
                        TextWrapping="Wrap"/>
           </StackPanel>
@@ -90,7 +90,7 @@
                              Foreground="{DynamicResource TextTertiaryBrush}"/>
                   <TextBlock Text="{Binding ModeText}"
                              Margin="8,0,0,0"
-                             FontSize="11"
+                             FontSize="{DynamicResource FontSizeSmall}"
                              FontWeight="SemiBold"
                              Foreground="{DynamicResource AccentPrimaryBrush}"/>
                 </StackPanel>
@@ -117,7 +117,7 @@
                        TextWrapping="Wrap"/>
             <TextBlock Text="{Binding LastCheckText}"
                        Margin="0,5,0,0"
-                       FontSize="11"
+                       FontSize="{DynamicResource FontSizeSmall}"
                        Foreground="{DynamicResource TextTertiaryBrush}"
                        TextWrapping="Wrap"/>
 
@@ -135,7 +135,7 @@
                     Visibility="{Binding DetailVisible, Converter={StaticResource BoolVis}}"
                     AutomationProperties.Name="样例诊断详情说明">
               <TextBlock Text="诊断详情尚未接入真实数据；当前区域仅演示渐进披露交互与排版状态。"
-                         FontSize="11"
+                         FontSize="{DynamicResource FontSizeSmall}"
                          Foreground="{DynamicResource TextSecondaryBrush}"
                          TextWrapping="Wrap"/>
             </Border>
@@ -150,7 +150,7 @@
                    Foreground="{DynamicResource TextPrimaryBrush}"/>
         <TextBlock Text="以下三项均为预览数据，用于检查数字、趋势和状态样式。"
                    Margin="0,3,0,0"
-                   FontSize="11"
+                   FontSize="{DynamicResource FontSizeSmall}"
                    Foreground="{DynamicResource TextSecondaryBrush}"/>
       </StackPanel>
 
@@ -179,7 +179,7 @@
                          FontSize="10"
                          Foreground="{DynamicResource TextTertiaryBrush}"/>
               <TextBlock Text="{Binding Metrics[0].Label}"
-                         FontSize="11"
+                         FontSize="{DynamicResource FontSizeSmall}"
                          Foreground="{DynamicResource TextSecondaryBrush}"/>
             </DockPanel>
             <TextBlock Grid.Row="1"
@@ -233,7 +233,7 @@
                                FontSize="10"
                                Foreground="{DynamicResource TextTertiaryBrush}"/>
                     <TextBlock Text="{Binding Label}"
-                               FontSize="11"
+                               FontSize="{DynamicResource FontSizeSmall}"
                                Foreground="{DynamicResource TextSecondaryBrush}"/>
                   </DockPanel>
                   <TextBlock Grid.Row="1"
@@ -280,7 +280,7 @@
                        Foreground="{DynamicResource TextPrimaryBrush}"/>
             <TextBlock Text="活动流尚未接入；下列内容仅描述当前预览状态。"
                        Margin="0,3,0,10"
-                       FontSize="11"
+                       FontSize="{DynamicResource FontSizeSmall}"
                        Foreground="{DynamicResource TextSecondaryBrush}"/>
 
             <Grid Margin="0,0,0,6">
@@ -289,11 +289,11 @@
                 <ColumnDefinition Width="Auto"/>
               </Grid.ColumnDefinitions>
               <TextBlock Text="当前模式预览"
-                         FontSize="11"
+                         FontSize="{DynamicResource FontSizeSmall}"
                          Foreground="{DynamicResource TextSecondaryBrush}"/>
               <TextBlock Grid.Column="1"
                          Text="{Binding ModeText}"
-                         FontSize="11"
+                         FontSize="{DynamicResource FontSizeSmall}"
                          Foreground="{DynamicResource TextPrimaryBrush}"/>
             </Grid>
             <Grid Margin="0,0,0,6">
@@ -302,11 +302,11 @@
                 <ColumnDefinition Width="Auto"/>
               </Grid.ColumnDefinitions>
               <TextBlock Text="样例数据刷新"
-                         FontSize="11"
+                         FontSize="{DynamicResource FontSizeSmall}"
                          Foreground="{DynamicResource TextSecondaryBrush}"/>
               <TextBlock Grid.Column="1"
                          Text="仅宿主启动或切换模式时"
-                         FontSize="11"
+                         FontSize="{DynamicResource FontSizeSmall}"
                          Foreground="{DynamicResource TextTertiaryBrush}"/>
             </Grid>
             <Grid>
@@ -315,7 +315,7 @@
                 <ColumnDefinition Width="Auto"/>
               </Grid.ColumnDefinitions>
               <TextBlock Text="真实活动记录"
-                         FontSize="11"
+                         FontSize="{DynamicResource FontSizeSmall}"
                          Foreground="{DynamicResource TextSecondaryBrush}"/>
               <ContentControl Grid.Column="1" Style="{DynamicResource EmptyChip}">
                 <TextBlock Text="未接入"
@@ -336,25 +336,25 @@
                        Foreground="{DynamicResource TextPrimaryBrush}"/>
             <TextBlock Text="当前 ViewModel 没有硬件型号绑定。"
                        Margin="0,3,0,10"
-                       FontSize="11"
+                       FontSize="{DynamicResource FontSizeSmall}"
                        Foreground="{DynamicResource TextSecondaryBrush}"
                        TextWrapping="Wrap"/>
             <DockPanel Margin="0,0,0,6">
               <ContentControl DockPanel.Dock="Right" Style="{DynamicResource EmptyChip}">
                 <TextBlock Text="未绑定" FontSize="10" Foreground="{DynamicResource TextTertiaryBrush}"/></ContentControl>
-              <TextBlock Text="处理器" FontSize="11"
+              <TextBlock Text="处理器" FontSize="{DynamicResource FontSizeSmall}"
                          Foreground="{DynamicResource TextSecondaryBrush}"/>
             </DockPanel>
             <DockPanel Margin="0,0,0,6">
               <ContentControl DockPanel.Dock="Right" Style="{DynamicResource EmptyChip}">
                 <TextBlock Text="未绑定" FontSize="10" Foreground="{DynamicResource TextTertiaryBrush}"/></ContentControl>
-              <TextBlock Text="图形设备" FontSize="11"
+              <TextBlock Text="图形设备" FontSize="{DynamicResource FontSizeSmall}"
                          Foreground="{DynamicResource TextSecondaryBrush}"/>
             </DockPanel>
             <DockPanel>
               <ContentControl DockPanel.Dock="Right" Style="{DynamicResource EmptyChip}">
                 <TextBlock Text="未绑定" FontSize="10" Foreground="{DynamicResource TextTertiaryBrush}"/></ContentControl>
-              <TextBlock Text="内存规格" FontSize="11"
+              <TextBlock Text="内存规格" FontSize="{DynamicResource FontSizeSmall}"
                          Foreground="{DynamicResource TextSecondaryBrush}"/>
             </DockPanel>
           </StackPanel>

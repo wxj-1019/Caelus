@@ -10,6 +10,8 @@
   <sys:Double x:Key="FontSizeTitle">17</sys:Double>
   <sys:Double x:Key="FontSizeBody">14</sys:Double>
   <sys:Double x:Key="FontSizeCaption">12</sys:Double>
+  <!-- 辅助小字：介于 Caption(12) 与 Mono(10) 之间，全站备注/说明/状态文字（113 处 XAML 引用） -->
+  <sys:Double x:Key="FontSizeSmall">11</sys:Double>
   <sys:Double x:Key="FontSizeMono">12</sys:Double>
   <sys:Double x:Key="FontSizeSection">22</sys:Double>
   <sys:Double x:Key="FontSizeHero">32</sys:Double>

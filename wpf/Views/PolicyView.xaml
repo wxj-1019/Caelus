@@ -29,7 +29,7 @@
               </Border>
             </StackPanel>
             <TextBlock Text="{Binding Description}"
-                       FontSize="11"
+                       FontSize="{DynamicResource FontSizeSmall}"
                        Foreground="{DynamicResource TextSecondaryBrush}"
                        TextWrapping="Wrap"
                        Margin="0,3,0,0"/>
@@ -71,7 +71,7 @@
                        Typography.NumeralAlignment="Tabular">
               <Run Text="{Binding TotalEnabled, Mode=OneWay}"/><Run Text="/" Foreground="{DynamicResource TextTertiaryBrush}"/><Run Text="{Binding TotalCount, Mode=OneWay}"/>
             </TextBlock>
-            <TextBlock Text="项已启用" Margin="8,0,0,0" FontSize="11"
+            <TextBlock Text="项已启用" Margin="8,0,0,0" FontSize="{DynamicResource FontSizeSmall}"
                        VerticalAlignment="Center"
                        Foreground="{DynamicResource TextSecondaryBrush}"/>
           </StackPanel>
@@ -83,10 +83,10 @@
                 <TextBlock Text="{Binding ModeBadgeText, Mode=OneWay}" FontSize="10"
                            FontWeight="SemiBold" Foreground="{DynamicResource ModeAccentBrush}"/>
               </Border>
-              <TextBlock Text="模式预设" FontSize="11" VerticalAlignment="Center"
+              <TextBlock Text="模式预设" FontSize="{DynamicResource FontSizeSmall}" VerticalAlignment="Center"
                          Foreground="{DynamicResource TextSecondaryBrush}" Margin="0,0,0,3"/>
             </WrapPanel>
-            <TextBlock Text="{Binding HintText, Mode=OneWay}" FontSize="11"
+            <TextBlock Text="{Binding HintText, Mode=OneWay}" FontSize="{DynamicResource FontSizeSmall}"
                        Foreground="{DynamicResource TextTertiaryBrush}"
                        TextWrapping="Wrap"/>
           </StackPanel>
@@ -107,7 +107,7 @@
             <TextBlock Text="{Binding CoreGroupTitle}" FontSize="{DynamicResource FontSizeBody}"
                        FontWeight="SemiBold" Foreground="{DynamicResource TextPrimaryBrush}"
                        VerticalAlignment="Center"/>
-            <TextBlock VerticalAlignment="Center" Margin="12,0,0,0" FontSize="11"
+            <TextBlock VerticalAlignment="Center" Margin="12,0,0,0" FontSize="{DynamicResource FontSizeSmall}"
                        Foreground="{DynamicResource TextSecondaryBrush}">
               <Run Text="{Binding CoreEnabled, Mode=OneWay}" Foreground="{DynamicResource SuccessBrush}" FontWeight="SemiBold"/><Run Text="/"/><Run Text="{Binding CoreTotal, Mode=OneWay}"/><Run Text=" 项已启用"/>
             </TextBlock>
@@ -122,7 +122,7 @@
             <TextBlock Text="{Binding CustomGroupTitle}" FontSize="{DynamicResource FontSizeBody}"
                        FontWeight="SemiBold" Foreground="{DynamicResource TextPrimaryBrush}"
                        VerticalAlignment="Center"/>
-            <TextBlock VerticalAlignment="Center" Margin="12,0,0,0" FontSize="11"
+            <TextBlock VerticalAlignment="Center" Margin="12,0,0,0" FontSize="{DynamicResource FontSizeSmall}"
                        Foreground="{DynamicResource TextSecondaryBrush}">
               <Run Text="{Binding CustomEnabled, Mode=OneWay}" Foreground="{DynamicResource SuccessBrush}" FontWeight="SemiBold"/><Run Text="/"/><Run Text="{Binding CustomTotal, Mode=OneWay}"/><Run Text=" 项已启用"/>
             </TextBlock>
@@ -137,7 +137,7 @@
             <TextBlock Text="{Binding ExtraGroupTitle}" FontSize="{DynamicResource FontSizeBody}"
                        FontWeight="SemiBold" Foreground="{DynamicResource TextPrimaryBrush}"
                        VerticalAlignment="Center"/>
-            <TextBlock VerticalAlignment="Center" Margin="12,0,0,0" FontSize="11"
+            <TextBlock VerticalAlignment="Center" Margin="12,0,0,0" FontSize="{DynamicResource FontSizeSmall}"
                        Foreground="{DynamicResource TextSecondaryBrush}">
               <Run Text="{Binding ExtraEnabled, Mode=OneWay}" Foreground="{DynamicResource SuccessBrush}" FontWeight="SemiBold"/><Run Text="/"/><Run Text="{Binding ExtraTotal, Mode=OneWay}"/><Run Text=" 项已启用"/>
             </TextBlock>

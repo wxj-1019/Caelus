@@ -97,6 +97,8 @@ namespace CaelusApp
                 try
                 {
                     WaitAdvance(beat, -1, 4000);
+                    // 环境可能导致 probe 默认 Idle；显式归一化保证起始状态确定
+                    try { probe.PriorityClass = ProcessPriorityClass.Normal; } catch { }
                     h = Native.OpenProcess(Native.PROCESS_SET_INFORMATION | Native.PROCESS_SET_LIMITED_INFORMATION
                         | Native.PROCESS_QUERY_LIMITED_INFORMATION, false, probe.Id);
                     if (h == IntPtr.Zero) throw new Exception("probe handle unavailable");

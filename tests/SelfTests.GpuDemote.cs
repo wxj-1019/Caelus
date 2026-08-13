@@ -145,6 +145,8 @@ namespace CaelusApp
                 {
                     SuppressionCore.GpuDemoteEnabled = true;
                     WaitAdvance(beat, -1, 4000);
+                    // 环境可能导致 probe 默认 Idle；显式归一化保证起始状态确定
+                    try { probe.PriorityClass = ProcessPriorityClass.Normal; } catch { }
                     Eq(AcquireResult.NewlyThrottled, core.Acquire(
                         probe.Id, probe.ProcessName, SuppressReason.Background, null, SuppressionLevel.Isolated));
                     probe.Refresh();

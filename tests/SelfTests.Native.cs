@@ -211,6 +211,8 @@ namespace CaelusApp
                 try
                 {
                     WaitAdvance(beat, -1, 4000);
+                    // 环境可能导致 probe 默认 Idle；显式归一化保证测试起始状态确定
+                    try { probe.PriorityClass = ProcessPriorityClass.Normal; } catch { }
                     probe.Refresh();
                     ProcessPriorityClass originalPriority = probe.PriorityClass;
                     IntPtr originalAffinity = probe.ProcessorAffinity;

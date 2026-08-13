@@ -1220,6 +1220,8 @@ cmd.exe //c "dev.cmd test"
                 {
                     int pid = p.Id;
                     if (pid <= 4 || pid == selfPid) continue;
+                    // 编译进程本身是提优对象（HIGH），绝不被后台压制——否则先提后压自相矛盾
+                    lock (sync) { if (activeBuildPids.Contains(pid)) continue; }
 
                     string nm;
                     try { nm = p.ProcessName; } catch { continue; }

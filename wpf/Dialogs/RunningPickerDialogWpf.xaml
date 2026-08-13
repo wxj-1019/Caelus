@@ -37,7 +37,7 @@
                    AutomationProperties.HelpText="按程序名称或可执行文件路径筛选"/>
           <TextBlock x:Name="FilterHint" Text="搜索名称或路径" Margin="11,0,0,0"
                      VerticalAlignment="Center" IsHitTestVisible="False"
-                     FontSize="11" Foreground="{DynamicResource TextTertiaryBrush}"/>
+                     FontSize="{DynamicResource FontSizeSmall}" Foreground="{DynamicResource TextTertiaryBrush}"/>
         </Grid>
         <Button Grid.Column="1" x:Name="BtnSelectAll" Content="全选" Click="OnSelectAll"
                 Style="{DynamicResource GhostButton}" Padding="12,7" Margin="10,0,0,0"
@@ -57,7 +57,7 @@
             <ColumnDefinition Width="*"/>
             <ColumnDefinition Width="Auto"/>
           </Grid.ColumnDefinitions>
-          <TextBlock Text="运行中的程序" FontSize="{DynamicResource FontSizeBody}" FontWeight="SemiBold"
+          <TextBlock Text="运行中的程序" FontSize="{DynamicResource FontSizeRegion}" FontWeight="SemiBold"
                      Foreground="{DynamicResource TextPrimaryBrush}"/>
           <TextBlock Grid.Column="1" Text="空格勾选 · Ctrl+A 全选 · 回车添加" FontSize="{DynamicResource FontSizeXs}"
                      Foreground="{DynamicResource TextTertiaryBrush}" VerticalAlignment="Center"/>
@@ -99,7 +99,7 @@
                       </Style>
                     </Border.Style>
                     <TextBlock Text="{Binding Initial}" HorizontalAlignment="Center" VerticalAlignment="Center"
-                               FontSize="11" FontWeight="SemiBold" Foreground="{DynamicResource ModeAccentBrush}"/>
+                               FontSize="{DynamicResource FontSizeSmall}" FontWeight="SemiBold" Foreground="{DynamicResource ModeAccentBrush}"/>
                   </Border>
                   <Image Source="{Binding Icon}" Stretch="Uniform" SnapsToDevicePixels="True"
                          AutomationProperties.Name="程序图标"/>
@@ -131,7 +131,7 @@
         <ColumnDefinition Width="Auto"/>
       </Grid.ColumnDefinitions>
       <TextBlock Grid.Column="0" x:Name="LblInfo" Text="正在看有哪些程序开着…"
-                 FontSize="11" Foreground="{DynamicResource TextSecondaryBrush}"
+                 FontSize="{DynamicResource FontSizeSmall}" Foreground="{DynamicResource TextSecondaryBrush}"
                  TextWrapping="Wrap" VerticalAlignment="Center"
                  AutomationProperties.Name="扫描状态"/>
       <Button Grid.Column="1" x:Name="BtnRefresh" Content="刷新" Click="OnRefresh"

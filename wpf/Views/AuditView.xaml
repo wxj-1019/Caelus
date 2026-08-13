@@ -167,7 +167,7 @@
                                    AutomationProperties.Name="体检进度"/>
             <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center">
               <TextBlock Text="{Binding Progress, StringFormat=P0, Mode=OneWay}"
-                         FontSize="22" FontWeight="SemiBold"
+                         FontSize="{DynamicResource FontSizeSection}" FontWeight="SemiBold"
                          Foreground="{DynamicResource TextPrimaryBrush}"
                          Typography.NumeralAlignment="Tabular"
                          HorizontalAlignment="Center"/>

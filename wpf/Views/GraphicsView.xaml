@@ -27,7 +27,7 @@
           </Grid.ColumnDefinitions>
           <StackPanel Grid.Column="0" VerticalAlignment="Center">
             <TextBlock Text="{Binding EnabledSummaryText, Mode=OneWay}"
-                       FontSize="14" FontWeight="SemiBold"
+                       FontSize="{DynamicResource FontSizeBody}" FontWeight="SemiBold"
                        Foreground="{DynamicResource TextPrimaryBrush}"/>
             <TextBlock Text="普通开关状态实时统计，不含档位选择与维护操作。"
                        Margin="0,3,0,0" FontSize="{DynamicResource FontSizeXs}"

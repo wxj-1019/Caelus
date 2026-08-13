@@ -28,10 +28,10 @@
             BorderBrush="{DynamicResource DangerBrush}">
       <Border Style="{DynamicResource SettingsRow}">
         <StackPanel>
-          <TextBlock Text="这是拿安全换性能" FontSize="{DynamicResource FontSizeBody}" FontWeight="SemiBold"
+          <TextBlock Text="这是拿安全换性能" FontSize="{DynamicResource FontSizeRegion}" FontWeight="SemiBold"
                      Foreground="{DynamicResource DangerBrush}"/>
           <TextBlock Text="被排除的目录不再被实时扫描，其中的恶意文件不会被拦截。只排除你信任来源的游戏。"
-                     Margin="0,5,0,0" FontSize="11" TextWrapping="Wrap"
+                     Margin="0,5,0,0" FontSize="{DynamicResource FontSizeSmall}" TextWrapping="Wrap"
                      Foreground="{DynamicResource TextSecondaryBrush}"/>
         </StackPanel>
       </Border>
@@ -42,7 +42,7 @@
         <ProgressBar x:Name="BusyIndicator" DockPanel.Dock="Right" Width="92" Height="4"
                      Margin="12,0,0,0" IsIndeterminate="True" Visibility="Collapsed"
                      AutomationProperties.Name="Defender 操作进度"/>
-        <TextBlock x:Name="LblStatus" Text="正在读取 Defender 状态…" FontSize="11"
+        <TextBlock x:Name="LblStatus" Text="正在读取 Defender 状态…" FontSize="{DynamicResource FontSizeSmall}"
                    Foreground="{DynamicResource TextSecondaryBrush}" TextWrapping="Wrap"
                    AutomationProperties.Name="Defender 状态"/>
       </DockPanel>
@@ -69,7 +69,7 @@
                                TextTrimming="CharacterEllipsis"/>
                   </StackPanel>
                   <TextBlock Grid.Column="1" Text="{Binding StateText}" Margin="14,0,12,0"
-                             VerticalAlignment="Center" FontSize="11" FontWeight="SemiBold"
+                             VerticalAlignment="Center" FontSize="{DynamicResource FontSizeSmall}" FontWeight="SemiBold"
                              Foreground="{Binding StateBrush}"/>
                   <ToggleButton Grid.Column="2" IsChecked="{Binding Excluded, Mode=OneWay}"
                                 Style="{DynamicResource PolicyToggle}" VerticalAlignment="Center"

@@ -56,7 +56,7 @@
           </Grid.ColumnDefinitions>
           <StackPanel Grid.Column="0">
             <StackPanel Orientation="Horizontal">
-              <TextBlock FontSize="24" FontWeight="SemiBold" Foreground="{DynamicResource TextPrimaryBrush}"
+              <TextBlock FontSize="{DynamicResource FontSizeMetric}" FontWeight="SemiBold" Foreground="{DynamicResource TextPrimaryBrush}"
                          Typography.NumeralAlignment="Tabular" VerticalAlignment="Center">
                 <Run Text="{Binding EnabledGroupCount, Mode=OneWay}"/><Run Text="/" Foreground="{DynamicResource TextTertiaryBrush}"/><Run Text="{Binding TotalGroupCount, Mode=OneWay}"/>
               </TextBlock>

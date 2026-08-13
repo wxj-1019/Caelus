@@ -36,7 +36,7 @@
                    AutomationProperties.HelpText="按游戏名称或可执行文件路径筛选"/>
           <TextBlock x:Name="FilterHint" Text="搜索名称或路径" Margin="11,0,0,0"
                      VerticalAlignment="Center" IsHitTestVisible="False"
-                     FontSize="11" Foreground="{DynamicResource TextTertiaryBrush}"/>
+                     FontSize="{DynamicResource FontSizeSmall}" Foreground="{DynamicResource TextTertiaryBrush}"/>
         </Grid>
         <Button Grid.Column="1" x:Name="BtnSelectAll" Content="全选" Click="OnSelectAll"
                 Style="{DynamicResource GhostButton}" Padding="12,7" Margin="10,0,0,0"
@@ -55,7 +55,7 @@
             <ColumnDefinition Width="*"/>
             <ColumnDefinition Width="Auto"/>
           </Grid.ColumnDefinitions>
-          <TextBlock Text="扫描结果" FontSize="{DynamicResource FontSizeBody}" FontWeight="SemiBold"
+          <TextBlock Text="扫描结果" FontSize="{DynamicResource FontSizeRegion}" FontWeight="SemiBold"
                      Foreground="{DynamicResource TextPrimaryBrush}"/>
           <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
             <ProgressBar x:Name="ScanProgress" Width="72" Height="3" Margin="0,0,10,0"
@@ -122,7 +122,7 @@
         <RowDefinition Height="Auto"/>
         <RowDefinition Height="Auto"/>
       </Grid.RowDefinitions>
-      <TextBlock Grid.Row="0" x:Name="LblInfo" Text="正在扫描…" FontSize="11"
+      <TextBlock Grid.Row="0" x:Name="LblInfo" Text="正在扫描…" FontSize="{DynamicResource FontSizeSmall}"
                  Foreground="{DynamicResource TextSecondaryBrush}" TextWrapping="Wrap"
                  AutomationProperties.Name="扫描状态"/>
       <Grid Grid.Row="1" Margin="0,12,0,0">

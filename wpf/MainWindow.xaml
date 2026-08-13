@@ -39,7 +39,7 @@
 
         <!-- 居中窗口标题 -->
         <TextBlock Grid.Column="1" Text="C A E L U S" HorizontalAlignment="Center"
-                   VerticalAlignment="Center" FontSize="11" FontWeight="SemiBold"
+                   VerticalAlignment="Center" FontSize="{DynamicResource FontSizeSmall}" FontWeight="SemiBold"
                    Foreground="{DynamicResource TextSecondaryBrush}"/>
 
         <!-- 最小化/最大化/关闭（Windows 11 风格：悬停淡底，关闭悬停变红） -->

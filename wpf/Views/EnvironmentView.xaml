@@ -3,7 +3,7 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:ctl="clr-namespace:CaelusApp.WpfHost.Controls"
              xmlns:local="clr-namespace:CaelusApp.WpfHost"
-             AutomationProperties.Name="绯荤粺鐜">
+             AutomationProperties.Name="系统环境">
   <UserControl.Resources>
     <BooleanToVisibilityConverter x:Key="BoolVis"/>
 

@@ -29,7 +29,7 @@
     <Border Grid.Row="1" Style="{DynamicResource SettingsGroup}" Margin="0,0,0,12">
       <Border Style="{DynamicResource SettingsRow}">
         <TextBlock Text="删完后客户端更新可能会重新下载这些组件。英雄联盟、WeGame 或反作弊运行时不会执行删除。"
-                   FontSize="11" Foreground="{DynamicResource TextSecondaryBrush}" TextWrapping="Wrap"/>
+                   FontSize="{DynamicResource FontSizeSmall}" Foreground="{DynamicResource TextSecondaryBrush}" TextWrapping="Wrap"/>
       </Border>
     </Border>
 
@@ -59,7 +59,7 @@
                      Margin="12,0,0,0" IsIndeterminate="True" Visibility="Collapsed"
                      AutomationProperties.Name="附加层操作进度"/>
         <TextBlock x:Name="LblStatus" Text="选择英雄联盟安装目录，或把目录拖到窗口中"
-                   FontSize="11" Foreground="{DynamicResource TextSecondaryBrush}" TextWrapping="Wrap"
+                   FontSize="{DynamicResource FontSizeSmall}" Foreground="{DynamicResource TextSecondaryBrush}" TextWrapping="Wrap"
                    AutomationProperties.Name="附加层检查状态"/>
       </DockPanel>
     </Border>
@@ -75,7 +75,7 @@
             <ColumnDefinition Width="*"/>
             <ColumnDefinition Width="Auto"/>
           </Grid.ColumnDefinitions>
-          <TextBlock Text="将处理的全部候选项" FontSize="{DynamicResource FontSizeBody}" FontWeight="SemiBold"
+          <TextBlock Text="将处理的全部候选项" FontSize="{DynamicResource FontSizeRegion}" FontWeight="SemiBold"
                      Foreground="{DynamicResource TextPrimaryBrush}"/>
           <TextBlock Grid.Column="1" Text="列表仅供确认范围" FontSize="{DynamicResource FontSizeXs}"
                      Foreground="{DynamicResource TextTertiaryBrush}" VerticalAlignment="Center"/>
@@ -100,7 +100,7 @@
                                Foreground="{DynamicResource TextTertiaryBrush}" TextWrapping="Wrap"/>
                   </StackPanel>
                   <TextBlock Grid.Column="1" Text="{Binding State}" Margin="14,0,4,0"
-                             VerticalAlignment="Center" FontSize="11"
+                             VerticalAlignment="Center" FontSize="{DynamicResource FontSizeSmall}"
                              Foreground="{Binding StateBrush}"/>
                 </Grid>
               </Border>

@@ -31,7 +31,7 @@
                     StrokeLineJoin="Round" StrokeStartLineCap="Round" StrokeEndLineCap="Round"/>
             </Viewbox>
           </Border>
-          <TextBlock Text="添加你的第一个游戏" FontSize="16" FontWeight="SemiBold"
+          <TextBlock Text="添加你的第一个游戏" FontSize="{DynamicResource FontSizeEmpty}" FontWeight="SemiBold"
                      Foreground="{DynamicResource TextPrimaryBrush}" HorizontalAlignment="Center" TextAlignment="Center"/>
           <TextBlock Text="{Binding EmptyHint}" Margin="0,6,0,0" FontSize="{DynamicResource FontSizeCaption}"
                      Foreground="{DynamicResource TextSecondaryBrush}" HorizontalAlignment="Center" TextAlignment="Center" TextWrapping="Wrap"/>
@@ -56,7 +56,7 @@
           <Grid Margin="0,20,0,0" Width="300">
             <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
             <Rectangle Grid.Column="0" Height="1" VerticalAlignment="Center" Fill="{DynamicResource BorderSubtleBrush}"/>
-            <TextBlock Grid.Column="1" Text="或拖放主程序到这里" Margin="12,0" FontSize="10" Foreground="{DynamicResource TextTertiaryBrush}"/>
+            <TextBlock Grid.Column="1" Text="或拖放主程序到这里" Margin="12,0" FontSize="{DynamicResource FontSizeXs}" Foreground="{DynamicResource TextTertiaryBrush}"/>
             <Rectangle Grid.Column="2" Height="1" VerticalAlignment="Center" Fill="{DynamicResource BorderSubtleBrush}"/>
           </Grid>
         </StackPanel>
@@ -68,13 +68,13 @@
           <WrapPanel VerticalAlignment="Center">
             <StackPanel Orientation="Horizontal" Margin="0,0,12,0">
               <Border Style="{DynamicResource NeutralStatusBadge}" Margin="0,0,8,6">
-                <StackPanel Orientation="Horizontal"><TextBlock Text="{Binding TotalCount}" FontWeight="SemiBold" Typography.NumeralAlignment="Tabular"/><TextBlock Text=" 已纳入" Margin="4,0,0,0" FontSize="10" Foreground="{DynamicResource TextSecondaryBrush}"/></StackPanel>
+                <StackPanel Orientation="Horizontal"><TextBlock Text="{Binding TotalCount}" FontWeight="SemiBold" Typography.NumeralAlignment="Tabular"/><TextBlock Text=" 已纳入" Margin="4,0,0,0" FontSize="{DynamicResource FontSizeXs}" Foreground="{DynamicResource TextSecondaryBrush}"/></StackPanel>
               </Border>
               <Border Style="{DynamicResource SuccessStatusBadge}" Margin="0,0,0,6">
-                <StackPanel Orientation="Horizontal"><TextBlock Text="{Binding RunningCount}" FontWeight="SemiBold" Typography.NumeralAlignment="Tabular"/><TextBlock Text=" 运行中" Margin="4,0,0,0" FontSize="10" Foreground="{DynamicResource TextSecondaryBrush}"/></StackPanel>
+                <StackPanel Orientation="Horizontal"><TextBlock Text="{Binding RunningCount}" FontWeight="SemiBold" Typography.NumeralAlignment="Tabular"/><TextBlock Text=" 运行中" Margin="4,0,0,0" FontSize="{DynamicResource FontSizeXs}" Foreground="{DynamicResource TextSecondaryBrush}"/></StackPanel>
               </Border>
             </StackPanel>
-            <TextBlock Text="{Binding DropHint}" MaxWidth="320" Margin="0,2,16,8" FontSize="10" Foreground="{DynamicResource TextTertiaryBrush}" TextWrapping="Wrap" VerticalAlignment="Center"/>
+            <TextBlock Text="{Binding DropHint}" MaxWidth="320" Margin="0,2,16,8" FontSize="{DynamicResource FontSizeXs}" Foreground="{DynamicResource TextTertiaryBrush}" TextWrapping="Wrap" VerticalAlignment="Center"/>
             <StackPanel Orientation="Horizontal">
               <Button Content="{Binding AddButtonText}" Click="OnAddClick" Style="{DynamicResource PrimaryButton}" Padding="14,7" Margin="0,0,6,6" AutomationProperties.Name="添加游戏"/>
               <Button x:Name="BtnRemove" Content="{Binding RemoveButtonText}" Click="OnRemoveClick" Style="{DynamicResource DangerButton}" Padding="12,7" Margin="0,0,0,6" IsEnabled="False" AutomationProperties.Name="移除所选游戏"/>
@@ -102,15 +102,15 @@
         <Border x:Name="ZoneList" Grid.Row="3" Style="{DynamicResource SettingsGroup}" Padding="6">
           <Grid>
             <Grid.RowDefinitions><RowDefinition Height="Auto"/><RowDefinition Height="*"/></Grid.RowDefinitions>
-            <Grid Grid.Row="0" Margin="12,8,12,7"><Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions><TextBlock Text="游戏与进程" FontSize="{DynamicResource FontSizeSmall}" FontWeight="SemiBold" Foreground="{DynamicResource TextSecondaryBrush}"/><TextBlock Grid.Column="1" Text="方向键选择 · Delete 移除" FontSize="10" Foreground="{DynamicResource TextTertiaryBrush}"/></Grid>
+            <Grid Grid.Row="0" Margin="12,8,12,7"><Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions><TextBlock Text="游戏与进程" FontSize="{DynamicResource FontSizeSmall}" FontWeight="SemiBold" Foreground="{DynamicResource TextSecondaryBrush}"/><TextBlock Grid.Column="1" Text="方向键选择 · Delete 移除" FontSize="{DynamicResource FontSizeXs}" Foreground="{DynamicResource TextTertiaryBrush}"/></Grid>
             <ListBox Grid.Row="1" x:Name="GameList" ItemsSource="{Binding Items}" ItemContainerStyle="{DynamicResource ListItem}" Background="Transparent" BorderThickness="0" ScrollViewer.HorizontalScrollBarVisibility="Disabled" ScrollViewer.VerticalScrollBarVisibility="Auto" KeyboardNavigation.DirectionalNavigation="Continue" SelectionMode="Single" SelectionChanged="OnGameSelectionChanged" PreviewKeyDown="OnGameListPreviewKeyDown" AutomationProperties.Name="已添加的游戏">
               <ListBox.ItemTemplate>
                 <DataTemplate>
                   <Border Style="{DynamicResource SettingsRow}" Margin="6,2" Padding="12,10" local:Motion.Lift="True" AutomationProperties.Name="{Binding Name}">
                     <Grid MinHeight="44"><Grid.ColumnDefinitions><ColumnDefinition Width="Auto"/><ColumnDefinition Width="*" MinWidth="120"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
                       <Border Grid.Column="0" Style="{DynamicResource GameAvatar}" Margin="0,0,14,0"><TextBlock Text="{Binding Initial}" FontSize="15" FontWeight="SemiBold" Foreground="{DynamicResource ModeAccentBrush}" HorizontalAlignment="Center" VerticalAlignment="Center"/></Border>
-                      <StackPanel Grid.Column="1" VerticalAlignment="Center"><TextBlock Text="{Binding Name}" FontSize="{DynamicResource FontSizeCaption}" FontWeight="SemiBold" Foreground="{DynamicResource TextPrimaryBrush}" TextTrimming="CharacterEllipsis"/><TextBlock Text="{Binding Path}" FontFamily="{DynamicResource FontMono}" FontSize="10" Foreground="{DynamicResource TextTertiaryBrush}" TextTrimming="CharacterEllipsis" Margin="0,4,18,0" ToolTip="{Binding Path}" AutomationProperties.Name="{Binding Path}"/></StackPanel>
-                      <StackPanel Grid.Column="2" Orientation="Horizontal" VerticalAlignment="Center"><Button Content="复制路径" Click="OnCopyPathClick" Style="{DynamicResource GhostButton}" Padding="8,4" Margin="0,0,8,0" ToolTip="复制完整主程序路径" AutomationProperties.Name="复制游戏路径"/><Border Style="{DynamicResource StatusBadge}"><StackPanel Orientation="Horizontal"><Ellipse Width="7" Height="7" Margin="0,0,7,0" VerticalAlignment="Center"><Ellipse.Style><Style TargetType="Ellipse"><Setter Property="Fill" Value="{DynamicResource TextTertiaryBrush}"/><Style.Triggers><DataTrigger Binding="{Binding IsRunning}" Value="True"><Setter Property="Fill" Value="{DynamicResource SuccessBrush}"/></DataTrigger></Style.Triggers></Style></Ellipse.Style></Ellipse><TextBlock Text="{Binding StatusText}" FontSize="10" VerticalAlignment="Center" AutomationProperties.Name="{Binding StatusText}"/></StackPanel></Border></StackPanel>
+                      <StackPanel Grid.Column="1" VerticalAlignment="Center"><TextBlock Text="{Binding Name}" FontSize="{DynamicResource FontSizeCaption}" FontWeight="SemiBold" Foreground="{DynamicResource TextPrimaryBrush}" TextTrimming="CharacterEllipsis"/><TextBlock Text="{Binding Path}" FontFamily="{DynamicResource FontMono}" FontSize="{DynamicResource FontSizeXs}" Foreground="{DynamicResource TextTertiaryBrush}" TextTrimming="CharacterEllipsis" Margin="0,4,18,0" ToolTip="{Binding Path}" AutomationProperties.Name="{Binding Path}"/></StackPanel>
+                      <StackPanel Grid.Column="2" Orientation="Horizontal" VerticalAlignment="Center"><Button Content="复制路径" Click="OnCopyPathClick" Style="{DynamicResource GhostButton}" Padding="8,4" Margin="0,0,8,0" ToolTip="复制完整主程序路径" AutomationProperties.Name="复制游戏路径"/><Border Style="{DynamicResource StatusBadge}"><StackPanel Orientation="Horizontal"><Ellipse Width="7" Height="7" Margin="0,0,7,0" VerticalAlignment="Center"><Ellipse.Style><Style TargetType="Ellipse"><Setter Property="Fill" Value="{DynamicResource TextTertiaryBrush}"/><Style.Triggers><DataTrigger Binding="{Binding IsRunning}" Value="True"><Setter Property="Fill" Value="{DynamicResource SuccessBrush}"/></DataTrigger></Style.Triggers></Style></Ellipse.Style></Ellipse><TextBlock Text="{Binding StatusText}" FontSize="{DynamicResource FontSizeXs}" VerticalAlignment="Center" AutomationProperties.Name="{Binding StatusText}"/></StackPanel></Border></StackPanel>
                     </Grid>
                   </Border>
                 </DataTemplate>
@@ -121,7 +121,7 @@
       </Grid>
 
       <Border x:Name="DropOverlay" Background="{DynamicResource AccentSoftBrush}" BorderBrush="{DynamicResource AccentPrimaryBrush}" BorderThickness="2" CornerRadius="{DynamicResource RadiusSm}" Visibility="Collapsed" IsHitTestVisible="False">
-        <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center"><TextBlock Text="松开以添加游戏主程序" FontSize="16" FontWeight="SemiBold" Foreground="{DynamicResource TextPrimaryBrush}" HorizontalAlignment="Center"/><TextBlock Text="仅支持 .exe 文件" Margin="0,6,0,0" FontSize="{DynamicResource FontSizeSmall}" Foreground="{DynamicResource TextSecondaryBrush}" HorizontalAlignment="Center"/></StackPanel>
+        <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center"><TextBlock Text="松开以添加游戏主程序" FontSize="{DynamicResource FontSizeEmpty}" FontWeight="SemiBold" Foreground="{DynamicResource TextPrimaryBrush}" HorizontalAlignment="Center"/><TextBlock Text="仅支持 .exe 文件" Margin="0,6,0,0" FontSize="{DynamicResource FontSizeSmall}" Foreground="{DynamicResource TextSecondaryBrush}" HorizontalAlignment="Center"/></StackPanel>
       </Border>
     </Grid>
   </Grid>

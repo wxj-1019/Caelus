@@ -28,7 +28,7 @@
             BorderBrush="{DynamicResource DangerBrush}">
       <Border Style="{DynamicResource SettingsRow}">
         <StackPanel>
-          <TextBlock Text="这是拿安全换性能" FontSize="13" FontWeight="SemiBold"
+          <TextBlock Text="这是拿安全换性能" FontSize="{DynamicResource FontSizeBody}" FontWeight="SemiBold"
                      Foreground="{DynamicResource DangerBrush}"/>
           <TextBlock Text="被排除的目录不再被实时扫描，其中的恶意文件不会被拦截。只排除你信任来源的游戏。"
                      Margin="0,5,0,0" FontSize="11" TextWrapping="Wrap"
@@ -61,9 +61,9 @@
                     <ColumnDefinition Width="Auto"/>
                   </Grid.ColumnDefinitions>
                   <StackPanel Grid.Column="0" VerticalAlignment="Center">
-                    <TextBlock Text="{Binding Name}" FontSize="12" FontWeight="SemiBold"
+                    <TextBlock Text="{Binding Name}" FontSize="{DynamicResource FontSizeCaption}" FontWeight="SemiBold"
                                Foreground="{DynamicResource TextPrimaryBrush}" TextTrimming="CharacterEllipsis"/>
-                    <TextBlock Text="{Binding Root}" Margin="0,4,0,0" FontSize="10"
+                    <TextBlock Text="{Binding Root}" Margin="0,4,0,0" FontSize="{DynamicResource FontSizeXs}"
                                FontFamily="{DynamicResource FontMono}"
                                Foreground="{DynamicResource TextTertiaryBrush}"
                                TextTrimming="CharacterEllipsis"/>

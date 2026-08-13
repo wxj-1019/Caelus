@@ -57,9 +57,9 @@
             <ColumnDefinition Width="*"/>
             <ColumnDefinition Width="Auto"/>
           </Grid.ColumnDefinitions>
-          <TextBlock Text="运行中的程序" FontSize="13" FontWeight="SemiBold"
+          <TextBlock Text="运行中的程序" FontSize="{DynamicResource FontSizeBody}" FontWeight="SemiBold"
                      Foreground="{DynamicResource TextPrimaryBrush}"/>
-          <TextBlock Grid.Column="1" Text="空格勾选 · Ctrl+A 全选 · 回车添加" FontSize="10"
+          <TextBlock Grid.Column="1" Text="空格勾选 · Ctrl+A 全选 · 回车添加" FontSize="{DynamicResource FontSizeXs}"
                      Foreground="{DynamicResource TextTertiaryBrush}" VerticalAlignment="Center"/>
         </Grid>
 
@@ -106,13 +106,13 @@
                 </Grid>
                 <StackPanel Grid.Column="2" VerticalAlignment="Center">
                   <TextBlock Text="{Binding Title}" FontWeight="SemiBold"
-                             Foreground="{DynamicResource TextPrimaryBrush}" FontSize="12"
+                             Foreground="{DynamicResource TextPrimaryBrush}" FontSize="{DynamicResource FontSizeCaption}"
                              TextTrimming="CharacterEllipsis"/>
-                  <TextBlock Text="{Binding Path}" FontSize="10" Margin="0,3,0,0"
+                  <TextBlock Text="{Binding Path}" FontSize="{DynamicResource FontSizeXs}" Margin="0,3,0,0"
                              Foreground="{DynamicResource TextTertiaryBrush}"
                              TextTrimming="CharacterEllipsis"/>
                 </StackPanel>
-                <TextBlock Grid.Column="3" Text="{Binding Detail}" FontSize="10"
+                <TextBlock Grid.Column="3" Text="{Binding Detail}" FontSize="{DynamicResource FontSizeXs}"
                            Margin="14,0,8,0" VerticalAlignment="Center"
                            Foreground="{DynamicResource TextSecondaryBrush}"
                            TextAlignment="Right"/>

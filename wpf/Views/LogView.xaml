@@ -31,11 +31,11 @@
             <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
               <TextBlock Text="运行记录" FontSize="{DynamicResource FontSizeSmall}" Foreground="{DynamicResource TextTertiaryBrush}"/>
               <Border Style="{DynamicResource NeutralStatusBadge}" Padding="8,3" Margin="8,0,0,0">
-                <TextBlock Text="{Binding SummaryText}" FontSize="10" Foreground="{DynamicResource TextSecondaryBrush}"/>
+                <TextBlock Text="{Binding SummaryText}" FontSize="{DynamicResource FontSizeXs}" Foreground="{DynamicResource TextSecondaryBrush}"/>
               </Border>
             </StackPanel>
             <WrapPanel Grid.Column="1" Orientation="Horizontal">
-              <TextBlock Text="跟随最新" FontSize="10" Foreground="{DynamicResource TextSecondaryBrush}"
+              <TextBlock Text="跟随最新" FontSize="{DynamicResource FontSizeXs}" Foreground="{DynamicResource TextSecondaryBrush}"
                          VerticalAlignment="Center" Margin="0,0,7,0"/>
               <ToggleButton x:Name="SwFollow" Style="{DynamicResource PolicyToggle}" IsChecked="True"
                             VerticalAlignment="Center" Margin="0,0,10,0"
@@ -74,7 +74,7 @@
 
         <Grid Grid.Row="2">
           <TextBox x:Name="TbLog" IsReadOnly="True" Background="Transparent" BorderThickness="0" Padding="14,12"
-                   Foreground="{DynamicResource TextSecondaryBrush}" FontFamily="{DynamicResource FontMono}" FontSize="12"
+                   Foreground="{DynamicResource TextSecondaryBrush}" FontFamily="{DynamicResource FontMono}" FontSize="{DynamicResource FontSizeMono}"
                    VerticalContentAlignment="Top" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Auto"
                    TextWrapping="NoWrap" Text="{Binding LogText, Mode=OneWay}" AutomationProperties.Name="运行日志内容">
             <TextBox.Style>
@@ -86,7 +86,7 @@
               <Style TargetType="Border" BasedOn="{StaticResource EmptyState}"><Setter Property="Visibility" Value="Collapsed"/><Style.Triggers><DataTrigger Binding="{Binding HasVisibleLog}" Value="False"><Setter Property="Visibility" Value="Visible"/></DataTrigger></Style.Triggers></Style>
             </Border.Style>
             <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center" MaxWidth="360" Margin="24">
-              <TextBlock Text="{Binding EmptyTitle}" FontSize="15" FontWeight="SemiBold" Foreground="{DynamicResource TextPrimaryBrush}" TextAlignment="Center"/>
+              <TextBlock Text="{Binding EmptyTitle}" FontSize="{DynamicResource FontSizeEmpty}" FontWeight="SemiBold" Foreground="{DynamicResource TextPrimaryBrush}" TextAlignment="Center"/>
               <TextBlock Text="{Binding EmptyHint}" FontSize="{DynamicResource FontSizeSmall}" Foreground="{DynamicResource TextSecondaryBrush}" TextWrapping="Wrap" TextAlignment="Center" Margin="0,6,0,0"/>
             </StackPanel>
           </Border>

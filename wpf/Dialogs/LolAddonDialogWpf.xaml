@@ -75,9 +75,9 @@
             <ColumnDefinition Width="*"/>
             <ColumnDefinition Width="Auto"/>
           </Grid.ColumnDefinitions>
-          <TextBlock Text="将处理的全部候选项" FontSize="13" FontWeight="SemiBold"
+          <TextBlock Text="将处理的全部候选项" FontSize="{DynamicResource FontSizeBody}" FontWeight="SemiBold"
                      Foreground="{DynamicResource TextPrimaryBrush}"/>
-          <TextBlock Grid.Column="1" Text="列表仅供确认范围" FontSize="10"
+          <TextBlock Grid.Column="1" Text="列表仅供确认范围" FontSize="{DynamicResource FontSizeXs}"
                      Foreground="{DynamicResource TextTertiaryBrush}" VerticalAlignment="Center"/>
         </Grid>
         <ListBox Grid.Row="1" x:Name="LstCandidates" Background="Transparent" BorderThickness="0"
@@ -94,9 +94,9 @@
                     <ColumnDefinition Width="Auto"/>
                   </Grid.ColumnDefinitions>
                   <StackPanel Grid.Column="0">
-                    <TextBlock Text="{Binding RelativePath}" FontSize="12" FontWeight="SemiBold"
+                    <TextBlock Text="{Binding RelativePath}" FontSize="{DynamicResource FontSizeCaption}" FontWeight="SemiBold"
                                Foreground="{DynamicResource TextPrimaryBrush}"/>
-                    <TextBlock Text="{Binding Detail}" Margin="0,4,0,0" FontSize="10"
+                    <TextBlock Text="{Binding Detail}" Margin="0,4,0,0" FontSize="{DynamicResource FontSizeXs}"
                                Foreground="{DynamicResource TextTertiaryBrush}" TextWrapping="Wrap"/>
                   </StackPanel>
                   <TextBlock Grid.Column="1" Text="{Binding State}" Margin="14,0,4,0"

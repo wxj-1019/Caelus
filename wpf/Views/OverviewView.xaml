@@ -74,7 +74,7 @@
             <TextBlock Text="CAELUS CORE"
                        Margin="0,8,0,0"
                        HorizontalAlignment="Center"
-                       FontSize="10"
+                       FontSize="{DynamicResource FontSizeXs}"
                        Foreground="{DynamicResource TextTertiaryBrush}"/>
           </StackPanel>
 
@@ -86,7 +86,7 @@
                       AutomationProperties.Name="当前样例模式">
                 <StackPanel Orientation="Horizontal">
                   <TextBlock Text="样例模式"
-                             FontSize="10"
+                             FontSize="{DynamicResource FontSizeXs}"
                              Foreground="{DynamicResource TextTertiaryBrush}"/>
                   <TextBlock Text="{Binding ModeText}"
                              Margin="8,0,0,0"
@@ -97,7 +97,7 @@
               </Border>
               <TextBlock Text="样例结论"
                          VerticalAlignment="Center"
-                         FontSize="10"
+                         FontSize="{DynamicResource FontSizeXs}"
                          Foreground="{DynamicResource TextTertiaryBrush}"/>
             </DockPanel>
 
@@ -176,7 +176,7 @@
             <DockPanel>
               <TextBlock Text="样例值"
                          DockPanel.Dock="Right"
-                         FontSize="10"
+                         FontSize="{DynamicResource FontSizeXs}"
                          Foreground="{DynamicResource TextTertiaryBrush}"/>
               <TextBlock Text="{Binding Metrics[0].Label}"
                          FontSize="{DynamicResource FontSizeSmall}"
@@ -230,7 +230,7 @@
                   <DockPanel>
                     <TextBlock Text="样例值"
                                DockPanel.Dock="Right"
-                               FontSize="10"
+                               FontSize="{DynamicResource FontSizeXs}"
                                Foreground="{DynamicResource TextTertiaryBrush}"/>
                     <TextBlock Text="{Binding Label}"
                                FontSize="{DynamicResource FontSizeSmall}"
@@ -244,7 +244,7 @@
                              Text="来自预览数据源"
                              Margin="0,8,0,8"
                              VerticalAlignment="Bottom"
-                             FontSize="10"
+                             FontSize="{DynamicResource FontSizeXs}"
                              Foreground="{DynamicResource TextTertiaryBrush}"/>
                   <Grid Grid.Row="3" Height="3">
                     <Grid.ColumnDefinitions>
@@ -319,7 +319,7 @@
                          Foreground="{DynamicResource TextSecondaryBrush}"/>
               <ContentControl Grid.Column="1" Style="{DynamicResource EmptyChip}">
                 <TextBlock Text="未接入"
-                           FontSize="10"
+                           FontSize="{DynamicResource FontSizeXs}"
                            Foreground="{DynamicResource TextTertiaryBrush}"/></ContentControl>
             </Grid>
           </StackPanel>
@@ -341,19 +341,19 @@
                        TextWrapping="Wrap"/>
             <DockPanel Margin="0,0,0,6">
               <ContentControl DockPanel.Dock="Right" Style="{DynamicResource EmptyChip}">
-                <TextBlock Text="未绑定" FontSize="10" Foreground="{DynamicResource TextTertiaryBrush}"/></ContentControl>
+                <TextBlock Text="未绑定" FontSize="{DynamicResource FontSizeXs}" Foreground="{DynamicResource TextTertiaryBrush}"/></ContentControl>
               <TextBlock Text="处理器" FontSize="{DynamicResource FontSizeSmall}"
                          Foreground="{DynamicResource TextSecondaryBrush}"/>
             </DockPanel>
             <DockPanel Margin="0,0,0,6">
               <ContentControl DockPanel.Dock="Right" Style="{DynamicResource EmptyChip}">
-                <TextBlock Text="未绑定" FontSize="10" Foreground="{DynamicResource TextTertiaryBrush}"/></ContentControl>
+                <TextBlock Text="未绑定" FontSize="{DynamicResource FontSizeXs}" Foreground="{DynamicResource TextTertiaryBrush}"/></ContentControl>
               <TextBlock Text="图形设备" FontSize="{DynamicResource FontSizeSmall}"
                          Foreground="{DynamicResource TextSecondaryBrush}"/>
             </DockPanel>
             <DockPanel>
               <ContentControl DockPanel.Dock="Right" Style="{DynamicResource EmptyChip}">
-                <TextBlock Text="未绑定" FontSize="10" Foreground="{DynamicResource TextTertiaryBrush}"/></ContentControl>
+                <TextBlock Text="未绑定" FontSize="{DynamicResource FontSizeXs}" Foreground="{DynamicResource TextTertiaryBrush}"/></ContentControl>
               <TextBlock Text="内存规格" FontSize="{DynamicResource FontSizeSmall}"
                          Foreground="{DynamicResource TextSecondaryBrush}"/>
             </DockPanel>

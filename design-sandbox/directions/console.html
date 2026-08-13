@@ -1,0 +1,231 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>方向 · 开发者控制台</title>
+<style>
+:root{
+  --bg:#0D1117; --panel:#12161C; --card:#161C24; --card-2:#1A212B; --line:#232C38; --line-hi:#33404F;
+  --tx:#E6EDF3; --tx-2:#8B98A5; --tx-3:#5C6B7A;
+  --ac:#4C9BE8; --ac-2:#2F7BD6; --ac-soft:rgba(76,155,232,.12); --ac-edge:rgba(76,155,232,.28);
+  --teal:#2DD4BF; --ok:#4CC38A; --warn:#E5A13D; --info:#4C9BE8;
+}
+*{margin:0;padding:0;box-sizing:border-box}
+body{background:var(--bg);color:var(--tx);font-family:"Segoe UI Variable Text","Segoe UI","Microsoft YaHei UI",sans-serif;font-size:13.5px;line-height:1.55}
+.mono{font-family:Consolas,"Cascadia Mono",monospace;font-variant-numeric:tabular-nums}
+.frame{max-width:1040px;margin:14px auto;background:var(--panel);border:1px solid var(--line);border-radius:10px;
+  overflow:hidden;box-shadow:0 24px 60px rgba(0,0,0,.5)}
+
+.titlebar{display:flex;align-items:center;justify-content:space-between;height:36px;padding:0 12px;
+  background:var(--card);border-bottom:1px solid var(--line)}
+.titlebar .brand{display:flex;align-items:center;gap:8px;font-size:11px;font-weight:600;color:var(--tx-2);letter-spacing:1px}
+.titlebar .brand .dot{width:7px;height:7px;border-radius:50%;background:var(--ok);box-shadow:0 0 6px var(--ok)}
+.titlebar .meta{font-size:10px;color:var(--tx-3)}
+.winbtns{display:flex}
+.winbtns span{width:38px;height:28px;display:grid;place-items:center;color:var(--tx-2);font-size:11px}
+.winbtns span:hover{background:var(--card-2);color:var(--tx)}
+.winbtns .close:hover{background:#C42B1C;color:#fff}
+
+.body{display:grid;grid-template-columns:200px 1fr}
+.sidebar{border-right:1px solid var(--line);padding:16px 12px;display:flex;flex-direction:column;min-height:560px;background:var(--panel)}
+.brandbox{display:flex;align-items:center;gap:9px;padding:0 6px 10px}
+.brandico{width:22px;height:22px;border-radius:6px;background:var(--ac-soft);border:1px solid var(--ac-edge);display:grid;place-items:center}
+.brandico svg{width:12px;height:12px;fill:var(--ac)}
+.brandname{font-size:14px;font-weight:600}
+.brandsub{font-size:10px;color:var(--tx-3)}
+.navgroup{font-size:10px;font-weight:600;color:var(--tx-3);margin:16px 8px 5px;letter-spacing:1.5px;text-transform:uppercase}
+.nav{display:flex;flex-direction:column;gap:1px}
+.nav button{display:flex;align-items:center;gap:9px;text-align:left;background:none;border:none;color:var(--tx-2);
+  font-size:12.5px;padding:7px 10px;border-radius:7px;cursor:pointer}
+.nav button svg{width:15px;height:15px;stroke:currentColor;fill:none;stroke-width:1.8;stroke-linejoin:round}
+.nav button:hover{background:var(--card);color:var(--tx)}
+.nav button.on{background:var(--ac-soft);color:var(--tx);font-weight:600;box-shadow:inset 0 0 0 1px var(--ac-edge)}
+.nav button.on svg{stroke:var(--ac)}
+.seg{margin-top:auto;display:flex;background:var(--card);border:1px solid var(--line);border-radius:8px;padding:2px}
+.seg button{flex:1;background:none;border:none;color:var(--tx-2);font-size:11px;padding:5px 0;border-radius:6px;cursor:pointer}
+.seg button.on{background:var(--card-2);color:var(--tx);font-weight:600}
+
+.content{padding:22px 26px;background:var(--panel)}
+.hrow{display:flex;align-items:baseline;justify-content:space-between;margin-bottom:16px}
+.h1{font-size:21px;font-weight:600}
+.hsub{font-size:11.5px;color:var(--tx-2);margin-top:3px}
+.live{display:flex;align-items:center;gap:7px;font-size:10.5px;color:var(--tx-3)}
+.live .dot{width:6px;height:6px;border-radius:50%;background:var(--ok)}
+
+.banner{display:flex;align-items:center;gap:12px;background:var(--card);border:1px solid var(--line);
+  border-radius:9px;padding:11px 14px;margin-bottom:16px}
+.badge{display:inline-flex;align-items:center;gap:6px;font-size:11px;font-weight:600;color:var(--teal);
+  background:rgba(45,212,191,.1);border:1px solid rgba(45,212,191,.25);border-radius:6px;padding:3px 9px}
+.badge .dot{width:5px;height:5px;border-radius:50%;background:var(--teal)}
+.banner .s1{font-weight:600;font-size:13px}
+.banner .s2{font-size:11.5px;color:var(--tx-2)}
+.banner .tail{margin-left:auto;font-size:10px;color:var(--tx-3)}
+
+.card{background:var(--card);border:1px solid var(--line);border-radius:10px;overflow:hidden}
+.card-hd{display:flex;align-items:center;justify-content:space-between;padding:11px 15px;border-bottom:1px solid var(--line)}
+.card-hd .t{font-size:12px;font-weight:600;color:var(--tx-2)}
+.card-hd .tag{font-size:10px;color:var(--tx-3)}
+.card-bd{padding:16px}
+.hero{display:grid;grid-template-columns:150px 1fr;gap:22px;align-items:center;margin-bottom:16px}
+.corebox{border:1px solid var(--line);border-radius:10px;background:var(--card-2);padding:14px;display:flex;flex-direction:column;align-items:center}
+.corelabel{font-size:9px;color:var(--tx-3);margin-top:8px;letter-spacing:2px}
+.hero-kicker{display:flex;align-items:center;gap:8px;font-size:10px;color:var(--tx-3);margin-bottom:7px}
+.hero-title{font-size:19px;font-weight:600;line-height:1.35}
+.hero-desc{font-size:12.5px;color:var(--tx-2);margin-top:6px;max-width:600px}
+.hero-meta{font-size:10.5px;color:var(--tx-3);margin-top:6px}
+.btnrow{margin-top:12px;display:flex;gap:8px}
+.btn{background:var(--ac-2);color:#fff;border:none;font-size:12.5px;padding:7px 15px;border-radius:7px;cursor:pointer;font-weight:600}
+.btn:hover{background:var(--ac)}
+.btn2{background:transparent;border:1px solid var(--line-hi);color:var(--tx);font-size:12.5px;padding:7px 14px;border-radius:7px;cursor:pointer}
+.btn2:hover{border-color:var(--tx-3)}
+
+.sect{font-size:13px;font-weight:600;margin-bottom:3px}
+.sectsub{font-size:11px;color:var(--tx-2);margin-bottom:12px}
+.metrics{display:grid;grid-template-columns:1.05fr 1fr 1fr 1fr;gap:12px;margin-bottom:16px}
+.mcard{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:14px 15px}
+.mcard:hover{border-color:var(--line-hi)}
+.mcard .lbl{font-size:11px;color:var(--tx-2)}
+.mcard .lbl .tag{float:right;font-size:10px;color:var(--tx-3)}
+.mcard .val{font-size:27px;font-weight:600;margin-top:8px;letter-spacing:-.5px}
+.mcard .val small{font-size:13px;color:var(--tx-3);font-weight:400}
+.mcard .sub{font-size:10px;color:var(--tx-3);margin-top:4px}
+.mcard .sub .up{color:var(--ok)}
+.mcard .sub .warn{color:var(--warn)}
+.bar{height:4px;border-radius:2px;background:var(--line);margin-top:12px;overflow:hidden}
+.bar i{display:block;height:100%;border-radius:2px}
+.spark{margin-top:10px;display:block}
+
+.bottom{display:grid;grid-template-columns:1.4fr 1fr;gap:12px;padding-bottom:14px}
+.rowkv{display:flex;justify-content:space-between;font-size:11.5px;padding:8px 15px;border-bottom:1px solid var(--line)}
+.rowkv:last-child{border-bottom:none}
+.rowkv .k{color:var(--tx-2)}
+.rowkv .v{color:var(--tx)}
+.rowkv .v.dim{color:var(--tx-3)}
+.rowkv .v.ok{color:var(--ok)}
+</style>
+</head>
+<body>
+<div class="frame">
+  <!-- 标题栏 -->
+  <div class="titlebar">
+    <div class="brand"><span class="dot"></span>Caelus<span style="color:var(--tx-3);font-weight:400">/ overview</span></div>
+    <div class="meta">均衡 · refresh 1s</div>
+    <div class="winbtns"><span>−</span><span>□</span><span class="close">×</span></div>
+  </div>
+  <div class="body">
+    <!-- 侧栏 -->
+    <aside class="sidebar">
+      <div class="brandbox">
+        <div class="brandico"><svg viewBox="0 0 24 24"><path d="M13 2L4 14h6l-1 8 9-12h-6z"/></svg></div>
+        <div><div class="brandname">Caelus</div><div class="brandsub">性能守护</div></div>
+      </div>
+      <nav class="nav">
+        <div class="navgroup">工作台</div>
+        <button class="on"><svg viewBox="0 0 24 24"><path d="M12 2l3 7h7l-5.5 4.5L18 21l-6-4-6 4 1.5-7.5L2 9h7z"/></svg>概览</button>
+        <button><svg viewBox="0 0 24 24"><path d="M4 7l8-4 8 4-8 4-8 4-8-4zM4 7v10l8 4 8-4V7"/></svg>目标库</button>
+        <div class="navgroup">调优</div>
+        <button><svg viewBox="0 0 24 24"><path d="M4 8h9M17 8h3M4 16h3M11 16h9M13 8a2 2 0 114 0 2 2 0 11-4 0M7 16a2 2 0 114 0 2 2 0 11-4 0"/></svg>优化策略</button>
+        <button><svg viewBox="0 0 24 24"><rect x="5" y="5" width="14" height="14" rx="1"/><path d="M9 1v4M15 1v4M9 19v4M15 19v4M1 9h4M1 15h4M19 9h4M19 15h4"/></svg>显卡</button>
+        <button><svg viewBox="0 0 24 24"><path d="M12 3l7 3v5c0 4.5-3 8.5-7 10-4-1.5-7-5.5-7-10V6z"/></svg>反作弊专项</button>
+        <div class="navgroup">系统</div>
+        <button><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3M4.9 4.9l2.1 2.1M17 17l2.1 2.1M19.1 4.9L17 7M7 17l-2.1 2.1"/></svg>系统环境</button>
+        <button><svg viewBox="0 0 24 24"><path d="M8 6h13M8 12h13M8 18h13M3 6l1 1 2-2M3 12l1 1 2-2M3 18l1 1 2-2"/></svg>白名单</button>
+        <div class="navgroup">诊断</div>
+        <button><svg viewBox="0 0 24 24"><path d="M3 12h4l3-8 4 16 3-8h4"/></svg>系统体检</button>
+        <button><svg viewBox="0 0 24 24"><path d="M4 6h16M4 12h16M4 18h10"/></svg>日志</button>
+      </nav>
+      <div class="seg"><button class="on">均衡</button><button>性能</button><button>自定义</button></div>
+    </aside>
+
+    <!-- 内容 -->
+    <main class="content">
+      <div class="hrow">
+        <div><div class="h1">概览</div><div class="hsub">游戏 · 开发 · 日常使用的资源守护</div></div>
+        <div class="live"><span class="dot"></span>LIVE</div>
+      </div>
+
+      <div class="banner">
+        <span class="badge"><span class="dot"></span>就绪</span>
+        <span class="s1">均衡模式</span>
+        <span class="s2">后台压制就绪 · 显卡均衡档 · 反作弊豁免中</span>
+        <span class="tail">依据：本机实测</span>
+      </div>
+
+      <div class="card hero">
+        <div class="corebox">
+          <svg width="116" height="116" viewBox="0 0 132 132">
+            <circle cx="66" cy="66" r="56" fill="none" stroke="#232C38" stroke-width="2"/>
+            <circle cx="66" cy="66" r="56" fill="none" stroke="#4C9BE8" stroke-width="4" stroke-linecap="round"
+                    stroke-dasharray="225 127" transform="rotate(-90 66 66)"/>
+            <circle cx="66" cy="66" r="42" fill="none" stroke="#232C38" stroke-width="1" stroke-dasharray="3 6"/>
+            <circle cx="66" cy="66" r="28" fill="#161C24" stroke="#33404F"/>
+            <path d="M70 50 L56 70 h12 l-3 15 18-24 h-12 z" fill="#4C9BE8"/>
+          </svg>
+          <div class="corelabel">CAELUS CORE</div>
+        </div>
+        <div>
+          <div class="hero-kicker"><span class="mono">[ 均衡模式 · BALANCED ]</span></div>
+          <div class="hero-title">系统状态良好，资源分配就绪</div>
+          <div class="hero-desc">后台压制已就绪。无论你正在打游戏、编译构建，还是多开办公，Caelus 都会把被后台占用的 CPU、磁盘与调度资源还给前台应用。</div>
+          <div class="hero-meta mono">last-check: 刚刚 · evidence: bench-verified</div>
+          <div class="btnrow"><button class="btn">查看诊断详情</button><button class="btn2">运行系统体检</button></div>
+        </div>
+      </div>
+
+      <div class="sect">关键指标</div>
+      <div class="sectsub">最近采集的系统遥测。</div>
+      <div class="metrics">
+        <div class="mcard">
+          <div class="lbl">GPU 温度<span class="tag">1s</span></div>
+          <div class="val mono">62<small>°C</small></div>
+          <svg class="spark" height="28" width="100%" viewBox="0 0 100 28" preserveAspectRatio="none">
+            <defs><linearGradient id="cfs" x1="0" y1="0" x2="0" y2="1"><stop offset="0" style="stop-color:#4C9BE8;stop-opacity:.25"/><stop offset="1" style="stop-color:#4C9BE8;stop-opacity:0"/></linearGradient></defs>
+            <polygon fill="url(#cfs)" points="0,22 12,18 24,20 36,14 48,16 60,11 72,13 84,8 100,11 100,28 0,28"/>
+            <polyline fill="none" stroke="#4C9BE8" stroke-width="1.6" points="0,22 12,18 24,20 36,14 48,16 60,11 72,13 84,8 100,11"/>
+            <circle cx="100" cy="11" r="2.5" fill="#4C9BE8"/>
+          </svg>
+          <div class="bar"><i style="width:62%;background:#4CC38A"></i></div>
+        </div>
+        <div class="mcard">
+          <div class="lbl">内存占用<span class="tag">1s</span></div>
+          <div class="val mono">11.4<small>GB</small></div>
+          <div class="sub"><span class="warn">▲ 71%</span> 待机已清理</div>
+          <div class="bar"><i style="width:71%;background:#E5A13D"></i></div>
+        </div>
+        <div class="mcard">
+          <div class="lbl">后台压制<span class="tag">1s</span></div>
+          <div class="val mono">14<small>项</small></div>
+          <div class="sub"><span class="up">▼ CPU 6.8%</span> 已释放</div>
+          <div class="bar"><i style="width:34%;background:#4C9BE8"></i></div>
+        </div>
+        <div class="mcard">
+          <div class="lbl">白名单<span class="tag">实时</span></div>
+          <div class="val mono">6<small>个</small></div>
+          <div class="sub">豁免中 · 稳定</div>
+          <div class="bar"><i style="width:20%;background:#2DD4BF"></i></div>
+        </div>
+      </div>
+
+      <div class="bottom">
+        <div class="card">
+          <div class="card-hd"><span class="t">最近活动</span><span class="tag">最近 4 条</span></div>
+          <div class="rowkv mono"><span class="k">20:41</span><span class="v">检测到前台应用 · 压制 14 项</span></div>
+          <div class="rowkv mono"><span class="k">20:41</span><span class="v dim">切换到 Caelus 均衡电源计划</span></div>
+          <div class="rowkv mono"><span class="k">20:47</span><span class="v">免打扰已开启 · 通知静默</span></div>
+          <div class="rowkv mono"><span class="k">21:03</span><span class="v ok">降频归因：功耗墙 / 温度墙 0%</span></div>
+        </div>
+        <div class="card">
+          <div class="card-hd"><span class="t">硬件摘要</span><span class="tag">本机</span></div>
+          <div class="rowkv mono"><span class="k">CPU</span><span class="v">i7-14700HX</span></div>
+          <div class="rowkv mono"><span class="k">GPU</span><span class="v">RTX 4070</span></div>
+          <div class="rowkv mono"><span class="k">RAM</span><span class="v">32GB DDR5</span></div>
+          <div class="rowkv mono"><span class="k">DISP</span><span class="v">1440p · 240Hz</span></div>
+        </div>
+      </div>
+    </main>
+  </div>
+</div>
+<p style="max-width:1040px;margin:0 auto 24px;padding:0 16px;color:#5C6B7A;font-size:11.5px">方向 · 开发者控制台 — 深色板岩 + 克制的技术感（Grafana/Vercel 风）。数据用等宽、界面用无衬线，专业而不花哨，最贴「开发」定位。</p>
+</body>
+</html>

@@ -85,20 +85,10 @@ namespace CaelusApp.WpfHost.Controls
             }
         }
 
+        // 极简 Linear：品牌核心保持静态几何，不做旋转动效。
         private void UpdateSpinState()
         {
-            bool shouldSpin = IsLoaded && IsVisible && hostWindow != null
-                && hostWindow.IsActive && hostWindow.WindowState != WindowState.Minimized
-                && Motion.Enabled && !Motion.Reduced;
-            if (!shouldSpin)
-            {
-                StopSpin();
-                return;
-            }
-            if (spinActive) return;
-            Motion.Spin(RingOuter, 14, false);
-            Motion.Spin(RingMid, 22, true);
-            spinActive = true;
+            StopSpin();
         }
 
         private void StopSpin()

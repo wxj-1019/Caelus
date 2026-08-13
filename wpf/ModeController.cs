@@ -2,7 +2,6 @@
 // 文件用途 驾驶舱模式切换编排：持久化 + 主题换槽 + 氛围过渡 + 视图刷新
 
 using System.Windows;
-using CaelusApp.WpfHost.Controls;
 
 namespace CaelusApp.WpfHost
 {
@@ -19,12 +18,11 @@ namespace CaelusApp.WpfHost
             return AppMode.Standard;
         }
 
-        public static void SwitchTo(Application app, AppMode mode, AmbientLayer ambient,
-            SampleOverviewSource source, OverviewViewModel vm, bool animate)
+        public static void SwitchTo(Application app, AppMode mode,
+            SampleOverviewSource source, OverviewViewModel vm)
         {
             Settings.SaveStr("PerformancePreset", ((int)ToPreset(mode)).ToString());
             ThemeManager.Apply(app, ThemeManager.CurrentTone, mode);
-            if (ambient != null) ambient.TransitionTo(animate);
             if (source != null) source.SetMode(mode);
             if (vm != null) vm.Refresh();
         }

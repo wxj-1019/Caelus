@@ -60,7 +60,6 @@
   <ItemGroup>
     <ApplicationDefinition Include="App.xaml" />
     <Page Include="MainWindow.xaml" />
-    <Page Include="Controls\AmbientLayer.xaml" />
     <Page Include="Controls\CaelusCore.xaml" />
     <Page Include="Themes\Tokens.xaml" />
     <Page Include="Themes\Colors.Light.xaml" />
@@ -96,7 +95,6 @@
     <Compile Include="Motion.cs" />
     <Compile Include="Spotlight.cs" />
     <Compile Include="Controls\IconView.cs" />
-    <Compile Include="Controls\SparkleLayer.cs" />
     <Compile Include="Controls\Sparkline.cs" />
     <Compile Include="Controls\ProgressRing.cs" />
     <Compile Include="Controls\GlassCard.cs" />
@@ -106,9 +104,6 @@
     </Compile>
     <Compile Include="MainWindow.xaml.cs">
       <DependentUpon>MainWindow.xaml</DependentUpon>
-    </Compile>
-    <Compile Include="Controls\AmbientLayer.xaml.cs">
-      <DependentUpon>Controls\AmbientLayer.xaml</DependentUpon>
     </Compile>
     <Compile Include="Controls\CaelusCore.xaml.cs">
       <DependentUpon>Controls\CaelusCore.xaml</DependentUpon>

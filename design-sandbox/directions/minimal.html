@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>方向 C · 极简 Linear（浅色安静）</title>
+<style>
+:root{
+  --bg:#FAFAFB; --card:#FFFFFF; --line:#E7E7EA; --line-hi:#D4D4D8;
+  --tx:#1D1D1F; --tx-2:#6E6E73; --tx-3:#A1A1A6;
+  --ac:#5E5CE6; --ac-soft:#EFEFFD; --ok:#30A46C; --warn:#E8A13A; --info:#3A9BD5;
+}
+*{margin:0;padding:0;box-sizing:border-box}
+body{background:var(--bg);color:var(--tx);font-family:"Segoe UI Variable Text","Segoe UI","Microsoft YaHei UI",sans-serif;font-size:14px;line-height:1.6}
+.frame{max-width:1040px;margin:16px auto;background:var(--card);border:1px solid var(--line);border-radius:12px;
+  overflow:hidden;box-shadow:0 1px 2px rgba(0,0,0,.04),0 16px 48px rgba(0,0,0,.06)}
+.num{font-variant-numeric:tabular-nums}
+
+.titlebar{display:flex;align-items:center;justify-content:space-between;height:38px;padding:0 16px;border-bottom:1px solid var(--line);background:var(--card)}
+.titlebar .brand{font-size:11px;font-weight:600;color:var(--tx-2);letter-spacing:3px}
+.titlebar .meta{font-size:11px;color:var(--tx-3)}
+.traffic{display:flex;gap:8px}
+.traffic span{width:11px;height:11px;border-radius:50%;background:var(--line-hi)}
+.traffic span:nth-child(1){background:#FF5F57}.traffic span:nth-child(2){background:#FEBC2E}.traffic span:nth-child(3){background:#28C840}
+
+.body{display:grid;grid-template-columns:208px 1fr}
+.sidebar{border-right:1px solid var(--line);padding:20px 14px;display:flex;flex-direction:column;min-height:560px;background:var(--card)}
+.brandname{font-size:18px;font-weight:600}
+.brandsub{font-size:11px;color:var(--tx-3);margin-top:2px}
+.navgroup{font-size:11px;font-weight:600;color:var(--tx-3);margin:20px 8px 6px;letter-spacing:.3px}
+.nav{display:flex;flex-direction:column;gap:1px}
+.nav button{display:flex;align-items:center;gap:10px;text-align:left;background:none;border:none;color:var(--tx-2);
+  font-size:13px;padding:7px 10px;border-radius:7px;cursor:pointer}
+.nav button svg{width:15px;height:15px;stroke:currentColor;fill:none;stroke-width:1.8;stroke-linejoin:round}
+.nav button:hover{background:#F3F3F5;color:var(--tx)}
+.nav button.on{background:var(--ac-soft);color:var(--ac);font-weight:600}
+.seg{margin-top:auto;display:flex;background:#F1F1F3;border-radius:9px;padding:2px}
+.seg button{flex:1;background:none;border:none;color:var(--tx-2);font-size:12px;padding:5px 0;border-radius:7px;cursor:pointer}
+.seg button.on{background:#fff;color:var(--tx);font-weight:600;box-shadow:0 1px 2px rgba(0,0,0,.08)}
+
+.content{padding:28px 32px}
+.h1{font-size:22px;font-weight:600}
+.hsub{font-size:12px;color:var(--tx-2);margin-top:4px}
+
+.banner{display:flex;align-items:center;gap:10px;border:1px solid var(--line);background:var(--card);
+  border-radius:10px;padding:11px 14px;margin:20px 0}
+.banner .dot{width:7px;height:7px;border-radius:50%;background:var(--ok)}
+.banner .s1{font-weight:600;font-size:13px}
+.banner .s2{font-size:12px;color:var(--tx-2)}
+.banner .tail{margin-left:auto;font-size:11px;color:var(--tx-3)}
+
+.hero{border:1px solid var(--line);border-radius:12px;padding:24px;display:grid;grid-template-columns:150px 1fr;gap:26px;margin-bottom:24px;background:var(--card)}
+.corebox{display:flex;flex-direction:column;align-items:center;justify-content:center;border:1px solid var(--line);border-radius:10px;padding:16px;background:var(--bg)}
+.corelabel{font-size:10px;color:var(--tx-3);margin-top:10px;letter-spacing:1px}
+.hero-kicker{font-size:11px;color:var(--tx-3);display:flex;justify-content:space-between;align-items:center;margin-bottom:8px}
+.modebadge{font-size:11px;color:var(--ac);background:var(--ac-soft);border-radius:6px;padding:3px 9px;font-weight:600}
+.hero-title{font-size:20px;font-weight:600;line-height:1.35}
+.hero-desc{font-size:13px;color:var(--tx-2);margin-top:6px;max-width:600px}
+.hero-meta{font-size:11px;color:var(--tx-3);margin-top:6px}
+.btn{margin-top:10px;background:var(--tx);color:#fff;border:none;font-size:13px;padding:8px 14px;border-radius:8px;cursor:pointer;font-weight:600}
+.btn-ghost2{background:none;border:1px solid var(--line-hi);color:var(--tx-2);margin-left:8px}
+.btn-ghost2:hover{color:var(--tx);border-color:var(--tx-3)}
+
+.sect{font-size:13px;font-weight:600;color:var(--tx);margin-bottom:2px}
+.sectsub{font-size:12px;color:var(--tx-2);margin-bottom:14px}
+.metrics{display:grid;grid-template-columns:1.05fr 1fr 1fr 1fr;gap:12px;margin-bottom:24px}
+.mcard{border:1px solid var(--line);border-radius:10px;padding:16px;background:var(--card)}
+.mcard:hover{border-color:var(--line-hi)}
+.mcard .lbl{font-size:12px;color:var(--tx-2)}
+.mcard .lbl .tag{float:right;font-size:11px;color:var(--tx-3)}
+.mcard .val{font-size:26px;font-weight:600;margin-top:10px;letter-spacing:-.5px}
+.mcard .val small{font-size:13px;color:var(--tx-3);font-weight:400;margin-left:2px}
+.mcard .sub{font-size:11px;color:var(--tx-3);margin-top:6px}
+.bar{height:3px;border-radius:2px;background:#EEEEF0;margin-top:12px;overflow:hidden}
+.bar i{display:block;height:100%;border-radius:2px}
+.spark{margin-top:10px;display:block}
+
+.bottom{display:grid;grid-template-columns:1.35fr 1fr;gap:12px;padding-bottom:20px}
+.group{border:1px solid var(--line);border-radius:10px;padding:18px;background:var(--card)}
+.rowkv{display:flex;justify-content:space-between;font-size:12px;padding:7px 0;border-bottom:1px solid #F1F1F3}
+.rowkv:last-child{border-bottom:none}
+.rowkv .k{color:var(--tx-2)}
+.rowkv .v{color:var(--tx)}
+.rowkv .v.dim{color:var(--tx-3)}
+.rowkv .chip{font-size:11px;color:var(--tx-3);border:1px dashed var(--line-hi);border-radius:6px;padding:1px 8px}
+</style>
+</head>
+<body>
+<div class="frame">
+  <!-- 标题栏 -->
+  <div class="titlebar">
+    <div class="traffic"><span></span><span></span><span></span></div>
+    <div class="brand">C A E L U S</div>
+    <div class="meta">概览 · 巡航</div>
+  </div>
+  <div class="body">
+    <!-- 侧栏 -->
+    <aside class="sidebar">
+      <div><div class="brandname">caelus</div><div class="brandsub">游戏环境控制台</div></div>
+      <nav class="nav" style="margin-top:0;">
+        <div class="navgroup">工作台</div>
+        <button class="on"><svg viewBox="0 0 24 24"><path d="M12 2l3 7h7l-5.5 4.5L18 21l-6-4-6 4 1.5-7.5L2 9h7z"/></svg>概览</button>
+        <button><svg viewBox="0 0 24 24"><path d="M4 7l8-4 8 4-8 4-8-4zM4 7v10l8 4 8-4V7"/></svg>游戏库</button>
+        <div class="navgroup">游戏调优</div>
+        <button><svg viewBox="0 0 24 24"><path d="M4 8h9M17 8h3M4 16h3M11 16h9M13 8a2 2 0 114 0 2 2 0 11-4 0M7 16a2 2 0 114 0 2 2 0 11-4 0"/></svg>优化策略</button>
+        <button><svg viewBox="0 0 24 24"><rect x="5" y="5" width="14" height="14" rx="2"/><path d="M9 1v4M15 1v4M9 19v4M15 19v4M1 9h4M1 15h4M19 9h4M19 15h4"/></svg>显卡</button>
+        <button><svg viewBox="0 0 24 24"><path d="M12 3l7 3v5c0 4.5-3 8.5-7 10-4-1.5-7-5.5-7-10V6z"/></svg>反作弊专项</button>
+        <div class="navgroup">系统</div>
+        <button><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3M4.9 4.9l2.1 2.1M17 17l2.1 2.1M19.1 4.9L17 7M7 17l-2.1 2.1"/></svg>系统环境</button>
+        <button><svg viewBox="0 0 24 24"><path d="M8 6h13M8 12h13M8 18h13M3 6l1 1 2-2M3 12l1 1 2-2M3 18l1 1 2-2"/></svg>白名单</button>
+        <div class="navgroup">诊断</div>
+        <button><svg viewBox="0 0 24 24"><path d="M3 12h4l3-8 4 16 3-8h4"/></svg>系统体检</button>
+        <button><svg viewBox="0 0 24 24"><path d="M4 6h16M4 12h16M4 18h10"/></svg>日志</button>
+      </nav>
+      <div class="seg"><button class="on">巡航</button><button>竞技</button><button>自定义</button></div>
+    </aside>
+
+    <!-- 内容 -->
+    <main class="content">
+      <div><div class="h1">概览</div><div class="hsub">游戏环境控制台 · 巡航模式</div></div>
+
+      <div class="banner">
+        <span class="dot"></span><span class="s1">就绪 · 巡航模式</span>
+        <span class="s2">后台压制就绪 · 显卡均衡档</span>
+        <span class="tail">巡航</span>
+      </div>
+
+      <div class="hero">
+        <div class="corebox">
+          <svg width="120" height="120" viewBox="0 0 132 132">
+            <circle cx="66" cy="66" r="56" fill="none" stroke="#E7E7EA" stroke-width="1.5"/>
+            <circle cx="66" cy="66" r="56" fill="none" stroke="#5E5CE6" stroke-width="3" stroke-linecap="round"
+                    stroke-dasharray="220 132" transform="rotate(-90 66 66)"/>
+            <circle cx="66" cy="66" r="40" fill="none" stroke="#E7E7EA" stroke-width="1"/>
+            <circle cx="66" cy="66" r="28" fill="#FAFAFB" stroke="#D4D4D8"/>
+            <path d="M70 50 L56 70 h12 l-3 15 18-24 h-12 z" fill="#5E5CE6"/>
+          </svg>
+          <div class="corelabel">CAELUS CORE</div>
+        </div>
+        <div>
+          <div class="hero-kicker"><span>系统结论</span><span class="modebadge">巡航</span></div>
+          <div class="hero-title">系统状态良好，可进入游戏</div>
+          <div class="hero-desc">后台压制已就绪，显卡策略为均衡档。当检测到游戏运行时，会自动把被后台占用的资源让给游戏。</div>
+          <div class="hero-meta">上次检查：刚刚</div>
+          <button class="btn">查看诊断详情</button><button class="btn btn-ghost2">运行体检</button>
+        </div>
+      </div>
+
+      <div class="sect">关键指标</div>
+      <div class="sectsub">最近的系统状态，按时间记录。</div>
+      <div class="metrics">
+        <div class="mcard">
+          <div class="lbl">GPU 温度<span class="tag">实时</span></div>
+          <div class="val num">62<small>°C</small></div>
+          <svg class="spark" height="28" width="100%" viewBox="0 0 100 28" preserveAspectRatio="none">
+            <defs><linearGradient id="mfs" x1="0" y1="0" x2="0" y2="1"><stop offset="0" style="stop-color:#5E5CE6;stop-opacity:.18"/><stop offset="1" style="stop-color:#5E5CE6;stop-opacity:0"/></linearGradient></defs>
+            <polygon fill="url(#mfs)" points="0,22 12,18 24,20 36,14 48,16 60,11 72,13 84,8 100,11 100,28 0,28"/>
+            <polyline fill="none" stroke="#5E5CE6" stroke-width="1.5" points="0,22 12,18 24,20 36,14 48,16 60,11 72,13 84,8 100,11"/>
+            <circle cx="100" cy="11" r="2.5" fill="#5E5CE6"/>
+          </svg>
+          <div class="bar"><i style="width:62%;background:var(--ok)"></i></div>
+        </div>
+        <div class="mcard">
+          <div class="lbl">内存占用<span class="tag">实时</span></div>
+          <div class="val num">11.4<small>GB</small></div>
+          <div class="sub">待机内存已清理</div>
+          <div class="bar"><i style="width:71%;background:var(--warn)"></i></div>
+        </div>
+        <div class="mcard">
+          <div class="lbl">后台压制<span class="tag">实时</span></div>
+          <div class="val num">14<small>项</small></div>
+          <div class="sub">节省 CPU 6.8%</div>
+          <div class="bar"><i style="width:34%;background:var(--info)"></i></div>
+        </div>
+        <div class="mcard">
+          <div class="lbl">白名单<span class="tag">实时</span></div>
+          <div class="val num">6<small>个</small></div>
+          <div class="sub">豁免中</div>
+          <div class="bar"><i style="width:20%;background:var(--ac)"></i></div>
+        </div>
+      </div>
+
+      <div class="bottom">
+        <div class="group">
+          <div class="sect">最近活动</div>
+          <div class="sectsub">按时间记录的运行事件。</div>
+          <div class="rowkv"><span class="k">对局开始</span><span class="v">压制 14 项后台</span></div>
+          <div class="rowkv"><span class="k">电源计划</span><span class="v dim">切换到 Caelus 竞技档</span></div>
+          <div class="rowkv"><span class="k">免打扰</span><span class="v">通知已静默</span></div>
+          <div class="rowkv"><span class="k">降频归因</span><span class="v" style="color:var(--ok)">功耗墙 / 温度墙 均为 0%</span></div>
+        </div>
+        <div class="group">
+          <div class="sect">硬件摘要</div>
+          <div class="sectsub">本机硬件一览。</div>
+          <div class="rowkv"><span class="k">处理器</span><span class="v">i7-14700HX</span></div>
+          <div class="rowkv"><span class="k">图形设备</span><span class="v">RTX 4070</span></div>
+          <div class="rowkv"><span class="k">内存规格</span><span class="v">32GB DDR5</span></div>
+        </div>
+      </div>
+    </main>
+  </div>
+</div>
+<p style="max-width:1040px;margin:0 auto 24px;padding:0 16px;color:#A1A1A6;font-size:12px">方向 C · 极简 Linear — 浅色留白 + 发丝线 + 单一强调色 + 排版驱动层级。安静、耐看、永不过时，亲和力最高。</p>
+</body>
+</html>

@@ -3,6 +3,23 @@
                     xmlns:controls="clr-namespace:CaelusApp.WpfHost.Controls"
                     xmlns:local="clr-namespace:CaelusApp.WpfHost">
 
+  <!-- =================================================================== -->
+  <!-- 极简 Linear · 组件库（Direction C）                                    -->
+  <!-- =================================================================== -->
+  <!-- 组件化说明：本文件是全站唯一的组件样式源。新增 UI 页面时，直接复用下方  -->
+  <!-- 组件 key 即可，不需要新写样式。组件按用途分组：                          -->
+  <!--   [表面/卡片]  CardBorder HeroCardBorder SettingsGroup SettingsRow MetricPanel StatusBanner EmptyState -->
+  <!--   [徽章/标签]  StatusBadge StatusChip WarnTag SegValueChip EmptyChip GameAvatar -->
+  <!--   [按钮]      PrimaryButton GhostButton DangerButton WindowButton CloseWindowButton TrafficButton -->
+  <!--   [导航/分段]  NavItem NavGroupLabel SegmentItem SegmentHost            -->
+  <!--   [输入/列表]  InputBox ListItem PolicyToggle                            -->
+  <!--   [行/容器]    PolicyRow ResultRow GlassCard HeroGlassCard DropZoneEmpty  -->
+  <!--   [排版]      PageHeader PageSubtitle CardLabel DisplayNumber MetricNumber -->
+  <!--   [系统]      FocusRing ScrollBar ScrollThumb                            -->
+  <!-- 令牌（颜色/字号/圆角/间距）来自 Tokens.xaml 与 Colors.*.xaml；强调色来自 Mode.*.xaml。 -->
+  <!-- =================================================================== -->
+
+  <!-- ========== [系统] 焦点环 ========== -->
   <Style x:Key="FocusRing" TargetType="Control">
     <Setter Property="Template">
       <Setter.Value>
@@ -16,18 +33,21 @@
     </Setter>
   </Style>
 
-  <!-- Compatibility surfaces: old keys now share the quiet solid-panel recipe. -->
+  <!-- ========== [表面/卡片] ========== -->
+  <!-- 通用卡片：发丝线描边 + 圆角 + 留白，层级靠描边与留白表达，不用阴影 -->
   <Style x:Key="CardBorder" TargetType="Border">
     <Setter Property="Background" Value="{DynamicResource Surface0Brush}"/>
     <Setter Property="BorderBrush" Value="{DynamicResource BorderSubtleBrush}"/>
     <Setter Property="BorderThickness" Value="1"/>
     <Setter Property="CornerRadius" Value="{DynamicResource RadiusMd}"/>
     <Setter Property="Padding" Value="16"/>
+    <Setter Property="SnapsToDevicePixels" Value="True"/>
   </Style>
   <Style x:Key="HeroCardBorder" TargetType="Border" BasedOn="{StaticResource CardBorder}">
     <Setter Property="Background" Value="{DynamicResource Surface1Brush}"/>
   </Style>
 
+  <!-- 设置分组容器：行之间用细分隔，整组一张卡 -->
   <Style x:Key="SettingsGroup" TargetType="Border">
     <Setter Property="Background" Value="{DynamicResource Surface0Brush}"/>
     <Setter Property="BorderBrush" Value="{DynamicResource BorderSubtleBrush}"/>
@@ -35,7 +55,6 @@
     <Setter Property="CornerRadius" Value="{DynamicResource RadiusMd}"/>
     <Setter Property="Padding" Value="0"/>
     <Setter Property="SnapsToDevicePixels" Value="True"/>
-    <Setter Property="local:Spotlight.Glow" Value="True"/>
   </Style>
   <Style x:Key="SettingsRow" TargetType="Border">
     <Setter Property="Background" Value="Transparent"/>
@@ -46,8 +65,9 @@
   </Style>
   <Style x:Key="MetricPanel" TargetType="Border" BasedOn="{StaticResource SettingsGroup}">
     <Setter Property="Padding" Value="16"/>
-    <Setter Property="local:Spotlight.Glow" Value="True"/>
   </Style>
+
+  <!-- 状态横幅：整宽信息条，五种语义变体 -->
   <Style x:Key="StatusBanner" TargetType="Border">
     <Setter Property="Background" Value="{DynamicResource Surface1Brush}"/>
     <Setter Property="BorderBrush" Value="{DynamicResource BorderSubtleBrush}"/>
@@ -71,7 +91,14 @@
     <Setter Property="Background" Value="{DynamicResource DangerSoftBrush}"/>
     <Setter Property="BorderBrush" Value="{DynamicResource DangerEdgeBrush}"/>
   </Style>
-  <!-- StatusBadge：状态徽章（圆角矩形 + 左侧 3px 强调边 = 模式色竖条，Linear/Raycast 式状态标签） -->
+
+  <!-- 空态容器 -->
+  <Style x:Key="EmptyState" TargetType="Border" BasedOn="{StaticResource SettingsGroup}">
+    <Setter Property="Background" Value="{DynamicResource Surface0Brush}"/>
+  </Style>
+
+  <!-- ========== [徽章/标签] ========== -->
+  <!-- 状态徽章：圆角矩形 + 左侧 3px 强调竖条（Linear/Raycast 式状态标签），五种语义变体 -->
   <Style x:Key="StatusBadge" TargetType="Border">
     <Setter Property="Background" Value="{DynamicResource AccentSoftBrush}"/>
     <Setter Property="BorderBrush" Value="{DynamicResource AccentPrimaryBrush}"/>
@@ -99,13 +126,77 @@
     <Setter Property="Background" Value="{DynamicResource DangerSoftBrush}"/>
     <Setter Property="BorderBrush" Value="{DynamicResource DangerEdgeBrush}"/>
   </Style>
-  <Style x:Key="EmptyState" TargetType="Border" BasedOn="{StaticResource SettingsGroup}">
-    <Setter Property="Background" Value="{DynamicResource Surface0Brush}"/>
+
+  <!-- 空态虚线 chip（未绑定/未接入占位值） -->
+  <Style x:Key="EmptyChip" TargetType="ContentControl">
+    <Setter Property="HorizontalContentAlignment" Value="Center"/>
+    <Setter Property="VerticalContentAlignment" Value="Center"/>
+    <Setter Property="Template">
+      <Setter.Value>
+        <ControlTemplate TargetType="ContentControl">
+          <Grid>
+            <Rectangle RadiusX="6" RadiusY="6"
+                       Stroke="{DynamicResource BorderStrongBrush}"
+                       StrokeThickness="1" StrokeDashArray="2 2"/>
+            <ContentPresenter Margin="6,1"/>
+          </Grid>
+        </ControlTemplate>
+      </Setter.Value>
+    </Setter>
   </Style>
 
-  <!-- PrimaryButton：模式色渐变底 + 悬停 Accent 辉光（彩色阴影）+ 悬停扫光带 -->
+  <!-- 首字母头像（AccentSoft 底 + Accent 描边） -->
+  <Style x:Key="GameAvatar" TargetType="Border">
+    <Setter Property="Width" Value="36"/>
+    <Setter Property="Height" Value="36"/>
+    <Setter Property="CornerRadius" Value="{DynamicResource RadiusSm}"/>
+    <Setter Property="Background" Value="{DynamicResource AccentSoftBrush}"/>
+    <Setter Property="BorderBrush" Value="{DynamicResource AccentEdgeBrush}"/>
+    <Setter Property="BorderThickness" Value="1"/>
+    <Setter Property="VerticalAlignment" Value="Center"/>
+  </Style>
+
+  <!-- 状态 chip：运行中走 success 柔色 tint -->
+  <Style x:Key="StatusChip" TargetType="Border">
+    <Setter Property="CornerRadius" Value="{DynamicResource RadiusSm}"/>
+    <Setter Property="Padding" Value="9,4"/>
+    <Setter Property="MinWidth" Value="76"/>
+    <Setter Property="VerticalAlignment" Value="Center"/>
+    <Setter Property="Background" Value="{DynamicResource NeutralSoftBrush}"/>
+    <Setter Property="BorderBrush" Value="{DynamicResource BorderSubtleBrush}"/>
+    <Setter Property="BorderThickness" Value="1"/>
+    <Style.Triggers>
+      <DataTrigger Binding="{Binding IsRunning}" Value="True">
+        <Setter Property="Background" Value="{DynamicResource SuccessSoftBrush}"/>
+        <Setter Property="BorderBrush" Value="{DynamicResource SuccessEdgeBrush}"/>
+      </DataTrigger>
+    </Style.Triggers>
+  </Style>
+
+  <!-- 风险"需注意"小标签（Warning 柔色） -->
+  <Style x:Key="WarnTag" TargetType="Border">
+    <Setter Property="CornerRadius" Value="4"/>
+    <Setter Property="Padding" Value="5,1"/>
+    <Setter Property="Background" Value="{DynamicResource WarningSoftBrush}"/>
+    <Setter Property="BorderBrush" Value="{DynamicResource WarningEdgeBrush}"/>
+    <Setter Property="BorderThickness" Value="1"/>
+    <Setter Property="VerticalAlignment" Value="Center"/>
+  </Style>
+
+  <!-- 分段控件标题旁的当前档位回显（Accent 柔色） -->
+  <Style x:Key="SegValueChip" TargetType="Border">
+    <Setter Property="CornerRadius" Value="4"/>
+    <Setter Property="Padding" Value="7,1"/>
+    <Setter Property="Background" Value="{DynamicResource AccentSoftBrush}"/>
+    <Setter Property="BorderBrush" Value="{DynamicResource AccentEdgeBrush}"/>
+    <Setter Property="BorderThickness" Value="1"/>
+    <Setter Property="VerticalAlignment" Value="Center"/>
+  </Style>
+
+  <!-- ========== [按钮] ========== -->
+  <!-- 主按钮：实心单一强调色，干净克制；悬停微压暗、按压更深、禁用半透明 -->
   <Style x:Key="PrimaryButton" TargetType="Button">
-    <Setter Property="Background" Value="{DynamicResource AccentGradientBrush}"/>
+    <Setter Property="Background" Value="{DynamicResource AccentPrimaryBrush}"/>
     <Setter Property="Foreground" Value="{DynamicResource OnAccentBrush}"/>
     <Setter Property="BorderBrush" Value="Transparent"/>
     <Setter Property="BorderThickness" Value="1"/>
@@ -125,33 +216,11 @@
                   BorderThickness="{TemplateBinding BorderThickness}"
                   CornerRadius="{DynamicResource RadiusSm}"
                   Padding="{TemplateBinding Padding}">
-            <Grid>
-              <!-- 扫光带：悬停时一道斜向高光掠过（一次性，非循环） -->
-              <Border x:Name="sheen" CornerRadius="{DynamicResource RadiusSm}"
-                      Opacity="0" IsHitTestVisible="False">
-                <Border.Background>
-                  <LinearGradientBrush StartPoint="0,0" EndPoint="1,0">
-                    <GradientStop Color="#00FFFFFF" Offset="0.3"/>
-                    <GradientStop Color="{DynamicResource ButtonSheenColor}" Offset="0.5"/>
-                    <GradientStop Color="#00FFFFFF" Offset="0.7"/>
-                  </LinearGradientBrush>
-                </Border.Background>
-                <Border.RenderTransform>
-                  <TranslateTransform x:Name="sheenX" X="-200"/>
-                </Border.RenderTransform>
-              </Border>
-              <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
-            </Grid>
+            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
           </Border>
           <ControlTemplate.Triggers>
             <Trigger Property="IsMouseOver" Value="True">
-              <Setter TargetName="bd" Property="Opacity" Value="0.92"/>
-              <Setter Property="Effect">
-                <Setter.Value>
-                  <DropShadowEffect Color="{DynamicResource AccentGlowColor}" BlurRadius="16"
-                                    ShadowDepth="0" Opacity="0.4"/>
-                </Setter.Value>
-              </Setter>
+              <Setter TargetName="bd" Property="Opacity" Value="0.9"/>
             </Trigger>
             <Trigger Property="IsPressed" Value="True">
               <Setter TargetName="bd" Property="Opacity" Value="0.78"/>
@@ -165,6 +234,7 @@
     </Setter>
   </Style>
 
+  <!-- 次级按钮：透明 + 发丝线描边，悬停浅底 -->
   <Style x:Key="GhostButton" TargetType="Button">
     <Setter Property="Background" Value="Transparent"/>
     <Setter Property="Foreground" Value="{DynamicResource TextSecondaryBrush}"/>
@@ -205,7 +275,7 @@
     </Setter>
   </Style>
 
-  <!-- 危险操作独立模板：hover/pressed 始终保留红色语义，不继承 GhostButton 的普通文字态 -->
+  <!-- 危险按钮：始终保留红色语义 -->
   <Style x:Key="DangerButton" TargetType="Button">
     <Setter Property="Background" Value="Transparent"/>
     <Setter Property="Foreground" Value="{DynamicResource DangerBrush}"/>
@@ -247,6 +317,7 @@
     </Setter>
   </Style>
 
+  <!-- 窗口控制按钮（最小化/最大化/关闭） -->
   <Style x:Key="WindowButton" TargetType="Button">
     <Setter Property="Width" Value="40"/>
     <Setter Property="Height" Value="36"/>
@@ -256,8 +327,6 @@
     <Setter Property="FontSize" Value="12"/>
     <Setter Property="Cursor" Value="Hand"/>
     <Setter Property="FocusVisualStyle" Value="{StaticResource FocusRing}"/>
-    <Setter Property="local:Motion.Press" Value="True"/>
-    <Setter Property="RenderTransformOrigin" Value="0.5,0.5"/>
     <Setter Property="Template">
       <Setter.Value>
         <ControlTemplate TargetType="Button">
@@ -283,7 +352,7 @@
     </Style.Triggers>
   </Style>
 
-  <!-- TrafficButton：macOS 红绿灯窗口按钮的透明命中容器（圆形灯本体在 MainWindow 内联） -->
+  <!-- 红绿灯窗口按钮的透明命中容器 -->
   <Style x:Key="TrafficButton" TargetType="Button">
     <Setter Property="Width" Value="20"/>
     <Setter Property="Height" Value="36"/>
@@ -302,6 +371,8 @@
     </Setter>
   </Style>
 
+  <!-- ========== [导航/分段] ========== -->
+  <!-- 侧栏导航项：选中 = Accent 柔色底 + Accent 字 + 细描边；悬停 = 浅底 -->
   <Style x:Key="NavItem" TargetType="RadioButton">
     <Setter Property="Foreground" Value="{DynamicResource TextSecondaryBrush}"/>
     <Setter Property="FontSize" Value="{DynamicResource FontSizeCaption}"/>
@@ -310,7 +381,6 @@
     <Setter Property="HorizontalContentAlignment" Value="Left"/>
     <Setter Property="Cursor" Value="Hand"/>
     <Setter Property="FocusVisualStyle" Value="{StaticResource FocusRing}"/>
-    <Setter Property="local:Spotlight.Glow" Value="True"/>
     <Setter Property="Template">
       <Setter.Value>
         <ControlTemplate TargetType="RadioButton">
@@ -338,6 +408,13 @@
         </ControlTemplate>
       </Setter.Value>
     </Setter>
+  </Style>
+
+  <Style x:Key="NavGroupLabel" TargetType="TextBlock">
+    <Setter Property="FontSize" Value="10"/>
+    <Setter Property="FontWeight" Value="SemiBold"/>
+    <Setter Property="Foreground" Value="{DynamicResource TextTertiaryBrush}"/>
+    <Setter Property="Margin" Value="18,14,0,6"/>
   </Style>
 
   <Style x:Key="SegmentItem" TargetType="RadioButton">
@@ -368,14 +445,15 @@
     </Setter>
   </Style>
   <Style x:Key="SegmentHost" TargetType="Border">
-    <Setter Property="Background" Value="{DynamicResource Surface0Brush}"/>
+    <Setter Property="Background" Value="{DynamicResource Surface1Brush}"/>
     <Setter Property="CornerRadius" Value="{DynamicResource RadiusMd}"/>
     <Setter Property="Padding" Value="3"/>
     <Setter Property="BorderBrush" Value="{DynamicResource BorderSubtleBrush}"/>
     <Setter Property="BorderThickness" Value="1"/>
   </Style>
 
-  <!-- PolicyToggle：uiverse.io 风格（aasisodiya/sour-horse-29）；圆形滑块 + 阴影 + hover 上移质感 -->
+  <!-- ========== [输入/列表/开关] ========== -->
+  <!-- 开关：圆形滑块轨道，开态 Accent 轨道 + 白色滑块 -->
   <Style x:Key="PolicyToggle" TargetType="ToggleButton">
     <Setter Property="Width" Value="38"/>
     <Setter Property="Height" Value="22"/>
@@ -391,9 +469,9 @@
             <Border x:Name="thumb" Width="16" Height="16" CornerRadius="8"
                     HorizontalAlignment="Left" Margin="3,0,0,3"
                     RenderTransformOrigin="0.5,0.5"
-                    Background="{DynamicResource Surface1Brush}">
+                    Background="{DynamicResource Surface0Brush}">
               <Border.Effect>
-                <DropShadowEffect BlurRadius="3" ShadowDepth="2" Direction="270" Opacity="0.32" Color="#000000"/>
+                <DropShadowEffect BlurRadius="3" ShadowDepth="1" Direction="270" Opacity="0.25" Color="#000000"/>
               </Border.Effect>
               <Border.RenderTransform><TranslateTransform/></Border.RenderTransform>
             </Border>
@@ -404,26 +482,6 @@
               <Setter TargetName="track" Property="BorderBrush" Value="{DynamicResource ModeAccentBrush}"/>
               <Setter TargetName="thumb" Property="Background" Value="{DynamicResource OnAccentBrush}"/>
             </Trigger>
-            <Trigger Property="IsMouseOver" Value="True">
-              <Setter TargetName="thumb" Property="Margin" Value="3,0,0,1"/>
-              <Setter TargetName="thumb" Property="Effect">
-                <Setter.Value>
-                  <DropShadowEffect BlurRadius="2" ShadowDepth="1" Direction="270" Opacity="0.2" Color="#000000"/>
-                </Setter.Value>
-              </Setter>
-            </Trigger>
-            <MultiTrigger>
-              <MultiTrigger.Conditions>
-                <Condition Property="IsChecked" Value="True"/>
-                <Condition Property="IsMouseOver" Value="True"/>
-              </MultiTrigger.Conditions>
-              <Setter TargetName="thumb" Property="Margin" Value="3,0,0,1"/>
-              <Setter TargetName="thumb" Property="Effect">
-                <Setter.Value>
-                  <DropShadowEffect BlurRadius="2" ShadowDepth="1" Direction="270" Opacity="0.2" Color="#000000"/>
-                </Setter.Value>
-              </Setter>
-            </MultiTrigger>
             <Trigger Property="IsEnabled" Value="False">
               <Setter Property="Opacity" Value="0.4"/>
             </Trigger>
@@ -495,18 +553,19 @@
     </Setter>
   </Style>
 
+  <!-- ========== [行/容器] ========== -->
+  <!-- 玻璃卡（内容容器）：发丝线描边 -->
   <Style x:Key="GlassCard" TargetType="controls:GlassCard">
     <Setter Property="Background" Value="{DynamicResource Surface0Brush}"/>
     <Setter Property="Padding" Value="16"/>
     <Setter Property="CornerRadius" Value="{DynamicResource RadiusMd}"/>
-    <Setter Property="local:Spotlight.Glow" Value="True"/>
     <Setter Property="Template">
       <Setter.Value>
         <ControlTemplate TargetType="controls:GlassCard">
           <Border Background="{TemplateBinding Background}"
                   BorderBrush="{DynamicResource BorderSubtleBrush}"
                   BorderThickness="1" CornerRadius="{TemplateBinding CornerRadius}"
-                  Padding="{TemplateBinding Padding}">
+                  Padding="{TemplateBinding Padding}" SnapsToDevicePixels="True">
             <ContentPresenter/>
           </Border>
         </ControlTemplate>
@@ -514,103 +573,12 @@
     </Setter>
   </Style>
 
-  <!-- HeroGlassCard：概览 Hero 专用——CardEdge 渐变描边 + 卡顶高光线 + 角部 Accent 光晕 -->
+  <!-- Hero 卡（概览主卡）：与普通卡同构，仅留白更大；极简路线去掉了渐变描边/角部光晕/顶部高光 -->
   <Style x:Key="HeroGlassCard" TargetType="controls:GlassCard" BasedOn="{StaticResource GlassCard}">
-    <Setter Property="Padding" Value="16"/>
-    <Setter Property="Template">
-      <Setter.Value>
-        <ControlTemplate TargetType="controls:GlassCard">
-          <Grid>
-            <Border Background="{TemplateBinding Background}"
-                    BorderBrush="{DynamicResource CardEdgeBrush}"
-                    BorderThickness="1" CornerRadius="{TemplateBinding CornerRadius}"/>
-            <Border CornerRadius="{TemplateBinding CornerRadius}"
-                    ClipToBounds="True" IsHitTestVisible="False">
-              <Ellipse Width="320" Height="320"
-                       HorizontalAlignment="Right" VerticalAlignment="Top"
-                       Margin="0,-90,-110,0" Opacity="0.16">
-                <Ellipse.Fill>
-                  <RadialGradientBrush>
-                    <GradientStop Color="{DynamicResource AccentGlowColor}" Offset="0"/>
-                    <GradientStop Color="#00000000" Offset="0.68"/>
-                  </RadialGradientBrush>
-                </Ellipse.Fill>
-              </Ellipse>
-            </Border>
-            <Border Height="1" VerticalAlignment="Top" Margin="28,0,28,0"
-                    Background="{DynamicResource TopHighlightBrush}" IsHitTestVisible="False"/>
-            <ContentPresenter Margin="{TemplateBinding Padding}"/>
-          </Grid>
-        </ControlTemplate>
-      </Setter.Value>
-    </Setter>
+    <Setter Property="Padding" Value="20"/>
   </Style>
 
-  <!-- EmptyChip：空态虚线 chip（未绑定/未接入类占位值；Border 非 Control 无 Template，
-       用 ContentControl + Rectangle 虚线描边实现） -->
-  <Style x:Key="EmptyChip" TargetType="ContentControl">
-    <Setter Property="HorizontalContentAlignment" Value="Center"/>
-    <Setter Property="VerticalContentAlignment" Value="Center"/>
-    <Setter Property="Template">
-      <Setter.Value>
-        <ControlTemplate TargetType="ContentControl">
-          <Grid>
-            <Rectangle RadiusX="6" RadiusY="6"
-                       Stroke="{DynamicResource BorderStrongBrush}"
-                       StrokeThickness="1" StrokeDashArray="2 2"/>
-            <ContentPresenter Margin="6,1"/>
-          </Grid>
-        </ControlTemplate>
-      </Setter.Value>
-    </Setter>
-  </Style>
-
-  <!-- GameAvatar：游戏行首字母头像（AccentSoft 底 + Accent 描边） -->
-  <Style x:Key="GameAvatar" TargetType="Border">
-    <Setter Property="Width" Value="36"/>
-    <Setter Property="Height" Value="36"/>
-    <Setter Property="CornerRadius" Value="{DynamicResource RadiusSm}"/>
-    <Setter Property="Background" Value="{DynamicResource AccentSoftBrush}"/>
-    <Setter Property="BorderBrush" Value="{DynamicResource AccentEdgeBrush}"/>
-    <Setter Property="BorderThickness" Value="1"/>
-    <Setter Property="VerticalAlignment" Value="Center"/>
-  </Style>
-
-  <!-- StatusChip：游戏行状态徽章；运行中走 success 柔色 tint（DataTrigger） -->
-  <Style x:Key="StatusChip" TargetType="Border">
-    <Setter Property="CornerRadius" Value="{DynamicResource RadiusSm}"/>
-    <Setter Property="Padding" Value="9,4"/>
-    <Setter Property="MinWidth" Value="76"/>
-    <Setter Property="VerticalAlignment" Value="Center"/>
-    <Setter Property="Background" Value="{DynamicResource GlassNavBrush}"/>
-    <Setter Property="BorderBrush" Value="{DynamicResource BorderSubtleBrush}"/>
-    <Setter Property="BorderThickness" Value="1"/>
-    <Style.Triggers>
-      <DataTrigger Binding="{Binding IsRunning}" Value="True">
-        <Setter Property="Background" Value="{DynamicResource SuccessSoftBrush}"/>
-        <Setter Property="BorderBrush" Value="{DynamicResource SuccessEdgeBrush}"/>
-      </DataTrigger>
-    </Style.Triggers>
-  </Style>
-  <Style x:Key="DropZoneEmpty" TargetType="ContentControl">
-    <Setter Property="Template">
-      <Setter.Value>
-        <ControlTemplate TargetType="ContentControl">
-          <Grid>
-            <Border Background="{DynamicResource Surface0Brush}"
-                    BorderBrush="{DynamicResource BorderSubtleBrush}"
-                    BorderThickness="1" CornerRadius="{DynamicResource RadiusMd}"/>
-            <Rectangle RadiusX="6" RadiusY="6" Margin="10"
-                       Stroke="{DynamicResource BorderSubtleBrush}" StrokeThickness="1.5"
-                       StrokeDashArray="4 4" IsHitTestVisible="False"/>
-            <ContentPresenter/>
-          </Grid>
-        </ControlTemplate>
-      </Setter.Value>
-    </Setter>
-  </Style>
-
-  <!-- PolicyRow：策略行（SettingsRow 基础上 + 悬停浅底 + 边框提亮） -->
+  <!-- 策略行：悬停浅底 + 发丝线提亮 -->
   <Style x:Key="PolicyRow" TargetType="Border" BasedOn="{StaticResource SettingsRow}">
     <Style.Triggers>
       <Trigger Property="IsMouseOver" Value="True">
@@ -620,27 +588,7 @@
     </Style.Triggers>
   </Style>
 
-  <!-- WarnTag：风险策略的"需注意"小标签（Warning 柔色） -->
-  <Style x:Key="WarnTag" TargetType="Border">
-    <Setter Property="CornerRadius" Value="4"/>
-    <Setter Property="Padding" Value="5,1"/>
-    <Setter Property="Background" Value="{DynamicResource WarningSoftBrush}"/>
-    <Setter Property="BorderBrush" Value="{DynamicResource WarningEdgeBrush}"/>
-    <Setter Property="BorderThickness" Value="1"/>
-    <Setter Property="VerticalAlignment" Value="Center"/>
-  </Style>
-
-  <!-- SegValueChip：分段控件标题旁的当前档位回显（Accent 柔色） -->
-  <Style x:Key="SegValueChip" TargetType="Border">
-    <Setter Property="CornerRadius" Value="4"/>
-    <Setter Property="Padding" Value="7,1"/>
-    <Setter Property="Background" Value="{DynamicResource AccentSoftBrush}"/>
-    <Setter Property="BorderBrush" Value="{DynamicResource AccentEdgeBrush}"/>
-    <Setter Property="BorderThickness" Value="1"/>
-    <Setter Property="VerticalAlignment" Value="Center"/>
-  </Style>
-
-  <!-- ResultRow：体检结果行（SettingsRow 基础上 + 悬停浅底 + 警告项 Warning tint） -->
+  <!-- 体检结果行：悬停浅底 + 警告项 Warning tint -->
   <Style x:Key="ResultRow" TargetType="Border" BasedOn="{StaticResource SettingsRow}">
     <Style.Triggers>
       <Trigger Property="IsMouseOver" Value="True">
@@ -659,6 +607,39 @@
     </Style.Triggers>
   </Style>
 
+  <!-- 拖放空态：虚线引导区 -->
+  <Style x:Key="DropZoneEmpty" TargetType="ContentControl">
+    <Setter Property="Template">
+      <Setter.Value>
+        <ControlTemplate TargetType="ContentControl">
+          <Grid>
+            <Border Background="{DynamicResource Surface0Brush}"
+                    BorderBrush="{DynamicResource BorderSubtleBrush}"
+                    BorderThickness="1" CornerRadius="{DynamicResource RadiusMd}"/>
+            <Rectangle RadiusX="6" RadiusY="6" Margin="10"
+                       Stroke="{DynamicResource BorderSubtleBrush}" StrokeThickness="1.5"
+                       StrokeDashArray="4 4" IsHitTestVisible="False"/>
+            <ContentPresenter/>
+          </Grid>
+        </ControlTemplate>
+      </Setter.Value>
+    </Setter>
+  </Style>
+
+  <!-- ========== [排版] ========== -->
+  <Style x:Key="PageHeader" TargetType="TextBlock">
+    <Setter Property="FontSize" Value="{DynamicResource FontSizeSection}"/>
+    <Setter Property="FontWeight" Value="SemiBold"/>
+    <Setter Property="Foreground" Value="{DynamicResource TextPrimaryBrush}"/>
+  </Style>
+  <Style x:Key="PageSubtitle" TargetType="TextBlock">
+    <Setter Property="FontSize" Value="11"/>
+    <Setter Property="Foreground" Value="{DynamicResource TextSecondaryBrush}"/>
+  </Style>
+  <Style x:Key="CardLabel" TargetType="TextBlock">
+    <Setter Property="FontSize" Value="11"/>
+    <Setter Property="Foreground" Value="{DynamicResource TextSecondaryBrush}"/>
+  </Style>
   <Style x:Key="DisplayNumber" TargetType="TextBlock">
     <Setter Property="FontSize" Value="{DynamicResource FontSizeHero}"/>
     <Setter Property="FontWeight" Value="Normal"/>
@@ -671,20 +652,8 @@
     <Setter Property="Foreground" Value="{DynamicResource TextPrimaryBrush}"/>
     <Setter Property="Typography.NumeralAlignment" Value="Tabular"/>
   </Style>
-  <Style x:Key="CardLabel" TargetType="TextBlock">
-    <Setter Property="FontSize" Value="11"/>
-    <Setter Property="Foreground" Value="{DynamicResource TextSecondaryBrush}"/>
-  </Style>
-  <Style x:Key="PageHeader" TargetType="TextBlock">
-    <Setter Property="FontSize" Value="{DynamicResource FontSizeSection}"/>
-    <Setter Property="FontWeight" Value="SemiBold"/>
-    <Setter Property="Foreground" Value="{DynamicResource TextPrimaryBrush}"/>
-  </Style>
-  <Style x:Key="PageSubtitle" TargetType="TextBlock">
-    <Setter Property="FontSize" Value="11"/>
-    <Setter Property="Foreground" Value="{DynamicResource TextSecondaryBrush}"/>
-  </Style>
 
+  <!-- ========== [系统] 滚动条 ========== -->
   <Style x:Key="ScrollThumb" TargetType="Thumb">
     <Setter Property="Background" Value="{DynamicResource ScrollThumbBrush}"/>
     <Setter Property="Template">
@@ -714,7 +683,6 @@
     </Setter>
   </Style>
 
-  <!-- 滚动条：8px 细胶囊轨道 + thumb；hover 加粗提亮（Apple 式），拖动用模式色 -->
   <Style TargetType="ScrollBar">
     <Setter Property="Width" Value="8"/>
     <Setter Property="Background" Value="Transparent"/>
@@ -749,12 +717,5 @@
         <Setter Property="Width" Value="Auto"/>
       </Trigger>
     </Style.Triggers>
-  </Style>
-
-  <Style x:Key="NavGroupLabel" TargetType="TextBlock">
-    <Setter Property="FontSize" Value="10"/>
-    <Setter Property="FontWeight" Value="SemiBold"/>
-    <Setter Property="Foreground" Value="{DynamicResource TextTertiaryBrush}"/>
-    <Setter Property="Margin" Value="18,14,0,6"/>
   </Style>
 </ResourceDictionary>

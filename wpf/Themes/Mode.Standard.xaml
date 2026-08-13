@@ -2,65 +2,57 @@
                     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
                     xmlns:sys="clr-namespace:System;assembly=mscorlib">
 
-  <!-- ===== Aurora 三层光晕（Apple 蓝/靛蓝/青，低饱和克制版） ===== -->
-  <Color x:Key="AuroraPrimaryColor">#0A84FF</Color>
-  <Color x:Key="AuroraPrimaryFadeColor">#000A84FF</Color>
+  <!-- 极简 Linear · 常规模式 · 单一强调色（靛蓝） =====
+       保留全部 key（无障碍覆盖层与资源查找依赖）；Aurora 光晕置 0，强调色收敛为单色。 -->
+
+  <!-- Aurora 光晕（极简路线不显示环境光；保留 key，透明度置 0） -->
+  <Color x:Key="AuroraPrimaryColor">#5E5CE6</Color>
+  <Color x:Key="AuroraPrimaryFadeColor">#005E5CE6</Color>
   <Color x:Key="AuroraSecondaryColor">#5E5CE6</Color>
   <Color x:Key="AuroraSecondaryFadeColor">#005E5CE6</Color>
-  <Color x:Key="AuroraTertiaryColor">#64D2FF</Color>
-  <Color x:Key="AuroraTertiaryFadeColor">#0064D2FF</Color>
-  <sys:Double x:Key="AuroraPrimaryOpacity">0.40</sys:Double>
-  <sys:Double x:Key="AuroraSecondaryOpacity">0.32</sys:Double>
-  <sys:Double x:Key="AuroraTertiaryOpacity">0.24</sys:Double>
+  <Color x:Key="AuroraTertiaryColor">#5E5CE6</Color>
+  <Color x:Key="AuroraTertiaryFadeColor">#005E5CE6</Color>
+  <sys:Double x:Key="AuroraPrimaryOpacity">0</sys:Double>
+  <sys:Double x:Key="AuroraSecondaryOpacity">0</sys:Double>
+  <sys:Double x:Key="AuroraTertiaryOpacity">0</sys:Double>
   <sys:Double x:Key="AuroraDriftSeconds">26</sys:Double>
 
-  <!-- 径向渐变画刷：光域扩大（Offset 0.72），让光晕覆盖更大区域 -->
   <RadialGradientBrush x:Key="AmbientPrimaryBrush" Center="0.5,0.5" RadiusX="0.72" RadiusY="0.72">
     <GradientStop Color="{DynamicResource AuroraPrimaryColor}" Offset="0"/>
-    <GradientStop Color="{DynamicResource AuroraPrimaryFadeColor}" Offset="0.72"/>
     <GradientStop Color="{DynamicResource AuroraPrimaryFadeColor}" Offset="1"/>
   </RadialGradientBrush>
   <RadialGradientBrush x:Key="AmbientSecondaryBrush" Center="0.5,0.5" RadiusX="0.68" RadiusY="0.68">
     <GradientStop Color="{DynamicResource AuroraSecondaryColor}" Offset="0"/>
-    <GradientStop Color="{DynamicResource AuroraSecondaryFadeColor}" Offset="0.68"/>
     <GradientStop Color="{DynamicResource AuroraSecondaryFadeColor}" Offset="1"/>
   </RadialGradientBrush>
   <RadialGradientBrush x:Key="AmbientTertiaryBrush" Center="0.5,0.5" RadiusX="0.62" RadiusY="0.62">
     <GradientStop Color="{DynamicResource AuroraTertiaryColor}" Offset="0"/>
-    <GradientStop Color="{DynamicResource AuroraTertiaryFadeColor}" Offset="0.62"/>
     <GradientStop Color="{DynamicResource AuroraTertiaryFadeColor}" Offset="1"/>
   </RadialGradientBrush>
 
-  <!-- ===== Accent 梯度（Apple systemBlue → systemIndigo） ===== -->
-  <Color x:Key="AccentPrimaryColor">#0A84FF</Color>
-  <Color x:Key="AccentSecondaryColor">#5E5CE6</Color>
+  <!-- 强调色：单一靛蓝；渐变保留供进度条/Sparkline（同色系双档，不再炫彩） -->
+  <Color x:Key="AccentPrimaryColor">#5E5CE6</Color>
+  <Color x:Key="AccentSecondaryColor">#7A78F0</Color>
   <SolidColorBrush x:Key="AccentPrimaryBrush" Color="{StaticResource AccentPrimaryColor}"/>
   <SolidColorBrush x:Key="AccentSecondaryBrush" Color="{StaticResource AccentSecondaryColor}"/>
   <LinearGradientBrush x:Key="AccentGradientBrush" StartPoint="0,0" EndPoint="1,0">
     <GradientStop Color="{StaticResource AccentPrimaryColor}" Offset="0"/>
     <GradientStop Color="{StaticResource AccentSecondaryColor}" Offset="1"/>
   </LinearGradientBrush>
-  <SolidColorBrush x:Key="AccentSoftBrush" Color="#240A84FF"/>
-  <SolidColorBrush x:Key="AccentEdgeBrush" Color="#540A84FF"/>
-  <Color x:Key="AccentGlowColor">#0A84FF</Color>
+  <SolidColorBrush x:Key="AccentSoftBrush" Color="#145E5CE6"/>
+  <SolidColorBrush x:Key="AccentEdgeBrush" Color="#405E5CE6"/>
+  <Color x:Key="AccentGlowColor">#5E5CE6</Color>
   <SolidColorBrush x:Key="OnAccentBrush" Color="#FFFFFF"/>
 
-  <!-- ===== 兼容别名层（旧 NavItem/按钮引用，逐页精修后回收） ===== -->
-  <Color x:Key="ModeAccentOnDarkColor">#0A84FF</Color>
-  <Color x:Key="ModeAccentOnLightColor">#007AFF</Color>
+  <!-- 兼容别名层（旧 NavItem/按钮引用） -->
+  <Color x:Key="ModeAccentOnDarkColor">#7A78F0</Color>
+  <Color x:Key="ModeAccentOnLightColor">#5E5CE6</Color>
   <SolidColorBrush x:Key="ModeAccentOnDarkBrush" Color="{StaticResource ModeAccentOnDarkColor}"/>
   <SolidColorBrush x:Key="ModeAccentOnLightBrush" Color="{StaticResource ModeAccentOnLightColor}"/>
-  <SolidColorBrush x:Key="ModeAccentSoftBrush" Color="#240A84FF"/>
-  <SolidColorBrush x:Key="ModeAccentEdgeBrush" Color="#540A84FF"/>
+  <SolidColorBrush x:Key="ModeAccentSoftBrush" Color="#145E5CE6"/>
+  <SolidColorBrush x:Key="ModeAccentEdgeBrush" Color="#405E5CE6"/>
 
-  <!-- ===== Hero 结论标题渐变（概览按主题二选一；深色档/浅色档各自静态配色，
-       字典资源画刷的嵌套 DynamicResource 渐变停止不会随换槽重解析，故不用嵌套引用） ===== -->
-  <LinearGradientBrush x:Key="HeroTitleOnDarkBrush" StartPoint="0,0" EndPoint="1,0">
-    <GradientStop Color="#0A84FF" Offset="0"/>
-    <GradientStop Color="#5E5CE6" Offset="1"/>
-  </LinearGradientBrush>
-  <LinearGradientBrush x:Key="HeroTitleOnLightBrush" StartPoint="0,0" EndPoint="1,0">
-    <GradientStop Color="#007AFF" Offset="0"/>
-    <GradientStop Color="#5856D6" Offset="1"/>
-  </LinearGradientBrush>
+  <!-- Hero 结论标题：极简路线为单色（排版驱动，不再渐变） -->
+  <SolidColorBrush x:Key="HeroTitleOnDarkBrush" Color="#7A78F0"/>
+  <SolidColorBrush x:Key="HeroTitleOnLightBrush" Color="#5E5CE6"/>
 </ResourceDictionary>

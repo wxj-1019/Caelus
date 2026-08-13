@@ -83,8 +83,6 @@ namespace CaelusApp.WpfHost
 
             DataContext = vm;
             PageHost.Content = overviewView;
-            // Aurora 氛围层启动显示（App 启动时已换槽主题资源；ModeController 负责后续切换过渡）
-            Loaded += delegate { Ambient.Show(); };
             Motion.PolicyChanged += OnMotionPolicyChanged;
             // 主题/模式换槽统一过渡：ModeChanged 在每次 ThemeManager.Apply（模式或深浅主题）后触发，
             // 在此集中 CrossFade 内容，替代各调用点的零散 CrossFade（含深浅主题切换这一原缺口）。
@@ -112,7 +110,7 @@ namespace CaelusApp.WpfHost
             if (!IsLoaded) return;
             AppMode mode = index == 1 ? AppMode.Competitive
                 : index == 2 ? AppMode.Custom : AppMode.Standard;
-            ModeController.SwitchTo(Application.Current, mode, Ambient, source, vm, true);
+            ModeController.SwitchTo(Application.Current, mode, source, vm);
             gameMode.Preset = ModeController.ToPreset(mode);
             policyVm.RefreshLocks();
             // 内容 CrossFade 由 OnThemeChanged 集中处理（ModeChanged 在 SwitchTo→Apply 后触发）

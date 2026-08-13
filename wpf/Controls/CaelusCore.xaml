@@ -3,17 +3,7 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              Width="100" Height="100" IsHitTestVisible="False">
   <Grid>
-    <!-- 品牌辉光底（AccentGlow 径向渐隐；本环境 DropShadowEffect 不可用，用渐变等效） -->
-    <Ellipse Width="92" Height="92" Opacity="0.35">
-      <Ellipse.Fill>
-        <RadialGradientBrush>
-          <GradientStop Color="{DynamicResource AccentGlowColor}" Offset="0"/>
-          <GradientStop Color="#00000000" Offset="0.7"/>
-        </RadialGradientBrush>
-      </Ellipse.Fill>
-    </Ellipse>
-
-    <!-- 外虚线环 + 顶点 Accent 亮点（正转 14s） -->
+    <!-- 外虚线环 + 顶点 Accent 亮点（极简 Linear：静态几何，无辉光无旋转） -->
     <Grid x:Name="RingOuter">
       <Ellipse Width="86" Height="86" Stroke="{DynamicResource BorderStrongBrush}"
                StrokeThickness="1" StrokeDashArray="3 7"/>

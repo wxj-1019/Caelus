@@ -16,9 +16,6 @@
       <RowDefinition Height="*"/>
     </Grid.RowDefinitions>
 
-    <!-- Aurora 氛围光层：模式切换交叉淡入；透过半透明表面形成 vibrancy 景深感 -->
-    <controls:AmbientLayer x:Name="Ambient" Grid.RowSpan="2"/>
-
     <Border Grid.Row="0" Background="{DynamicResource SurfaceBrush}"
             BorderBrush="{DynamicResource BorderSubtleBrush}" BorderThickness="0,0,0,1"
             MouseLeftButtonDown="TitleBarDrag">
@@ -195,7 +192,5 @@
       </Grid>
     </Grid>
 
-    <!-- 星点微光层（最顶层覆盖，低密度闪烁 + 缓慢上浮，不干扰阅读） -->
-    <controls:SparkleLayer Grid.RowSpan="2"/>
   </Grid>
 </Window>

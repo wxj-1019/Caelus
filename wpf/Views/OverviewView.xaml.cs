@@ -41,12 +41,10 @@ namespace CaelusApp.WpfHost.Views
             ApplyHeroTitle();
         }
 
-        // 标题渐变档按主题选用：深色用 Accent 梯度，浅色用 OnLight 变体保证白底对比度
+        // 极简 Linear：结论标题为排版驱动的主文字色（不再用 Accent 渐变档）。
         private void ApplyHeroTitle()
         {
-            string key = ThemeManager.CurrentTone == UiTone.Light
-                ? "HeroTitleOnLightBrush" : "HeroTitleOnDarkBrush";
-            object brush = TryFindResource(key);
+            object brush = TryFindResource("TextPrimaryBrush");
             if (brush is Brush) ConclusionTitleText.Foreground = (Brush)brush;
         }
 

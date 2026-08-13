@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Caelus UI/UX 方向对比稿 · 通用性能守护</title>
+<style>
+:root{--bg:#101013;--panel:#17171B;--line:#26262C;--tx:#EDEDF0;--tx-2:#9A9AA2;--tx-3:#5E5E66;--ac:#5E5CE6}
+*{margin:0;padding:0;box-sizing:border-box}
+body{background:var(--bg);color:var(--tx);font-family:"Segoe UI Variable Text","Segoe UI","Microsoft YaHei UI",sans-serif;line-height:1.5}
+.wrap{max-width:1400px;margin:0 auto;padding:26px 24px 40px}
+.hdr{display:flex;align-items:baseline;justify-content:space-between;flex-wrap:wrap;gap:12px;margin-bottom:8px}
+.hdr h1{font-size:22px;font-weight:600}
+.hdr h1 em{font-style:normal;color:var(--ac)}
+.hdr .sub{font-size:12px;color:var(--tx-2)}
+.lead{font-size:13px;color:var(--tx-2);max-width:860px;margin-bottom:8px}
+.lead b{color:var(--tx)}
+.tagrow{display:flex;gap:8px;margin:10px 0 22px;flex-wrap:wrap}
+.tagrow span{font-size:11px;color:var(--tx-2);border:1px solid var(--line);border-radius:6px;padding:3px 10px;background:var(--panel)}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:18px}
+@media (max-width:1200px){.grid{grid-template-columns:1fr}}
+.cell{border:1px solid var(--line);border-radius:12px;overflow:hidden;background:var(--panel)}
+.cell-hd{display:flex;align-items:center;justify-content:space-between;padding:12px 16px;border-bottom:1px solid var(--line)}
+.cell-hd .name{font-size:14px;font-weight:600}
+.cell-hd .name .tag{font-size:11px;font-weight:600;color:var(--ac);background:rgba(94,92,230,.14);border-radius:5px;padding:1px 7px;margin-left:8px}
+.cell-hd a{font-size:11px;color:var(--ac);text-decoration:none}
+.cell-hd a:hover{text-decoration:underline}
+.cell-desc{font-size:11.5px;color:var(--tx-2);padding:8px 16px 0}
+.view{height:430px;background:#000}
+.view iframe{width:100%;height:100%;border:0;display:block}
+.legend{margin-top:22px;border:1px solid var(--line);border-radius:12px;padding:16px 18px;background:var(--panel)}
+.legend h3{font-size:13px;font-weight:600;margin-bottom:10px}
+.legend table{width:100%;border-collapse:collapse;font-size:12px}
+.legend td,.legend th{padding:7px 8px;text-align:left;border-top:1px solid var(--line);vertical-align:top}
+.legend th{color:var(--tx-3);font-weight:600;border-top:none}
+.legend td:first-child{font-weight:600;white-space:nowrap}
+.note{margin-top:16px;font-size:11.5px;color:var(--tx-3)}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="hdr">
+    <h1>Caelus 前端 UI/UX <em>方向对比稿</em></h1>
+    <div class="sub">同一概览页 · 四种方向 · 浏览器直接打开可交互</div>
+  </div>
+  <p class="lead">Caelus 不只是游戏优化工具——它同样服务<b>开发</b>（编译/构建时释放资源）与<b>系统优化</b>（日常使用的资源守护）。所以这套稿刻意避开了浓玩家味的「竞技/终端」路线，四个方向都按<b>「专业性能守护工具」</b>的定位来做。同一套内容（标题栏 + 侧栏 + 概览页），只改视觉方向，便于直接对比。</p>
+  <div class="tagrow"><span>游戏</span><span>开发</span><span>系统优化</span><span>通用性能守护</span></div>
+
+  <div class="grid">
+    <div class="cell">
+      <div class="cell-hd"><span class="name">Windows 原生 Fluent<span class="tag">最贴「系统优化」</span></span><a href="fluent.html" target="_blank">全屏查看 →</a></div>
+      <div class="cell-desc">Mica 质感 + 系统蓝 + Win11 卡片/导航。「像系统自带工具」的信赖感（PowerToys / 任务管理器风），跨游戏/开发/日常通用。</div>
+      <div class="view"><iframe src="fluent.html" title="方向 Windows 原生 Fluent" loading="lazy"></iframe></div>
+    </div>
+
+    <div class="cell">
+      <div class="cell-hd"><span class="name">开发者控制台<span class="tag">最贴「开发」</span></span><a href="console.html" target="_blank">全屏查看 →</a></div>
+      <div class="cell-desc">深色板岩 + 克制的技术感（Grafana / Vercel 风）。数据用等宽、界面用无衬线，专业而不花哨，遥测清晰。</div>
+      <div class="view"><iframe src="console.html" title="方向 开发者控制台" loading="lazy"></iframe></div>
+    </div>
+
+    <div class="cell">
+      <div class="cell-hd"><span class="name">C · 极简 Linear<span class="tag">最安静通用</span></span><a href="minimal.html" target="_blank">全屏查看 →</a></div>
+      <div class="cell-desc">浅色留白 + 发丝线 + 单一强调色 + 排版驱动层级。干净、耐看、亲和力最高，任何场景都不违和。</div>
+      <div class="view"><iframe src="minimal.html" title="方向 极简 Linear" loading="lazy"></iframe></div>
+    </div>
+
+    <div class="cell">
+      <div class="cell-hd"><span class="name">D · 精修苹果<span class="tag">当前方向基线</span></span><a href="apple.html" target="_blank">全屏查看 →</a></div>
+      <div class="cell-desc">macOS 中性表面 + Apple 强调色 + 微妙高光/辉光。即你现在的方向（精修版），用来和上面三个对照。</div>
+      <div class="view"><iframe src="apple.html" title="方向 精修苹果" loading="lazy"></iframe></div>
+    </div>
+  </div>
+
+  <div class="legend">
+    <h3>怎么选</h3>
+    <table>
+      <tr><th>方向</th><th>气质</th><th>适合如果你…</th><th>代价 / 风险</th></tr>
+      <tr><td>Windows 原生 Fluent</td><td>原生、可信赖、专业</td><td>希望像「系统自带工具」，跨场景通用</td><td>需要真正接 DWM Mica/Acrylic 材质</td></tr>
+      <tr><td>开发者控制台</td><td>克制、技术、清晰</td><td>常用它做开发/监控，喜欢数据感</td><td>偏深色专业风，亲和力略低于浅色</td></tr>
+      <tr><td>C · 极简 Linear</td><td>干净、安静、高级</td><td>讨厌装饰感，想要 less is more</td><td>做过了会显平淡、品牌感弱</td></tr>
+      <tr><td>D · 精修苹果</td><td>精致、现代、安静</td><td>基本满意现状，只想要更精致</td><td>是微调而非换方向，可能仍不合口味</td></tr>
+    </table>
+  </div>
+
+  <p class="note">说明：四稿均为自包含静态 HTML（无需构建/服务器），用真实样例数据呈现，便于横向比较审美。旧的「游戏驾驶舱」「赛博终端」两稿偏玩家向，不符合新定位，已从对比中移除（文件仍在 <code>directions/</code> 下，想回看可单独打开）。选定方向后，我按项目的 design-sandbox → <code>wpf/Themes/</code> 映射流程落地成真实主题。</p>
+</div>
+</body>
+</html>

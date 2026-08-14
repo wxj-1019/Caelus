@@ -235,6 +235,7 @@ namespace CaelusApp
                 lock (sync) { if (!grantedFlag) return; }
                 SweepDailySuppression();
                 BoostVisibleFamily();
+                HealthCare.RunIfDue();   // 到点判定内部做，未到期零开销
             }
             catch { }
         }

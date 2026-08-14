@@ -2095,6 +2095,9 @@ namespace CaelusApp
             test("竞技电源：清理绝不碰用户自己的方案", TestPowerPlanPurgeSparesForeignSchemes);
             test("竞技电源：旧版遗留的方案副本会被迁移删除", TestPowerPlanMigratesLegacyClone);
             test("竞技电源：反复解析目标计划只会有一个方案", TestPowerPlanResolveIsIdempotent);
+            test("健康维护：启动项基线对比只报新增", TestStartupAuditDiffNew);
+            test("健康维护：基线快照存储往返与转义", TestStartupAuditBaselineRoundtrip);
+            test("健康维护：到点判定覆盖从未运行与损坏数据", TestHealthCareIsDue);
             }
             finally { try { Directory.Delete(root, true); } catch { } }
 

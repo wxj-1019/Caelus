@@ -353,5 +353,56 @@ namespace CaelusApp
                 DeleteTempDir(dir);
             }
         }
+        private static void TestIdeCatalogMatch()
+        {
+            Eq(true, IdeCatalog.IsMatch("devenv",
+                @"C:\Program Files\Microsoft Visual Studio\2022\Community\Common7\IDE\devenv.exe"));
+            Eq(false, IdeCatalog.IsMatch("code", @"C:\Temp\code.exe"));
+            Eq(false, IdeCatalog.IsMatch("notepad",
+                @"C:\Program Files\Microsoft Visual Studio\2022\Community\Common7\IDE\notepad.exe"));
+            Eq(false, IdeCatalog.IsMatch(null, null));
+            Eq(false, IdeCatalog.IsMatch("devenv", null));
+        }
+
+        private static void TestDevFocusIdeBoostRestore()
+        {
+            string dir = NewTempDir("devfocus-ide");
+            Process probe = null;
+            DevFocus dev = null;
+            try
+            {
+                string beat = Path.Combine(dir, "ide.beat");
+                probe = StartProbe(beat);
+                WaitAdvance(beat, -1, 4000);
+                probe.Refresh();
+                Eq(ProcessPriorityClass.Normal, probe.PriorityClass);
+
+                var arbiter = new ScenarioArbiter();
+                var core = new SuppressionCore(Path.Combine(dir, "s.state"));
+                dev = new DevFocus(arbiter, core, () => true, (n, p) => false, name => false);
+
+                // 测试钩子绕过窗口条件直接提优：AboveNormal 生效
+                Eq(true, dev.BoostIdeForTest(probe.Id));
+                probe.Refresh();
+                Eq(ProcessPriorityClass.AboveNormal, probe.PriorityClass);
+
+                // 重复提优幂等（快照不叠加）
+                Eq(true, dev.BoostIdeForTest(probe.Id));
+                probe.Refresh();
+                Eq(ProcessPriorityClass.AboveNormal, probe.PriorityClass);
+
+                // 还原：回到 Normal
+                dev.RestoreIdeBoost();
+                probe.Refresh();
+                Eq(ProcessPriorityClass.Normal, probe.PriorityClass);
+            }
+            finally
+            {
+                if (dev != null) try { dev.RestoreIdeBoost(); } catch { }
+                if (dev != null) try { dev.Stop(); } catch { }
+                if (probe != null) try { StopOwned(probe); } catch { }
+                DeleteTempDir(dir);
+            }
+        }
     }
 }

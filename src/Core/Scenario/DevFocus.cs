@@ -4,6 +4,7 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.IO;
 using System.Threading;
 
 namespace CaelusApp
@@ -25,6 +26,8 @@ namespace CaelusApp
         private bool quietApplied;
         private Timer reconcileTimer;
         private long sessionStartTicks;
+        private readonly Dictionary<int, uint> ideBoosted = new Dictionary<int, uint>();
+        private readonly Dictionary<int, long> ideBoostedCreation = new Dictionary<int, long>();
 
         /// <summary>编译会话状态变化时触发，参数是文案 key（bal.buildstart / bal.buildend）</summary>
         public event Action<string> SessionChanged;
@@ -210,11 +213,19 @@ namespace CaelusApp
             foreach (int pid in dead) pids.Remove(pid);
         }
 
-        /// <summary>判断进程是否为 IDE 进程。Task 4 接线 IdeCatalog；当前 stub 返回 false。</summary>
+        /// <summary>判断进程是否为 IDE 进程。名称预筛 + 安装目录双重校验。</summary>
         private bool IsIdeProcess(int pid, string name, string path)
         {
-            // TODO P2 Task 4: 接线 IdeCatalog.IsMatch
-            return false;
+            if (!IdeCatalog.NameMatches(name)) return false;
+            string p = path;
+            if (string.IsNullOrEmpty(p))
+            {
+                IntPtr h = Native.OpenProcess(Native.PROCESS_QUERY_LIMITED_INFORMATION, false, pid);
+                if (h == IntPtr.Zero) return false;
+                try { p = Native.ImagePath(h); }
+                finally { Native.CloseHandle(h); }
+            }
+            return IdeCatalog.IsMatch(name, p);
         }
 
         /// <summary>IScenario：获得掌职权——暂停索引服务、提优编译进程（后台压制在 Task 4 加入）</summary>
@@ -411,8 +422,107 @@ namespace CaelusApp
             catch { }
         }
 
-        private void ReconcileIdeBoost() { }
-        private void RestoreIdeBoost() { }
+        private void ReconcileIdeBoost()
+        {
+            int[] ides;
+            lock (sync)
+            {
+                ides = new int[activeIdePids.Count];
+                activeIdePids.CopyTo(ides);
+            }
+            if (ides.Length == 0) { RestoreIdeBoost(); return; }
+
+            HashSet<int> visible;
+            try { visible = GameSessionDetector.VisibleWindowPids(true); }
+            catch { visible = new HashSet<int>(); }
+
+            bool anyVisible = false;
+            foreach (int pid in ides) if (visible.Contains(pid)) { anyVisible = true; break; }
+            if (!anyVisible) { RestoreIdeBoost(); return; }
+
+            foreach (int pid in ides) BoostOneIde(pid);
+        }
+
+        private void BoostOneIde(int pid)
+        {
+            lock (sync) { if (ideBoosted.ContainsKey(pid)) return; }
+
+            long creation = 0;
+            try { using (var p = Process.GetProcessById(pid)) creation = p.StartTime.Ticks; }
+            catch { }
+
+            IntPtr h = Native.OpenProcess(
+                Native.PROCESS_SET_INFORMATION | Native.PROCESS_QUERY_LIMITED_INFORMATION, false, pid);
+            if (h == IntPtr.Zero) return;
+            try
+            {
+                uint orig = Native.GetPriorityClass(h);
+                if (orig == 0) return;
+                if (orig == Native.HIGH_PRIORITY_CLASS || orig == 0x100) return;
+                if (orig == Native.ABOVE_NORMAL_PRIORITY_CLASS) return;
+
+                Native.SetPriorityClass(h, Native.ABOVE_NORMAL_PRIORITY_CLASS);
+                if (Native.GetPriorityClass(h) != Native.ABOVE_NORMAL_PRIORITY_CLASS) return;
+                Native.TrySetIoPriority(h, 3);
+
+                lock (sync)
+                {
+                    ideBoosted[pid] = orig;
+                    ideBoostedCreation[pid] = creation;
+                }
+            }
+            catch { }
+            finally { Native.CloseHandle(h); }
+        }
+
+        internal void RestoreIdeBoost()
+        {
+            KeyValuePair<int, uint>[] snap;
+            KeyValuePair<int, long>[] snapCreation;
+            lock (sync)
+            {
+                if (ideBoosted.Count == 0) return;
+                snap = new KeyValuePair<int, uint>[ideBoosted.Count];
+                ((ICollection<KeyValuePair<int, uint>>)ideBoosted).CopyTo(snap, 0);
+                ideBoosted.Clear();
+                snapCreation = new KeyValuePair<int, long>[ideBoostedCreation.Count];
+                ((ICollection<KeyValuePair<int, long>>)ideBoostedCreation).CopyTo(snapCreation, 0);
+                ideBoostedCreation.Clear();
+            }
+            var creationMap = new Dictionary<int, long>();
+            foreach (var kv in snapCreation) creationMap[kv.Key] = kv.Value;
+
+            foreach (var kv in snap)
+            {
+                try
+                {
+                    long expectCreation;
+                    if (creationMap.TryGetValue(kv.Key, out expectCreation))
+                    {
+                        long nowCreation;
+                        try { nowCreation = Process.GetProcessById(kv.Key).StartTime.Ticks; }
+                        catch { continue; }
+                        if (nowCreation != expectCreation) continue;
+                    }
+                    IntPtr h = Native.OpenProcess(Native.PROCESS_SET_INFORMATION, false, kv.Key);
+                    if (h == IntPtr.Zero) continue;
+                    try
+                    {
+                        Native.SetPriorityClass(h, kv.Value);
+                        Native.TrySetIoPriority(h, 2);
+                    }
+                    finally { Native.CloseHandle(h); }
+                }
+                catch { }
+            }
+        }
+
+        /// <summary>测试钩子：绕过窗口条件直接提优单个进程（返回是否入快照）</summary>
+        internal bool BoostIdeForTest(int pid)
+        {
+            BoostOneIde(pid);
+            lock (sync) return ideBoosted.ContainsKey(pid);
+        }
 
         /// <summary>程序退出时调用，确保还原。仅在 ProcNotify 停止后调用（退出路径单线程）</summary>
         public void Stop()

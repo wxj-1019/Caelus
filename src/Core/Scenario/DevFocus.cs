@@ -9,10 +9,8 @@ using System.Threading;
 
 namespace CaelusApp
 {
-    internal sealed class DevFocus : IScenario
+    internal sealed class DevFocus : ScenarioBase
     {
-        private readonly object sync = new object();
-        private readonly ScenarioArbiter arbiter;
         private readonly SuppressionCore core;
         private readonly Func<bool> enabled;
         private readonly Func<string, string, bool> isWhitelisted;
@@ -22,7 +20,6 @@ namespace CaelusApp
         private readonly HashSet<string> distractNotified = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
         private long lastWindowCheckTicks;
         private bool granted;
-        private bool reported;
         private bool quietApplied;
         private Timer reconcileTimer;
         private long sessionStartTicks;
@@ -32,8 +29,8 @@ namespace CaelusApp
         /// <summary>编译会话状态变化时触发，参数是文案 key（bal.buildstart / bal.buildend）</summary>
         public event Action<string> SessionChanged;
 
-        public ScenarioKind Kind { get { return ScenarioKind.DevFocus; } }
-        public int Priority { get { return 50; } }
+        public override ScenarioKind Kind { get { return ScenarioKind.DevFocus; } }
+        public override int Priority { get { return 50; } }
 
         /// <summary>专注模式开关状态。实时读注册表——WPF 宿主（独立进程）修改后本进程下次评估即生效</summary>
         public bool FocusModeOn { get { return Settings.Load("DevFocusModeOn", false); } }
@@ -42,6 +39,11 @@ namespace CaelusApp
         private bool AnyActive
         {
             get { return activeBuildPids.Count > 0 || FocusModeOn || activeIdePids.Count > 0; }
+        }
+
+        protected override bool WantsActiveLocked
+        {
+            get { return enabled() && (activeBuildPids.Count > 0 || FocusModeOn || activeIdePids.Count > 0); }
         }
 
         /// <summary>检测状态：是否存在任一活性来源（与是否掌权无关）</summary>
@@ -55,14 +57,12 @@ namespace CaelusApp
 
         public DevFocus(ScenarioArbiter arbiter, SuppressionCore core, Func<bool> enabled,
             Func<string, string, bool> isWhitelisted, Func<string, bool> isDistract)
+            : base(arbiter)
         {
-            if (arbiter == null) throw new ArgumentNullException("arbiter");
-            this.arbiter = arbiter;
             this.core = core;
             this.enabled = enabled != null ? enabled : (() => true);
             this.isWhitelisted = isWhitelisted;
             this.isDistract = isDistract;
-            arbiter.Register(this);
         }
 
         /// <summary>专注模式开关（托盘菜单/设置页调用）。写注册表 + 活性重算。</summary>
@@ -229,7 +229,7 @@ namespace CaelusApp
         }
 
         /// <summary>IScenario：获得掌职权——暂停索引服务、提优编译进程（后台压制在 Task 4 加入）</summary>
-        public void Grant()
+        public override void Grant()
         {
             lock (sync)
             {
@@ -273,7 +273,7 @@ namespace CaelusApp
         }
 
         /// <summary>IScenario：挂起——还原全部副作用，检测状态保留</summary>
-        public void Suspend()
+        public override void Suspend()
         {
             bool wasQuiet;
             lock (sync)

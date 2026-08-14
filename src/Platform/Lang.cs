@@ -455,6 +455,7 @@ namespace CaelusApp
             { "tray.open", new[]{ "打开面板" } },
             { "btn.panic", new[]{ "一键恢复已记录项" } },
             { "tray.exit", new[]{ "退出" } },
+            { "tray.focus", new[]{ "专注模式" } },
             { "tray.active", new[]{ "Caelus - 守护中（{0}）" } },
             { "tray.idle", new[]{ "Caelus - 待命，未检测到游戏" } },
             { "tray.armed", new[]{ "Caelus - 已就位《{0}》，进对局自动接管" } },

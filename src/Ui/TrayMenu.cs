@@ -118,6 +118,7 @@ namespace CaelusApp
     {
         private readonly Tamer tamer;
         private readonly GameMode gameMode;
+        private readonly DevFocus devFocus;
         private readonly Action openPanel;
         private readonly Action exitApp;
         private readonly Action afterChange;
@@ -125,10 +126,11 @@ namespace CaelusApp
 
         public ContextMenuStrip Strip { get { return strip; } }
 
-        public TrayMenu(Tamer tamer, GameMode gameMode, Action openPanel, Action exitApp, Action afterChange)
+        public TrayMenu(Tamer tamer, GameMode gameMode, DevFocus devFocus, Action openPanel, Action exitApp, Action afterChange)
         {
             this.tamer = tamer;
             this.gameMode = gameMode;
+            this.devFocus = devFocus;
             this.openPanel = openPanel;
             this.exitApp = exitApp;
             this.afterChange = afterChange;
@@ -221,6 +223,11 @@ namespace CaelusApp
             {
                 tamer.Paused = !tamer.Paused;
                 Settings.Save("TameOn", !tamer.Paused);
+                Changed();
+            }));
+            strip.Items.Add(Check(Lang.T("tray.focus"), devFocus.FocusModeOn, (s, e) =>
+            {
+                devFocus.SetFocusMode(!devFocus.FocusModeOn);
                 Changed();
             }));
 

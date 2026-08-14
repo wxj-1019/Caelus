@@ -326,7 +326,7 @@ namespace CaelusApp
                 Application.Exit();
             };
 
-            var trayMenu = new TrayMenu(tamer, gameMode,
+            var trayMenu = new TrayMenu(tamer, gameMode, devFocus,
                 () => panel.ShowPanel(),
                 doExit,
                 () => panel.SyncAllToggles());

@@ -636,7 +636,9 @@ namespace CaelusApp
                 var core = new SuppressionCore();
                 var tamer = new Tamer(core);
                 var mode = new GameMode(data, core);
-                var tray = new TrayMenu(tamer, mode, delegate { }, delegate { }, delegate { });
+                var arbiter = new ScenarioArbiter();
+                var devFocus = new DevFocus(arbiter, core, () => false, (a, b) => false, c => false);
+                var tray = new TrayMenu(tamer, mode, devFocus, delegate { }, delegate { }, delegate { });
                 ContextMenuStrip strip = tray.Strip;
                 strip.Show(new Point(-20000, -20000));
                 for (int i = 0; i < 12; i++) { Application.DoEvents(); Thread.Sleep(20); }

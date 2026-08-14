@@ -24,6 +24,9 @@ namespace CaelusApp
         public ScenarioKind Kind { get { return ScenarioKind.DevFocus; } }
         public int Priority { get { return 50; } }
 
+        /// <summary>专注模式开关状态。实时读注册表——WPF 宿主（独立进程）修改后本进程下次评估即生效</summary>
+        public bool FocusModeOn { get { return Settings.Load("DevFocusModeOn", false); } }
+
         /// <summary>检测状态：是否存在活跃的编译进程（与是否掌权无关）</summary>
         public bool IsActive { get { lock (sync) return activeBuildPids.Count > 0; } }
 
@@ -37,6 +40,36 @@ namespace CaelusApp
             this.core = core;
             this.enabled = enabled != null ? enabled : (() => true);
             arbiter.Register(this);
+        }
+
+        /// <summary>专注模式开关（托盘菜单/设置页调用）。写注册表 + 活性重算。</summary>
+        public void SetFocusMode(bool on)
+        {
+            Settings.Save("DevFocusModeOn", on);
+            // TODO P2 Task 1: if (!on) { lock (sync) distractNotified.Clear(); }
+            RecomputeActivity();
+        }
+
+        /// <summary>重算活性：开关状态变化后立即重评，通知仲裁器。</summary>
+        private void RecomputeActivity()
+        {
+            if (!enabled())
+            {
+                bool wasReported;
+                lock (sync)
+                {
+                    wasReported = reported;
+                    reported = false;
+                    activeBuildPids.Clear();
+                }
+                if (wasReported) arbiter.ReportActivity(Kind, false);
+            }
+            else
+            {
+                bool nowActive;
+                lock (sync) { nowActive = activeBuildPids.Count > 0; }
+                if (nowActive) arbiter.ReportActivity(Kind, true);
+            }
         }
 
         public void NotifyProcessChanges(ProcessChangeBatch batch)

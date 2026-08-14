@@ -71,7 +71,9 @@ namespace CaelusApp
                         File.Copy(Application.ExecutablePath, demoExe, true);
                         scMode.AddGameExecutable("NEBULA STRIKE", demoExe);
                     }
-                    using (var f = new PanelForm(scTamer, scMode, IconArt.MakeIcon(Dpi.S(24)), true))
+                    var scArbiter = new ScenarioArbiter();
+                    var scDevFocus = new DevFocus(scArbiter, scCore, () => false, (a, b) => false, c => false);
+                    using (var f = new PanelForm(scTamer, scMode, scDevFocus, IconArt.MakeIcon(Dpi.S(24)), true))
                     {
                         IntPtr hShot = f.Handle;
                         GC.KeepAlive(hShot);
@@ -94,8 +96,10 @@ namespace CaelusApp
                 var previewTamer = new Tamer(previewCore);
                 var previewMode = new GameMode(Paths.Data, previewCore);
                 previewMode.Enabled = Settings.Load("GameModeOn", true);
+                var previewArbiter = new ScenarioArbiter();
+                var previewDevFocus = new DevFocus(previewArbiter, previewCore, () => false, (a, b) => false, c => false);
                 using (Icon previewIcon = IconArt.MakeMultiIcon(previewMode.ActivePreset, previewMode.Enabled))
-                using (var preview = new PanelForm(previewTamer, previewMode, previewIcon, true))
+                using (var preview = new PanelForm(previewTamer, previewMode, previewDevFocus, previewIcon, true))
                 {
                     preview.RealExit = true;
                     preview.ShowPanel();
@@ -294,7 +298,7 @@ namespace CaelusApp
             PerformancePreset runtimeIconMode = gameMode.ActivePreset;
             bool runtimeIconEnabled = gameMode.Enabled;
             Icon appIcon = IconArt.MakeMultiIcon(runtimeIconMode, runtimeIconEnabled);
-            var panel = new PanelForm(tamer, gameMode, appIcon, elevated);
+            var panel = new PanelForm(tamer, gameMode, devFocus, appIcon, elevated);
             GC.KeepAlive(panel.Handle);
 
             bool pendingPanel = Settings.Load(PendingPanelKey, false);
@@ -416,6 +420,17 @@ namespace CaelusApp
                     panel.BeginInvoke((MethodInvoker)(() =>
                     {
                         try { icon.ShowBalloonTip(5000, App.DisplayName, Lang.T(key), ToolTipIcon.Info); } catch { }
+                    }));
+                }
+                catch { }
+            };
+            arbiter.GrantedChanged += kind =>
+            {
+                try
+                {
+                    panel.BeginInvoke((MethodInvoker)(() =>
+                    {
+                        try { panel.SetGrantedScenario(kind); } catch { }
                     }));
                 }
                 catch { }

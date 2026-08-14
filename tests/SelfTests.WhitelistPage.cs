@@ -145,7 +145,9 @@ namespace CaelusApp
                 if (File.Exists(sample)) mode.AddWhitelistAuto(sample);
 
             Trace("构造面板");
-            var form = new PanelForm(new Tamer(core), mode, IconArt.MakeIcon(Dpi.S(24)), true);
+            var testArbiter = new ScenarioArbiter();
+            var testDevFocus = new DevFocus(testArbiter, core, () => false, (a, b) => false, c => false);
+            var form = new PanelForm(new Tamer(core), mode, testDevFocus, IconArt.MakeIcon(Dpi.S(24)), true);
             form.StartPosition = System.Windows.Forms.FormStartPosition.Manual;
             form.Location = new System.Drawing.Point(-20000, -20000);
             Trace("面板已构造");

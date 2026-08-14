@@ -219,5 +219,13 @@ namespace CaelusApp
             }
             finally { DeleteTempDir(dir); }
         }
+
+        private static void TestScenarioStatusSuffix()
+        {
+            Eq("", PanelForm.ScenarioStatusSuffix(null));
+            Eq(" · 游戏", PanelForm.ScenarioStatusSuffix(ScenarioKind.Game));
+            Eq(" · 开发", PanelForm.ScenarioStatusSuffix(ScenarioKind.DevFocus));
+            Eq(" · 日常", PanelForm.ScenarioStatusSuffix(ScenarioKind.DailyCare));
+        }
     }
 }

@@ -37,7 +37,9 @@ namespace CaelusApp
     {
         private readonly Tamer tamer;
         private readonly GameMode gameMode;
+        private readonly DevFocus devFocus;
         private readonly bool elevated;
+        private ScenarioKind? grantedScenario;
 
         private DBPanel pageOverview, pagePolicy, pageAntiCheat, pageLibrary, pageLog, pageSettings, pageAbout;
         private DBPanel pageGraphics, pageEnvironment, pageWhitelist;
@@ -80,9 +82,9 @@ namespace CaelusApp
         private const int ContentX = 26, ContentW = PageW - ContentX * 2;
         private const int ScrollContentW = PageW - 40 - 12 - 20;
 
-        public PanelForm(Tamer t, GameMode gm, Icon icon, bool isElevated)
+        public PanelForm(Tamer t, GameMode gm, DevFocus devFocus, Icon icon, bool isElevated)
         {
-            tamer = t; gameMode = gm; elevated = isElevated; appIcon = (Icon)icon.Clone();
+            tamer = t; gameMode = gm; this.devFocus = devFocus; elevated = isElevated; appIcon = (Icon)icon.Clone();
             visualMode = gameMode.ActivePreset; visualEnabled = gameMode.Enabled;
             Theme.SetMode(visualMode, false);
             BuildUi(appIcon);
@@ -518,7 +520,7 @@ namespace CaelusApp
         private void RefreshLightweightUiState()
         {
             if (gameMode == null) return;
-            if (lblStatus != null) lblStatus.Text = gameMode.StatusText;
+            if (lblStatus != null) lblStatus.Text = gameMode.StatusText + ScenarioStatusSuffix(grantedScenario);
             bool act = gameMode.Enabled && gameMode.IsActive;
             if (statusDot != null)
             {
@@ -855,6 +857,25 @@ namespace CaelusApp
                 return;
             }
             base.OnFormClosing(e);
+        }
+
+        internal static string ScenarioStatusSuffix(ScenarioKind? kind)
+        {
+            if (!kind.HasValue) return "";
+            switch (kind.Value)
+            {
+                case ScenarioKind.Game: return " · 游戏";
+                case ScenarioKind.DevFocus: return " · 开发";
+                case ScenarioKind.DailyCare: return " · 日常";
+                default: return "";
+            }
+        }
+
+        public void SetGrantedScenario(ScenarioKind? kind)
+        {
+            grantedScenario = kind;
+            if (lblStatus != null)
+                lblStatus.Text = gameMode.StatusText + ScenarioStatusSuffix(kind);
         }
     }
 

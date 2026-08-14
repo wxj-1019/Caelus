@@ -860,6 +860,13 @@ namespace CaelusApp
             test("白名单家族：后代仅在 PID 身份一致时保留", TestWhitelistFamilyIdentity);
             test("白名单家族事件：事件顺序与父进程创建时间阻断 PID 继承", TestWhitelistFamilyEvents);
             test("进程事件：延迟启动不会接上过期的父进程身份", TestProcNotifyParentIdentity);
+            test("场景仲裁：单场景激活即掌权", TestArbiterSingleActivation);
+            test("场景仲裁：高优先级抢占先挂起后授权", TestArbiterPreemptionOrder);
+            test("场景仲裁：抢占解除后低优先级补位", TestArbiterResumeAfterPreemption);
+            test("场景仲裁：低优先级激活不抢占", TestArbiterLowPriorityNoPreempt);
+            test("场景仲裁：全部解除后掌权者为空", TestArbiterEmptyGrantsNull);
+            test("场景仲裁：重复报告无副作用", TestArbiterDuplicateReportNoOp);
+            test("场景仲裁：掌权者变更事件", TestArbiterGrantedChangedEvent);
             test("白名单存储：数据损坏时安全失败，写入为事务性", TestWhitelistStorageSafety);
             test("白名单并发：编辑与进行中的策略快照串行化", TestWhitelistMutationSerialization);
             test("极端豁免：反作弊名称匹配不区分大小写", () =>

@@ -883,6 +883,9 @@ namespace CaelusApp
             test("开发专注：分心应用气球每名一次、专注重开可再报", TestDevFocusDistractOnce);
             test("开发专注：IDE 目录双校验防同名误伤", TestIdeCatalogMatch);
             test("开发专注：IDE 提优 AboveNormal 与还原往返", TestDevFocusIdeBoostRestore);
+            test("日常优化：家族双校验防同名误伤", TestDailyCatalogMatch);
+            test("日常优化：电池供电激活与市电解除", TestDailyCareBatteryActivates);
+            test("日常优化：家族进程无可见窗口不激活", TestDailyCareNoWindowNoActivate);
             test("白名单存储：数据损坏时安全失败，写入为事务性", TestWhitelistStorageSafety);
             test("白名单并发：编辑与进行中的策略快照串行化", TestWhitelistMutationSerialization);
             test("极端豁免：反作弊名称匹配不区分大小写", () =>

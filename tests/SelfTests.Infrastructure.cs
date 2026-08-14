@@ -142,6 +142,19 @@ namespace CaelusApp
                 throw new Exception("expected " + expected + ", actual " + actual);
         }
 
+        private static string NewTempDir(string tag)
+        {
+            string dir = Path.Combine(Path.GetTempPath(),
+                "Caelus.test." + tag + "." + Guid.NewGuid().ToString("N"));
+            Directory.CreateDirectory(dir);
+            return dir;
+        }
+
+        private static void DeleteTempDir(string dir)
+        {
+            try { if (Directory.Exists(dir)) Directory.Delete(dir, true); } catch { }
+        }
+
         private static void Skip(string reason)
         {
             throw new TestSkippedException(reason);

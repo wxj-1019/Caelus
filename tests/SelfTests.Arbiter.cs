@@ -3,6 +3,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Threading;
 
 namespace CaelusApp
@@ -185,6 +186,38 @@ namespace CaelusApp
             }
             // 最终记账与最后一次派发/通知一致
             lock (notifyGate) Eq<ScenarioKind?>(finalGranted, lastNotified);
+        }
+
+        private static void TestGameModeActiveChangedEvent()
+        {
+            string dir = NewTempDir("arbiter-gm");
+            try
+            {
+                var core = new SuppressionCore(Path.Combine(dir, "s.state"));
+                var gm = new GameMode(dir, core);
+                var seen = new List<bool>();
+                gm.ActiveChanged += on => seen.Add(on);
+
+                gm.SimulateActiveForTest(true);
+                gm.SimulateActiveForTest(false);
+                Eq(2, seen.Count);
+                Eq(true, seen[0]);
+                Eq(false, seen[1]);
+            }
+            finally { DeleteTempDir(dir); }
+        }
+
+        private static void TestGameModeWhitelistQueryEmpty()
+        {
+            string dir = NewTempDir("arbiter-wl");
+            try
+            {
+                var core = new SuppressionCore(Path.Combine(dir, "s.state"));
+                var gm = new GameMode(dir, core);
+                // 空白名单下任何进程都不被豁免
+                Eq(false, gm.IsProcessWhitelisted("chrome", @"C:\Apps\chrome.exe"));
+            }
+            finally { DeleteTempDir(dir); }
         }
     }
 }

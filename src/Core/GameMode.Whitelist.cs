@@ -51,6 +51,22 @@ namespace CaelusApp
                     ref whiteHasFamilyRules, 0, 0) != 0;
         }
 
+        /// <summary>规则级白名单查询：名称/精确路径规则是否命中该进程（家族规则的子进程扩展不展开）。
+        /// 供 DevFocus 等场景的压制豁免复用；匹配前内部做规范化。</summary>
+        internal bool IsProcessWhitelisted(string name, string imagePath)
+        {
+            if (string.IsNullOrEmpty(name)) return false;
+            string nn = WhitelistRule.NormalizeName(name);
+            string np = string.IsNullOrEmpty(imagePath)
+                ? null : WhitelistRule.NormalizeImagePath(imagePath);
+            lock (whiteEvalSync)
+            {
+                for (int i = 0; i < whiteRules.Count; i++)
+                    if (whiteRules[i].MatchesNormalized(nn, np)) return true;
+            }
+            return false;
+        }
+
         private bool AddWhiteRuleNoSave(WhitelistRule rule)
         {
             if (rule == null || !whiteRuleKeys.Add(rule.Key)) return false;

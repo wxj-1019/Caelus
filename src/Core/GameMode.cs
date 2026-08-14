@@ -434,8 +434,16 @@ namespace CaelusApp
 
         public bool IsActive { get { lock (sync) return active; } }
 
+        /// <summary>游戏会话活性变化时触发（true=激活 false=解除）。供场景仲裁器接线，UI 轮询 IsActive 不受影响。</summary>
+        public event Action<bool> ActiveChanged;
+
 #if CAELUS_SELFTEST
-        internal void SimulateActiveForTest(bool value) { lock (sync) active = value; }
+        internal void SimulateActiveForTest(bool value)
+        {
+            lock (sync) active = value;
+            var h = ActiveChanged;
+            if (h != null) h(value);
+        }
 #endif
 
         public string ActiveGame { get { lock (sync) return active ? activeGame : null; } }
@@ -965,6 +973,8 @@ namespace CaelusApp
                                     {
                                         lock (sync) { active = true; activeGame = running; firstSweep = true; }
                                         Logger.Log("游戏模式激活：检测到 " + running);
+                                        var h = ActiveChanged;
+                                        if (h != null) { try { h(true); } catch { } }
                                         ReportBegin(running);
                                     }
                                     else if (!string.Equals(activeGame, running, StringComparison.OrdinalIgnoreCase))

@@ -871,6 +871,9 @@ namespace CaelusApp
             test("场景仲裁：并发报告不产生交错非法序列", TestArbiterConcurrentReports);
             test("场景仲裁：游戏激活事件驱动仲裁报告", TestGameModeActiveChangedEvent);
             test("场景仲裁：空白名单查询不误豁免", TestGameModeWhitelistQueryEmpty);
+            test("开发专注：编译进程激活掌权与退出还原", TestDevFocusGrantAndRelease);
+            test("开发专注：游戏激活抢占挂起与补位恢复", TestDevFocusPreemptedByGame);
+            test("开发专注：开关关闭不激活且立即解除", TestDevFocusDisabledSwitch);
             test("白名单存储：数据损坏时安全失败，写入为事务性", TestWhitelistStorageSafety);
             test("白名单并发：编辑与进行中的策略快照串行化", TestWhitelistMutationSerialization);
             test("极端豁免：反作弊名称匹配不区分大小写", () =>

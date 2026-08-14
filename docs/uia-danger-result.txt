@@ -1,0 +1,6 @@
+=== high-risk confirmation regression v2 @ 2026-08-13 12:20:04 ===
+PASS  T1 restore-all confirm+cancel :: dialog '
+SKIP  T2 VBS disable confirm+cancel+rollback :: VBS already disabled (toggle On); turning Off executes without confirm by design
+SKIP  T3 defender add-exclusion confirm+cancel :: no non-excluded row available (removal path has no confirm by design)
+----
+TOTAL 5  FAIL 0

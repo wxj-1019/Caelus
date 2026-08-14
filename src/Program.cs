@@ -233,7 +233,7 @@ namespace CaelusApp
             var devFocus = new DevFocus(arbiter, core,
                 () => Settings.Load("DevModeOn", true),
                 gameMode.IsProcessWhitelisted,
-                (string name) => false);
+                DistractCatalog.IsMatch);
             gameMode.ActiveChanged += on => arbiter.ReportActivity(ScenarioKind.Game, on);
 
             var startGate = new object();

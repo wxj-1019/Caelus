@@ -310,5 +310,48 @@ namespace CaelusApp
                 DeleteTempDir(dir);
             }
         }
+
+        private static void TestDevFocusDistractOnce()
+        {
+            string dir = NewTempDir("devfocus-distract");
+            DevFocus dev = null;
+            try
+            {
+                var arbiter = new ScenarioArbiter();
+                var core = new SuppressionCore(Path.Combine(dir, "s.state"));
+                dev = new DevFocus(arbiter, core, () => true, (n, p) => false,
+                    name => string.Equals(name, "discord", StringComparison.OrdinalIgnoreCase));
+
+                var balloons = new List<string>();
+                dev.SessionChanged += key => balloons.Add(key);
+
+                dev.SetFocusMode(true);
+                Eq(true, dev.IsGranted);
+
+                // 同名分心进程两次启动：气球只报一次
+                dev.NotifyProcessChanges(new ProcessChangeBatch(
+                    new[] { MakeChange(42001, "discord", ProcessChangeKind.Started) }, false));
+                dev.NotifyProcessChanges(new ProcessChangeBatch(
+                    new[] { MakeChange(42002, "discord", ProcessChangeKind.Started) }, false));
+                int distractCount = 0;
+                foreach (string k in balloons) if (k == "bal.distract") distractCount++;
+                Eq(1, distractCount);
+
+                // 专注关闭后再开：清空已报集合，可再次提醒
+                dev.SetFocusMode(false);
+                dev.SetFocusMode(true);
+                dev.NotifyProcessChanges(new ProcessChangeBatch(
+                    new[] { MakeChange(42003, "discord", ProcessChangeKind.Started) }, false));
+                distractCount = 0;
+                foreach (string k in balloons) if (k == "bal.distract") distractCount++;
+                Eq(2, distractCount);
+            }
+            finally
+            {
+                if (dev != null) try { dev.Stop(); } catch { }
+                try { Settings.Save("DevFocusModeOn", false); } catch { }
+                DeleteTempDir(dir);
+            }
+        }
     }
 }

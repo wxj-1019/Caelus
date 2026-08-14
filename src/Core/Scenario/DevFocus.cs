@@ -117,8 +117,7 @@ namespace CaelusApp
             if (becameIdle)
             {
                 long elapsedMs = (DateTime.UtcNow.Ticks - sessionStartTicks) / TimeSpan.TicksPerMillisecond;
-                if (elapsedMs >= 0)
-                    Logger.Log(string.Format("开发专注：本次编译 {0:0.#} 秒", elapsedMs / 1000.0));
+                Logger.Log(string.Format("开发专注：本次编译 {0:0.#} 秒", elapsedMs / 1000.0));
                 try { var h = SessionChanged; if (h != null) h("bal.buildend"); } catch { }
                 arbiter.ReportActivity(Kind, false);
             }
@@ -134,6 +133,11 @@ namespace CaelusApp
             }
             try
             {
+                // TODO: SvcPause 引用计数——当 GameMode (Custom preset + svcPauseOn) 退出时，
+                // RestoreEnv() 会在 arbiter 回调 Grant 之后调 SvcPause.Restore()，覆盖此处。
+                // 当前仅在 Custom preset 用户手动开启 svcPauseOn 且游戏退出时编译还在跑时触发。
+                // 根治需要 SvcPause 引用计数化（Activate 递增/Restore 递减/计数归零才真 Restore），
+                // 或 GameMode 成为 IScenario 后 SvcPause 控制权完全归仲裁器。
                 SvcPause.Activate();
                 BoostBuildProcesses();
                 Logger.Log("开发专注：获得掌职权，已暂停索引服务并提优编译进程");

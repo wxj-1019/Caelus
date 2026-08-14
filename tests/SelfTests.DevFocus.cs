@@ -77,7 +77,7 @@ namespace CaelusApp
             finally
             {
                 if (dev != null) try { dev.Stop(); } catch { }
-                if (probe != null) StopOwned(probe);
+                if (probe != null) try { StopOwned(probe); } catch { }
                 DeleteTempDir(dir);
             }
         }
@@ -115,7 +115,7 @@ namespace CaelusApp
             finally
             {
                 if (dev != null) try { dev.Stop(); } catch { }
-                if (probe != null) StopOwned(probe);
+                if (probe != null) try { StopOwned(probe); } catch { }
                 DeleteTempDir(dir);
             }
         }
@@ -155,7 +155,7 @@ namespace CaelusApp
             finally
             {
                 if (dev != null) try { dev.Stop(); } catch { }
-                if (probe != null) StopOwned(probe);
+                if (probe != null) try { StopOwned(probe); } catch { }
                 DeleteTempDir(dir);
             }
         }

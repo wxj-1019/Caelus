@@ -269,5 +269,46 @@ namespace CaelusApp
                 DeleteTempDir(dir);
             }
         }
+
+        private static void TestDevFocusFocusGrantEffects()
+        {
+            string dir = NewTempDir("devfocus-fx");
+            DevFocus dev = null;
+            try
+            {
+                var arbiter = new ScenarioArbiter();
+                var core = new SuppressionCore(Path.Combine(dir, "s.state"));
+                arbiter.Register(new StubGameScenario());
+                dev = new DevFocus(arbiter, core, () => true, (n, p) => false, name => false);
+
+                // 专注开 → 掌权 → 校正定时器启动
+                dev.SetFocusMode(true);
+                Eq(true, dev.IsGranted);
+                Eq(true, dev.FocusTimerRunning);
+
+                // 游戏抢占 → 挂起 → 定时器必须停止（挂起场景零后台开销）
+                arbiter.ReportActivity(ScenarioKind.Game, true);
+                Eq(false, dev.IsGranted);
+                Eq(false, dev.FocusTimerRunning);
+                // 活性仍在（专注开关还开着）
+                Eq(true, dev.IsActive);
+
+                // 游戏退出 → 补位 → 定时器恢复
+                arbiter.ReportActivity(ScenarioKind.Game, false);
+                Eq(true, dev.IsGranted);
+                Eq(true, dev.FocusTimerRunning);
+
+                // 专注关 → 整体解除
+                dev.SetFocusMode(false);
+                Eq(false, dev.IsGranted);
+                Eq(false, dev.FocusTimerRunning);
+            }
+            finally
+            {
+                if (dev != null) try { dev.Stop(); } catch { }
+                try { Settings.Save("DevFocusModeOn", false); } catch { }
+                DeleteTempDir(dir);
+            }
+        }
     }
 }

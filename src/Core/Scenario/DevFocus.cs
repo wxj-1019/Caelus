@@ -4,6 +4,7 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Threading;
 
 namespace CaelusApp
 {
@@ -21,6 +22,8 @@ namespace CaelusApp
         private long lastWindowCheckTicks;
         private bool granted;
         private bool reported;
+        private bool quietApplied;
+        private Timer reconcileTimer;
         private long sessionStartTicks;
 
         /// <summary>编译会话状态变化时触发，参数是文案 key（bal.buildstart / bal.buildend）</summary>
@@ -43,6 +46,9 @@ namespace CaelusApp
 
         /// <summary>仲裁器授权状态：副作用是否已施加</summary>
         public bool IsGranted { get { lock (sync) return granted; } }
+
+        /// <summary>测试钩子：校正定时器是否运行中（应只在掌权期间为 true）</summary>
+        internal bool FocusTimerRunning { get { lock (sync) return reconcileTimer != null; } }
 
         public DevFocus(ScenarioArbiter arbiter, SuppressionCore core, Func<bool> enabled,
             Func<string, string, bool> isWhitelisted, Func<string, bool> isDistract)
@@ -221,15 +227,36 @@ namespace CaelusApp
             }
             try
             {
+                bool build;
+                bool focus;
+                bool ide;
+                lock (sync)
+                {
+                    build = activeBuildPids.Count > 0;
+                    focus = FocusModeOn;
+                    ide = activeIdePids.Count > 0;
+                }
+
                 // TODO: SvcPause 引用计数——当 GameMode (Custom preset + svcPauseOn) 退出时，
                 // RestoreEnv() 会在 arbiter 回调 Grant 之后调 SvcPause.Restore()，覆盖此处。
                 // 当前仅在 Custom preset 用户手动开启 svcPauseOn 且游戏退出时编译还在跑时触发。
                 // 根治需要 SvcPause 引用计数化（Activate 递增/Restore 递减/计数归零才真 Restore），
                 // 或 GameMode 成为 IScenario 后 SvcPause 控制权完全归仲裁器。
-                SvcPause.Activate();
-                BoostBuildProcesses();
-                SweepBuildSuppression();
-                Logger.Log("开发专注：获得掌职权，已暂停索引服务并提优编译进程");
+                if (build)
+                {
+                    SvcPause.Activate();
+                    BoostBuildProcesses();
+                }
+                // 编译深化与专注模式共用同一套常规档压制（Build 位）
+                if (build || focus) SweepBuildSuppression();
+                if (focus)
+                {
+                    try { if (Notif.Quiet()) { lock (sync) quietApplied = true; } } catch { }
+                    StartReconcileTimer();
+                }
+                if (ide) ReconcileIdeBoost();
+
+                Logger.Log("开发专注：获得掌职权（编译=" + build + " 专注=" + focus + " IDE=" + ide + "）");
             }
             catch (Exception ex) { Logger.LogFailure("开发专注掌权失败", ex); }
         }
@@ -237,16 +264,22 @@ namespace CaelusApp
         /// <summary>IScenario：挂起——还原全部副作用，检测状态保留</summary>
         public void Suspend()
         {
+            bool wasQuiet;
             lock (sync)
             {
                 if (!granted) return;
                 granted = false;
+                wasQuiet = quietApplied;
+                quietApplied = false;
             }
             try
             {
+                StopReconcileTimer();
+                RestoreIdeBoost();
                 if (core != null) core.ReleaseReason(SuppressReason.Build);
+                if (wasQuiet) Notif.Restore();
                 SvcPause.Restore();
-                Logger.Log("开发专注：挂起，编译压制已释放、索引服务已恢复（编译检测继续）");
+                Logger.Log("开发专注：挂起，全部副作用已还原（检测继续）");
             }
             catch (Exception ex) { Logger.LogFailure("开发专注挂起失败", ex); }
         }
@@ -342,6 +375,44 @@ namespace CaelusApp
             if (suppressed > 0)
                 Logger.Log("开发专注：编译期间压制 " + suppressed + " 个后台进程（编译位，退出即还原）");
         }
+
+        private void StartReconcileTimer()
+        {
+            lock (sync)
+            {
+                if (reconcileTimer != null) return;
+                reconcileTimer = new Timer(
+                    _ => ReconcileTick(), null, 30000, 30000);
+            }
+        }
+
+        private void StopReconcileTimer()
+        {
+            Timer t;
+            lock (sync)
+            {
+                t = reconcileTimer;
+                reconcileTimer = null;
+            }
+            if (t != null) t.Dispose();
+        }
+
+        /// <summary>校正节拍：增量追压新后台 + IDE 窗口条件复查。回调到达时可能已挂起，先检查。</summary>
+        private void ReconcileTick()
+        {
+            lock (sync) { if (!granted) return; }
+            try
+            {
+                bool focus;
+                focus = FocusModeOn;
+                if (focus) SweepBuildSuppression();   // Acquire 对已压进程返回 AlreadyThrottled，幂等
+                ReconcileIdeBoost();
+            }
+            catch { }
+        }
+
+        private void ReconcileIdeBoost() { }
+        private void RestoreIdeBoost() { }
 
         /// <summary>程序退出时调用，确保还原。仅在 ProcNotify 停止后调用（退出路径单线程）</summary>
         public void Stop()

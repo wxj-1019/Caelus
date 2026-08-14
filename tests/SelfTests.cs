@@ -891,6 +891,9 @@ namespace CaelusApp
             test("日常优化：家族进程无可见窗口不激活", TestDailyCareNoWindowNoActivate);
             test("日常优化：Daily 压制位与游戏位引用计数隔离", TestDailyCareReasonIsolation);
             test("日常优化：电池升档压制级别选择", TestDailyCareLevelChoice);
+    test("日常优化：电池降档到市电后级别与优先级恢复", TestDailyCareLevelDowngradeOnAc);
+    test("日常优化：多原因并存生效级别取最强且释放隔离", TestDailyCareReasonLevelMax);
+    test("日常优化：家族提优 AboveNormal+IO 快照往返还原", TestDailyCareFamilyBoostRoundtrip);
             test("白名单存储：数据损坏时安全失败，写入为事务性", TestWhitelistStorageSafety);
             test("白名单并发：编辑与进行中的策略快照串行化", TestWhitelistMutationSerialization);
             test("极端豁免：反作弊名称匹配不区分大小写", () =>
@@ -2101,6 +2104,7 @@ namespace CaelusApp
             test("健康维护：启动项基线对比只报新增", TestStartupAuditDiffNew);
             test("健康维护：基线快照存储往返与转义", TestStartupAuditBaselineRoundtrip);
             test("健康维护：到点判定覆盖从未运行与损坏数据", TestHealthCareIsDue);
+    test("健康维护：反斜杠-t 序列与真实制表符基线往返无损", TestStartupAuditEscapingRoundtrip);
             }
             finally { try { Directory.Delete(root, true); } catch { } }
 

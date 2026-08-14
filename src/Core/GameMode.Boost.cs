@@ -1027,8 +1027,6 @@ namespace CaelusApp
                 firstSweep = true;
             }
             gameGoneSinceTicks = 0;
-            var activeChangedHandler = ActiveChanged;
-            if (activeChangedHandler != null) { try { activeChangedHandler(false); } catch { } }
 
             bool clean = UnboostGames();
             List<int> background = core.PidsWith(SuppressReason.Background);
@@ -1037,6 +1035,11 @@ namespace CaelusApp
             foreach (int pid in background) if (core.IsThrottled(pid)) { backgroundClean = false; break; }
             bool envClean = RestoreEnv();
             ClearEnvRetryState();
+            // 场景仲裁接线点：必须在 RestoreEnv 之后触发——本模式先完整还原系统副作用
+            // （SvcPause.Restore 等），仲裁器再授权给下一场景（如 DevFocus 编译期）时，
+            // 其 SvcPause.Activate 才不会被本模式的还原路径覆盖（否则刚暂停的索引服务被立刻拉起）。
+            var activeChangedHandler = ActiveChanged;
+            if (activeChangedHandler != null) { try { activeChangedHandler(false); } catch { } }
             pressure.Clear();
             freezeDwell.Clear();
             if (clean) CrashGuard.ClearBoost();

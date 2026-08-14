@@ -18,13 +18,13 @@ namespace CaelusApp
         private readonly HashSet<int> activeBuildPids = new HashSet<int>();
         private readonly HashSet<int> activeIdePids = new HashSet<int>();
         private readonly HashSet<string> distractNotified = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
-        private long lastWindowCheckTicks;
         private bool granted;
         private bool quietApplied;
         private Timer reconcileTimer;
         private long sessionStartTicks;
         private readonly Dictionary<int, uint> ideBoosted = new Dictionary<int, uint>();
         private readonly Dictionary<int, long> ideBoostedCreation = new Dictionary<int, long>();
+        private readonly Dictionary<int, int> ideBoostedIo = new Dictionary<int, int>();
 
         /// <summary>编译会话状态变化时触发，参数是文案 key（bal.buildstart / bal.buildend）</summary>
         public event Action<string> SessionChanged;
@@ -71,30 +71,6 @@ namespace CaelusApp
             Settings.Save("DevFocusModeOn", on);
             if (!on) { lock (sync) { distractNotified.Clear(); } }
             RecomputeActivity();
-        }
-
-        /// <summary>统一重算活性：三来源任一 + 开关 → 报告仲裁器。</summary>
-        private void RecomputeActivity()
-        {
-            bool becameActive = false;
-            bool becameIdle = false;
-            lock (sync)
-            {
-                bool nowActive = enabled() && AnyActive;
-                if (nowActive && !reported)
-                {
-                    reported = true;
-                    becameActive = true;
-                    sessionStartTicks = DateTime.UtcNow.Ticks;
-                }
-                else if (!nowActive && reported)
-                {
-                    reported = false;
-                    becameIdle = true;
-                }
-            }
-            if (becameActive) arbiter.ReportActivity(Kind, true);
-            if (becameIdle) arbiter.ReportActivity(Kind, false);
         }
 
         public void NotifyProcessChanges(ProcessChangeBatch batch)
@@ -248,11 +224,9 @@ namespace CaelusApp
                     ide = activeIdePids.Count > 0;
                 }
 
-                // TODO: SvcPause 引用计数——当 GameMode (Custom preset + svcPauseOn) 退出时，
-                // RestoreEnv() 会在 arbiter 回调 Grant 之后调 SvcPause.Restore()，覆盖此处。
-                // 当前仅在 Custom preset 用户手动开启 svcPauseOn 且游戏退出时编译还在跑时触发。
-                // 根治需要 SvcPause 引用计数化（Activate 递增/Restore 递减/计数归零才真 Restore），
-                // 或 GameMode 成为 IScenario 后 SvcPause 控制权完全归仲裁器。
+                // 注：GameMode.Deactivate 的 ActiveChanged(false) 已移到 RestoreEnv 之后触发
+                // （审查迭代 2026-08），本场景 Activate 不再被游戏还原路径覆盖。
+                // 若未来仍有 SvcPause 多占用方叠加，再考虑引用计数化。
                 if (build)
                 {
                     SvcPause.Activate();
@@ -263,8 +237,10 @@ namespace CaelusApp
                 if (focus)
                 {
                     try { if (Notif.Quiet()) { lock (sync) quietApplied = true; } } catch { }
-                    StartReconcileTimer();
                 }
+                // 校正节拍在编译/专注任一来源下都运行：长编译期间增量追压新后台，
+                // 专注模式还需节拍感知 WPF 宿主跨进程的开关翻转（无进程事件时也能解除）。
+                if (build || focus) StartReconcileTimer();
                 if (ide) ReconcileIdeBoost();
 
                 Logger.Log("开发专注：获得掌职权（编译=" + build + " 专注=" + focus + " IDE=" + ide + "）");
@@ -414,10 +390,19 @@ namespace CaelusApp
             lock (sync) { if (!granted) return; }
             try
             {
+                bool build;
                 bool focus;
+                lock (sync) { build = activeBuildPids.Count > 0; }
                 focus = FocusModeOn;
-                if (focus) SweepBuildSuppression();   // Acquire 对已压进程返回 AlreadyThrottled，幂等
+                // 专注开关可能已被 WPF 宿主跨进程关闭：本进程没有进程事件时，靠节拍重算活性
+                // 触发仲裁器挂起（还原 Notif 静默等副作用），避免开关失效延迟到下一个进程事件。
+                RecomputeActivity();
+                lock (sync) { if (!granted) return; }
+                if (build || focus) SweepBuildSuppression();   // Acquire 对已压进程返回 AlreadyThrottled，幂等
                 ReconcileIdeBoost();
+                // 竞态护栏：挂起可能在扫描期间到达（granted 已翻 false），泄漏的压制立即回收；
+                // 若挂起在护栏之后到达，Suspend 自带的 ReleaseReason(Build) 会兜底。
+                lock (sync) { if (!granted && core != null) core.ReleaseReason(SuppressReason.Build); }
             }
             catch { }
         }
@@ -461,14 +446,18 @@ namespace CaelusApp
                 if (orig == Native.HIGH_PRIORITY_CLASS || orig == 0x100) return;
                 if (orig == Native.ABOVE_NORMAL_PRIORITY_CLASS) return;
 
+                int origIo = Native.QueryIoPriority(h);
                 Native.SetPriorityClass(h, Native.ABOVE_NORMAL_PRIORITY_CLASS);
                 if (Native.GetPriorityClass(h) != Native.ABOVE_NORMAL_PRIORITY_CLASS) return;
+                // IO 优先级写入需要 SeIncreaseBasePriorityPrivilege（与 GameMode 提优同要求）
+                try { Native.EnsureBoostPrivilege(); } catch { }
                 Native.TrySetIoPriority(h, 3);
 
                 lock (sync)
                 {
                     ideBoosted[pid] = orig;
                     ideBoostedCreation[pid] = creation;
+                    ideBoostedIo[pid] = origIo;
                 }
             }
             catch { }
@@ -479,6 +468,7 @@ namespace CaelusApp
         {
             KeyValuePair<int, uint>[] snap;
             KeyValuePair<int, long>[] snapCreation;
+            KeyValuePair<int, int>[] snapIo;
             lock (sync)
             {
                 if (ideBoosted.Count == 0) return;
@@ -488,9 +478,14 @@ namespace CaelusApp
                 snapCreation = new KeyValuePair<int, long>[ideBoostedCreation.Count];
                 ((ICollection<KeyValuePair<int, long>>)ideBoostedCreation).CopyTo(snapCreation, 0);
                 ideBoostedCreation.Clear();
+                snapIo = new KeyValuePair<int, int>[ideBoostedIo.Count];
+                ((ICollection<KeyValuePair<int, int>>)ideBoostedIo).CopyTo(snapIo, 0);
+                ideBoostedIo.Clear();
             }
             var creationMap = new Dictionary<int, long>();
             foreach (var kv in snapCreation) creationMap[kv.Key] = kv.Value;
+            var ioMap = new Dictionary<int, int>();
+            foreach (var kv in snapIo) ioMap[kv.Key] = kv.Value;
 
             foreach (var kv in snap)
             {
@@ -509,7 +504,9 @@ namespace CaelusApp
                     try
                     {
                         Native.SetPriorityClass(h, kv.Value);
-                        Native.TrySetIoPriority(h, 2);
+                        int origIo;
+                        Native.TrySetIoPriority(h,
+                            ioMap.TryGetValue(kv.Key, out origIo) && origIo >= 0 ? origIo : 2);
                     }
                     finally { Native.CloseHandle(h); }
                 }

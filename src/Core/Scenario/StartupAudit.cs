@@ -111,7 +111,23 @@ namespace CaelusApp
         private static string Unesc(string s)
         {
             if (string.IsNullOrEmpty(s)) return "";
-            return s.Replace("\\t", "\t").Replace("\\r", "\r").Replace("\\n", "\n").Replace("\\\\", "\\");
+            // 转义是歧义的（"\\t" 既可能是字面反斜杠+t，也可能是转义后的 TAB），
+            // 连续 Replace 无法正确处理，必须单趟从左到右扫描：
+            //   "\\" → 字面反斜杠；"\\t/\\r/\\n" → 对应控制字符；其余原样保留。
+            var sb = new System.Text.StringBuilder(s.Length);
+            for (int i = 0; i < s.Length; i++)
+            {
+                if (s[i] == '\\' && i + 1 < s.Length)
+                {
+                    char next = s[i + 1];
+                    if (next == '\\') { sb.Append('\\'); i++; continue; }
+                    if (next == 't') { sb.Append('\t'); i++; continue; }
+                    if (next == 'r') { sb.Append('\r'); i++; continue; }
+                    if (next == 'n') { sb.Append('\n'); i++; continue; }
+                }
+                sb.Append(s[i]);
+            }
+            return sb.ToString();
         }
     }
 }

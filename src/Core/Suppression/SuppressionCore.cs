@@ -47,6 +47,8 @@ namespace CaelusApp
             public SuppressionLevel Level;
             public SuppressionLevel AntiCheatLevel;
             public SuppressionLevel BackgroundLevel;
+            public SuppressionLevel BuildLevel;
+            public SuppressionLevel DailyLevel;
             public bool Applied;
             public SuppressReason Reasons;
 
@@ -447,6 +449,8 @@ namespace CaelusApp
                 e.Reasons &= ~reason;
                 if ((reason & SuppressReason.AntiCheat) != 0) e.AntiCheatLevel = SuppressionLevel.None;
                 if ((reason & SuppressReason.Background) != 0) e.BackgroundLevel = SuppressionLevel.None;
+                if ((reason & SuppressReason.Build) != 0) e.BuildLevel = SuppressionLevel.None;
+                if ((reason & SuppressReason.Daily) != 0) e.DailyLevel = SuppressionLevel.None;
                 e.Level = EffectiveLevel(e);
                 if (e.Reasons != SuppressReason.None)
                 {
@@ -606,6 +610,8 @@ namespace CaelusApp
                 SuppressionLevel level = SuppressionLevel.None;
                 if ((reason & SuppressReason.AntiCheat) != 0) level = e.AntiCheatLevel;
                 if ((reason & SuppressReason.Background) != 0 && e.BackgroundLevel > level) level = e.BackgroundLevel;
+                if ((reason & SuppressReason.Build) != 0 && e.BuildLevel > level) level = e.BuildLevel;
+                if ((reason & SuppressReason.Daily) != 0 && e.DailyLevel > level) level = e.DailyLevel;
                 return level;
             }
         }
@@ -1293,6 +1299,8 @@ namespace CaelusApp
         {
             if ((reason & SuppressReason.AntiCheat) != 0) e.AntiCheatLevel = level;
             if ((reason & SuppressReason.Background) != 0) e.BackgroundLevel = level;
+            if ((reason & SuppressReason.Build) != 0) e.BuildLevel = level;
+            if ((reason & SuppressReason.Daily) != 0) e.DailyLevel = level;
             e.Level = EffectiveLevel(e);
             if (e.AntiCheatLevel >= SuppressionLevel.Frozen)
                 e.AntiCheatLevel = SuppressionLevel.Isolated;
@@ -1303,7 +1311,11 @@ namespace CaelusApp
 
         private static SuppressionLevel EffectiveLevel(Entry e)
         {
-            return e.AntiCheatLevel > e.BackgroundLevel ? e.AntiCheatLevel : e.BackgroundLevel;
+            SuppressionLevel level = e.AntiCheatLevel > e.BackgroundLevel
+                ? e.AntiCheatLevel : e.BackgroundLevel;
+            if (e.BuildLevel > level) level = e.BuildLevel;
+            if (e.DailyLevel > level) level = e.DailyLevel;
+            return level;
         }
 
         private bool PersistJournalLocked()

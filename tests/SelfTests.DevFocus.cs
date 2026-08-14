@@ -364,6 +364,14 @@ namespace CaelusApp
             Eq(false, IdeCatalog.IsMatch("devenv", null));
         }
 
+        private static int QueryIoOf(int pid)
+        {
+            IntPtr h = Native.OpenProcess(Native.PROCESS_QUERY_LIMITED_INFORMATION, false, pid);
+            if (h == IntPtr.Zero) return -2;
+            try { return Native.QueryIoPriority(h); }
+            finally { Native.CloseHandle(h); }
+        }
+
         private static void TestDevFocusIdeBoostRestore()
         {
             string dir = NewTempDir("devfocus-ide");
@@ -376,25 +384,30 @@ namespace CaelusApp
                 WaitAdvance(beat, -1, 4000);
                 probe.Refresh();
                 Eq(ProcessPriorityClass.Normal, probe.PriorityClass);
+                int ioBefore = QueryIoOf(probe.Id);
+                Eq(true, ioBefore >= 2);
 
                 var arbiter = new ScenarioArbiter();
                 var core = new SuppressionCore(Path.Combine(dir, "s.state"));
                 dev = new DevFocus(arbiter, core, () => true, (n, p) => false, name => false);
 
-                // 测试钩子绕过窗口条件直接提优：AboveNormal 生效
+                // 测试钩子绕过窗口条件直接提优：AboveNormal + IO 3 生效
                 Eq(true, dev.BoostIdeForTest(probe.Id));
                 probe.Refresh();
                 Eq(ProcessPriorityClass.AboveNormal, probe.PriorityClass);
+                Eq(3, QueryIoOf(probe.Id));
 
                 // 重复提优幂等（快照不叠加）
                 Eq(true, dev.BoostIdeForTest(probe.Id));
                 probe.Refresh();
                 Eq(ProcessPriorityClass.AboveNormal, probe.PriorityClass);
+                Eq(3, QueryIoOf(probe.Id));
 
-                // 还原：回到 Normal
+                // 还原：优先级回到 Normal，IO 回到快照原值（不是写死的 2）
                 dev.RestoreIdeBoost();
                 probe.Refresh();
                 Eq(ProcessPriorityClass.Normal, probe.PriorityClass);
+                Eq(ioBefore, QueryIoOf(probe.Id));
             }
             finally
             {

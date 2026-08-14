@@ -15,6 +15,8 @@ namespace CaelusApp
         private readonly Func<string, string, bool> isWhitelisted;
         private readonly HashSet<int> dailyPids = new HashSet<int>();
         private readonly Dictionary<int, uint> dailyBoosted = new Dictionary<int, uint>();
+        private readonly Dictionary<int, long> dailyBoostedCreation = new Dictionary<int, long>();
+        private readonly Dictionary<int, int> dailyBoostedIo = new Dictionary<int, int>();
         private bool familyVisible;
         private bool onBattery;
         private bool batteryBalloonShown;
@@ -236,6 +238,9 @@ namespace CaelusApp
                 SweepDailySuppression();
                 BoostVisibleFamily();
                 HealthCare.RunIfDue();   // 到点判定内部做，未到期零开销
+                // 竞态护栏：挂起可能在扫描期间到达（grantedFlag 已翻 false），泄漏的压制立即回收；
+                // 若挂起在护栏之后到达，Suspend 自带的 ReleaseReason(Daily) 会兜底。
+                lock (sync) { if (!grantedFlag && core != null) core.ReleaseReason(SuppressReason.Daily); }
             }
             catch { }
         }
@@ -315,6 +320,13 @@ namespace CaelusApp
         private void BoostOne(int pid)
         {
             lock (sync) { if (dailyBoosted.ContainsKey(pid)) return; }
+
+            // 快照创建时间与 IO 优先级：还原时按创建时间校验防 PID 复用改到新进程，
+            // IO 优先级还原本值而非写死 2（与 DevFocus.RestoreIdeBoost 同语义）。
+            long creation = 0;
+            try { using (var p = Process.GetProcessById(pid)) creation = p.StartTime.Ticks; }
+            catch { }
+
             IntPtr h = Native.OpenProcess(
                 Native.PROCESS_SET_INFORMATION | Native.PROCESS_QUERY_LIMITED_INFORMATION, false, pid);
             if (h == IntPtr.Zero) return;
@@ -325,10 +337,18 @@ namespace CaelusApp
                 if (orig == Native.HIGH_PRIORITY_CLASS || orig == 0x100) return;
                 if (orig >= Native.ABOVE_NORMAL_PRIORITY_CLASS) return;
 
+                int origIo = Native.QueryIoPriority(h);
                 Native.SetPriorityClass(h, Native.ABOVE_NORMAL_PRIORITY_CLASS);
                 if (Native.GetPriorityClass(h) != Native.ABOVE_NORMAL_PRIORITY_CLASS) return;
+                // IO 优先级写入需要 SeIncreaseBasePriorityPrivilege（与 GameMode 提优同要求）
+                try { Native.EnsureBoostPrivilege(); } catch { }
                 Native.TrySetIoPriority(h, 3);
-                lock (sync) dailyBoosted[pid] = orig;
+                lock (sync)
+                {
+                    dailyBoosted[pid] = orig;
+                    dailyBoostedCreation[pid] = creation;
+                    dailyBoostedIo[pid] = origIo;
+                }
             }
             catch { }
             finally { Native.CloseHandle(h); }
@@ -337,28 +357,58 @@ namespace CaelusApp
         internal void RestoreFamilyBoost()
         {
             KeyValuePair<int, uint>[] snap;
+            KeyValuePair<int, long>[] snapCreation;
+            KeyValuePair<int, int>[] snapIo;
             lock (sync)
             {
                 if (dailyBoosted.Count == 0) return;
                 snap = new KeyValuePair<int, uint>[dailyBoosted.Count];
                 ((ICollection<KeyValuePair<int, uint>>)dailyBoosted).CopyTo(snap, 0);
                 dailyBoosted.Clear();
+                snapCreation = new KeyValuePair<int, long>[dailyBoostedCreation.Count];
+                ((ICollection<KeyValuePair<int, long>>)dailyBoostedCreation).CopyTo(snapCreation, 0);
+                dailyBoostedCreation.Clear();
+                snapIo = new KeyValuePair<int, int>[dailyBoostedIo.Count];
+                ((ICollection<KeyValuePair<int, int>>)dailyBoostedIo).CopyTo(snapIo, 0);
+                dailyBoostedIo.Clear();
             }
+            var creationMap = new Dictionary<int, long>();
+            foreach (var kv in snapCreation) creationMap[kv.Key] = kv.Value;
+            var ioMap = new Dictionary<int, int>();
+            foreach (var kv in snapIo) ioMap[kv.Key] = kv.Value;
+
             foreach (var kv in snap)
             {
                 try
                 {
+                    long expectCreation;
+                    if (creationMap.TryGetValue(kv.Key, out expectCreation))
+                    {
+                        long nowCreation;
+                        try { nowCreation = Process.GetProcessById(kv.Key).StartTime.Ticks; }
+                        catch { continue; }
+                        if (nowCreation != expectCreation) continue;
+                    }
                     IntPtr h = Native.OpenProcess(Native.PROCESS_SET_INFORMATION, false, kv.Key);
                     if (h == IntPtr.Zero) continue;
                     try
                     {
                         Native.SetPriorityClass(h, kv.Value);
-                        Native.TrySetIoPriority(h, 2);
+                        int origIo;
+                        Native.TrySetIoPriority(h,
+                            ioMap.TryGetValue(kv.Key, out origIo) && origIo >= 0 ? origIo : 2);
                     }
                     finally { Native.CloseHandle(h); }
                 }
                 catch { }
             }
+        }
+
+        /// <summary>测试钩子：绕过窗口条件直接提优单个家族进程（返回是否入快照）</summary>
+        internal bool BoostFamilyForTest(int pid)
+        {
+            BoostOne(pid);
+            lock (sync) return dailyBoosted.ContainsKey(pid);
         }
     }
 }

@@ -176,6 +176,7 @@
     <Compile Include="..\src\Core\*.cs" />
     <Compile Include="..\src\Core\Detection\*.cs" />
     <Compile Include="..\src\Core\Suppression\*.cs" />
+    <Compile Include="..\src\Core\Scenario\*.cs" />
     <Compile Include="..\src\Core\Tweaks\*.cs" />
     <Compile Include="..\src\Platform\*.cs" />
     <Compile Include="..\src\UiShared\*.cs" />

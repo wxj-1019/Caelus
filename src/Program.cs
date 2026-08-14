@@ -229,7 +229,10 @@ namespace CaelusApp
             var gameMode = new GameMode(dir, core);
             gameMode.Enabled = Settings.Load("GameModeOn", true);
 
-            var buildWatch = new BuildWatch(() => gameMode.IsActive);
+            var arbiter = new ScenarioArbiter();
+            var devFocus = new DevFocus(arbiter, core,
+                () => Settings.Load("DevModeOn", true));
+            gameMode.ActiveChanged += on => arbiter.ReportActivity(ScenarioKind.Game, on);
 
             var startGate = new object();
             bool exiting = false;
@@ -266,7 +269,7 @@ namespace CaelusApp
             {
                 gameMode.NotifyProcessChanges(batch);
                 tamer.NotifyProcessChanges(batch);
-                buildWatch.NotifyProcessChanges(batch);
+                devFocus.NotifyProcessChanges(batch);
             };
             procNotify.Start();
             gameMode.ProcessEventsAvailable = procNotify.IsActive;
@@ -316,7 +319,7 @@ namespace CaelusApp
                 try { procNotify.Stop(); } catch { }
                 tamer.Stop();
                 gameMode.Stop();
-                buildWatch.Stop();
+                devFocus.Stop();
                 panel.RealExit = true;
                 Application.Exit();
             };
@@ -351,7 +354,7 @@ namespace CaelusApp
                 try { AdlxTweaks.RestoreRis(); } catch { }
                 try { PresenceQos.Restore(); } catch { }
                 try { PowerOverlay.Restore(); } catch { }
-                try { buildWatch.Stop(); } catch { }
+                try { devFocus.Stop(); } catch { }
             };
             gameMode.SessionEnded += msg =>
             {
@@ -379,7 +382,7 @@ namespace CaelusApp
             {
                 try { panel.NotifyLibraryChanged(); } catch { }
             };
-            buildWatch.SessionChanged += key =>
+            devFocus.SessionChanged += key =>
             {
                 try
                 {

@@ -1027,6 +1027,8 @@ namespace CaelusApp
                 firstSweep = true;
             }
             gameGoneSinceTicks = 0;
+            var activeChangedHandler = ActiveChanged;
+            if (activeChangedHandler != null) { try { activeChangedHandler(false); } catch { } }
 
             bool clean = UnboostGames();
             List<int> background = core.PidsWith(SuppressReason.Background);

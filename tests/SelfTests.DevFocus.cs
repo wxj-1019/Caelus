@@ -159,5 +159,85 @@ namespace CaelusApp
                 DeleteTempDir(dir);
             }
         }
+
+        private static void TestDevFocusSuppressionDecision()
+        {
+            string winRoot = Environment.GetFolderPath(Environment.SpecialFolder.Windows);
+            int self = Process.GetCurrentProcess().Id;
+            int session = Process.GetCurrentProcess().SessionId;
+            var noWindows = new HashSet<int>();
+            Func<string, string, bool> noWhitelist = (n, p) => false;
+
+            // 普通用户后台进程：应压制
+            Eq(true, DevFocus.ShouldSuppressBackground(
+                5000, self, "someapp", @"C:\Apps\someapp.exe",
+                session, session, 0, noWindows, winRoot, noWhitelist));
+
+            // 前台程序：豁免
+            Eq(false, DevFocus.ShouldSuppressBackground(
+                5000, self, "someapp", @"C:\Apps\someapp.exe",
+                session, session, 5000, noWindows, winRoot, noWhitelist));
+
+            // 有可见窗口的程序：豁免（常规档不动带窗口程序）
+            var visible = new HashSet<int>(); visible.Add(5000);
+            Eq(false, DevFocus.ShouldSuppressBackground(
+                5000, self, "someapp", @"C:\Apps\someapp.exe",
+                session, session, 0, visible, winRoot, noWhitelist));
+
+            // 反作弊进程：豁免（任何强度不动摇）
+            Eq(false, DevFocus.ShouldSuppressBackground(
+                5001, self, "vgc", @"C:\Riot\vgc.exe",
+                session, session, 0, noWindows, winRoot, noWhitelist));
+
+            // 别的登录账户的进程：豁免
+            Eq(false, DevFocus.ShouldSuppressBackground(
+                5002, self, "someapp", @"C:\Apps\someapp.exe",
+                session + 1, session, 0, noWindows, winRoot, noWhitelist));
+
+            // 白名单命中：豁免
+            Eq(false, DevFocus.ShouldSuppressBackground(
+                5003, self, "mytool", @"C:\Tools\mytool.exe",
+                session, session, 0, noWindows, winRoot, (n, p) => true));
+        }
+
+        private static void TestDevFocusBuildReasonIsolation()
+        {
+            string dir = NewTempDir("devfocus-buildbit");
+            Process probe = null;
+            try
+            {
+                string beat = Path.Combine(dir, "p.beat");
+                probe = StartNamedProbe(dir, "testhelper.exe", out beat);
+                WaitAdvance(beat, -1, 4000);
+
+                var core = new SuppressionCore(Path.Combine(dir, "s.state"));
+                try
+                {
+                    // 同一进程先被游戏位压制、再被编译位压制（引用计数语义）
+                    core.Acquire(probe.Id, probe.ProcessName,
+                        SuppressReason.Background, null, SuppressionLevel.Eco);
+                    core.Acquire(probe.Id, probe.ProcessName,
+                        SuppressReason.Build, "devfocus", SuppressionLevel.Eco);
+                    Eq(true, core.HasReason(probe.Id, SuppressReason.Background));
+                    Eq(true, core.HasReason(probe.Id, SuppressReason.Build));
+
+                    // 按编译位还原：游戏位仍在，进程仍被压制
+                    core.ReleaseReason(SuppressReason.Build);
+                    Eq(false, core.HasReason(probe.Id, SuppressReason.Build));
+                    Eq(true, core.HasReason(probe.Id, SuppressReason.Background));
+                    Eq(true, core.IsThrottled(probe.Id));
+
+                    // 按游戏位还原后彻底解除
+                    core.ReleaseReason(SuppressReason.Background);
+                    Eq(false, core.IsThrottled(probe.Id));
+                }
+                finally { core.ReleaseReason(SuppressReason.Background | SuppressReason.Build); }
+            }
+            finally
+            {
+                if (probe != null) try { StopOwned(probe); } catch { }
+                DeleteTempDir(dir);
+            }
+        }
     }
 }

@@ -874,6 +874,8 @@ namespace CaelusApp
             test("开发专注：编译进程激活掌权与退出还原", TestDevFocusGrantAndRelease);
             test("开发专注：游戏激活抢占挂起与补位恢复", TestDevFocusPreemptedByGame);
             test("开发专注：开关关闭不激活且立即解除", TestDevFocusDisabledSwitch);
+            test("开发专注：压制决策覆盖前台/窗口/反作弊/他账户/白名单豁免", TestDevFocusSuppressionDecision);
+            test("开发专注：编译压制位与游戏压制位引用计数隔离", TestDevFocusBuildReasonIsolation);
             test("白名单存储：数据损坏时安全失败，写入为事务性", TestWhitelistStorageSafety);
             test("白名单并发：编辑与进行中的策略快照串行化", TestWhitelistMutationSerialization);
             test("极端豁免：反作弊名称匹配不区分大小写", () =>

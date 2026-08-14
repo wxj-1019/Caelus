@@ -3,6 +3,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 
 namespace CaelusApp
 {
@@ -140,6 +141,7 @@ namespace CaelusApp
                 // 或 GameMode 成为 IScenario 后 SvcPause 控制权完全归仲裁器。
                 SvcPause.Activate();
                 BoostBuildProcesses();
+                SweepBuildSuppression();
                 Logger.Log("开发专注：获得掌职权，已暂停索引服务并提优编译进程");
             }
             catch (Exception ex) { Logger.LogFailure("开发专注掌权失败", ex); }
@@ -155,8 +157,9 @@ namespace CaelusApp
             }
             try
             {
+                if (core != null) core.ReleaseReason(SuppressReason.Build);
                 SvcPause.Restore();
-                Logger.Log("开发专注：挂起，索引服务已恢复（编译检测继续）");
+                Logger.Log("开发专注：挂起，编译压制已释放、索引服务已恢复（编译检测继续）");
             }
             catch (Exception ex) { Logger.LogFailure("开发专注挂起失败", ex); }
         }
@@ -184,6 +187,76 @@ namespace CaelusApp
                 }
                 catch { }
             }
+        }
+
+        /// <summary>常规档压制决策（纯逻辑，可单测）：复用游戏模式的常规档豁免计算器，
+        /// 再叠加白名单。activeGameRoot/游戏宿主祖先在游戏不活跃时无意义，不传入。</summary>
+        internal static bool ShouldSuppressBackground(int pid, int selfPid, string name, string path,
+            int session, int ownerSession, int foregroundPid, HashSet<int> visibleWindowPids,
+            string windowsRoot, Func<string, string, bool> isWhitelisted)
+        {
+            bool userFacing = visibleWindowPids != null && visibleWindowPids.Contains(pid);
+            if (!GameMode.BasicBackgroundEligible(pid, selfPid, name, path, session, ownerSession,
+                foregroundPid, userFacing, windowsRoot)) return false;
+            if (isWhitelisted != null && isWhitelisted(name, path)) return false;
+            return true;
+        }
+
+        /// <summary>全量扫描后台进程并按编译位压制。在 ProcNotify 事件线程同步执行（沿用
+        /// BuildWatch 既定模式）；扫描耗时与 SvcPause 同量级，若实测阻塞事件流再改异步+代数校验。</summary>
+        private void SweepBuildSuppression()
+        {
+            if (core == null) return;
+            int selfPid = Process.GetCurrentProcess().Id;
+            int ownerSession;
+            try { ownerSession = Process.GetCurrentProcess().SessionId; } catch { ownerSession = -1; }
+            int foregroundPid;
+            try { foregroundPid = GameSessionDetector.ForegroundPid(); } catch { foregroundPid = 0; }
+            HashSet<int> visible;
+            try { visible = GameSessionDetector.VisibleWindowPids(true); }
+            catch { visible = new HashSet<int>(); }
+            string windowsRoot = Environment.GetFolderPath(Environment.SpecialFolder.Windows);
+
+            // TODO: 注入 gameMode.IsProcessWhitelisted 委托（DevFocus 构造第 4 参），
+            // P2 Task 3 时接线。当前 passing null——白名单豁免暂缺，仅影响编译场景。
+
+            int suppressed = 0;
+            Process[] all;
+            try { all = Process.GetProcesses(); } catch { return; }
+            foreach (Process p in all)
+            {
+                try
+                {
+                    int pid = p.Id;
+                    if (pid <= 4 || pid == selfPid) continue;
+                    // 编译进程本身是提优对象（HIGH），绝不被后台压制——否则先提后压自相矛盾
+                    lock (sync) { if (activeBuildPids.Contains(pid)) continue; }
+
+                    string nm;
+                    try { nm = p.ProcessName; } catch { continue; }
+                    int session;
+                    try { session = p.SessionId; } catch { session = -1; }
+
+                    string ipath = null;
+                    IntPtr h = Native.OpenProcess(Native.PROCESS_QUERY_LIMITED_INFORMATION, false, pid);
+                    if (h != IntPtr.Zero)
+                    {
+                        try { ipath = Native.ImagePath(h); }
+                        finally { Native.CloseHandle(h); }
+                    }
+
+                    if (!ShouldSuppressBackground(pid, selfPid, nm, ipath, session, ownerSession,
+                        foregroundPid, visible, windowsRoot, null)) continue;
+
+                    AcquireResult r = core.Acquire(pid, nm, SuppressReason.Build, "devfocus",
+                        SuppressionLevel.Eco);
+                    if (r == AcquireResult.NewlyThrottled) suppressed++;
+                }
+                catch { }
+                finally { p.Dispose(); }
+            }
+            if (suppressed > 0)
+                Logger.Log("开发专注：编译期间压制 " + suppressed + " 个后台进程（编译位，退出即还原）");
         }
 
         /// <summary>程序退出时调用，确保还原。仅在 ProcNotify 停止后调用（退出路径单线程）</summary>

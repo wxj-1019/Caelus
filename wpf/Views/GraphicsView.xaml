@@ -88,8 +88,16 @@
       </Border>
 
       <!-- 通用逐游戏 -->
-      <TextBlock Text="{Binding PerGameTitle}" FontSize="{DynamicResource FontSizeBody}"
-                 FontWeight="SemiBold" Foreground="{DynamicResource TextPrimaryBrush}" Margin="0,0,0,8"/>
+      <StackPanel Orientation="Horizontal" Margin="0,0,0,8">
+        <Border Width="30" Height="30" CornerRadius="{DynamicResource RadiusSm}"
+                Background="{DynamicResource AccentSoftBrush}" BorderBrush="{DynamicResource AccentEdgeBrush}"
+                BorderThickness="1" VerticalAlignment="Center" Margin="0,0,12,0">
+          <ctl:IconView Key="IconGpu" Width="16" Height="16" Foreground="{DynamicResource ModeAccentBrush}"
+                        HorizontalAlignment="Center" VerticalAlignment="Center"/>
+        </Border>
+        <TextBlock Text="{Binding PerGameTitle}" FontSize="{DynamicResource FontSizeBody}"
+                   FontWeight="SemiBold" Foreground="{DynamicResource TextPrimaryBrush}" VerticalAlignment="Center"/>
+      </StackPanel>
       <Border x:Name="ZoneGeneral" Style="{DynamicResource SettingsGroup}">
         <StackPanel>
           <Border Style="{DynamicResource PolicyRow}" BorderThickness="0,0,0,1" local:RowToggle.Enabled="True">

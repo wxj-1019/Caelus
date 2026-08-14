@@ -105,6 +105,12 @@
       <Grid x:Name="ZoneGroups">
         <StackPanel x:Name="ZoneCore">
           <StackPanel Orientation="Horizontal" Margin="0,0,0,8">
+            <Border Width="30" Height="30" CornerRadius="{DynamicResource RadiusSm}"
+                    Background="{DynamicResource AccentSoftBrush}" BorderBrush="{DynamicResource AccentEdgeBrush}"
+                    BorderThickness="1" VerticalAlignment="Center" Margin="0,0,12,0">
+              <ctl:IconView Key="IconPolicy" Width="16" Height="16" Foreground="{DynamicResource ModeAccentBrush}"
+                            HorizontalAlignment="Center" VerticalAlignment="Center"/>
+            </Border>
             <TextBlock Text="{Binding CoreGroupTitle}" FontSize="{DynamicResource FontSizeBody}"
                        FontWeight="SemiBold" Foreground="{DynamicResource TextPrimaryBrush}"
                        VerticalAlignment="Center"/>
@@ -120,6 +126,12 @@
 
         <StackPanel x:Name="ZoneCustom" Visibility="Collapsed">
           <StackPanel Orientation="Horizontal" Margin="0,0,0,8">
+            <Border Width="30" Height="30" CornerRadius="{DynamicResource RadiusSm}"
+                    Background="{DynamicResource AccentSoftBrush}" BorderBrush="{DynamicResource AccentEdgeBrush}"
+                    BorderThickness="1" VerticalAlignment="Center" Margin="0,0,12,0">
+              <ctl:IconView Key="IconSettings" Width="16" Height="16" Foreground="{DynamicResource ModeAccentBrush}"
+                            HorizontalAlignment="Center" VerticalAlignment="Center"/>
+            </Border>
             <TextBlock Text="{Binding CustomGroupTitle}" FontSize="{DynamicResource FontSizeBody}"
                        FontWeight="SemiBold" Foreground="{DynamicResource TextPrimaryBrush}"
                        VerticalAlignment="Center"/>
@@ -135,6 +147,12 @@
 
         <StackPanel x:Name="ZoneExtra" Visibility="Collapsed">
           <StackPanel Orientation="Horizontal" Margin="0,0,0,8">
+            <Border Width="30" Height="30" CornerRadius="{DynamicResource RadiusSm}"
+                    Background="{DynamicResource AccentSoftBrush}" BorderBrush="{DynamicResource AccentEdgeBrush}"
+                    BorderThickness="1" VerticalAlignment="Center" Margin="0,0,12,0">
+              <ctl:IconView Key="IconBolt" Width="16" Height="16" Foreground="{DynamicResource ModeAccentBrush}"
+                            HorizontalAlignment="Center" VerticalAlignment="Center"/>
+            </Border>
             <TextBlock Text="{Binding ExtraGroupTitle}" FontSize="{DynamicResource FontSizeBody}"
                        FontWeight="SemiBold" Foreground="{DynamicResource TextPrimaryBrush}"
                        VerticalAlignment="Center"/>

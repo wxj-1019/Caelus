@@ -13,7 +13,8 @@ namespace CaelusApp
         None = 0,
         AntiCheat = 1,
         Background = 2,
-        Build = 4
+        Build = 4,
+        Daily = 8
     }
 
     internal enum AcquireResult

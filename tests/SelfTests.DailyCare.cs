@@ -1,10 +1,11 @@
 // @author zenjiro 18967498922@163.com
-// 文件用途 DailyCare 日常场景的自测：家族识别、活性判定、电池切换
+// 文件用途 DailyCare 日常场景的自测：家族识别、活性判定、电池切换、压制位隔离
 
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
+using System.Linq;
 
 namespace CaelusApp
 {
@@ -79,6 +80,48 @@ namespace CaelusApp
                 if (daily != null) try { daily.Stop(); } catch { }
                 DeleteTempDir(dir);
             }
+        }
+
+        private static void TestDailyCareReasonIsolation()
+        {
+            string dir = NewTempDir("daily-bit");
+            Process probe = null;
+            try
+            {
+                string beat = Path.Combine(dir, "p.beat");
+                probe = StartProbe(beat);
+                WaitAdvance(beat, -1, 4000);
+
+                var core = new SuppressionCore(Path.Combine(dir, "s.state"));
+                try
+                {
+                    core.Acquire(probe.Id, probe.ProcessName,
+                        SuppressReason.Background, null, SuppressionLevel.Eco);
+                    core.Acquire(probe.Id, probe.ProcessName,
+                        SuppressReason.Daily, "dailycare", SuppressionLevel.Eco);
+                    Eq(true, core.HasReason(probe.Id, SuppressReason.Daily));
+
+                    core.ReleaseReason(SuppressReason.Daily);
+                    Eq(false, core.HasReason(probe.Id, SuppressReason.Daily));
+                    Eq(true, core.HasReason(probe.Id, SuppressReason.Background));
+                    Eq(true, core.IsThrottled(probe.Id));
+
+                    core.ReleaseReason(SuppressReason.Background);
+                    Eq(false, core.IsThrottled(probe.Id));
+                }
+                finally { core.ReleaseReason(SuppressReason.Background | SuppressReason.Daily); }
+            }
+            finally
+            {
+                if (probe != null) try { StopOwned(probe); } catch { }
+                DeleteTempDir(dir);
+            }
+        }
+
+        private static void TestDailyCareLevelChoice()
+        {
+            Eq(SuppressionLevel.Eco, DailyCare.ResolveDailyLevel(false));
+            Eq(SuppressionLevel.Restrained, DailyCare.ResolveDailyLevel(true));
         }
     }
 }

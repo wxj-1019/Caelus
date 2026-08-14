@@ -14,6 +14,7 @@ namespace CaelusApp
         private readonly Func<bool> enabled;
         private readonly Func<string, string, bool> isWhitelisted;
         private readonly HashSet<int> dailyPids = new HashSet<int>();
+        private readonly Dictionary<int, uint> dailyBoosted = new Dictionary<int, uint>();
         private bool familyVisible;
         private bool onBattery;
         private bool batteryBalloonShown;
@@ -158,10 +159,11 @@ namespace CaelusApp
             }
             try
             {
-                // TODO: Task 3 fills in SweepDailySuppression + BoostVisibleFamily
+                SweepDailySuppression();
+                BoostVisibleFamily();
                 StartReconcileTimer();
                 MaybeShowBatteryBalloon();
-                Logger.Log("日常优化：获得掌职权（家族窗口/电池）");
+                Logger.Log("日常优化：获得掌职权（家族窗口/电池），后台转入常规档压制");
             }
             catch (Exception ex) { Logger.LogFailure("日常优化掌权失败", ex); }
         }
@@ -176,7 +178,7 @@ namespace CaelusApp
             try
             {
                 StopReconcileTimer();
-                // TODO: Task 3 fills in RestoreFamilyBoost + ReleaseReason(Daily)
+                RestoreFamilyBoost();
                 if (core != null) core.ReleaseReason(SuppressReason.Daily);
                 Logger.Log("日常优化：挂起，全部副作用已还原（检测继续）");
             }
@@ -231,14 +233,131 @@ namespace CaelusApp
                 RefreshFamilyVisible(true);
                 RecomputeActivity();
                 lock (sync) { if (!grantedFlag) return; }
-                // TODO: Task 3 fills in SweepDailySuppression + BoostVisibleFamily
+                SweepDailySuppression();
+                BoostVisibleFamily();
             }
             catch { }
         }
 
-        // Stub methods for Task 3
-        private void SweepDailySuppression() { }
-        private void BoostVisibleFamily() { }
-        internal void RestoreFamilyBoost() { }
+        private void SweepDailySuppression()
+        {
+            if (core == null) return;
+            int selfPid = Process.GetCurrentProcess().Id;
+            int ownerSession;
+            try { ownerSession = Process.GetCurrentProcess().SessionId; } catch { ownerSession = -1; }
+            int foregroundPid;
+            try { foregroundPid = GameSessionDetector.ForegroundPid(); } catch { foregroundPid = 0; }
+            HashSet<int> visible;
+            try { visible = GameSessionDetector.VisibleWindowPids(true); }
+            catch { visible = new HashSet<int>(); }
+            string windowsRoot = Environment.GetFolderPath(Environment.SpecialFolder.Windows);
+            bool batt;
+            lock (sync) batt = onBattery;
+            SuppressionLevel level = ResolveDailyLevel(batt);
+
+            int suppressed = 0;
+            Process[] all;
+            try { all = Process.GetProcesses(); } catch { return; }
+            foreach (Process p in all)
+            {
+                try
+                {
+                    int pid = p.Id;
+                    if (pid <= 4 || pid == selfPid) continue;
+                    lock (sync) { if (dailyPids.Contains(pid)) continue; }
+
+                    string nm;
+                    try { nm = p.ProcessName; } catch { continue; }
+                    int session;
+                    try { session = p.SessionId; } catch { session = -1; }
+                    string ipath = null;
+                    IntPtr h = Native.OpenProcess(Native.PROCESS_QUERY_LIMITED_INFORMATION, false, pid);
+                    if (h != IntPtr.Zero)
+                    {
+                        try { ipath = Native.ImagePath(h); }
+                        finally { Native.CloseHandle(h); }
+                    }
+
+                    if (!DevFocus.ShouldSuppressBackground(pid, selfPid, nm, ipath, session,
+                        ownerSession, foregroundPid, visible, windowsRoot, isWhitelisted)) continue;
+
+                    AcquireResult r = core.Acquire(pid, nm, SuppressReason.Daily, "dailycare", level);
+                    if (r == AcquireResult.NewlyThrottled) suppressed++;
+                }
+                catch { }
+                finally { p.Dispose(); }
+            }
+            if (suppressed > 0)
+                Logger.Log("日常优化：压制 " + suppressed + " 个后台进程（"
+                    + (batt ? "电池档" : "常规档") + "）");
+        }
+
+        private void BoostVisibleFamily()
+        {
+            int[] family;
+            lock (sync)
+            {
+                family = new int[dailyPids.Count];
+                dailyPids.CopyTo(family);
+            }
+            if (family.Length == 0) return;
+            HashSet<int> visible;
+            try { visible = GameSessionDetector.VisibleWindowPids(true); }
+            catch { return; }
+            foreach (int pid in family)
+            {
+                if (!visible.Contains(pid)) continue;
+                BoostOne(pid);
+            }
+        }
+
+        private void BoostOne(int pid)
+        {
+            lock (sync) { if (dailyBoosted.ContainsKey(pid)) return; }
+            IntPtr h = Native.OpenProcess(
+                Native.PROCESS_SET_INFORMATION | Native.PROCESS_QUERY_LIMITED_INFORMATION, false, pid);
+            if (h == IntPtr.Zero) return;
+            try
+            {
+                uint orig = Native.GetPriorityClass(h);
+                if (orig == 0) return;
+                if (orig == Native.HIGH_PRIORITY_CLASS || orig == 0x100) return;
+                if (orig >= Native.ABOVE_NORMAL_PRIORITY_CLASS) return;
+
+                Native.SetPriorityClass(h, Native.ABOVE_NORMAL_PRIORITY_CLASS);
+                if (Native.GetPriorityClass(h) != Native.ABOVE_NORMAL_PRIORITY_CLASS) return;
+                Native.TrySetIoPriority(h, 3);
+                lock (sync) dailyBoosted[pid] = orig;
+            }
+            catch { }
+            finally { Native.CloseHandle(h); }
+        }
+
+        internal void RestoreFamilyBoost()
+        {
+            KeyValuePair<int, uint>[] snap;
+            lock (sync)
+            {
+                if (dailyBoosted.Count == 0) return;
+                snap = new KeyValuePair<int, uint>[dailyBoosted.Count];
+                ((ICollection<KeyValuePair<int, uint>>)dailyBoosted).CopyTo(snap, 0);
+                dailyBoosted.Clear();
+            }
+            foreach (var kv in snap)
+            {
+                try
+                {
+                    IntPtr h = Native.OpenProcess(Native.PROCESS_SET_INFORMATION, false, kv.Key);
+                    if (h == IntPtr.Zero) continue;
+                    try
+                    {
+                        Native.SetPriorityClass(h, kv.Value);
+                        Native.TrySetIoPriority(h, 2);
+                    }
+                    finally { Native.CloseHandle(h); }
+                }
+                catch { }
+            }
+        }
     }
 }

@@ -234,6 +234,16 @@ namespace CaelusApp
                 () => Settings.Load("DevModeOn", true),
                 gameMode.IsProcessWhitelisted,
                 DistractCatalog.IsMatch);
+            var dailyCare = new DailyCare(arbiter, core,
+                () => Settings.Load("DailyCareOn", true),
+                gameMode.IsProcessWhitelisted);
+            var powerPollTimer = new System.Windows.Forms.Timer();
+            powerPollTimer.Interval = 5000;
+            powerPollTimer.Tick += (s2, e2) =>
+            {
+                try { dailyCare.RefreshPowerState(); } catch { }
+            };
+            powerPollTimer.Start();
             gameMode.ActiveChanged += on => arbiter.ReportActivity(ScenarioKind.Game, on);
 
             var startGate = new object();
@@ -272,6 +282,7 @@ namespace CaelusApp
                 gameMode.NotifyProcessChanges(batch);
                 tamer.NotifyProcessChanges(batch);
                 devFocus.NotifyProcessChanges(batch);
+                dailyCare.NotifyProcessChanges(batch);
             };
             procNotify.Start();
             gameMode.ProcessEventsAvailable = procNotify.IsActive;
@@ -315,6 +326,7 @@ namespace CaelusApp
             {
 
                 try { trayTip.Stop(); trayTip.Dispose(); } catch { }
+                try { powerPollTimer.Stop(); powerPollTimer.Dispose(); } catch { }
                 icon.Visible = false;
                 icon.Dispose();
                 lock (startGate) exiting = true;
@@ -322,6 +334,7 @@ namespace CaelusApp
                 tamer.Stop();
                 gameMode.Stop();
                 devFocus.Stop();
+                dailyCare.Stop();
                 panel.RealExit = true;
                 Application.Exit();
             };
@@ -357,6 +370,7 @@ namespace CaelusApp
                 try { PresenceQos.Restore(); } catch { }
                 try { PowerOverlay.Restore(); } catch { }
                 try { devFocus.Stop(); } catch { }
+                try { dailyCare.Stop(); } catch { }
             };
             gameMode.SessionEnded += msg =>
             {
@@ -385,6 +399,17 @@ namespace CaelusApp
                 try { panel.NotifyLibraryChanged(); } catch { }
             };
             devFocus.SessionChanged += key =>
+            {
+                try
+                {
+                    panel.BeginInvoke((MethodInvoker)(() =>
+                    {
+                        try { icon.ShowBalloonTip(5000, App.DisplayName, Lang.T(key), ToolTipIcon.Info); } catch { }
+                    }));
+                }
+                catch { }
+            };
+            dailyCare.SessionChanged += key =>
             {
                 try
                 {

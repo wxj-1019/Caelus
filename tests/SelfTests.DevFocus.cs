@@ -54,7 +54,7 @@ namespace CaelusApp
             {
                 var arbiter = new ScenarioArbiter();
                 var core = new SuppressionCore(Path.Combine(dir, "s.state"));
-                dev = new DevFocus(arbiter, core, () => true);
+                dev = new DevFocus(arbiter, core, () => true, (n, p) => false, name => false);
 
                 string beat;
                 probe = StartNamedProbe(dir, "msbuild.exe", out beat);
@@ -92,7 +92,7 @@ namespace CaelusApp
                 var arbiter = new ScenarioArbiter();
                 var core = new SuppressionCore(Path.Combine(dir, "s.state"));
                 arbiter.Register(new StubGameScenario());
-                dev = new DevFocus(arbiter, core, () => true);
+                dev = new DevFocus(arbiter, core, () => true, (n, p) => false, name => false);
 
                 string beat;
                 probe = StartNamedProbe(dir, "csc.exe", out beat);
@@ -130,7 +130,7 @@ namespace CaelusApp
                 var arbiter = new ScenarioArbiter();
                 var core = new SuppressionCore(Path.Combine(dir, "s.state"));
                 bool on = false;
-                dev = new DevFocus(arbiter, core, () => on);
+                dev = new DevFocus(arbiter, core, () => on, (n, p) => false, name => false);
 
                 string beat;
                 probe = StartNamedProbe(dir, "msbuild.exe", out beat);
@@ -236,6 +236,36 @@ namespace CaelusApp
             finally
             {
                 if (probe != null) try { StopOwned(probe); } catch { }
+                DeleteTempDir(dir);
+            }
+        }
+
+        private static void TestDevFocusActivitySources()
+        {
+            string dir = NewTempDir("devfocus-sources");
+            DevFocus dev = null;
+            try
+            {
+                var arbiter = new ScenarioArbiter();
+                var core = new SuppressionCore(Path.Combine(dir, "s.state"));
+                dev = new DevFocus(arbiter, core, () => true, (n, p) => false, name => false);
+
+                // 初始：无任何活性来源
+                Eq(false, dev.IsActive);
+                Eq<ScenarioKind?>(null, arbiter.CurrentGranted);
+
+                // 专注开关
+                dev.SetFocusMode(true);
+                Eq(true, dev.IsActive);
+                Eq<ScenarioKind?>(ScenarioKind.DevFocus, arbiter.CurrentGranted);
+                dev.SetFocusMode(false);
+                Eq(false, dev.IsActive);
+                Eq<ScenarioKind?>(null, arbiter.CurrentGranted);
+            }
+            finally
+            {
+                if (dev != null) try { dev.Stop(); } catch { }
+                try { Settings.Save("DevFocusModeOn", false); } catch { }
                 DeleteTempDir(dir);
             }
         }

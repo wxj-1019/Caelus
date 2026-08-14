@@ -530,6 +530,7 @@ namespace CaelusApp
         public const uint NORMAL_PRIORITY_CLASS = 0x20;
         public const uint BELOW_NORMAL_PRIORITY_CLASS = 0x4000;
         public const uint HIGH_PRIORITY_CLASS = 0x80;
+        public const uint ABOVE_NORMAL_PRIORITY_CLASS = 0x8000;
         private const int ProcessIoPriorityNt = 33;
         private const int ProcessPagePriorityNt = 39;
         private const int ProcessPowerThrottling = 4;

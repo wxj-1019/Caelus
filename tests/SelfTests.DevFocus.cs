@@ -54,7 +54,7 @@ namespace CaelusApp
             {
                 var arbiter = new ScenarioArbiter();
                 var core = new SuppressionCore(Path.Combine(dir, "s.state"));
-                dev = new DevFocus(arbiter, core, () => true);
+                dev = new DevFocus(arbiter, core, () => true, (n, p) => false, name => false);
 
                 string beat;
                 probe = StartNamedProbe(dir, "msbuild.exe", out beat);
@@ -92,7 +92,7 @@ namespace CaelusApp
                 var arbiter = new ScenarioArbiter();
                 var core = new SuppressionCore(Path.Combine(dir, "s.state"));
                 arbiter.Register(new StubGameScenario());
-                dev = new DevFocus(arbiter, core, () => true);
+                dev = new DevFocus(arbiter, core, () => true, (n, p) => false, name => false);
 
                 string beat;
                 probe = StartNamedProbe(dir, "csc.exe", out beat);
@@ -130,7 +130,7 @@ namespace CaelusApp
                 var arbiter = new ScenarioArbiter();
                 var core = new SuppressionCore(Path.Combine(dir, "s.state"));
                 bool on = false;
-                dev = new DevFocus(arbiter, core, () => on);
+                dev = new DevFocus(arbiter, core, () => on, (n, p) => false, name => false);
 
                 string beat;
                 probe = StartNamedProbe(dir, "msbuild.exe", out beat);
@@ -235,6 +235,171 @@ namespace CaelusApp
             }
             finally
             {
+                if (probe != null) try { StopOwned(probe); } catch { }
+                DeleteTempDir(dir);
+            }
+        }
+
+        private static void TestDevFocusActivitySources()
+        {
+            string dir = NewTempDir("devfocus-sources");
+            DevFocus dev = null;
+            try
+            {
+                var arbiter = new ScenarioArbiter();
+                var core = new SuppressionCore(Path.Combine(dir, "s.state"));
+                dev = new DevFocus(arbiter, core, () => true, (n, p) => false, name => false);
+
+                // 初始：无任何活性来源
+                Eq(false, dev.IsActive);
+                Eq<ScenarioKind?>(null, arbiter.CurrentGranted);
+
+                // 专注开关
+                dev.SetFocusMode(true);
+                Eq(true, dev.IsActive);
+                Eq<ScenarioKind?>(ScenarioKind.DevFocus, arbiter.CurrentGranted);
+                dev.SetFocusMode(false);
+                Eq(false, dev.IsActive);
+                Eq<ScenarioKind?>(null, arbiter.CurrentGranted);
+            }
+            finally
+            {
+                if (dev != null) try { dev.Stop(); } catch { }
+                try { Settings.Save("DevFocusModeOn", false); } catch { }
+                DeleteTempDir(dir);
+            }
+        }
+
+        private static void TestDevFocusFocusGrantEffects()
+        {
+            string dir = NewTempDir("devfocus-fx");
+            DevFocus dev = null;
+            try
+            {
+                var arbiter = new ScenarioArbiter();
+                var core = new SuppressionCore(Path.Combine(dir, "s.state"));
+                arbiter.Register(new StubGameScenario());
+                dev = new DevFocus(arbiter, core, () => true, (n, p) => false, name => false);
+
+                // 专注开 → 掌权 → 校正定时器启动
+                dev.SetFocusMode(true);
+                Eq(true, dev.IsGranted);
+                Eq(true, dev.FocusTimerRunning);
+
+                // 游戏抢占 → 挂起 → 定时器必须停止（挂起场景零后台开销）
+                arbiter.ReportActivity(ScenarioKind.Game, true);
+                Eq(false, dev.IsGranted);
+                Eq(false, dev.FocusTimerRunning);
+                // 活性仍在（专注开关还开着）
+                Eq(true, dev.IsActive);
+
+                // 游戏退出 → 补位 → 定时器恢复
+                arbiter.ReportActivity(ScenarioKind.Game, false);
+                Eq(true, dev.IsGranted);
+                Eq(true, dev.FocusTimerRunning);
+
+                // 专注关 → 整体解除
+                dev.SetFocusMode(false);
+                Eq(false, dev.IsGranted);
+                Eq(false, dev.FocusTimerRunning);
+            }
+            finally
+            {
+                if (dev != null) try { dev.Stop(); } catch { }
+                try { Settings.Save("DevFocusModeOn", false); } catch { }
+                DeleteTempDir(dir);
+            }
+        }
+
+        private static void TestDevFocusDistractOnce()
+        {
+            string dir = NewTempDir("devfocus-distract");
+            DevFocus dev = null;
+            try
+            {
+                var arbiter = new ScenarioArbiter();
+                var core = new SuppressionCore(Path.Combine(dir, "s.state"));
+                dev = new DevFocus(arbiter, core, () => true, (n, p) => false,
+                    name => string.Equals(name, "discord", StringComparison.OrdinalIgnoreCase));
+
+                var balloons = new List<string>();
+                dev.SessionChanged += key => balloons.Add(key);
+
+                dev.SetFocusMode(true);
+                Eq(true, dev.IsGranted);
+
+                // 同名分心进程两次启动：气球只报一次
+                dev.NotifyProcessChanges(new ProcessChangeBatch(
+                    new[] { MakeChange(42001, "discord", ProcessChangeKind.Started) }, false));
+                dev.NotifyProcessChanges(new ProcessChangeBatch(
+                    new[] { MakeChange(42002, "discord", ProcessChangeKind.Started) }, false));
+                int distractCount = 0;
+                foreach (string k in balloons) if (k == "bal.distract") distractCount++;
+                Eq(1, distractCount);
+
+                // 专注关闭后再开：清空已报集合，可再次提醒
+                dev.SetFocusMode(false);
+                dev.SetFocusMode(true);
+                dev.NotifyProcessChanges(new ProcessChangeBatch(
+                    new[] { MakeChange(42003, "discord", ProcessChangeKind.Started) }, false));
+                distractCount = 0;
+                foreach (string k in balloons) if (k == "bal.distract") distractCount++;
+                Eq(2, distractCount);
+            }
+            finally
+            {
+                if (dev != null) try { dev.Stop(); } catch { }
+                try { Settings.Save("DevFocusModeOn", false); } catch { }
+                DeleteTempDir(dir);
+            }
+        }
+        private static void TestIdeCatalogMatch()
+        {
+            Eq(true, IdeCatalog.IsMatch("devenv",
+                @"C:\Program Files\Microsoft Visual Studio\2022\Community\Common7\IDE\devenv.exe"));
+            Eq(false, IdeCatalog.IsMatch("code", @"C:\Temp\code.exe"));
+            Eq(false, IdeCatalog.IsMatch("notepad",
+                @"C:\Program Files\Microsoft Visual Studio\2022\Community\Common7\IDE\notepad.exe"));
+            Eq(false, IdeCatalog.IsMatch(null, null));
+            Eq(false, IdeCatalog.IsMatch("devenv", null));
+        }
+
+        private static void TestDevFocusIdeBoostRestore()
+        {
+            string dir = NewTempDir("devfocus-ide");
+            Process probe = null;
+            DevFocus dev = null;
+            try
+            {
+                string beat = Path.Combine(dir, "ide.beat");
+                probe = StartProbe(beat);
+                WaitAdvance(beat, -1, 4000);
+                probe.Refresh();
+                Eq(ProcessPriorityClass.Normal, probe.PriorityClass);
+
+                var arbiter = new ScenarioArbiter();
+                var core = new SuppressionCore(Path.Combine(dir, "s.state"));
+                dev = new DevFocus(arbiter, core, () => true, (n, p) => false, name => false);
+
+                // 测试钩子绕过窗口条件直接提优：AboveNormal 生效
+                Eq(true, dev.BoostIdeForTest(probe.Id));
+                probe.Refresh();
+                Eq(ProcessPriorityClass.AboveNormal, probe.PriorityClass);
+
+                // 重复提优幂等（快照不叠加）
+                Eq(true, dev.BoostIdeForTest(probe.Id));
+                probe.Refresh();
+                Eq(ProcessPriorityClass.AboveNormal, probe.PriorityClass);
+
+                // 还原：回到 Normal
+                dev.RestoreIdeBoost();
+                probe.Refresh();
+                Eq(ProcessPriorityClass.Normal, probe.PriorityClass);
+            }
+            finally
+            {
+                if (dev != null) try { dev.RestoreIdeBoost(); } catch { }
+                if (dev != null) try { dev.Stop(); } catch { }
                 if (probe != null) try { StopOwned(probe); } catch { }
                 DeleteTempDir(dir);
             }

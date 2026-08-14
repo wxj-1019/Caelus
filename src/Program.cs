@@ -231,7 +231,9 @@ namespace CaelusApp
 
             var arbiter = new ScenarioArbiter();
             var devFocus = new DevFocus(arbiter, core,
-                () => Settings.Load("DevModeOn", true));
+                () => Settings.Load("DevModeOn", true),
+                gameMode.IsProcessWhitelisted,
+                DistractCatalog.IsMatch);
             gameMode.ActiveChanged += on => arbiter.ReportActivity(ScenarioKind.Game, on);
 
             var startGate = new object();
@@ -324,7 +326,7 @@ namespace CaelusApp
                 Application.Exit();
             };
 
-            var trayMenu = new TrayMenu(tamer, gameMode,
+            var trayMenu = new TrayMenu(tamer, gameMode, devFocus,
                 () => panel.ShowPanel(),
                 doExit,
                 () => panel.SyncAllToggles());

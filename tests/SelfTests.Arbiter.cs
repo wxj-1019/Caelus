@@ -3,6 +3,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Threading;
 
 namespace CaelusApp
 {
@@ -123,6 +124,67 @@ namespace CaelusApp
             Eq(2, seen.Count);
             Eq<ScenarioKind?>(ScenarioKind.DevFocus, seen[0]);
             Eq<ScenarioKind?>(null, seen[1]);
+        }
+
+        private static void TestArbiterUnregisteredKindIgnored()
+        {
+            var arbiter = new ScenarioArbiter();
+            var late = new FakeScenario(ScenarioKind.DailyCare, 10);
+            arbiter.ReportActivity(ScenarioKind.DailyCare, true);
+            Eq<ScenarioKind?>(null, arbiter.CurrentGranted);
+            arbiter.Register(late);
+            // 注册后仍为空：未注册期间的报告只记账，需再次报告才成为候选
+            Eq<ScenarioKind?>(null, arbiter.CurrentGranted);
+            Eq(0, late.Calls.Count);
+            arbiter.ReportActivity(ScenarioKind.DailyCare, true);
+            Eq<ScenarioKind?>(ScenarioKind.DailyCare, arbiter.CurrentGranted);
+            Eq(1, late.Calls.Count);
+            Eq("G:DailyCare", late.Calls[0]);
+        }
+
+        private static void TestArbiterConcurrentReports()
+        {
+            FakeScenario game, dev, daily;
+            var arbiter = NewArbiterWithAll(out game, out dev, out daily);
+            var notifyGate = new object();
+            ScenarioKind? lastNotified = null;
+            arbiter.GrantedChanged += k => { lock (notifyGate) lastNotified = k; };
+
+            var t1 = new Thread(delegate()
+            {
+                for (int i = 0; i < 2000; i++)
+                    arbiter.ReportActivity(ScenarioKind.Game, i % 2 == 0);
+            });
+            var t2 = new Thread(delegate()
+            {
+                for (int i = 0; i < 2000; i++)
+                    arbiter.ReportActivity(ScenarioKind.DevFocus, i % 2 == 1);
+            });
+            t1.Start();
+            t2.Start();
+            t1.Join();
+            t2.Join();
+
+            ScenarioKind? finalGranted = arbiter.CurrentGranted;
+            // 不变量：每个场景的调用序列为空，或从 G 开始严格 G/S 交替（偶数位 G、奇数位 S）
+            FakeScenario[] fakes = new FakeScenario[] { game, dev, daily };
+            foreach (FakeScenario f in fakes)
+            {
+                for (int i = 0; i < f.Calls.Count; i++)
+                {
+                    string expected = ((i % 2 == 0) ? "G:" : "S:") + f.Kind;
+                    Eq(expected, f.Calls[i]);
+                }
+            }
+            // 当前掌权者必以 G 结尾（调用数为奇数），其余为空或以 S 结尾（调用数为偶数）
+            Eq(finalGranted.HasValue && fakes[(int)finalGranted.Value].Calls.Count % 2 == 1, true);
+            for (int i = 0; i < fakes.Length; i++)
+            {
+                if (finalGranted.HasValue && i == (int)finalGranted.Value) continue;
+                Eq(fakes[i].Calls.Count % 2 == 0, true);
+            }
+            // 最终记账与最后一次派发/通知一致
+            lock (notifyGate) Eq<ScenarioKind?>(finalGranted, lastNotified);
         }
     }
 }

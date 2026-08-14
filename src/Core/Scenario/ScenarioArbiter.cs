@@ -9,6 +9,7 @@ namespace CaelusApp
     internal sealed class ScenarioArbiter
     {
         private readonly object sync = new object();
+        private readonly object dispatchLock = new object();
         private readonly Dictionary<ScenarioKind, IScenario> scenarios =
             new Dictionary<ScenarioKind, IScenario>();
         private readonly HashSet<ScenarioKind> active = new HashSet<ScenarioKind>();
@@ -25,7 +26,7 @@ namespace CaelusApp
             lock (sync) scenarios[scenario.Kind] = scenario;
         }
 
-        /// <summary>纯逻辑：给定活跃集合，返回优先级最高的场景；无活跃返回 null。</summary>
+        /// <summary>纯逻辑：给定活跃集合，返回优先级最高的场景；无活跃返回 null。平级时取枚举值较小者，保证结果确定。</summary>
         internal static ScenarioKind? Evaluate(
             HashSet<ScenarioKind> activeSet, Dictionary<ScenarioKind, IScenario> map)
         {
@@ -35,7 +36,8 @@ namespace CaelusApp
             {
                 IScenario s;
                 if (!map.TryGetValue(kind, out s)) continue;
-                if (!winner.HasValue || s.Priority > best)
+                if (!winner.HasValue || s.Priority > best
+                    || (s.Priority == best && kind < winner.Value))
                 {
                     winner = kind;
                     best = s.Priority;
@@ -45,42 +47,50 @@ namespace CaelusApp
         }
 
         /// <summary>场景报告自身活性。锁内只记账，Grant/Suspend 在锁外执行。</summary>
+        /// <remarks>报告尚未注册的场景种类会被记录但被 Evaluate 忽略，直到 Register；
+        /// 注册后的场景在其下一次报告时才会成为候选。</remarks>
         public void ReportActivity(ScenarioKind kind, bool isActive)
         {
-            IScenario toSuspend = null;
-            IScenario toGrant = null;
-            ScenarioKind? nowGranted;
-            lock (sync)
+            // 串行化记账+派发整体：防并发报告交错导致系统状态与记账背离。
+            // Monitor 同线程可重入，Grant/Suspend 回调同线程重入 ReportActivity 不会自死锁。
+            lock (dispatchLock)
             {
-                if (isActive) active.Add(kind);
-                else active.Remove(kind);
+                IScenario toSuspend = null;
+                IScenario toGrant = null;
+                ScenarioKind? nowGranted;
+                lock (sync)
+                {
+                    if (isActive) active.Add(kind);
+                    else active.Remove(kind);
 
-                nowGranted = Evaluate(active, scenarios);
-                if (nowGranted.Equals(granted)) return;
+                    nowGranted = Evaluate(active, scenarios);
+                    if (nowGranted.Equals(granted)) return;
 
-                IScenario s;
-                if (granted.HasValue && scenarios.TryGetValue(granted.Value, out s))
-                    toSuspend = s;
-                granted = nowGranted;
-                if (granted.HasValue && scenarios.TryGetValue(granted.Value, out s))
-                    toGrant = s;
-            }
+                    IScenario s;
+                    if (granted.HasValue && scenarios.TryGetValue(granted.Value, out s))
+                        toSuspend = s;
+                    granted = nowGranted;
+                    if (granted.HasValue && scenarios.TryGetValue(granted.Value, out s))
+                        toGrant = s;
+                }
 
-            // 先还原旧掌权者，再授权新掌权者（顺序是要害：系统状态任一时刻只反映一个场景）
-            if (toSuspend != null)
-            {
-                try { toSuspend.Suspend(); }
-                catch (Exception ex) { Logger.LogFailure("场景挂起失败（" + toSuspend.Kind + "）", ex); }
-            }
-            if (toGrant != null)
-            {
-                try { toGrant.Grant(); }
-                catch (Exception ex) { Logger.LogFailure("场景授权失败（" + toGrant.Kind + "）", ex); }
-            }
-            var handler = GrantedChanged;
-            if (handler != null)
-            {
-                try { handler(nowGranted); } catch { }
+                // 先还原旧掌权者，再授权新掌权者（顺序是要害：系统状态任一时刻只反映一个场景）
+                if (toSuspend != null)
+                {
+                    try { toSuspend.Suspend(); }
+                    catch (Exception ex) { Logger.LogFailure("场景挂起失败（" + toSuspend.Kind + "）", ex); }
+                }
+                if (toGrant != null)
+                {
+                    try { toGrant.Grant(); }
+                    catch (Exception ex) { Logger.LogFailure("场景授权失败（" + toGrant.Kind + "）", ex); }
+                }
+                var handler = GrantedChanged;
+                if (handler != null)
+                {
+                    try { handler(nowGranted); }
+                    catch (Exception ex) { Logger.LogFailure("场景掌权者变更通知失败", ex); }
+                }
             }
         }
     }

@@ -198,7 +198,7 @@
                   AutomationProperties.Name="体检健康摘要">
             <StackPanel>
               <WrapPanel>
-              <TextBlock Text="{Binding Score, Mode=OneWay}" FontSize="40" FontWeight="SemiBold"
+              <TextBlock Text="{Binding Score, Mode=OneWay}" FontSize="{DynamicResource FontSizeScore}" FontWeight="SemiBold"
                          VerticalAlignment="Center" Typography.NumeralAlignment="Tabular">
                 <TextBlock.Style>
                   <Style TargetType="TextBlock">

@@ -21,9 +21,13 @@
   <sys:Double x:Key="FontSizeMono">12</sys:Double>
   <!-- 空态与拖放遮罩标题：主操作引导的醒目标题 -->
   <sys:Double x:Key="FontSizeEmpty">16</sys:Double>
+  <!-- 结论标题：概览 Hero 状态结论（游戏环境已准备好 / 优化中） -->
+  <sys:Double x:Key="FontSizeConclusion">20</sys:Double>
   <sys:Double x:Key="FontSizeSection">22</sys:Double>
   <sys:Double x:Key="FontSizeHero">32</sys:Double>
   <sys:Double x:Key="FontSizeMetric">24</sys:Double>
+  <!-- 健康评分：体检页大号得分数字 -->
+  <sys:Double x:Key="FontSizeScore">40</sys:Double>
 
   <sys:Double x:Key="SpaceXs">4</sys:Double>
   <sys:Double x:Key="SpaceSm">8</sys:Double>

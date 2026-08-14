@@ -324,7 +324,7 @@
     <Setter Property="Background" Value="Transparent"/>
     <Setter Property="Foreground" Value="{DynamicResource TextSecondaryBrush}"/>
     <Setter Property="BorderThickness" Value="0"/>
-    <Setter Property="FontSize" Value="12"/>
+    <Setter Property="FontSize" Value="{DynamicResource FontSizeCaption}"/>
     <Setter Property="Cursor" Value="Hand"/>
     <Setter Property="FocusVisualStyle" Value="{StaticResource FocusRing}"/>
     <Setter Property="Template">
@@ -411,7 +411,7 @@
   </Style>
 
   <Style x:Key="NavGroupLabel" TargetType="TextBlock">
-    <Setter Property="FontSize" Value="10"/>
+    <Setter Property="FontSize" Value="{DynamicResource FontSizeXs}"/>
     <Setter Property="FontWeight" Value="SemiBold"/>
     <Setter Property="Foreground" Value="{DynamicResource TextTertiaryBrush}"/>
     <Setter Property="Margin" Value="18,14,0,6"/>
@@ -419,7 +419,7 @@
 
   <Style x:Key="SegmentItem" TargetType="RadioButton">
     <Setter Property="Foreground" Value="{DynamicResource TextSecondaryBrush}"/>
-    <Setter Property="FontSize" Value="11"/>
+    <Setter Property="FontSize" Value="{DynamicResource FontSizeSmall}"/>
     <Setter Property="Padding" Value="12,6"/>
     <Setter Property="MinWidth" Value="54"/>
     <Setter Property="Cursor" Value="Hand"/>
@@ -633,11 +633,11 @@
     <Setter Property="Foreground" Value="{DynamicResource TextPrimaryBrush}"/>
   </Style>
   <Style x:Key="PageSubtitle" TargetType="TextBlock">
-    <Setter Property="FontSize" Value="11"/>
+    <Setter Property="FontSize" Value="{DynamicResource FontSizeSmall}"/>
     <Setter Property="Foreground" Value="{DynamicResource TextSecondaryBrush}"/>
   </Style>
   <Style x:Key="CardLabel" TargetType="TextBlock">
-    <Setter Property="FontSize" Value="11"/>
+    <Setter Property="FontSize" Value="{DynamicResource FontSizeSmall}"/>
     <Setter Property="Foreground" Value="{DynamicResource TextSecondaryBrush}"/>
   </Style>
   <Style x:Key="DisplayNumber" TargetType="TextBlock">
@@ -654,28 +654,45 @@
   </Style>
 
   <!-- ========== [系统] 滚动条 ========== -->
+  <!-- macOS overlay：默认极细淡出（30% 不透明度），hover 淡入 + thumb 展开 -->
   <Style x:Key="ScrollThumb" TargetType="Thumb">
     <Setter Property="Background" Value="{DynamicResource ScrollThumbBrush}"/>
     <Setter Property="Template">
       <Setter.Value>
         <ControlTemplate TargetType="Thumb">
           <Border x:Name="ThumbBody" Background="{TemplateBinding Background}"
-                  CornerRadius="3" Margin="1,1" MinHeight="24"/>
+                  CornerRadius="2" Margin="2,1" MinHeight="20"/>
           <ControlTemplate.Triggers>
             <Trigger Property="IsMouseOver" Value="True">
-              <Setter TargetName="ThumbBody" Property="Margin" Value="0,1"/>
-              <Setter TargetName="ThumbBody" Property="CornerRadius" Value="4"/>
+              <Trigger.EnterActions>
+                <BeginStoryboard>
+                  <Storyboard>
+                    <ThicknessAnimation Storyboard.TargetName="ThumbBody" Storyboard.TargetProperty="Margin"
+                                        To="0.5,1" Duration="0:0:0.15">
+                      <ThicknessAnimation.EasingFunction><CubicEase EasingMode="EaseOut"/></ThicknessAnimation.EasingFunction>
+                    </ThicknessAnimation>
+                  </Storyboard>
+                </BeginStoryboard>
+              </Trigger.EnterActions>
+              <Trigger.ExitActions>
+                <BeginStoryboard>
+                  <Storyboard>
+                    <ThicknessAnimation Storyboard.TargetName="ThumbBody" Storyboard.TargetProperty="Margin"
+                                        To="2,1" Duration="0:0:0.3" BeginTime="0:0:0.3"/>
+                  </Storyboard>
+                </BeginStoryboard>
+              </Trigger.ExitActions>
               <Setter TargetName="ThumbBody" Property="Background" Value="{DynamicResource ScrollThumbHoverBrush}"/>
             </Trigger>
             <Trigger Property="IsDragging" Value="True">
-              <Setter TargetName="ThumbBody" Property="Margin" Value="0,1"/>
-              <Setter TargetName="ThumbBody" Property="CornerRadius" Value="4"/>
+              <Setter TargetName="ThumbBody" Property="Margin" Value="0.5,1"/>
               <Setter TargetName="ThumbBody" Property="Background" Value="{DynamicResource ModeAccentBrush}"/>
             </Trigger>
             <DataTrigger Binding="{Binding Orientation, RelativeSource={RelativeSource AncestorType=ScrollBar}}"
                          Value="Horizontal">
               <Setter TargetName="ThumbBody" Property="MinHeight" Value="0"/>
-              <Setter TargetName="ThumbBody" Property="MinWidth" Value="24"/>
+              <Setter TargetName="ThumbBody" Property="MinWidth" Value="20"/>
+              <Setter TargetName="ThumbBody" Property="Margin" Value="1,2"/>
             </DataTrigger>
           </ControlTemplate.Triggers>
         </ControlTemplate>
@@ -684,14 +701,13 @@
   </Style>
 
   <Style TargetType="ScrollBar">
-    <Setter Property="Width" Value="8"/>
+    <Setter Property="Width" Value="6"/>
     <Setter Property="Background" Value="Transparent"/>
+    <Setter Property="Opacity" Value="0.3"/>
     <Setter Property="Template">
       <Setter.Value>
         <ControlTemplate TargetType="ScrollBar">
           <Grid Background="{TemplateBinding Background}">
-            <Border x:Name="TrackBody" Background="{DynamicResource ScrollTrackBrush}"
-                    CornerRadius="4" Margin="0,1"/>
             <Track x:Name="PART_Track" IsDirectionReversed="True">
               <Track.DecreaseRepeatButton>
                 <RepeatButton Command="ScrollBar.PageUpCommand" Opacity="0" Focusable="False"/>
@@ -702,19 +718,31 @@
               </Track.IncreaseRepeatButton>
             </Track>
           </Grid>
-          <ControlTemplate.Triggers>
-            <DataTrigger Binding="{Binding Orientation, RelativeSource={RelativeSource AncestorType=ScrollBar}}"
-                         Value="Horizontal">
-              <Setter TargetName="TrackBody" Property="Margin" Value="1,0"/>
-            </DataTrigger>
-          </ControlTemplate.Triggers>
         </ControlTemplate>
       </Setter.Value>
     </Setter>
     <Style.Triggers>
       <Trigger Property="Orientation" Value="Horizontal">
-        <Setter Property="Height" Value="8"/>
+        <Setter Property="Height" Value="6"/>
         <Setter Property="Width" Value="Auto"/>
+      </Trigger>
+      <Trigger Property="IsMouseOver" Value="True">
+        <Trigger.EnterActions>
+          <BeginStoryboard>
+            <Storyboard>
+              <DoubleAnimation To="1" Duration="0:0:0.12" Storyboard.TargetProperty="Opacity">
+                <DoubleAnimation.EasingFunction><CubicEase EasingMode="EaseOut"/></DoubleAnimation.EasingFunction>
+              </DoubleAnimation>
+            </Storyboard>
+          </BeginStoryboard>
+        </Trigger.EnterActions>
+        <Trigger.ExitActions>
+          <BeginStoryboard>
+            <Storyboard>
+              <DoubleAnimation To="0.3" Duration="0:0:0.6" BeginTime="0:0:0.4" Storyboard.TargetProperty="Opacity"/>
+            </Storyboard>
+          </BeginStoryboard>
+        </Trigger.ExitActions>
       </Trigger>
     </Style.Triggers>
   </Style>

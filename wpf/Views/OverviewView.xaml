@@ -103,7 +103,7 @@
 
             <TextBlock x:Name="ConclusionTitleText"
                        Text="{Binding ConclusionTitle}"
-                       FontSize="20"
+                       FontSize="{DynamicResource FontSizeConclusion}"
                        FontWeight="SemiBold"
                        Foreground="{DynamicResource TextPrimaryBrush}"
                        TextWrapping="Wrap"
@@ -275,7 +275,7 @@
                 AutomationProperties.Name="最近活动预览摘要">
           <StackPanel>
             <TextBlock Text="最近活动"
-                       FontSize="{DynamicResource FontSizeBody}"
+                       FontSize="{DynamicResource FontSizeRegion}"
                        FontWeight="SemiBold"
                        Foreground="{DynamicResource TextPrimaryBrush}"/>
             <TextBlock Text="活动流还是空的，等一场对局来把它填满。"
@@ -331,7 +331,7 @@
                 AutomationProperties.Name="硬件摘要预览状态">
           <StackPanel>
             <TextBlock Text="硬件摘要"
-                       FontSize="{DynamicResource FontSizeBody}"
+                       FontSize="{DynamicResource FontSizeRegion}"
                        FontWeight="SemiBold"
                        Foreground="{DynamicResource TextPrimaryBrush}"/>
             <TextBlock Text="硬件信息还在路上，就快到了。"

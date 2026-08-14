@@ -15,6 +15,8 @@ namespace CaelusApp
         private bool autoHide;
         private bool lightMode;
         private bool devMode;
+        private bool focusMode;
+        private bool dailyCare;
         private string shaderStatus;
         private string pageFeedback = "";
         private string pageFeedbackKind = "Info";
@@ -29,6 +31,8 @@ namespace CaelusApp
             autoHide = Settings.Load("AutoHideOnGame", false);
             lightMode = Settings.Load("UiLight", false);
             devMode = Settings.Load("DevModeOn", true);
+            focusMode = Settings.Load("DevFocusModeOn", false);
+            dailyCare = Settings.Load("DailyCareOn", true);
             shaderStatus = Lang.T("set.shader.n");
         }
 
@@ -121,6 +125,20 @@ namespace CaelusApp
             }
         }
 
+        // —— 专注模式 ——
+        public string FocusModeTitle { get { return Lang.T("set.focus"); } }
+        public string FocusModeNote { get { return Lang.T("set.focus.n"); } }
+        public bool FocusMode
+        {
+            get { return focusMode; }
+            set
+            {
+                if (!SetProperty(ref focusMode, value, "FocusMode")) return;
+                Settings.Save("DevFocusModeOn", value);
+                ShowFeedback(value ? "专注模式已开启。" : "专注模式已关闭。", "Success");
+            }
+        }
+
         // —— 自定义编译进程 ——
         public string DevCustomTitle { get { return Lang.T("set.dev.custom"); } }
         public string DevCustomNote { get { return Lang.T("set.dev.custom.n"); } }
@@ -179,6 +197,30 @@ namespace CaelusApp
         public string AddonTitle { get { return Lang.T("addon.open"); } }
         public string AddonDesc { get { return Lang.T("addon.open.sub"); } }
         public string AddonText { get { return Lang.T("btn.open"); } }
+
+        // —— 日常优化 ——
+        public string DailySectionTitle { get { return Lang.T("sec.daily"); } }
+        public string DailyCareTitle { get { return Lang.T("set.daily"); } }
+        public string DailyCareNote { get { return Lang.T("set.daily.n"); } }
+        public bool DailyCare
+        {
+            get { return dailyCare; }
+            set
+            {
+                if (!SetProperty(ref dailyCare, value, "DailyCare")) return;
+                Settings.Save("DailyCareOn", value);
+                ShowFeedback(value ? "日常场景调度已开启。" : "日常场景调度已关闭。", "Success");
+            }
+        }
+        public string StartupNewsTitle { get { return Lang.T("set.startup.news"); } }
+        public string StartupNews
+        {
+            get
+            {
+                string news = Settings.LoadStr("HealthStartupNews", "");
+                return news.Length == 0 ? Lang.T("set.startup.none") : news;
+            }
+        }
 
         // —— 维护：着色器缓存 ——
         public string ShaderTitle { get { return Lang.T("btn.shader"); } }

@@ -578,7 +578,9 @@ namespace CaelusApp
                 var core = new SuppressionCore();
                 var tamer = new Tamer(core);
                 var mode = new GameMode(data, core);
-                using (var f = new PanelForm(tamer, mode, IconArt.MakeIcon(Dpi.S(24)), true))
+                var testArbiter = new ScenarioArbiter();
+                var testDevFocus = new DevFocus(testArbiter, core, () => false, (a, b) => false, c => false);
+                using (var f = new PanelForm(tamer, mode, testDevFocus, IconArt.MakeIcon(Dpi.S(24)), true))
                 {
                     GC.KeepAlive(f.Handle);
                     f.StartPosition = FormStartPosition.Manual;
@@ -869,6 +871,7 @@ namespace CaelusApp
             test("场景仲裁：全部解除后掌权者为空", TestArbiterEmptyGrantsNull);
             test("场景仲裁：重复报告无副作用", TestArbiterDuplicateReportNoOp);
             test("场景仲裁：掌权者变更事件", TestArbiterGrantedChangedEvent);
+            test("场景仲裁：掌权场景状态后缀映射", TestScenarioStatusSuffix);
             test("场景仲裁：未注册场景的报告记账但被忽略", TestArbiterUnregisteredKindIgnored);
             test("场景仲裁：并发报告不产生交错非法序列", TestArbiterConcurrentReports);
             test("场景仲裁：游戏激活事件驱动仲裁报告", TestGameModeActiveChangedEvent);
@@ -2095,6 +2098,9 @@ namespace CaelusApp
             test("竞技电源：清理绝不碰用户自己的方案", TestPowerPlanPurgeSparesForeignSchemes);
             test("竞技电源：旧版遗留的方案副本会被迁移删除", TestPowerPlanMigratesLegacyClone);
             test("竞技电源：反复解析目标计划只会有一个方案", TestPowerPlanResolveIsIdempotent);
+            test("健康维护：启动项基线对比只报新增", TestStartupAuditDiffNew);
+            test("健康维护：基线快照存储往返与转义", TestStartupAuditBaselineRoundtrip);
+            test("健康维护：到点判定覆盖从未运行与损坏数据", TestHealthCareIsDue);
             }
             finally { try { Directory.Delete(root, true); } catch { } }
 

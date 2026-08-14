@@ -11,7 +11,7 @@ namespace CaelusApp
 {
     internal partial class PanelForm
     {
-        private Toggle swAuto, swAutoHide, swDev;
+        private Toggle swAuto, swAutoHide, swDev, swFocus, swDaily;
         private SettingCard cardShader;
         private static volatile bool shaderCleaning;
         private int slowBusy;
@@ -72,6 +72,57 @@ namespace CaelusApp
             scroll.Controls.Add(btnDevSave);
             CardLabel(scroll, Lang.T("set.dev.custom.n"), 14, sy + 76, ScrollContentW - 28, 32, 7.4f, false, Theme.Dim);
             sy += 114;
+
+            swFocus = MakeSwitch(devFocus.FocusModeOn, delegate
+            {
+                devFocus.SetFocusMode(swFocus.Checked);
+            });
+            MakeAutoCard(scroll, 6, sy, ScrollContentW, 76, Lang.T("set.focus"), Lang.T("set.focus.n"), swFocus, out cardH);
+            sy += cardH + 8;
+
+            CardLabel(scroll, Lang.T("set.distract"), 14, sy + 6, ScrollContentW - 28, 18, 8f, true, Theme.Fg);
+            var tbDistract = Theme.MakeTextBox(Theme.S(14), Theme.S(sy + 26), Theme.S(ScrollContentW - 110));
+            tbDistract.Text = Settings.LoadStr("DevFocusDistractList", "");
+            tbDistract.Height = Theme.S(44);
+            tbDistract.Multiline = true;
+            tbDistract.ScrollBars = ScrollBars.Vertical;
+            tbDistract.ForeColor = Theme.Fg;
+            tbDistract.BackColor = Theme.Inset;
+            scroll.Controls.Add(tbDistract);
+            var btnDistractSave = new PillButton(Lang.T("set.dev.custom.save"), BtnKind.Normal);
+            btnDistractSave.Bg = Theme.Card;
+            btnDistractSave.Size = new Size(Theme.S(80), Theme.S(30));
+            btnDistractSave.Location = new Point(Theme.S(ScrollContentW - 96), Theme.S(sy + 30));
+            btnDistractSave.Click += delegate
+            {
+                Settings.SaveStr("DevFocusDistractList", tbDistract.Text);
+                DistractCatalog.Reload();
+                btnDistractSave.Text = Lang.T("set.dev.custom.saved");
+                var revert2 = new System.Windows.Forms.Timer();
+                revert2.Interval = 1500;
+                revert2.Tick += (s3, e3) => { revert2.Stop(); revert2.Dispose(); btnDistractSave.Text = Lang.T("set.dev.custom.save"); };
+                revert2.Start();
+            };
+            scroll.Controls.Add(btnDistractSave);
+            CardLabel(scroll, Lang.T("set.distract.n"), 14, sy + 76, ScrollContentW - 28, 32, 7.4f, false, Theme.Dim);
+            sy += 114;
+
+            sy += 10;
+            Section(scroll, Lang.T("sec.daily"), 6, sy); sy += 24;
+
+            swDaily = MakeSwitch(Settings.Load("DailyCareOn", true), delegate
+            {
+                Settings.Save("DailyCareOn", swDaily.Checked);
+            });
+            MakeAutoCard(scroll, 6, sy, ScrollContentW, 76, Lang.T("set.daily"), Lang.T("set.daily.n"), swDaily, out cardH);
+            sy += cardH + 8;
+
+            // Startup audit report
+            string news = Settings.LoadStr("HealthStartupNews", "");
+            CardLabel(scroll, Lang.T("set.startup.news"), 14, sy + 4, ScrollContentW - 28, 18, 8f, true, Theme.Fg);
+            CardLabel(scroll, news.Length == 0 ? Lang.T("set.startup.none") : news,
+                14, sy + 24, ScrollContentW - 28, 44, 8f, false, Theme.Dim);
+            sy += 70;
 
             sy += 10;
             Section(scroll, Lang.T("sec.maint"), 6, sy); sy += 24;

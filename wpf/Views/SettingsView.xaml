@@ -78,7 +78,30 @@
         <Border Style="{DynamicResource SettingsGroup}" Margin="0,0,0,16">
           <StackPanel>
             <Border Style="{DynamicResource PolicyRow}" BorderThickness="0,0,0,1" local:RowToggle.Enabled="True"><DockPanel><ToggleButton Style="{DynamicResource PolicyToggle}" IsChecked="{Binding DevMode}" DockPanel.Dock="Right" VerticalAlignment="Center" Margin="16,0,0,0" AutomationProperties.Name="开发模式"/><StackPanel VerticalAlignment="Center"><TextBlock Text="{Binding DevModeTitle}" FontSize="{DynamicResource FontSizeCaption}" FontWeight="SemiBold" Foreground="{DynamicResource TextPrimaryBrush}"/><TextBlock Text="{Binding DevModeNote}" FontSize="{DynamicResource FontSizeSmall}" Foreground="{DynamicResource TextSecondaryBrush}" TextWrapping="Wrap" Margin="0,3,0,0"/></StackPanel></DockPanel></Border>
+            <Border Style="{DynamicResource PolicyRow}" BorderThickness="0,0,0,1" local:RowToggle.Enabled="True"><DockPanel><ToggleButton Style="{DynamicResource PolicyToggle}" IsChecked="{Binding FocusMode}" DockPanel.Dock="Right" VerticalAlignment="Center" Margin="16,0,0,0" AutomationProperties.Name="专注模式"/><StackPanel VerticalAlignment="Center"><TextBlock Text="{Binding FocusModeTitle}" FontSize="{DynamicResource FontSizeCaption}" FontWeight="SemiBold" Foreground="{DynamicResource TextPrimaryBrush}"/><TextBlock Text="{Binding FocusModeNote}" FontSize="{DynamicResource FontSizeSmall}" Foreground="{DynamicResource TextSecondaryBrush}" TextWrapping="Wrap" Margin="0,3,0,0"/></StackPanel></DockPanel></Border>
             <Border Style="{DynamicResource PolicyRow}" IsEnabled="{Binding IsDevCustomEnabled}"><StackPanel><DockPanel Margin="0,0,0,8"><Button x:Name="BtnDevSave" Content="{Binding DevCustomSaveText}" Click="OnDevSave" Style="{DynamicResource GhostButton}" Padding="10,5" DockPanel.Dock="Right" VerticalAlignment="Center" Margin="16,0,0,0" AutomationProperties.Name="保存自定义编译进程"/><TextBlock Text="{Binding DevCustomTitle}" FontSize="{DynamicResource FontSizeCaption}" FontWeight="SemiBold" Foreground="{DynamicResource TextPrimaryBrush}" VerticalAlignment="Center"/></DockPanel><TextBox x:Name="TbDevCustom" Text="{Binding DevCustomInitial, Mode=OneTime}" Style="{DynamicResource InputBox}" TextWrapping="Wrap" AcceptsReturn="True" VerticalScrollBarVisibility="Auto" MinHeight="48" MaxHeight="112" FontFamily="{DynamicResource FontMono}" FontSize="{DynamicResource FontSizeMono}" AutomationProperties.Name="自定义编译进程列表"/><TextBlock Text="{Binding DevCustomNote}" FontSize="{DynamicResource FontSizeSmall}" Foreground="{DynamicResource TextSecondaryBrush}" TextWrapping="Wrap" Margin="0,7,0,0"/></StackPanel></Border>
+          </StackPanel>
+        </Border>
+      </StackPanel>
+
+      <StackPanel x:Name="ZoneDaily">
+        <StackPanel Orientation="Horizontal" Margin="0,0,0,8">
+          <Border Width="28" Height="28" CornerRadius="{DynamicResource RadiusSm}"
+                  Background="{DynamicResource AccentSoftBrush}" BorderBrush="{DynamicResource AccentEdgeBrush}"
+                  BorderThickness="1" VerticalAlignment="Center" Margin="0,0,10,0">
+            <Viewbox Width="15" Height="15">
+              <Path Data="M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20zm0 4v4l3 3"
+                    Stroke="{DynamicResource ModeAccentBrush}" StrokeThickness="2" StrokeLineJoin="Round"/>
+            </Viewbox>
+          </Border>
+          <TextBlock Text="{Binding DailySectionTitle}" FontSize="{DynamicResource FontSizeBody}"
+                     FontWeight="SemiBold" Foreground="{DynamicResource TextPrimaryBrush}" VerticalAlignment="Center"/>
+        </StackPanel>
+        <TextBlock Text="浏览器/Office/会议软件活跃时自动压制后台。" FontSize="{DynamicResource FontSizeXs}" Foreground="{DynamicResource TextTertiaryBrush}" Margin="0,0,0,8"/>
+        <Border Style="{DynamicResource SettingsGroup}" Margin="0,0,0,16">
+          <StackPanel>
+            <Border Style="{DynamicResource PolicyRow}" BorderThickness="0,0,0,1" local:RowToggle.Enabled="True"><DockPanel><ToggleButton Style="{DynamicResource PolicyToggle}" IsChecked="{Binding DailyCare}" DockPanel.Dock="Right" VerticalAlignment="Center" Margin="16,0,0,0" AutomationProperties.Name="日常场景调度"/><StackPanel VerticalAlignment="Center"><TextBlock Text="{Binding DailyCareTitle}" FontSize="{DynamicResource FontSizeCaption}" FontWeight="SemiBold" Foreground="{DynamicResource TextPrimaryBrush}"/><TextBlock Text="{Binding DailyCareNote}" FontSize="{DynamicResource FontSizeSmall}" Foreground="{DynamicResource TextSecondaryBrush}" TextWrapping="Wrap" Margin="0,3,0,0"/></StackPanel></DockPanel></Border>
+            <Border Style="{DynamicResource PolicyRow}"><StackPanel><TextBlock Text="{Binding StartupNewsTitle}" FontSize="{DynamicResource FontSizeCaption}" FontWeight="SemiBold" Foreground="{DynamicResource TextPrimaryBrush}"/><TextBlock Text="{Binding StartupNews}" FontSize="{DynamicResource FontSizeSmall}" Foreground="{DynamicResource TextSecondaryBrush}" TextWrapping="Wrap" Margin="0,3,0,0"/></StackPanel></Border>
           </StackPanel>
         </Border>
       </StackPanel>

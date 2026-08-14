@@ -31,7 +31,9 @@ namespace CaelusApp
                 var tamer = new Tamer(core);
                 var mode = new GameMode(data, core);
                 PanelForm form;
-                try { form = new PanelForm(tamer, mode, IconArt.MakeIcon(Dpi.S(24)), true); }
+                var testArbiter = new ScenarioArbiter();
+                var testDevFocus = new DevFocus(testArbiter, core, () => false, (a, b) => false, c => false);
+                try { form = new PanelForm(tamer, mode, testDevFocus, IconArt.MakeIcon(Dpi.S(24)), true); }
                 catch (Exception ex) { throw new TestSkippedException("面板无法构建：" + ex.GetType().Name); }
                 using (form)
                 {

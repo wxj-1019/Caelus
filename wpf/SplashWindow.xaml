@@ -1,0 +1,36 @@
+<Window x:Class="CaelusApp.WpfHost.SplashWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="Caelus 启动中" Width="460" Height="320"
+        WindowStyle="None" AllowsTransparency="False" Background="#FF1B1524"
+        ResizeMode="NoResize" WindowStartupLocation="CenterScreen"
+        ShowInTaskbar="False" Topmost="True"
+        FontFamily="Segoe UI Variable Text, Microsoft YaHei UI, sans-serif">
+  <!-- 棉花糖启动屏：样式完全自包含（运行在独立线程，不引用应用级主题资源）。
+       圆角由 DWM 提供（与主窗口同款），不依赖透明层。 -->
+  <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center">
+    <!-- 三环静态标（内联糖果色，复刻应用图标） -->
+    <Grid Width="92" Height="92">
+      <Ellipse Stroke="#3A3246" StrokeThickness="1.2" StrokeDashArray="3 7" Margin="2"/>
+      <Ellipse Stroke="#8B7CF6" StrokeThickness="3.5" StrokeDashArray="70 217" StrokeDashCap="Round" Margin="10"/>
+      <Ellipse Stroke="#A78BFA" StrokeThickness="3.5" StrokeDashArray="70 217" StrokeDashCap="Round" Margin="10"
+               RenderTransformOrigin="0.5,0.5">
+        <Ellipse.RenderTransform><RotateTransform Angle="180"/></Ellipse.RenderTransform>
+      </Ellipse>
+      <Ellipse Stroke="#3A3246" StrokeThickness="2.5" StrokeDashArray="2 5" Margin="26"/>
+      <Ellipse Fill="#241D30" Stroke="#8B7CF6" StrokeThickness="1" Margin="34"/>
+      <Viewbox Width="15" Height="15">
+        <Path Fill="#8B7CF6" Data="M13 2L4 14h6l-1 8 9-12h-6z"/>
+      </Viewbox>
+    </Grid>
+
+    <TextBlock x:Name="LblTitle" Text="C A E L U S" HorizontalAlignment="Center" Margin="0,14,0,0"
+               FontSize="24" FontWeight="Bold" Foreground="#F7F1EA"/>
+    <TextBlock x:Name="LblHint" Text="正在为你拨开云层…" HorizontalAlignment="Center"
+               Margin="0,8,0,0" FontSize="12.5" Foreground="#B8AEC0"/>
+
+    <ProgressBar Width="184" Height="3" IsIndeterminate="True"
+                 Margin="0,22,0,0" Foreground="#8B7CF6" Background="#2EFFFFFF"
+                 BorderThickness="0"/>
+  </StackPanel>
+</Window>

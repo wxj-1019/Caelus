@@ -60,6 +60,7 @@
   <ItemGroup>
     <ApplicationDefinition Include="App.xaml" />
     <Page Include="MainWindow.xaml" />
+    <Page Include="SplashWindow.xaml" />
     <Page Include="Controls\CaelusCore.xaml" />
     <Page Include="Themes\Tokens.xaml" />
     <Page Include="Themes\Colors.Light.xaml" />
@@ -104,6 +105,9 @@
     </Compile>
     <Compile Include="MainWindow.xaml.cs">
       <DependentUpon>MainWindow.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="SplashWindow.xaml.cs">
+      <DependentUpon>SplashWindow.xaml</DependentUpon>
     </Compile>
     <Compile Include="Controls\CaelusCore.xaml.cs">
       <DependentUpon>Controls\CaelusCore.xaml</DependentUpon>

@@ -4,6 +4,7 @@
 using System;
 using System.Diagnostics;
 using System.IO;
+using System.Threading;
 using System.Windows;
 using System.Windows.Threading;
 using System.Windows.Media;
@@ -59,11 +60,31 @@ namespace CaelusApp.WpfHost
             ThemeManager.Apply(this, tone, initial);
             ThemeManager.TryApplyUserTheme(this);
             Paths.Init();
+            // 棉花糖启动屏（主线程显示，保证可见）：先强制首帧渲染，
+            // 再把 GameMode 移到后台线程并泵送消息循环，让加载动画保持滚动。
+            var splash = new SplashWindow();
+            splash.Show();
+            splash.UpdateLayout();
+            Dispatcher.Invoke(DispatcherPriority.Render, new Action(delegate { }));
+
             var gameCore = new SuppressionCore();
-            var gameMode = new GameMode(Paths.Data, gameCore);
+            GameMode gameMode = null;
+            var gmDone = new ManualResetEvent(false);
+            var gmThread = new Thread(delegate ()
+            {
+                try { gameMode = new GameMode(Paths.Data, gameCore); }
+                catch { }
+                gmDone.Set();
+            });
+            gmThread.IsBackground = true;
+            gmThread.Start();
+            while (!gmDone.WaitOne(25))
+                Dispatcher.Invoke(DispatcherPriority.Background, new Action(delegate { }));
+
             MainWindow w = new MainWindow(gameMode);
             w.ApplyPersistedMode(initial);
             w.Show();
+            splash.Close();
             // 托盘图标延迟到消息循环运行后创建（OnStartup 阶段 Dispatcher 尚未泵消息，
             // 此时创建的 NotifyIcon 不会在通知区域显示）
             Dispatcher.BeginInvoke(new Action(CreateTray));

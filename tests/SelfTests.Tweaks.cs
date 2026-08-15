@@ -245,6 +245,62 @@ namespace CaelusApp
             }
         }
 
+        private static void TestIfeoSystemReservedGuard()
+        {
+            // 纯逻辑判定：系统保留名裸名与 .exe 形态都拒绝，普通游戏名不误伤
+            Eq(true, IfeoBoost.IsSystemReserved("svchost"));
+            Eq(true, IfeoBoost.IsSystemReserved("svchost.exe"));
+            Eq(true, IfeoBoost.IsSystemReserved("lsass.exe"));
+            Eq(true, IfeoBoost.IsSystemReserved("explorer"));
+            Eq(true, IfeoBoost.IsSystemReserved("System"));
+            Eq(false, IfeoBoost.IsSystemReserved("cyberpunk2077"));
+            Eq(false, IfeoBoost.IsSystemReserved("NebulaStrike-Win64-Shipping"));
+            Eq(false, IfeoBoost.IsSystemReserved(null));
+            Eq(false, IfeoBoost.IsSystemReserved(""));
+
+            string sandbox = @"Software\CaelusTest\IFEOGuard_" + System.Diagnostics.Process.GetCurrentProcess().Id;
+            IfeoBoost.Hive = Microsoft.Win32.Registry.CurrentUser;
+            IfeoBoost.RootOverride = sandbox;
+            IfeoBoost.ClearArmed();
+            try
+            {
+                using (var k = Microsoft.Win32.Registry.CurrentUser.CreateSubKey(sandbox)) { }
+
+                // Arm：系统保留名被拒绝，预置列表不被污染
+                Eq(false, IfeoBoost.Arm("svchost.exe"));
+                Eq(false, IfeoBoost.Arm("winlogon"));
+                Eq(0, IfeoBoost.Armed().Length);
+
+                // EnsureForGame：不写任何 IFEO 键
+                IfeoBoost.EnsureForGame("lsass.exe");
+                using (var k = Microsoft.Win32.Registry.CurrentUser.OpenSubKey(sandbox + @"\lsass.exe"))
+                    if (k != null) throw new Exception("system-reserved name must not create IFEO key");
+
+                // PreArmAll 兜底：向预置列表直接注入保留名也必须被跳过（ApplyFor 防护）
+                Settings.SaveStr("IfeoArm", "normal.exe;csrss.exe");
+                Eq(1, IfeoBoost.PreArmAll());
+                using (var k = Microsoft.Win32.Registry.CurrentUser.OpenSubKey(sandbox + @"\csrss.exe"))
+                    if (k != null) throw new Exception("pre-arm must not apply system-reserved name");
+                using (var p = Microsoft.Win32.Registry.CurrentUser.OpenSubKey(sandbox + @"\normal.exe\PerfOptions"))
+                {
+                    if (p == null) throw new Exception("normal pre-arm should still apply");
+                    Eq(3, (int)p.GetValue("CpuPriorityClass", -1));
+                }
+                Eq(true, IfeoBoost.RestoreAll());
+                Eq(2, IfeoBoost.ClearArmed());
+                Eq(0, IfeoBoost.Armed().Length);
+            }
+            finally
+            {
+                IfeoBoost.Hive = Microsoft.Win32.Registry.LocalMachine;
+                IfeoBoost.RootOverride = null;
+                IfeoBoost.ClearArmed();
+                try { Settings.SaveStr("IfeoArm", ""); } catch { }
+                try { Settings.SaveStr("IfeoList", ""); } catch { }
+                try { Microsoft.Win32.Registry.CurrentUser.DeleteSubKeyTree(sandbox, false); } catch { }
+            }
+        }
+
         private static void TestIfeoPreArmAppliesBeforeGameStarts()
         {
             string sandbox = @"Software\CaelusTest\IFEOArm_" + System.Diagnostics.Process.GetCurrentProcess().Id;

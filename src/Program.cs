@@ -1,4 +1,4 @@
-﻿// @author zenjiro 18967498922@163.com
+// @author zenjiro 18967498922@163.com
 // 文件用途 启动程序并处理单实例 自愈和命令行入口
 
 using System;
@@ -160,7 +160,25 @@ namespace CaelusApp
                 }
             }
 
-            var showEvt = new EventWaitHandle(false, EventResetMode.AutoReset, "Global\\Caelus_ShowPanel");
+            // 与 exitEvt 相同的每用户 ACL（安全审查 S1）：默认 ACL 允许任意本地用户 Set
+            // 本事件，在管理员桌面上强制弹出面板（干扰/诱导）。同名对象已存在时安全描述符
+            // 被忽略，同用户重复启动（OpenExisting 路径）不受影响。
+            bool showCreated;
+            EventWaitHandle showEvt;
+            try
+            {
+                var showSec = new EventWaitHandleSecurity();
+                showSec.AddAccessRule(new EventWaitHandleAccessRule(
+                    WindowsIdentity.GetCurrent().User,
+                    EventWaitHandleRights.Modify | EventWaitHandleRights.Synchronize,
+                    AccessControlType.Allow));
+                showEvt = new EventWaitHandle(false, EventResetMode.AutoReset,
+                    "Global\\Caelus_ShowPanel", out showCreated, showSec);
+            }
+            catch
+            {
+                showEvt = new EventWaitHandle(false, EventResetMode.AutoReset, "Global\\Caelus_ShowPanel");
+            }
             EventWaitHandle exitEvt;
             try
             {

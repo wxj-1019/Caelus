@@ -11,6 +11,21 @@ namespace CaelusApp
     internal static class IfeoBoost
     {
         private const string Root = @"SOFTWARE\Microsoft\Windows NT\CurrentVersion\Image File Execution Options";
+
+        /// <summary>系统关键映像名（安全审查 S2）：IFEO 按裸映像名匹配，对这些名字预置
+        /// PerfOptions 会波及系统进程本身（如把全部 svchost 提为 HIGH 优先级）。</summary>
+        private static readonly System.Collections.Generic.HashSet<string> SystemReservedNames =
+            new System.Collections.Generic.HashSet<string>(System.StringComparer.OrdinalIgnoreCase)
+        {
+            "system", "secure system", "registry", "memory compression",
+            "smss", "csrss", "wininit", "winlogon", "services", "lsass",
+            "svchost", "dwm", "fontdrvhost", "audiodg", "wudfhost", "wmiprvse",
+            "explorer", "ctfmon", "textinputhost", "sihost", "taskhostw",
+            "conhost", "dllhost", "runtimebroker", "applicationframehost",
+            "shellexperiencehost", "startmenuexperiencehost", "searchhost",
+            "lockapp", "logonui", "securityhealthsystray",
+            "vmmem", "vmmemwsl", "wslservice"
+        };
         private const string ListKey = "IfeoList";
         private const string ArmKey = "IfeoArm";
         private const int HighPriority = 3;
@@ -54,10 +69,24 @@ namespace CaelusApp
                 ? rendererName : rendererName + ".exe";
         }
 
+        /// <summary>系统保留名判定（纯逻辑可单测）：禁止对这些映像名预置 IFEO 项。</summary>
+        internal static bool IsSystemReserved(string exe)
+        {
+            if (string.IsNullOrEmpty(exe)) return false;
+            string n = exe.EndsWith(".exe", StringComparison.OrdinalIgnoreCase)
+                ? exe.Substring(0, exe.Length - 4) : exe;
+            return SystemReservedNames.Contains(n);
+        }
+
         public static bool Arm(string rendererName)
         {
             string exe = NormalizeExe(rendererName);
             if (string.IsNullOrEmpty(exe) || exe.IndexOf(';') >= 0) return false;
+            if (IsSystemReserved(exe))
+            {
+                Logger.Log("后备提优：拒绝系统保留映像名 " + exe);
+                return false;
+            }
             lock (lk)
             {
                 foreach (string s in ParseList(Settings.LoadStr(ArmKey, "")))
@@ -98,6 +127,7 @@ namespace CaelusApp
         {
             string exe = NormalizeExe(rendererName);
             if (string.IsNullOrEmpty(exe)) return;
+            if (IsSystemReserved(exe)) return;
             lock (lk)
             {
                 if (Listed(exe)) return;
@@ -109,6 +139,7 @@ namespace CaelusApp
         {
             lock (lk)
             {
+                if (IsSystemReserved(exe)) return false;
                 if (Listed(exe)) return true;
                 try
                 {

@@ -1,4 +1,4 @@
-﻿// @author zenjiro 18967498922@163.com
+// @author zenjiro 18967498922@163.com
 // 文件用途 运行不依赖测试框架的项目自测
 
 using System;
@@ -2082,6 +2082,7 @@ namespace CaelusApp
             test("后备提优：沙箱往返写入优先级且零残留", TestIfeoSandboxRoundtrip);
             test("后备提优：PerfOptions 三项写入且完整还原", TestIfeoWritesFullPerfOptionsTriple);
             test("后备提优：预置发生在游戏启动之前而非之后", TestIfeoPreArmAppliesBeforeGameStarts);
+            test("后备提优：系统保留映像名拒绝预置且零残留", TestIfeoSystemReservedGuard);
             test("反作弊识别：认不出的产品绝不编造名称", TestKernelAntiCheatNamingIsHonest);
             test("清除旧数据：还原失败时绝不删除任何数据", TestLegacyPurgeKeepsDataWhenRestoreFails);
             test("清除旧数据：只删除 Caelus 自己的文件", TestLegacyPurgeNeverTouchesForeignFiles);

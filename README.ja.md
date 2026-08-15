@@ -1,12 +1,14 @@
 <div align="center">
 
-<img src="docs/icon.png" width="96" height="96" alt="Caelus">
+<img src="assets/banner.svg" alt="CAELUS — ゲームに空を譲る" width="960">
 
-# Caelus
+**ゲーム中、PC の性能をゲームに回す Windows 用の小さなツール**
 
-ゲーム中、PC の性能をゲームに回す Windows 用の小さなツール
-
-`C#` · `WinForms` · `簡体字中国語 UI`
+[![対応](https://img.shields.io/badge/対応-Windows%2010%2F11-%235E5CE6)](https://github.com/wxj-1019/Caelus)
+[![言語](https://img.shields.io/badge/言語-C%23%20.NET%20Framework%204.x-%237A78F0)](https://github.com/wxj-1019/Caelus)
+[![自己テスト](https://img.shields.io/badge/自己テスト-213%20件%20合格-%233DD68C)](https://github.com/wxj-1019/Caelus)
+[![プライバシー](https://img.shields.io/badge/プライバシー-完全ローカル%20%C2%B7%20送信なし-%233DD68C)](https://github.com/wxj-1019/Caelus)
+[![ライセンス](https://img.shields.io/badge/ライセンス-販売禁止-%23E5A13D)](LICENSE)
 
 [简体中文](README.md) · [English](README.en.md) · **日本語**
 

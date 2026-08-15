@@ -1,12 +1,14 @@
 <div align="center">
 
-<img src="docs/icon.png" width="96" height="96" alt="Caelus">
+<img src="assets/banner.svg" alt="CAELUS — clear skies for your game" width="960">
 
-# Caelus
+**A small Windows tool that hands your system's resources to the game while you play.**
 
-A small Windows tool that hands your system's resources to the game while you play
-
-`C#` · `WinForms` · `Simplified Chinese UI`
+[![Platform](https://img.shields.io/badge/platform-Windows%2010%2F11-%235E5CE6)](https://github.com/wxj-1019/Caelus)
+[![Language](https://img.shields.io/badge/language-C%23%20.NET%20Framework%204.x-%237A78F0)](https://github.com/wxj-1019/Caelus)
+[![Self-tests](https://img.shields.io/badge/self%2Dtests-213%20passing-%233DD68C)](https://github.com/wxj-1019/Caelus)
+[![Privacy](https://img.shields.io/badge/privacy-local%20only%20%C2%B7%20zero%20upload-%233DD68C)](https://github.com/wxj-1019/Caelus)
+[![License](https://img.shields.io/badge/license-resale%20forbidden-%23E5A13D)](LICENSE)
 
 [简体中文](README.md) · **English** · [日本語](README.ja.md)
 

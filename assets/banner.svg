@@ -1,0 +1,68 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Caelus banner: 天空之神 —— 为游戏腾出天空。三环核心复刻应用图标；SMIL 仅为渐进增强，静态帧即完整。 -->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 960 300"
+     font-family="ui-sans-serif, system-ui, -apple-system, 'Segoe UI', 'Microsoft YaHei', sans-serif">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#1B1C24"/>
+      <stop offset="1" stop-color="#0C0D11"/>
+    </linearGradient>
+    <radialGradient id="aurora" cx="0.16" cy="0.10" r="0.8">
+      <stop offset="0" stop-color="#5E5CE6" stop-opacity="0.30"/>
+      <stop offset="1" stop-color="#5E5CE6" stop-opacity="0"/>
+    </radialGradient>
+    <linearGradient id="ring" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#A5A3FF"/>
+      <stop offset="1" stop-color="#5E5CE6"/>
+    </linearGradient>
+    <linearGradient id="word" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0" stop-color="#FFFFFF"/>
+      <stop offset="0.55" stop-color="#C9C8FF"/>
+      <stop offset="1" stop-color="#8F8DF2"/>
+    </linearGradient>
+    <filter id="glow" x="-80%" y="-80%" width="260%" height="260%">
+      <feGaussianBlur stdDeviation="12" result="b"/>
+      <feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+  </defs>
+
+  <rect width="960" height="300" rx="24" fill="url(#bg)"/>
+  <rect width="960" height="300" rx="24" fill="url(#aurora)"/>
+
+  <!-- 夜空星点 -->
+  <g fill="#FFFFFF">
+    <circle cx="838" cy="52" r="1.6" opacity="0.55"/>
+    <circle cx="886" cy="96" r="1.1" opacity="0.35"/>
+    <circle cx="800" cy="120" r="1.3" opacity="0.4"/>
+    <circle cx="858" cy="168" r="1.0" opacity="0.3"/>
+    <circle cx="912" cy="226" r="1.5" opacity="0.35"/>
+    <circle cx="762" cy="74" r="1.0" opacity="0.3"/>
+    <circle cx="106" cy="248" r="1.2" opacity="0.35"/>
+    <circle cx="60" cy="210" r="1.0" opacity="0.28"/>
+  </g>
+
+  <!-- 三环核心（复刻应用图标：外虚线环 / 中双弧环 / 内刻度环 / 中心盘+闪电） -->
+  <g transform="translate(196,150)" filter="url(#glow)">
+    <!-- 外虚线环 -->
+    <circle r="84" fill="none" stroke="#FFFFFF" stroke-opacity="0.13" stroke-width="1.1" stroke-dasharray="3 8"/>
+    <!-- 中双弧环（渐变弧 + 180° 相位弧，缓慢旋转；静态帧即成立） -->
+    <g>
+      <circle r="68" fill="none" stroke="url(#ring)" stroke-width="3.4" stroke-dasharray="70 357" stroke-linecap="round"/>
+      <circle r="68" fill="none" stroke="#9D9BFF" stroke-opacity="0.85" stroke-width="3.4"
+              stroke-dasharray="70 357" stroke-linecap="round" transform="rotate(180)"/>
+      <animateTransform attributeName="transform" type="rotate" from="0 0 0" to="360 0 0"
+                        dur="26s" repeatCount="indefinite"/>
+    </g>
+    <!-- 内刻度环 -->
+    <circle r="52" fill="none" stroke="#FFFFFF" stroke-opacity="0.18" stroke-width="3" stroke-dasharray="2 5"/>
+    <!-- 中心盘 -->
+    <circle r="44" fill="#1E1E26" stroke="#8F8DF2" stroke-opacity="0.7" stroke-width="1.2"/>
+    <!-- 闪电 -->
+    <path d="M 6 -20 L -12 6 L -1 6 L -6 22 L 12 -4 L 1 -4 Z" fill="url(#ring)"/>
+  </g>
+
+  <!-- 字标与标语 -->
+  <text x="330" y="138" font-size="74" font-weight="800" letter-spacing="7" fill="url(#word)">CAELUS</text>
+  <text x="333" y="178" font-size="26" fill="#B9B8EF" letter-spacing="2">为游戏腾出天空</text>
+  <text x="333" y="208" font-size="15.5" fill="#8A8B98" letter-spacing="1.5">Windows 游戏资源调度 · 纯本地 · 零上传 · 退出即还原</text>
+</svg>

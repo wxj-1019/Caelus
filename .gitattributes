@@ -1,0 +1,26 @@
+# Caelus 行尾约定：源码 CRLF（Windows 工具链），文本/脚本 LF，二进制标记。
+* text=auto
+
+*.cs     text eol=crlf
+*.csproj text eol=crlf
+*.xaml   text eol=crlf
+*.config text eol=crlf
+
+*.md     text eol=lf
+*.txt    text eol=lf
+*.cmd    text eol=lf
+*.ps1    text eol=lf
+*.svg    text eol=lf
+*.yml    text eol=lf
+*.yaml   text eol=lf
+*.json   text eol=lf
+*.targets text eol=lf
+*.manifest text eol=lf
+
+*.png    binary
+*.jpg    binary
+*.jpeg   binary
+*.ico    binary
+*.exe    binary
+*.dll    binary
+*.baml   binary

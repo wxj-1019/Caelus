@@ -17,8 +17,8 @@ namespace CaelusApp
 {
     internal static class IconArt
     {
-        private static readonly Color Ink   = Color.FromArgb(24, 26, 32);
-        private static readonly Color Rim   = Color.FromArgb(40, 255, 255, 255);
+        // 棉花糖天空：糖果底 + 奶油弯月星。糖果色镜像 wpf/Themes/Mode.*.xaml 的 AccentPrimary。
+        private static readonly Color Cream = Color.FromArgb(255, 248, 240);
 
         [DllImport("user32.dll")] private static extern bool DestroyIcon(IntPtr h);
 
@@ -64,27 +64,62 @@ namespace CaelusApp
                 g.Clear(Color.Transparent);
                 g.ScaleTransform(px / 100f, px / 100f);
 
-                Color modeColor = Theme.ModeColor(mode);
-                Color bolt = enabled ? modeColor : Col.Lerp(modeColor, Color.FromArgb(105, 110, 121), 0.58f);
-                Color rim = enabled ? Col.Alpha(bolt, 105) : Rim;
-                using (var badge = Squircle(2.5f, 2.5f, 95, 95, 25))
+                Color candy = CandyColor(mode);
+                Color candyLight = CandyLight(mode);
+                if (!enabled)
                 {
-                    using (var b = new SolidBrush(Ink)) g.FillPath(b, badge);
-                    using (var pen = new Pen(rim, 1.8f)) g.DrawPath(pen, badge);
+                    Color gray = Color.FromArgb(107, 93, 85);
+                    candy = Col.Lerp(candy, gray, 0.55f);
+                    candyLight = Col.Lerp(candyLight, gray, 0.55f);
                 }
-                // 弯月：填充外圆，但用 SetClip 排除偏移的内圆，挖出月牙
+
+                // 糖果渐变圆角方块（左上亮 → 右下深 = 棉花糖蓬松感）
+                using (var badge = Squircle(2.5f, 2.5f, 95, 95, 27))
+                {
+                    using (var grad = new LinearGradientBrush(
+                        new RectangleF(2.5f, 2.5f, 95, 95), candyLight, candy, 58f))
+                        g.FillPath(grad, badge);
+                    using (var pen = new Pen(Color.FromArgb(96, 255, 255, 255), 1.8f))
+                        g.DrawPath(pen, badge);
+
+                    // 顶部枕头高光（软白横椭圆，裁剪进徽章）
+                    GraphicsState st = g.Save();
+                    g.SetClip(badge, CombineMode.Intersect);
+                    using (var sheen = new SolidBrush(Color.FromArgb(40, 255, 255, 255)))
+                        g.FillEllipse(sheen, 14f, -24f, 72f, 54f);
+                    g.Restore(st);
+                }
+
+                // 奶油弯月：填充外圆，但用 SetClip 排除偏移的内圆，挖出月牙
                 GraphicsState gs = g.Save();
                 using (var cutout = new GraphicsPath())
                 {
                     cutout.AddEllipse(CrescentCutout());
                     g.SetClip(cutout, CombineMode.Exclude);
                 }
-                using (var b = new SolidBrush(bolt)) g.FillPath(b, CrescentPath());
+                using (var b = new SolidBrush(Cream)) g.FillPath(b, CrescentPath());
                 g.Restore(gs);
-                Color starColor = enabled ? Col.Lerp(bolt, Color.White, 0.15f) : bolt;
-                using (var b = new SolidBrush(starColor)) g.FillPath(b, StarPath(66, 62, 8));
+
+                // 奶油四角星
+                using (var b = new SolidBrush(Cream)) g.FillPath(b, StarPath(66, 62, 8));
             }
             return bmp;
+        }
+
+        /// <summary>主糖果色（镜像 wpf/Themes/Mode.*.xaml AccentPrimaryColor）。</summary>
+        private static Color CandyColor(PerformancePreset mode)
+        {
+            if (mode == PerformancePreset.Competitive) return Color.FromArgb(255, 138, 92);   // 蜜桃橙 #FF8A5C
+            if (mode == PerformancePreset.Custom) return Color.FromArgb(230, 184, 76);        // 奶油金 #E6B84C
+            return Color.FromArgb(139, 124, 246);                                             // 棉花糖紫 #8B7CF6
+        }
+
+        /// <summary>糖果浅档（镜像 AccentSecondaryColor，渐变亮端）。</summary>
+        private static Color CandyLight(PerformancePreset mode)
+        {
+            if (mode == PerformancePreset.Competitive) return Color.FromArgb(255, 160, 122);  // #FFA07A
+            if (mode == PerformancePreset.Custom) return Color.FromArgb(232, 201, 122);       // #E8C97A
+            return Color.FromArgb(167, 139, 250);                                             // #A78BFA
         }
 
         private static GraphicsPath Squircle(float x, float y, float w, float h, float r)

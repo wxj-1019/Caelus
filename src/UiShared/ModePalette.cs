@@ -1,8 +1,9 @@
 // @author zenjiro 18967498922@163.com
-// 文件用途 驾驶舱模式氛围色板：Standard 紫罗兰 / Competitive 红 / Custom 金（Aurora 规格 §3.2/§4.3）
-// 同步 wpf/Themes/Mode.*.xaml 的 AuroraPrimary/AuroraSecondary/ModeAccentOnDark/ModeAccentOnLight。
+// 文件用途 模式氛围色板读取：从 wpf/Themes/Mode.*.xaml 提取（XAML 是唯一事实源，
+//           旧硬编码曾与主题分叉——cyan/red 巡航战备时代遗留，已删除）
 
 using System;
+using System.IO;
 
 namespace CaelusApp
 {
@@ -23,40 +24,39 @@ namespace CaelusApp
 
     internal static class ModePalette
     {
-        private static readonly ModeColors standard = new ModeColors
+        private static string ModeFile(AppMode mode)
         {
-            // Aurora：紫罗兰主光晕 + 青色 Accent（Mode.Standard.xaml）
-            AmbientPrimary = "#5B3BE8",
-            AmbientSecondary = "#2563EB",
-            ModeAccentOnDark = "#67E8F9",
-            ModeAccentOnLight = "#0E7490"
-        };
+            string name = mode == AppMode.Competitive ? "Mode.Competitive.xaml"
+                : (mode == AppMode.Custom ? "Mode.Custom.xaml" : "Mode.Standard.xaml");
+            // 与 Palette 相同的仓库根定位：向上找 src/Ui
+            string dir = AppDomain.CurrentDomain.BaseDirectory;
+            for (int depth = 0; depth < 6 && !string.IsNullOrEmpty(dir); depth++)
+            {
+                string candidate = Path.Combine(dir, "src");
+                if (Directory.Exists(candidate) && Directory.Exists(Path.Combine(candidate, "Ui")))
+                    return Path.Combine(dir, "wpf", "Themes", name);
+                DirectoryInfo parent = Directory.GetParent(dir.TrimEnd(Path.DirectorySeparatorChar));
+                if (parent == null) break;
+                dir = parent.FullName;
+            }
+            return null;
+        }
 
-        private static readonly ModeColors competitive = new ModeColors
-        {
-            // Aurora：战备红主光晕 + 橙红辅光晕 + 粉红 Accent（Mode.Competitive.xaml）
-            AmbientPrimary = "#E11D48",
-            AmbientSecondary = "#F97316",
-            ModeAccentOnDark = "#FB7185",
-            // 注：原规格 #DC2626 对浅底 #F5F7F9 对比度仅 4.497，未达 AA；
-            // 同红相加深至 #CC2020（对比度 5.15），规格 §4.3 表已同步。
-            ModeAccentOnLight = "#CC2020"
-        };
-
-        private static readonly ModeColors custom = new ModeColors
-        {
-            // Aurora：工程金主光晕 + 紫罗兰辅光晕 + 金黄 Accent（Mode.Custom.xaml）
-            AmbientPrimary = "#D4A847",
-            AmbientSecondary = "#7C3AED",
-            ModeAccentOnDark = "#E9C46A",
-            ModeAccentOnLight = "#8A5A18"
-        };
-
+        /// <summary>从模式 XAML 实时提取色板；XAML 缺失时返回空值（调用方测试跳过）。</summary>
         public static ModeColors For(AppMode mode)
         {
-            if (mode == AppMode.Competitive) return competitive;
-            if (mode == AppMode.Custom) return custom;
-            return standard;
+            var c = new ModeColors();
+            string path = ModeFile(mode);
+            if (path == null || !File.Exists(path)) return c;
+            string text;
+            try { text = File.ReadAllText(path); }
+            catch { return c; }
+
+            c.AmbientPrimary = ThemeContract.ExtractColorValue(text, "AuroraPrimaryColor");
+            c.AmbientSecondary = ThemeContract.ExtractColorValue(text, "AuroraSecondaryColor");
+            c.ModeAccentOnDark = ThemeContract.ExtractColorValue(text, "ModeAccentOnDarkColor");
+            c.ModeAccentOnLight = ThemeContract.ExtractColorValue(text, "ModeAccentOnLightColor");
+            return c;
         }
 
         public static string DisplayName(AppMode mode)

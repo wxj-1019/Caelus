@@ -59,5 +59,24 @@ namespace CaelusApp
                 if (!have.Contains(key)) missing.Add(key);
             return missing.ToArray();
         }
+
+        private static readonly Regex ColorValue =
+            new Regex("#[0-9A-Fa-f]{6,8}", RegexOptions.CultureInvariant);
+
+        /// <summary>从 XAML 文本提取指定 key 的颜色值（#RRGGBB 或 #AARRGGBB）。
+        /// 行级扫描：<Color x:Key="K">VALUE</Color> 与 <SolidColorBrush x:Key="K" Color="VALUE"/>
+        /// 都按行解析；找不到返回 null。XAML 是唯一事实源，禁止再硬编码色板副本。</summary>
+        public static string ExtractColorValue(string xamlText, string key)
+        {
+            if (string.IsNullOrEmpty(xamlText)) return null;
+            string[] lines = xamlText.Split('\n');
+            foreach (string line in lines)
+            {
+                if (line.IndexOf("x:Key=\"" + key + "\"", StringComparison.Ordinal) < 0) continue;
+                Match m = ColorValue.Match(line);
+                return m.Success ? m.Value : null;
+            }
+            return null;
+        }
     }
 }

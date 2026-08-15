@@ -1,5 +1,9 @@
 // @author zenjiro 18967498922@163.com
-// 文件用途 新 UI 的颜色 Token：语义色与中性色，深浅双主题（规格 §3.1）
+// 文件用途 新 UI 的颜色 Token 读取：从 wpf/Themes XAML 提取（XAML 是唯一事实源，
+//           不再维护硬编码副本——旧硬编码曾与实际主题分叉，测试给虚假信心）
+
+using System;
+using System.IO;
 
 namespace CaelusApp
 {
@@ -28,43 +32,55 @@ namespace CaelusApp
 
     internal static class Palette
     {
-        private static readonly ThemeColors light = new ThemeColors
+        /// <summary>定位仓库根（向上找 src/Ui），找不到返回 null。</summary>
+        private static string FindRepoRoot()
         {
-            Success = "#2F9E5F",
-            Warning = "#D97706",
-            Danger = "#DC2626",
-            Info = "#2563EB",
-            Brand = "#D4A847",
-            Background = "#F5F7F9",
-            Surface = "#FFFFFF",
-            SurfaceRaised = "#FAFBFC",
-            Border = "#D8E0E6",
-            BorderSubtle = "#E8EDF1",
-            TextPrimary = "#141F29",
-            TextSecondary = "#61727E",
-            TextTertiary = "#848F96"
-        };
+            string dir = AppDomain.CurrentDomain.BaseDirectory;
+            for (int depth = 0; depth < 6 && !string.IsNullOrEmpty(dir); depth++)
+            {
+                string candidate = Path.Combine(dir, "src");
+                if (Directory.Exists(candidate) && Directory.Exists(Path.Combine(candidate, "Ui")))
+                    return dir;
+                DirectoryInfo parent = Directory.GetParent(dir.TrimEnd(Path.DirectorySeparatorChar));
+                if (parent == null) break;
+                dir = parent.FullName;
+            }
+            return null;
+        }
 
-        private static readonly ThemeColors dark = new ThemeColors
+        private static string ReadTone(UiTone tone, out string text)
         {
-            Success = "#4ADE80",
-            Warning = "#FBBF24",
-            Danger = "#F87171",
-            Info = "#60A5FA",
-            Brand = "#D4A847",
-            Background = "#0F1419",
-            Surface = "#161C22",
-            SurfaceRaised = "#1A2028",
-            Border = "#26313B",
-            BorderSubtle = "#2E3A44",
-            TextPrimary = "#E8EEF2",
-            TextSecondary = "#9AA6AE",
-            TextTertiary = "#6E7D89"
-        };
+            text = null;
+            string root = FindRepoRoot();
+            if (root == null) return null;
+            string path = Path.Combine(root, "wpf", "Themes",
+                tone == UiTone.Light ? "Colors.Light.xaml" : "Colors.Dark.xaml");
+            if (!File.Exists(path)) return null;
+            text = File.ReadAllText(path);
+            return path;
+        }
 
+        /// <summary>从主题 XAML 实时提取色板；XAML 缺失时返回空值（调用方测试跳过）。</summary>
         public static ThemeColors For(UiTone tone)
         {
-            return tone == UiTone.Light ? light : dark;
+            var c = new ThemeColors();
+            string text;
+            if (ReadTone(tone, out text) == null || text == null) return c;
+
+            c.Success = ThemeContract.ExtractColorValue(text, "SuccessColor");
+            c.Warning = ThemeContract.ExtractColorValue(text, "WarningColor");
+            c.Danger = ThemeContract.ExtractColorValue(text, "DangerColor");
+            c.Info = ThemeContract.ExtractColorValue(text, "InfoColor");
+            c.Brand = ThemeContract.ExtractColorValue(text, "BrandColor");
+            c.Background = ThemeContract.ExtractColorValue(text, "BackgroundColor");
+            c.Surface = ThemeContract.ExtractColorValue(text, "Surface0Color");
+            c.SurfaceRaised = ThemeContract.ExtractColorValue(text, "Surface1Color");
+            c.Border = ThemeContract.ExtractColorValue(text, "BorderStrongBrush");
+            c.BorderSubtle = ThemeContract.ExtractColorValue(text, "BorderSubtleBrush");
+            c.TextPrimary = ThemeContract.ExtractColorValue(text, "TextPrimaryColor");
+            c.TextSecondary = ThemeContract.ExtractColorValue(text, "TextSecondaryColor");
+            c.TextTertiary = ThemeContract.ExtractColorValue(text, "TextTertiaryColor");
+            return c;
         }
     }
 }

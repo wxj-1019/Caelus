@@ -1,6 +1,8 @@
 // @author zenjiro 18967498922@163.com
 // 文件用途 WPF 设置页 ViewModel：应用偏好、维护状态与页面反馈
 
+using System;
+using System.Text;
 using System.Threading;
 using System.Windows;
 using CaelusApp.WpfHost;
@@ -137,6 +139,62 @@ namespace CaelusApp
                 Settings.Save("DevFocusModeOn", value);
                 ShowFeedback(value ? "专注模式已开启。" : "专注模式已关闭。", "Success");
             }
+        }
+
+        // —— 专注时长统计 ——
+        public string FocusStatsText
+        {
+            get
+            {
+                long sec = FocusStats.TodaySeconds(DateTime.Now);
+                int n = FocusStats.TodaySessions(DateTime.Now);
+                return Lang.F("set.focus.stats", (sec / 60).ToString(), n.ToString());
+            }
+        }
+
+        // —— 分心应用清单 ——
+        public string DistractTitle { get { return Lang.T("set.distract"); } }
+        public string DistractNote { get { return Lang.T("set.distract.n"); } }
+        public string DistractInitial { get { return Settings.LoadStr("DevFocusDistractList", ""); } }
+        public void SaveDistract(string text)
+        {
+            Settings.SaveStr("DevFocusDistractList", text ?? "");
+            DistractCatalog.Reload();
+            ShowFeedback("分心应用清单已保存。", "Success");
+        }
+
+        // —— 开发服务守护 ——
+        public string DevSvcTitle { get { return Lang.T("set.devsvc"); } }
+        public string DevSvcNote { get { return Lang.T("set.devsvc.n"); } }
+        public string DevSvcInitial { get { return Settings.LoadStr("DevServiceList", ""); } }
+        public void SaveDevSvc(string text)
+        {
+            Settings.SaveStr("DevServiceList", text ?? "");
+            DevServiceCatalog.Reload();
+            ShowFeedback("开发服务守护清单已保存。", "Success");
+        }
+
+        // —— 开发环境体检（只读） ——
+        private string devEnvResult = "";
+        public string DevEnvTitle { get { return Lang.T("set.devenv"); } }
+        public string DevEnvNote { get { return Lang.T("set.devenv.n"); } }
+        public string DevEnvRunText { get { return Lang.T("set.devenv.run"); } }
+        public string DevEnvResult
+        {
+            get { return devEnvResult; }
+            private set { SetProperty(ref devEnvResult, value, "DevEnvResult"); }
+        }
+        /// <summary>后台线程调用：探测工具链并返回格式化结果。</summary>
+        public string RunDevEnvAudit()
+        {
+            var sb = new StringBuilder();
+            foreach (DevEnvAudit.DevEnvItem it in DevEnvAudit.Run())
+                sb.AppendLine(it.Name.PadRight(12) + it.Detail);
+            return sb.ToString().TrimEnd();
+        }
+        public void SetDevEnvResult(string text)
+        {
+            DevEnvResult = text ?? "";
         }
 
         // —— 自定义编译进程 ——

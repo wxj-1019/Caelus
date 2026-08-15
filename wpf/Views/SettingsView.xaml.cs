@@ -34,6 +34,7 @@ namespace CaelusApp.WpfHost.Views
             Motion.RiseIn(ZoneSummary, 90);
             Motion.RiseIn(ZoneApp, 140);
             Motion.RiseIn(ZoneDev, 190);
+            Motion.RiseIn(ZoneDaily, 215);
             Motion.RiseIn(ZoneMaint, 240);
             Motion.RiseIn(ZoneDanger, 290);
         }
@@ -44,6 +45,38 @@ namespace CaelusApp.WpfHost.Views
             if (vm == null || !vm.IsDevCustomEnabled) return;
             vm.SaveDevCustom(TbDevCustom.Text);
             Motion.Emphasize(PageFeedbackBanner);
+        }
+
+        private void OnDistractSave(object sender, RoutedEventArgs e)
+        {
+            SettingsViewModel vm = DataContext as SettingsViewModel;
+            if (vm == null || !vm.IsDevCustomEnabled) return;
+            vm.SaveDistract(TbDistract.Text);
+            Motion.Emphasize(PageFeedbackBanner);
+        }
+
+        private void OnDevSvcSave(object sender, RoutedEventArgs e)
+        {
+            SettingsViewModel vm = DataContext as SettingsViewModel;
+            if (vm == null || !vm.IsDevCustomEnabled) return;
+            vm.SaveDevSvc(TbDevSvc.Text);
+            Motion.Emphasize(PageFeedbackBanner);
+        }
+
+        private void OnDevEnvRun(object sender, RoutedEventArgs e)
+        {
+            SettingsViewModel vm = DataContext as SettingsViewModel;
+            if (vm == null) return;
+            // 工具链版本探测可能耗时数秒，放后台线程，完成后回 UI 线程
+            ThreadPool.QueueUserWorkItem(delegate
+            {
+                string result = vm.RunDevEnvAudit();
+                Dispatcher.BeginInvoke(new Action(delegate
+                {
+                    vm.SetDevEnvResult(result);
+                    vm.ShowFeedback("开发环境体检完成。", "Success");
+                }));
+            });
         }
 
         private void OnRestore(object sender, RoutedEventArgs e)

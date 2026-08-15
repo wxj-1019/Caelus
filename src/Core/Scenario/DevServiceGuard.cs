@@ -27,6 +27,12 @@ namespace CaelusApp
             var toNotify = new List<string>();
             lock (sync)
             {
+                long now = DateTime.UtcNow.Ticks;
+
+                // 死 PID 兜底清理：短命进程的 Stopped 事件可能丢失，否则计数会永久虚高、
+                // 最后一个实例退出也永远不触发。清理同样走 RemoveLocked（会触发通知）。
+                PruneDeadLocked(now, toNotify);
+
                 foreach (ProcessChange pc in batch.Changes)
                 {
                     if (string.IsNullOrEmpty(pc.Name) || !DevServiceCatalog.IsMatch(pc.Name)) continue;
@@ -41,28 +47,12 @@ namespace CaelusApp
                             int c;
                             counts.TryGetValue(bare, out c);
                             counts[bare] = c + 1;
-                            if (c == 0) firstSeen[bare] = DateTime.UtcNow.Ticks;
+                            if (c == 0) firstSeen[bare] = now;
                         }
                     }
                     else if (pc.Kind == ProcessChangeKind.Stopped)
                     {
-                        string existing;
-                        if (live.TryGetValue(pc.Pid, out existing))
-                        {
-                            live.Remove(pc.Pid);
-                            int c;
-                            counts.TryGetValue(existing, out c);
-                            if (c <= 1)
-                            {
-                                counts.Remove(existing);
-                                long seen;
-                                firstSeen.TryGetValue(existing, out seen);
-                                if (DateTime.UtcNow.Ticks - seen >= MinAliveTicks)
-                                    toNotify.Add(existing);
-                                firstSeen.Remove(existing);
-                            }
-                            else counts[existing] = c - 1;
-                        }
+                        RemoveLocked(pc.Pid, now, toNotify);
                     }
                 }
             }
@@ -76,6 +66,41 @@ namespace CaelusApp
                         try { handler(name); } catch { }
                     }
             }
+        }
+
+        /// <summary>锁内：清理已死亡的跟踪进程（进程不存在或已退出）。</summary>
+        private void PruneDeadLocked(long now, List<string> toNotify)
+        {
+            if (live.Count == 0) return;
+            var dead = new List<int>();
+            foreach (KeyValuePair<int, string> kv in live)
+            {
+                IntPtr h = Native.OpenProcess(Native.PROCESS_QUERY_LIMITED_INFORMATION, false, kv.Key);
+                if (h == IntPtr.Zero) { dead.Add(kv.Key); continue; }
+                try { if (!Native.StillActive(h)) dead.Add(kv.Key); }
+                finally { Native.CloseHandle(h); }
+            }
+            foreach (int pid in dead) RemoveLocked(pid, now, toNotify);
+        }
+
+        /// <summary>锁内：移除一个已退出实例，计数归零且存活够久时加入通知。</summary>
+        private void RemoveLocked(int pid, long now, List<string> toNotify)
+        {
+            string existing;
+            if (!live.TryGetValue(pid, out existing)) return;
+            live.Remove(pid);
+            int c;
+            counts.TryGetValue(existing, out c);
+            if (c <= 1)
+            {
+                counts.Remove(existing);
+                long seen;
+                firstSeen.TryGetValue(existing, out seen);
+                if (now - seen >= MinAliveTicks)
+                    toNotify.Add(existing);
+                firstSeen.Remove(existing);
+            }
+            else counts[existing] = c - 1;
         }
 
         public void Stop()

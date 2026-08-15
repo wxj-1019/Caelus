@@ -77,7 +77,6 @@ namespace CaelusApp
                         try { p.Kill(); } catch { }
                         return new DevEnvItem(exe, "(超时)", false);
                     }
-                    p.WaitForExit();
                     string version = ParseVersion(p.StandardOutput.ReadToEnd(), p.StandardError.ReadToEnd());
                     if (version.Length == 0) return new DevEnvItem(exe, "(无输出)", false);
                     return new DevEnvItem(exe, version, true);

@@ -67,3 +67,28 @@ AC：
 | Modify | tests/SelfTests.cs + 相关测试文件 | 注册测试 |
 | Create | tests/SelfTests.DevService.cs | REQ-2 测试 |
 | Modify | tests/SelfTests.ContentionLab.cs | REQ-3 台架 |
+
+---
+
+## 追加（2026-08-15 第二批）
+
+### REQ-4 专注时长统计
+
+- REQ-4.1 新增 FocusStats：累计「开发专注掌权时长」与「会话次数」，按日历天归零，持久化到注册表
+- REQ-4.2 DevFocus 在 Grant 记起点、Suspend 把本次掌权时长计入 FocusStats
+- REQ-4.3 设置页开发模式下显示「今日开发专注：X 分钟 · Y 次会话」
+
+AC：
+- GIVEN 同一天记录 10s + 5s WHEN TodaySeconds THEN 15，TodaySessions THEN 2
+- GIVEN 跨天再记录 5s WHEN TodaySeconds THEN 5（归零重计），TodaySessions THEN 1
+- GIVEN DevFocus 专注开→关 WHEN 会话 THEN TodaySessions 递增
+
+### REQ-5 开发环境体检
+
+- REQ-5.1 新增 DevEnvAudit：只读检测开发工具链版本（dotnet/node/npm/git/python/java/cargo/go）与 Windows 开发者模式
+- REQ-5.2 探测用固定参数数组起进程，3 秒超时；未安装/超时记「(未安装)」
+- REQ-5.3 设置页开发模式新增「开发环境体检」区：检测按钮 + 只读结果列表
+
+AC：
+- GIVEN Run() WHEN 完成 THEN 返回稳定顺序的工具名列表（dotnet 第一、node 第二、git 第三…），每项 Name/Detail 非空，Found 与 Detail 一致
+- GIVEN 版本输出到 stderr（python/java 常见）WHEN ParseVersion(stdout, stderr) THEN 取首个非空行

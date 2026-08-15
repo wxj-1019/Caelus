@@ -899,6 +899,10 @@ namespace CaelusApp
             test("开发服务：同名多实例未归零不触发", TestDevServiceGuardNoFireWhileOthersAlive);
             test("开发服务：注册服务在压制扫描中豁免", TestDevServiceExemptFromSuppression);
             test("编译台架：提速百分比计算", TestBuildProbeSpeedupPct);
+            test("专注时长：累计与跨天归零", TestFocusStatsAccumulateAndReset);
+            test("专注时长：专注开关往返计入会话", TestDevFocusRecordsFocusStats);
+            test("开发环境：版本输出解析", TestDevEnvParseVersion);
+            test("开发环境：工具链名录顺序与结构", TestDevEnvAuditNames);
             test("日常优化：家族双校验防同名误伤", TestDailyCatalogMatch);
             test("日常优化：电池供电激活与市电解除", TestDailyCareBatteryActivates);
             test("日常优化：家族进程无可见窗口不激活", TestDailyCareNoWindowNoActivate);

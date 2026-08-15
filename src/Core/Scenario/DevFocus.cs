@@ -22,6 +22,7 @@ namespace CaelusApp
         private bool quietApplied;
         private Timer reconcileTimer;
         private long sessionStartTicks;
+        private long grantStartTicks;
         private readonly Dictionary<int, uint> ideBoosted = new Dictionary<int, uint>();
         private readonly Dictionary<int, long> ideBoostedCreation = new Dictionary<int, long>();
         private readonly Dictionary<int, int> ideBoostedIo = new Dictionary<int, int>();
@@ -211,6 +212,7 @@ namespace CaelusApp
             {
                 if (granted) return;
                 granted = true;
+                grantStartTicks = DateTime.UtcNow.Ticks;
             }
             try
             {
@@ -252,13 +254,16 @@ namespace CaelusApp
         public override void Suspend()
         {
             bool wasQuiet;
+            long elapsed = 0;
             lock (sync)
             {
                 if (!granted) return;
                 granted = false;
                 wasQuiet = quietApplied;
                 quietApplied = false;
+                elapsed = DateTime.UtcNow.Ticks - grantStartTicks;
             }
+            if (elapsed > 0) FocusStats.RecordSession(elapsed);
             try
             {
                 StopReconcileTimer();

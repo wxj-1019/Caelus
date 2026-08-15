@@ -80,6 +80,13 @@ namespace CaelusApp
             MakeAutoCard(scroll, 6, sy, ScrollContentW, 76, Lang.T("set.focus"), Lang.T("set.focus.n"), swFocus, out cardH);
             sy += cardH + 8;
 
+            // 今日专注时长统计（构建时快照，重启后刷新）
+            long focusSec = FocusStats.TodaySeconds(DateTime.Now);
+            int focusN = FocusStats.TodaySessions(DateTime.Now);
+            CardLabel(scroll, Lang.F("set.focus.stats", (focusSec / 60).ToString(), focusN.ToString()),
+                14, sy + 4, ScrollContentW - 28, 18, 8f, false, Theme.Dim);
+            sy += 26;
+
             CardLabel(scroll, Lang.T("set.distract"), 14, sy + 6, ScrollContentW - 28, 18, 8f, true, Theme.Fg);
             var tbDistract = Theme.MakeTextBox(Theme.S(14), Theme.S(sy + 26), Theme.S(ScrollContentW - 110));
             tbDistract.Text = Settings.LoadStr("DevFocusDistractList", "");
@@ -133,6 +140,37 @@ namespace CaelusApp
             scroll.Controls.Add(btnDevSvcSave);
             CardLabel(scroll, Lang.T("set.devsvc.n"), 14, sy + 76, ScrollContentW - 28, 32, 7.4f, false, Theme.Dim);
             sy += 114;
+
+            // 开发环境体检（只读）
+            CardLabel(scroll, Lang.T("set.devenv"), 14, sy + 6, ScrollContentW - 28, 18, 8f, true, Theme.Fg);
+            CardLabel(scroll, Lang.T("set.devenv.n"), 14, sy + 26, ScrollContentW - 28, 16, 7.4f, false, Theme.Dim);
+            var tbDevEnv = Theme.MakeTextBox(Theme.S(14), Theme.S(sy + 44), Theme.S(ScrollContentW - 110));
+            tbDevEnv.Text = "";
+            tbDevEnv.Height = Theme.S(76);
+            tbDevEnv.Multiline = true;
+            tbDevEnv.ReadOnly = true;
+            tbDevEnv.ScrollBars = ScrollBars.Vertical;
+            tbDevEnv.ForeColor = Theme.Fg;
+            tbDevEnv.BackColor = Theme.Inset;
+            scroll.Controls.Add(tbDevEnv);
+            var btnDevEnv = new PillButton(Lang.T("set.devenv.run"), BtnKind.Normal);
+            btnDevEnv.Bg = Theme.Card;
+            btnDevEnv.Size = new Size(Theme.S(80), Theme.S(30));
+            btnDevEnv.Location = new Point(Theme.S(ScrollContentW - 96), Theme.S(sy + 46));
+            btnDevEnv.Click += delegate
+            {
+                Cursor = Cursors.WaitCursor;
+                try
+                {
+                    var sb = new System.Text.StringBuilder();
+                    foreach (DevEnvAudit.DevEnvItem it in DevEnvAudit.Run())
+                        sb.AppendLine(it.Name.PadRight(12) + it.Detail);
+                    tbDevEnv.Text = sb.ToString();
+                }
+                finally { Cursor = Cursors.Default; }
+            };
+            scroll.Controls.Add(btnDevEnv);
+            sy += 128;
 
             sy += 10;
             Section(scroll, Lang.T("sec.daily"), 6, sy); sy += 24;

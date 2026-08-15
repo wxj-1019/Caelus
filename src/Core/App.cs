@@ -7,7 +7,7 @@ namespace CaelusApp
     internal static class App
     {
         public const string DisplayName = "CAELUS";
-        public const string Version = "1.7.0";
+        public const string Version = "1.8.0";
         public const string Author = "zenjiro";
         public const string AuthorEmail = "18967498922@163.com";
         public const string WeChat = "";

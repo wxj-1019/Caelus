@@ -42,7 +42,7 @@
   <SolidColorBrush x:Key="OnAccentBrush" Color="#1D1D1F"/>
 
   <Color x:Key="ModeAccentOnDarkColor">#F2A33C</Color>
-  <Color x:Key="ModeAccentOnLightColor">#C5740A</Color>
+  <Color x:Key="ModeAccentOnLightColor">#A86200</Color>
   <SolidColorBrush x:Key="ModeAccentOnDarkBrush" Color="{StaticResource ModeAccentOnDarkColor}"/>
   <SolidColorBrush x:Key="ModeAccentOnLightBrush" Color="{StaticResource ModeAccentOnLightColor}"/>
   <SolidColorBrush x:Key="ModeAccentSoftBrush" Color="#16E8890C"/>

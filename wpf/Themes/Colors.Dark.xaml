@@ -32,7 +32,7 @@
   <!-- 文字：排版驱动层级 -->
   <Color x:Key="TextPrimaryColor">#EDEDF0</Color>
   <Color x:Key="TextSecondaryColor">#9A9AA2</Color>
-  <Color x:Key="TextTertiaryColor">#62626B</Color>
+  <Color x:Key="TextTertiaryColor">#86868B</Color>
   <Color x:Key="ButtonSheenColor">#2EFFFFFF</Color>
 
   <!-- 画刷 -->

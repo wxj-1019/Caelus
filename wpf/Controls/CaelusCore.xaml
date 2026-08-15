@@ -3,7 +3,7 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              Width="100" Height="100" IsHitTestVisible="False">
   <Grid>
-    <!-- 外虚线环 + 顶点 Accent 亮点（极简 Linear：静态几何，无辉光无旋转） -->
+    <!-- 外虚线环 + 顶点 Accent 亮点（棉花糖天空：静态几何 + 软糯糖果色） -->
     <Grid x:Name="RingOuter">
       <Ellipse Width="86" Height="86" Stroke="{DynamicResource BorderStrongBrush}"
                StrokeThickness="1" StrokeDashArray="3 7"/>

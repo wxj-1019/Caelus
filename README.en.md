@@ -1,8 +1,10 @@
 <div align="center">
 
-<img src="assets/banner.svg" alt="CAELUS — clear skies for your game" width="960">
+<img src="docs/icon.png" width="144" alt="CAELUS">
 
-**A small Windows tool that hands your system's resources to the game while you play.**
+# CAELUS
+
+**Clear skies for your game** — a small Windows tool that hands your system's resources to the game while you play.
 
 [![Platform](https://img.shields.io/badge/platform-Windows%2010%2F11-%235E5CE6)](https://github.com/wxj-1019/Caelus)
 [![Language](https://img.shields.io/badge/language-C%23%20.NET%20Framework%204.x-%237A78F0)](https://github.com/wxj-1019/Caelus)

@@ -1,8 +1,10 @@
 <div align="center">
 
-<img src="assets/banner.svg" alt="CAELUS —— 为游戏腾出天空" width="960">
+<img src="docs/icon.png" width="144" alt="CAELUS">
 
-**打游戏时把系统资源让给游戏的 Windows 小工具。**
+# CAELUS
+
+**为游戏腾出天空** —— 打游戏时把系统资源让给游戏的 Windows 小工具。
 
 [![平台](https://img.shields.io/badge/平台-Windows%2010%2F11-%235E5CE6)](https://github.com/wxj-1019/Caelus)
 [![语言](https://img.shields.io/badge/语言-C%23%20.NET%20Framework%204.x-%237A78F0)](https://github.com/wxj-1019/Caelus)

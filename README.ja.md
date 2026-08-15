@@ -1,8 +1,10 @@
 <div align="center">
 
-<img src="assets/banner.svg" alt="CAELUS — ゲームに空を譲る" width="960">
+<img src="docs/icon.png" width="144" alt="CAELUS">
 
-**ゲーム中、PC の性能をゲームに回す Windows 用の小さなツール**
+# CAELUS
+
+**ゲームに空を譲る** — ゲーム中、PC の性能をゲームに回す Windows 用の小さなツール
 
 [![対応](https://img.shields.io/badge/対応-Windows%2010%2F11-%235E5CE6)](https://github.com/wxj-1019/Caelus)
 [![言語](https://img.shields.io/badge/言語-C%23%20.NET%20Framework%204.x-%237A78F0)](https://github.com/wxj-1019/Caelus)

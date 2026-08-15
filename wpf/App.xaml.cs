@@ -60,31 +60,37 @@ namespace CaelusApp.WpfHost
             ThemeManager.Apply(this, tone, initial);
             ThemeManager.TryApplyUserTheme(this);
             Paths.Init();
-            // 棉花糖启动屏（主线程显示，保证可见）：先强制首帧渲染，
-            // 再把 GameMode 移到后台线程并泵送消息循环，让加载动画保持滚动。
+            // 棉花糖启动屏：强制首帧渲染后立即把消息循环还给调度器，
+            // 启动动画全速滚动；GameMode 在后台线程加载，完成后回主线程
+            // 分块构建主窗口（边构建边泵送），全部就绪才 Show 并淡出启动屏。
             var splash = new SplashWindow();
             splash.Show();
             splash.UpdateLayout();
             Dispatcher.Invoke(DispatcherPriority.Render, new Action(delegate { }));
 
             var gameCore = new SuppressionCore();
-            GameMode gameMode = null;
-            var gmDone = new ManualResetEvent(false);
             var gmThread = new Thread(delegate ()
             {
+                GameMode gameMode = null;
                 try { gameMode = new GameMode(Paths.Data, gameCore); }
                 catch { }
-                gmDone.Set();
+                Dispatcher.BeginInvoke(DispatcherPriority.Background, new Action(delegate ()
+                {
+                    CaelusApp.WpfHost.MainWindow.ProgressPump = delegate
+                    {
+                        Dispatcher.Invoke(DispatcherPriority.Background, new Action(delegate { }));
+                    };
+                    MainWindow w = new MainWindow(gameMode);
+                    CaelusApp.WpfHost.MainWindow.ProgressPump = null;
+                    w.ApplyPersistedMode(initial);
+                    w.Show();
+                    // 启动屏先 Show，会成为 Application.MainWindow；归位给真正的主窗口
+                    MainWindow = w;
+                    splash.CloseAnimated();
+                }));
             });
             gmThread.IsBackground = true;
             gmThread.Start();
-            while (!gmDone.WaitOne(25))
-                Dispatcher.Invoke(DispatcherPriority.Background, new Action(delegate { }));
-
-            MainWindow w = new MainWindow(gameMode);
-            w.ApplyPersistedMode(initial);
-            w.Show();
-            splash.Close();
             // 托盘图标延迟到消息循环运行后创建（OnStartup 阶段 Dispatcher 尚未泵消息，
             // 此时创建的 NotifyIcon 不会在通知区域显示）
             Dispatcher.BeginInvoke(new Action(CreateTray));

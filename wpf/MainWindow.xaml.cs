@@ -42,9 +42,19 @@ namespace CaelusApp.WpfHost
 
         public MainWindow() : this(null) { }
 
+        // 启动期间由 App 注入的分块泵送钩子：构建主窗口时让启动屏动画保持滚动
+        internal static Action ProgressPump;
+
+        private static void Pump()
+        {
+            Action p = ProgressPump;
+            if (p != null) p();
+        }
+
         internal MainWindow(GameMode gm)
         {
             InitializeComponent();
+            Pump();
             ModePicker.ItemsSource = new System.Collections.Generic.List<string>
             {
                 "常规", "竞技", "自定义"
@@ -52,23 +62,28 @@ namespace CaelusApp.WpfHost
             source = new SampleOverviewSource();
             vm = new OverviewViewModel(source);
             vm.Refresh();
+            Pump();
             gameMode = gm ?? new GameMode(Paths.Data, new SuppressionCore());
             policyVm = new PolicyPageViewModel(gameMode);
             libraryVm = new LibraryViewModel(gameMode);
             libraryVm.Refresh();
             logVm = new LogViewModel();
             logVm.Refresh();
+            Pump();
             aboutVm = new AboutViewModel();
             tamer = new Tamer(new SuppressionCore());
             settingsVm = new SettingsViewModel(gameMode, tamer);
             antiCheatVm = new AntiCheatViewModel(tamer);
             antiCheatVm.BuildCards();
+            Pump();
             environmentVm = new EnvironmentViewModel(gameMode);
             environmentVm.BuildToggles();
+            Pump();
             graphicsVm = new GraphicsViewModel(gameMode);
             auditVm = new AuditViewModel();
             whitelistVm = new WhitelistViewModel(gameMode);
 
+            Pump();
             overviewView = new OverviewView { DataContext = vm };
             policyView = new PolicyView { DataContext = policyVm };
             libraryView = new LibraryView { DataContext = libraryVm };
@@ -80,6 +95,7 @@ namespace CaelusApp.WpfHost
             graphicsView = new GraphicsView { DataContext = graphicsVm };
             auditView = new AuditView { DataContext = auditVm };
             whitelistView = new WhitelistView { DataContext = whitelistVm };
+            Pump();
 
             DataContext = vm;
             PageHost.Content = overviewView;

@@ -8,7 +8,7 @@
 
 [![対応](https://img.shields.io/badge/対応-Windows%2010%2F11-%235E5CE6)](https://github.com/wxj-1019/Caelus)
 [![言語](https://img.shields.io/badge/言語-C%23%20.NET%20Framework%204.x-%237A78F0)](https://github.com/wxj-1019/Caelus)
-[![自己テスト](https://img.shields.io/badge/自己テスト-213%20件%20合格-%233DD68C)](https://github.com/wxj-1019/Caelus)
+[![自己テスト](https://img.shields.io/badge/自己テスト-225%20件%20合格-%233DD68C)](https://github.com/wxj-1019/Caelus)
 [![プライバシー](https://img.shields.io/badge/プライバシー-完全ローカル%20%C2%B7%20送信なし-%233DD68C)](https://github.com/wxj-1019/Caelus)
 [![ライセンス](https://img.shields.io/badge/ライセンス-販売禁止-%23E5A13D)](LICENSE)
 

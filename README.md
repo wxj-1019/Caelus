@@ -9,7 +9,7 @@
 [![平台](https://img.shields.io/badge/平台-Windows%2010%2F11-%235E5CE6)](https://github.com/wxj-1019/Caelus)
 [![语言](https://img.shields.io/badge/语言-C%23%20.NET%20Framework%204.x-%237A78F0)](https://github.com/wxj-1019/Caelus)
 [![界面](https://img.shields.io/badge/界面-WinForms%20%C2%B7%20WPF-%237A78F0)](https://github.com/wxj-1019/Caelus)
-[![自测](https://img.shields.io/badge/自测-213%20项%200%20失败-%233DD68C)](https://github.com/wxj-1019/Caelus)
+[![自测](https://img.shields.io/badge/自测-225%20项%200%20失败-%233DD68C)](https://github.com/wxj-1019/Caelus)
 [![隐私](https://img.shields.io/badge/隐私-纯本地%20%C2%B7%20零上传-%233DD68C)](https://github.com/wxj-1019/Caelus)
 [![许可](https://img.shields.io/badge/许可-禁止销售-%23E5A13D)](LICENSE)
 
@@ -41,7 +41,7 @@ Caelus 不是给电脑"凭空变出性能"的，也不会让 CPU、显卡突破�
 | ⚖️ **三档策略** | 常规（轻压）/ 竞技（全压）/ 自定义（逐项选），反作弊与对局宿主无条件豁免 |
 | 🔄 **恢复靠记录** | 每个被动过的进程都存下动之前的状态（PID + 创建时间校验），退出还原；崩溃了下次启动接着还原 |
 | 🔒 **纯本地** | 不装服务、不上传数据、不注入游戏、不改游戏内存与文件；写过的设置逐项读回核对 |
-| 🧪 **实测说话** | 内置 213 项自测 + 真机台架数据：压制收益、中断分布、NVIDIA 写入全部有数据支撑 |
+| 🧪 **实测说话** | 内置 225 项自测 + 真机台架数据：压制收益、中断分布、NVIDIA 写入全部有数据支撑 |
 
 ---
 
@@ -102,7 +102,7 @@ Caelus 不是给电脑"凭空变出性能"的，也不会让 CPU、显卡突破�
 ```cmd
 build.cmd              rem 生成图标 + 编译带管理员清单的 Caelus.exe
 dev.cmd                rem 结束旧实例 → 构建 Caelus.dev.exe → 启动（开发循环）
-dev.cmd test           rem 构建含自测的版本，跑完 213 项自测并输出结果摘要
+dev.cmd test           rem 构建含自测的版本，跑完 225 项自测并输出结果摘要
 ```
 
 - 双击 `Caelus.exe` 后程序进入托盘；调整其它进程和系统设置需要管理员权限
@@ -189,7 +189,7 @@ tools/PerfLab  独立回归守卫台架（真实压制内核上的多进程 A/B 
 
 ## 验证与实测
 
-内置自测当前包含 **213 项**，覆盖目标识别与会话保护、压制与恢复（含 PID 复用、崩溃唤醒）、CPU 拓扑与分区、档案存储的格式兼容与未知版本保护、游戏扫描与加速器过滤、学习机制的触发边界、系统体检阈值、界面绘制与场景仲裁。机器缺少对应能力时会记录 `SKIP`，不会算作 `PASS`。
+内置自测当前包含 **225 项**，覆盖目标识别与会话保护、压制与恢复（含 PID 复用、崩溃唤醒）、CPU 拓扑与分区、档案存储的格式兼容与未知版本保护、游戏扫描与加速器过滤、学习机制的触发边界、系统体检阈值、界面绘制与场景仲裁。机器缺少对应能力时会记录 `SKIP`，不会算作 `PASS`。
 
 同核心争抢测试是人为把两个计算进程放在同一核心后冻结竞争者，它只能证明释放 CPU 时间后吞吐能够恢复，不是实际游戏 FPS 或 1% Low 证明。
 

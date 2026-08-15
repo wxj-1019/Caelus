@@ -8,7 +8,7 @@
 
 [![Platform](https://img.shields.io/badge/platform-Windows%2010%2F11-%235E5CE6)](https://github.com/wxj-1019/Caelus)
 [![Language](https://img.shields.io/badge/language-C%23%20.NET%20Framework%204.x-%237A78F0)](https://github.com/wxj-1019/Caelus)
-[![Self-tests](https://img.shields.io/badge/self%2Dtests-213%20passing-%233DD68C)](https://github.com/wxj-1019/Caelus)
+[![Self-tests](https://img.shields.io/badge/self%2Dtests-225%20passing-%233DD68C)](https://github.com/wxj-1019/Caelus)
 [![Privacy](https://img.shields.io/badge/privacy-local%20only%20%C2%B7%20zero%20upload-%233DD68C)](https://github.com/wxj-1019/Caelus)
 [![License](https://img.shields.io/badge/license-resale%20forbidden-%23E5A13D)](LICENSE)
 

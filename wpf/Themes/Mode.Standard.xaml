@@ -2,19 +2,20 @@
                     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
                     xmlns:sys="clr-namespace:System;assembly=mscorlib">
 
-  <!-- 极简 Linear · 常规模式 · 单一强调色（靛蓝） =====
-       保留全部 key（无障碍覆盖层与资源查找依赖）；Aurora 光晕置 0，强调色收敛为单色。 -->
+  <!-- 棉花糖天空 · 常规模式 · 棉花糖紫（糖果薰衣草） =====
+       大胆软糯：亮糖果色作填充/图标，深可可字落在糖果底上保证对比度；
+       Aurora 光晕回填为低透明软光，营造棉花糖云朵氛围。 -->
 
-  <!-- Aurora 光晕（极简路线不显示环境光；保留 key，透明度置 0） -->
-  <Color x:Key="AuroraPrimaryColor">#5E5CE6</Color>
-  <Color x:Key="AuroraPrimaryFadeColor">#005E5CE6</Color>
-  <Color x:Key="AuroraSecondaryColor">#5E5CE6</Color>
-  <Color x:Key="AuroraSecondaryFadeColor">#005E5CE6</Color>
-  <Color x:Key="AuroraTertiaryColor">#5E5CE6</Color>
-  <Color x:Key="AuroraTertiaryFadeColor">#005E5CE6</Color>
-  <sys:Double x:Key="AuroraPrimaryOpacity">0</sys:Double>
-  <sys:Double x:Key="AuroraSecondaryOpacity">0</sys:Double>
-  <sys:Double x:Key="AuroraTertiaryOpacity">0</sys:Double>
+  <!-- 棉花糖氛围光晕（软糯低透明，云朵感） -->
+  <Color x:Key="AuroraPrimaryColor">#8B7CF6</Color>
+  <Color x:Key="AuroraPrimaryFadeColor">#008B7CF6</Color>
+  <Color x:Key="AuroraSecondaryColor">#A78BFA</Color>
+  <Color x:Key="AuroraSecondaryFadeColor">#00A78BFA</Color>
+  <Color x:Key="AuroraTertiaryColor">#C7B8F0</Color>
+  <Color x:Key="AuroraTertiaryFadeColor">#00C7B8F0</Color>
+  <sys:Double x:Key="AuroraPrimaryOpacity">0.18</sys:Double>
+  <sys:Double x:Key="AuroraSecondaryOpacity">0.12</sys:Double>
+  <sys:Double x:Key="AuroraTertiaryOpacity">0.08</sys:Double>
   <sys:Double x:Key="AuroraDriftSeconds">26</sys:Double>
 
   <RadialGradientBrush x:Key="AmbientPrimaryBrush" Center="0.5,0.5" RadiusX="0.72" RadiusY="0.72">
@@ -30,29 +31,30 @@
     <GradientStop Color="{DynamicResource AuroraTertiaryFadeColor}" Offset="1"/>
   </RadialGradientBrush>
 
-  <!-- 强调色：单一靛蓝；渐变保留供进度条/Sparkline（同色系双档，不再炫彩） -->
-  <Color x:Key="AccentPrimaryColor">#5E5CE6</Color>
-  <Color x:Key="AccentSecondaryColor">#7A78F0</Color>
+  <!-- 糖果薰衣草：亮紫填充 + 浅紫渐变第二档 -->
+  <Color x:Key="AccentPrimaryColor">#8B7CF6</Color>
+  <Color x:Key="AccentSecondaryColor">#A78BFA</Color>
   <SolidColorBrush x:Key="AccentPrimaryBrush" Color="{StaticResource AccentPrimaryColor}"/>
   <SolidColorBrush x:Key="AccentSecondaryBrush" Color="{StaticResource AccentSecondaryColor}"/>
   <LinearGradientBrush x:Key="AccentGradientBrush" StartPoint="0,0" EndPoint="1,0">
     <GradientStop Color="{StaticResource AccentPrimaryColor}" Offset="0"/>
     <GradientStop Color="{StaticResource AccentSecondaryColor}" Offset="1"/>
   </LinearGradientBrush>
-  <SolidColorBrush x:Key="AccentSoftBrush" Color="#145E5CE6"/>
-  <SolidColorBrush x:Key="AccentEdgeBrush" Color="#405E5CE6"/>
-  <Color x:Key="AccentGlowColor">#5E5CE6</Color>
-  <SolidColorBrush x:Key="OnAccentBrush" Color="#FFFFFF"/>
+  <SolidColorBrush x:Key="AccentSoftBrush" Color="#168B7CF6"/>
+  <SolidColorBrush x:Key="AccentEdgeBrush" Color="#408B7CF6"/>
+  <Color x:Key="AccentGlowColor">#8B7CF6</Color>
+  <!-- 棉花糖式深可可字落于亮糖果底（对比度 4.80） -->
+  <SolidColorBrush x:Key="OnAccentBrush" Color="#2B1F1A"/>
 
   <!-- 兼容别名层（旧 NavItem/按钮引用） -->
-  <Color x:Key="ModeAccentOnDarkColor">#7A78F0</Color>
-  <Color x:Key="ModeAccentOnLightColor">#5E5CE6</Color>
+  <Color x:Key="ModeAccentOnDarkColor">#A78BFA</Color>
+  <Color x:Key="ModeAccentOnLightColor">#6D5CE0</Color>
   <SolidColorBrush x:Key="ModeAccentOnDarkBrush" Color="{StaticResource ModeAccentOnDarkColor}"/>
   <SolidColorBrush x:Key="ModeAccentOnLightBrush" Color="{StaticResource ModeAccentOnLightColor}"/>
-  <SolidColorBrush x:Key="ModeAccentSoftBrush" Color="#145E5CE6"/>
-  <SolidColorBrush x:Key="ModeAccentEdgeBrush" Color="#405E5CE6"/>
+  <SolidColorBrush x:Key="ModeAccentSoftBrush" Color="#168B7CF6"/>
+  <SolidColorBrush x:Key="ModeAccentEdgeBrush" Color="#408B7CF6"/>
 
-  <!-- Hero 结论标题：极简路线为单色（排版驱动，不再渐变） -->
-  <SolidColorBrush x:Key="HeroTitleOnDarkBrush" Color="#7A78F0"/>
-  <SolidColorBrush x:Key="HeroTitleOnLightBrush" Color="#5E5CE6"/>
+  <!-- Hero 结论标题 -->
+  <SolidColorBrush x:Key="HeroTitleOnDarkBrush" Color="#A78BFA"/>
+  <SolidColorBrush x:Key="HeroTitleOnLightBrush" Color="#6D5CE0"/>
 </ResourceDictionary>

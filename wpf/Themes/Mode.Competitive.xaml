@@ -2,17 +2,17 @@
                     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
                     xmlns:sys="clr-namespace:System;assembly=mscorlib">
 
-  <!-- 极简 Linear · 竞技模式 · 单一强调色（克制橙） ===== -->
+  <!-- 棉花糖天空 · 竞技模式 · 蜜桃橙（糖果蜜桃） ===== -->
 
-  <Color x:Key="AuroraPrimaryColor">#E8890C</Color>
-  <Color x:Key="AuroraPrimaryFadeColor">#00E8890C</Color>
-  <Color x:Key="AuroraSecondaryColor">#E8890C</Color>
-  <Color x:Key="AuroraSecondaryFadeColor">#00E8890C</Color>
-  <Color x:Key="AuroraTertiaryColor">#E8890C</Color>
-  <Color x:Key="AuroraTertiaryFadeColor">#00E8890C</Color>
-  <sys:Double x:Key="AuroraPrimaryOpacity">0</sys:Double>
-  <sys:Double x:Key="AuroraSecondaryOpacity">0</sys:Double>
-  <sys:Double x:Key="AuroraTertiaryOpacity">0</sys:Double>
+  <Color x:Key="AuroraPrimaryColor">#FF8A5C</Color>
+  <Color x:Key="AuroraPrimaryFadeColor">#00FF8A5C</Color>
+  <Color x:Key="AuroraSecondaryColor">#FFA07A</Color>
+  <Color x:Key="AuroraSecondaryFadeColor">#00FFA07A</Color>
+  <Color x:Key="AuroraTertiaryColor">#FFC4B0</Color>
+  <Color x:Key="AuroraTertiaryFadeColor">#00FFC4B0</Color>
+  <sys:Double x:Key="AuroraPrimaryOpacity">0.16</sys:Double>
+  <sys:Double x:Key="AuroraSecondaryOpacity">0.10</sys:Double>
+  <sys:Double x:Key="AuroraTertiaryOpacity">0.06</sys:Double>
   <sys:Double x:Key="AuroraDriftSeconds">22</sys:Double>
 
   <RadialGradientBrush x:Key="AmbientPrimaryBrush" Center="0.5,0.5" RadiusX="0.72" RadiusY="0.72">
@@ -28,26 +28,27 @@
     <GradientStop Color="{DynamicResource AuroraTertiaryFadeColor}" Offset="1"/>
   </RadialGradientBrush>
 
-  <Color x:Key="AccentPrimaryColor">#E8890C</Color>
-  <Color x:Key="AccentSecondaryColor">#F2A33C</Color>
+  <Color x:Key="AccentPrimaryColor">#FF8A5C</Color>
+  <Color x:Key="AccentSecondaryColor">#FFA07A</Color>
   <SolidColorBrush x:Key="AccentPrimaryBrush" Color="{StaticResource AccentPrimaryColor}"/>
   <SolidColorBrush x:Key="AccentSecondaryBrush" Color="{StaticResource AccentSecondaryColor}"/>
   <LinearGradientBrush x:Key="AccentGradientBrush" StartPoint="0,0" EndPoint="1,0">
     <GradientStop Color="{StaticResource AccentPrimaryColor}" Offset="0"/>
     <GradientStop Color="{StaticResource AccentSecondaryColor}" Offset="1"/>
   </LinearGradientBrush>
-  <SolidColorBrush x:Key="AccentSoftBrush" Color="#16E8890C"/>
-  <SolidColorBrush x:Key="AccentEdgeBrush" Color="#44E8890C"/>
-  <Color x:Key="AccentGlowColor">#E8890C</Color>
-  <SolidColorBrush x:Key="OnAccentBrush" Color="#1D1D1F"/>
+  <SolidColorBrush x:Key="AccentSoftBrush" Color="#16FF8A5C"/>
+  <SolidColorBrush x:Key="AccentEdgeBrush" Color="#44FF8A5C"/>
+  <Color x:Key="AccentGlowColor">#FF8A5C</Color>
+  <!-- 深可可字落于亮蜜桃底（对比度 6.88） -->
+  <SolidColorBrush x:Key="OnAccentBrush" Color="#2B1F1A"/>
 
-  <Color x:Key="ModeAccentOnDarkColor">#F2A33C</Color>
-  <Color x:Key="ModeAccentOnLightColor">#A86200</Color>
+  <Color x:Key="ModeAccentOnDarkColor">#FFA07A</Color>
+  <Color x:Key="ModeAccentOnLightColor">#B84518</Color>
   <SolidColorBrush x:Key="ModeAccentOnDarkBrush" Color="{StaticResource ModeAccentOnDarkColor}"/>
   <SolidColorBrush x:Key="ModeAccentOnLightBrush" Color="{StaticResource ModeAccentOnLightColor}"/>
-  <SolidColorBrush x:Key="ModeAccentSoftBrush" Color="#16E8890C"/>
-  <SolidColorBrush x:Key="ModeAccentEdgeBrush" Color="#44E8890C"/>
+  <SolidColorBrush x:Key="ModeAccentSoftBrush" Color="#16FF8A5C"/>
+  <SolidColorBrush x:Key="ModeAccentEdgeBrush" Color="#44FF8A5C"/>
 
-  <SolidColorBrush x:Key="HeroTitleOnDarkBrush" Color="#F2A33C"/>
-  <SolidColorBrush x:Key="HeroTitleOnLightBrush" Color="#C5740A"/>
+  <SolidColorBrush x:Key="HeroTitleOnDarkBrush" Color="#FFA07A"/>
+  <SolidColorBrush x:Key="HeroTitleOnLightBrush" Color="#B84518"/>
 </ResourceDictionary>

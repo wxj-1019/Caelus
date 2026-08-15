@@ -32,8 +32,8 @@
   <sys:Double x:Key="SpaceXl">24</sys:Double>
   <sys:Double x:Key="Space2Xl">32</sys:Double>
 
-  <!-- macOS 连续圆角近似：小控件 6 / 卡片分组 10 / Hero 大卡 14 -->
-  <CornerRadius x:Key="RadiusSm">6</CornerRadius>
-  <CornerRadius x:Key="RadiusMd">10</CornerRadius>
-  <CornerRadius x:Key="RadiusLg">14</CornerRadius>
+  <!-- 棉花糖圆角：按钮药丸 12 / 卡片软糯 18 / Hero 大卡 24（软糯蓬松是关键签名） -->
+  <CornerRadius x:Key="RadiusSm">12</CornerRadius>
+  <CornerRadius x:Key="RadiusMd">18</CornerRadius>
+  <CornerRadius x:Key="RadiusLg">24</CornerRadius>
 </ResourceDictionary>

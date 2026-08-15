@@ -30,7 +30,7 @@ namespace CaelusApp.WpfHost
         {
             base.OnStartup(e);
             Motion.PolicyChanged += OnMotionPolicyChanged;
-            // 迭代测试期间的异常观测点（问题解决后评估保留）
+            // 预览宿主不因单个绑定/布局异常静默丢窗口：记日志后标记已处理，界面保持存活
             DispatcherUnhandledException += (s, ex) =>
             {
                 try
@@ -40,6 +40,7 @@ namespace CaelusApp.WpfHost
                         DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss") + " " + ex.Exception + Environment.NewLine);
                 }
                 catch { }
+                ex.Handled = true;
             };
             if (e.Args.Length >= 2 && e.Args[0] == "--wpf-shot")
             {

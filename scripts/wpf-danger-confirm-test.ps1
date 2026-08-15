@@ -1,7 +1,7 @@
-﻿# ASCII-only danger-confirm regression v2 (elevated): detects MessageBox via Win32
+# ASCII-only danger-confirm regression v2 (elevated): detects MessageBox via Win32
 # EnumWindows + GetWindowText (UIA cannot enumerate it), answers Cancel/No via WM_COMMAND.
 # NEVER confirms a destructive action.
-$resultFile = "E:\project\Caelus\docs\uia-danger-result.txt"
+$resultFile = Join-Path $PSScriptRoot '..\docs\uia-danger-result.txt'
 $log = New-Object System.Collections.Generic.List[string]
 $failures = 0
 
@@ -88,7 +88,7 @@ try {
     }
     Start-Sleep -Milliseconds 600
 
-    $proc = Start-Process -FilePath "E:\project\Caelus\wpf\bin\Release\CaelusWpf.exe" -PassThru
+    $proc = Start-Process -FilePath (Join-Path $PSScriptRoot '..\wpf\bin\Release\CaelusWpf.exe') -PassThru
     $deadline = [DateTime]::UtcNow.AddMilliseconds(15000)
     do {
         Start-Sleep -Milliseconds 250

@@ -100,6 +100,12 @@ namespace CaelusApp
                     args.Length >= 4 ? args[3] : null, args.Length >= 5 ? args[4] : null);
                 return true;
             }
+            if (args[0] == "--build-probe" && args.Length >= 2)
+            {
+                RunBuildProbe(args[1], args.Length >= 3 ? args[2] : null,
+                    args.Length >= 4 ? args[3] : null, args.Length >= 5 ? args[4] : null);
+                return true;
+            }
             if (args[0] == "--lane-live" && args.Length >= 3)
             {
                 RunLaneLive(args[1], args[2]);
@@ -886,6 +892,13 @@ namespace CaelusApp
             test("开发专注：分心应用气球每名一次、专注重开可再报", TestDevFocusDistractOnce);
             test("开发专注：IDE 目录双校验防同名误伤", TestIdeCatalogMatch);
             test("开发专注：IDE 提优 AboveNormal 与还原往返", TestDevFocusIdeBoostRestore);
+            test("开发专注：编译工具链扩展名录与运行时排除", TestBuildCatalogExpandedTools);
+            test("开发专注：数据库客户端与移动 IDE 目录双校验", TestIdeCatalogDbTools);
+            test("开发服务：名录解析与重载", TestDevServiceCatalogMatch);
+            test("开发服务：最后一个实例退出触发通知", TestDevServiceGuardNotifyOnLastStop);
+            test("开发服务：同名多实例未归零不触发", TestDevServiceGuardNoFireWhileOthersAlive);
+            test("开发服务：注册服务在压制扫描中豁免", TestDevServiceExemptFromSuppression);
+            test("编译台架：提速百分比计算", TestBuildProbeSpeedupPct);
             test("日常优化：家族双校验防同名误伤", TestDailyCatalogMatch);
             test("日常优化：电池供电激活与市电解除", TestDailyCareBatteryActivates);
             test("日常优化：家族进程无可见窗口不激活", TestDailyCareNoWindowNoActivate);

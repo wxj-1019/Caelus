@@ -1,4 +1,4 @@
-﻿// @author zenjiro 18967498922@163.com
+// @author zenjiro 18967498922@163.com
 // 文件用途 构建设置页 只放应用自身的偏好与维护工具
 
 using System;
@@ -105,6 +105,33 @@ namespace CaelusApp
             };
             scroll.Controls.Add(btnDistractSave);
             CardLabel(scroll, Lang.T("set.distract.n"), 14, sy + 76, ScrollContentW - 28, 32, 7.4f, false, Theme.Dim);
+            sy += 114;
+
+            CardLabel(scroll, Lang.T("set.devsvc"), 14, sy + 6, ScrollContentW - 28, 18, 8f, true, Theme.Fg);
+            var tbDevSvc = Theme.MakeTextBox(Theme.S(14), Theme.S(sy + 26), Theme.S(ScrollContentW - 110));
+            tbDevSvc.Text = Settings.LoadStr("DevServiceList", "");
+            tbDevSvc.Height = Theme.S(44);
+            tbDevSvc.Multiline = true;
+            tbDevSvc.ScrollBars = ScrollBars.Vertical;
+            tbDevSvc.ForeColor = Theme.Fg;
+            tbDevSvc.BackColor = Theme.Inset;
+            scroll.Controls.Add(tbDevSvc);
+            var btnDevSvcSave = new PillButton(Lang.T("set.dev.custom.save"), BtnKind.Normal);
+            btnDevSvcSave.Bg = Theme.Card;
+            btnDevSvcSave.Size = new Size(Theme.S(80), Theme.S(30));
+            btnDevSvcSave.Location = new Point(Theme.S(ScrollContentW - 96), Theme.S(sy + 30));
+            btnDevSvcSave.Click += delegate
+            {
+                Settings.SaveStr("DevServiceList", tbDevSvc.Text);
+                DevServiceCatalog.Reload();
+                btnDevSvcSave.Text = Lang.T("set.dev.custom.saved");
+                var revert3 = new System.Windows.Forms.Timer();
+                revert3.Interval = 1500;
+                revert3.Tick += (s4, e4) => { revert3.Stop(); revert3.Dispose(); btnDevSvcSave.Text = Lang.T("set.dev.custom.save"); };
+                revert3.Start();
+            };
+            scroll.Controls.Add(btnDevSvcSave);
+            CardLabel(scroll, Lang.T("set.devsvc.n"), 14, sy + 76, ScrollContentW - 28, 32, 7.4f, false, Theme.Dim);
             sy += 114;
 
             sy += 10;

@@ -1,4 +1,4 @@
-﻿// @author zenjiro 18967498922@163.com
+// @author zenjiro 18967498922@163.com
 // 文件用途 用受控争抢负载量化后台压制的真实收益 A-B-A 三段自带漂移检验
 
 using System;
@@ -303,6 +303,106 @@ namespace CaelusApp
             victim.BeginPhase();
             Thread.Sleep(seconds * 1000);
             return Summarize(victim.EndPhase());
+        }
+
+        /// <summary>编译提速百分比（纯逻辑可单测）：(基线-压制)/基线 × 100。</summary>
+        internal static double BuildProbeSpeedupPct(double baselineMedianMs, double suppressedMedianMs)
+        {
+            if (baselineMedianMs <= 0) return 0;
+            return (baselineMedianMs - suppressedMedianMs) / baselineMedianMs * 100.0;
+        }
+
+        private static void TestBuildProbeSpeedupPct()
+        {
+            Eq(true, BuildProbeSpeedupPct(10.0, 9.0) > 0);
+            Eq(true, Math.Abs(BuildProbeSpeedupPct(10.0, 10.0)) < 0.0001);
+            Eq(true, BuildProbeSpeedupPct(9.0, 10.0) < 0);
+            Eq(0.0, BuildProbeSpeedupPct(0.0, 5.0));
+        }
+
+        /// <summary>定量负载：固定工作量单线程循环，返回墙钟毫秒（模拟一次编译的 CPU 工作量）。</summary>
+        private static double TimeFixedWork(long iterations)
+        {
+            var sw = System.Diagnostics.Stopwatch.StartNew();
+            double sink = 0;
+            for (long i = 1; i <= iterations; i++) sink += 1.0 / i;
+            sw.Stop();
+            if (sink < 0) Console.Write("");
+            return sw.Elapsed.TotalMilliseconds;
+        }
+
+        /// <summary>编译提速实测：A/B 配对（放任 vs 降优先级压制），受害者=固定工作量负载。</summary>
+        private static void RunBuildProbe(string output, string workArg, string hogsArg, string roundsArg)
+        {
+            long work;
+            if (!long.TryParse(workArg ?? "", out work) || work < 1) work = 40000000L;
+            int hogs, rounds;
+            if (!int.TryParse(hogsArg ?? "", out hogs) || hogs < 1) hogs = Environment.ProcessorCount;
+            if (!int.TryParse(roundsArg ?? "", out rounds) || rounds < 1) rounds = 5;
+
+            var sb = new StringBuilder();
+            string self = Process.GetCurrentProcess().MainModule.FileName;
+            var spawned = new List<Process>();
+            var core = new SuppressionCore();
+            var baseTimes = new List<double>();
+            var supTimes = new List<double>();
+
+            sb.AppendLine("=== 编译提速实测（多轮 A/B 配对，受害者=固定工作量单线程负载）===");
+            sb.AppendLine("逻辑处理器: " + Environment.ProcessorCount + " | 抢占进程: " + hogs
+                + " | 工作量: " + work + " | 轮数: " + rounds);
+            sb.AppendLine("压制档位: 降优先级（Restrained，即 README 实测中收益的主来源）");
+            sb.AppendLine();
+
+            try
+            {
+                for (int i = 0; i < hogs; i++)
+                {
+                    var psi = new ProcessStartInfo(self, "--cpu-burn")
+                    { UseShellExecute = false, CreateNoWindow = true };
+                    spawned.Add(Process.Start(psi));
+                }
+                Thread.Sleep(1500);
+                TimeFixedWork(work / 10);   // 预热
+
+                sb.AppendLine("轮次   放任(ms)   压制(ms)");
+                for (int r = 1; r <= rounds; r++)
+                {
+                    core.ReleaseReason(SuppressReason.Background);
+                    double b = TimeFixedWork(work);
+                    baseTimes.Add(b);
+
+                    int n = Apply(core, spawned, SuppressionLevel.Restrained);
+                    Thread.Sleep(800);
+                    double s = TimeFixedWork(work);
+                    supTimes.Add(s);
+                    core.ReleaseReason(SuppressReason.Background);
+
+                    sb.AppendLine(r.ToString().PadLeft(3) + "   "
+                        + b.ToString("F0").PadLeft(9) + "   " + s.ToString("F0").PadLeft(9)
+                        + (n < hogs ? "  (仅 " + n + "/" + hogs + " 个抢占者被压)" : ""));
+                }
+
+                double medBase = Summarize(baseTimes.ToArray()).Median;
+                double medSup = Summarize(supTimes.ToArray()).Median;
+                sb.AppendLine();
+                sb.AppendLine("中位编译时间：放任 " + medBase.ToString("F1")
+                    + "ms | 压制 " + medSup.ToString("F1") + "ms");
+                sb.AppendLine("提速：" + BuildProbeSpeedupPct(medBase, medSup).ToString("F1")
+                    + "%（正=更快；合成负载，仅证压制后台能缩短 CPU 争抢下的编译墙钟，不据此外推真实项目）");
+            }
+            catch (Exception ex) { sb.AppendLine("异常: " + ex); }
+            finally
+            {
+                try { core.ReleaseReason(SuppressReason.Background); } catch { }
+                foreach (Process p in spawned)
+                {
+                    try { if (!p.HasExited) p.Kill(); } catch { }
+                    try { p.Dispose(); } catch { }
+                }
+            }
+
+            File.WriteAllText(output, sb.ToString(), Encoding.UTF8);
+            Console.Write(sb.ToString());
         }
 
     }

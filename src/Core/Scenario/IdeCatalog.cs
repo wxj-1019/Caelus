@@ -36,7 +36,14 @@ namespace CaelusApp
                 new IdeEntry("webstorm64", new[] { Path.Combine(Pf, @"JetBrains\"), Path.Combine(Local, @"Programs\") }),
                 new IdeEntry("goland64", new[] { Path.Combine(Pf, @"JetBrains\"), Path.Combine(Local, @"Programs\") }),
                 new IdeEntry("clion64", new[] { Path.Combine(Pf, @"JetBrains\"), Path.Combine(Local, @"Programs\") }),
-                new IdeEntry("pycharm64", new[] { Path.Combine(Pf, @"JetBrains\"), Path.Combine(Local, @"Programs\") })
+                new IdeEntry("pycharm64", new[] { Path.Combine(Pf, @"JetBrains\"), Path.Combine(Local, @"Programs\") }),
+                // 数据库客户端 / 移动 IDE（进程名 + 安装目录双校验）
+                new IdeEntry("ssms", new[] { Path.Combine(Pf, @"Microsoft SQL Server Management Studio\") }),
+                new IdeEntry("datagrip64", new[] { Path.Combine(Pf, @"JetBrains\"), Path.Combine(Local, @"Programs\") }),
+                new IdeEntry("dbeaver", new[] { Path.Combine(Pf, @"DBeaver\"), Path.Combine(Local, @"Programs\DBeaver\") }),
+                new IdeEntry("studio64", new[] { Path.Combine(Pf, @"Android\Android Studio\"), Path.Combine(Local, @"Programs\Android Studio\") }),
+                new IdeEntry("azuredatastudio", new[] { Path.Combine(Local, @"Programs\Azure Data Studio\"), Path.Combine(Pf, @"Azure Data Studio\") }),
+                new IdeEntry("mysqlworkbench", new[] { Path.Combine(Pf, @"MySQL\MySQL Workbench\") })
             };
         }
 

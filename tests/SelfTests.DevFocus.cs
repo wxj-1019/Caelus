@@ -417,5 +417,45 @@ namespace CaelusApp
                 DeleteTempDir(dir);
             }
         }
+
+        private static void TestBuildCatalogExpandedTools()
+        {
+            // 新增编译/任务编排工具链：应命中
+            Eq(true, BuildCatalog.IsMatch("pnpm"));
+            Eq(true, BuildCatalog.IsMatch("yarn"));
+            Eq(true, BuildCatalog.IsMatch("bun"));
+            Eq(true, BuildCatalog.IsMatch("nx"));
+            Eq(true, BuildCatalog.IsMatch("lerna"));
+            Eq(true, BuildCatalog.IsMatch("just"));
+            Eq(true, BuildCatalog.IsMatch("uv"));
+            Eq(true, BuildCatalog.IsMatch("poetry"));
+            Eq(true, BuildCatalog.IsMatch("pnpm.exe"));
+            // 通用运行时仍排除（防误触发）
+            Eq(false, BuildCatalog.IsMatch("node"));
+            Eq(false, BuildCatalog.IsMatch("npm"));
+            Eq(false, BuildCatalog.IsMatch("npx"));
+            Eq(false, BuildCatalog.IsMatch("dotnet"));
+            Eq(false, BuildCatalog.IsMatch("java"));
+            Eq(false, BuildCatalog.IsMatch("python"));
+        }
+
+        private static void TestIdeCatalogDbTools()
+        {
+            string pf = Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles);
+            string local = Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData);
+            Eq(true, IdeCatalog.IsMatch("datagrip64",
+                System.IO.Path.Combine(pf, @"JetBrains\DataGrip\bin\datagrip64.exe")));
+            Eq(false, IdeCatalog.IsMatch("datagrip64", @"C:\Temp\datagrip64.exe"));
+            Eq(true, IdeCatalog.IsMatch("dbeaver",
+                System.IO.Path.Combine(pf, @"DBeaver\dbeaver.exe")));
+            Eq(true, IdeCatalog.IsMatch("ssms",
+                System.IO.Path.Combine(pf, @"Microsoft SQL Server Management Studio\ssms.exe")));
+            Eq(true, IdeCatalog.IsMatch("studio64",
+                System.IO.Path.Combine(pf, @"Android\Android Studio\bin\studio64.exe")));
+            Eq(true, IdeCatalog.IsMatch("azuredatastudio",
+                System.IO.Path.Combine(local, @"Programs\Azure Data Studio\azuredatastudio.exe")));
+            Eq(true, IdeCatalog.IsMatch("mysqlworkbench",
+                System.IO.Path.Combine(pf, @"MySQL\MySQL Workbench\MySQLWorkbench.exe")));
+        }
     }
 }

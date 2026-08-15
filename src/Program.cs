@@ -252,13 +252,17 @@ namespace CaelusApp
             gameMode.Enabled = Settings.Load("GameModeOn", true);
 
             var arbiter = new ScenarioArbiter();
+            // 开发服务在 DevFocus/DailyCare 的压制扫描中被豁免（白名单 OR 已注册开发服务）
+            Func<string, string, bool> devWhitelist = (name, path) =>
+                gameMode.IsProcessWhitelisted(name, path) || DevServiceCatalog.IsMatch(name);
             var devFocus = new DevFocus(arbiter, core,
                 () => Settings.Load("DevModeOn", true),
-                gameMode.IsProcessWhitelisted,
+                devWhitelist,
                 DistractCatalog.IsMatch);
             var dailyCare = new DailyCare(arbiter, core,
                 () => Settings.Load("DailyCareOn", true),
-                gameMode.IsProcessWhitelisted);
+                devWhitelist);
+            var devServiceGuard = new DevServiceGuard();
             var powerPollTimer = new System.Windows.Forms.Timer();
             powerPollTimer.Interval = 5000;
             powerPollTimer.Tick += (s2, e2) =>
@@ -305,6 +309,7 @@ namespace CaelusApp
                 tamer.NotifyProcessChanges(batch);
                 devFocus.NotifyProcessChanges(batch);
                 dailyCare.NotifyProcessChanges(batch);
+                devServiceGuard.NotifyProcessChanges(batch);
             };
             procNotify.Start();
             gameMode.ProcessEventsAvailable = procNotify.IsActive;
@@ -357,6 +362,7 @@ namespace CaelusApp
                 gameMode.Stop();
                 devFocus.Stop();
                 dailyCare.Stop();
+                devServiceGuard.Stop();
                 panel.RealExit = true;
                 Application.Exit();
             };
@@ -393,6 +399,7 @@ namespace CaelusApp
                 try { PowerOverlay.Restore(); } catch { }
                 try { devFocus.Stop(); } catch { }
                 try { dailyCare.Stop(); } catch { }
+                try { devServiceGuard.Stop(); } catch { }
             };
             gameMode.SessionEnded += msg =>
             {
@@ -438,6 +445,17 @@ namespace CaelusApp
                     panel.BeginInvoke((MethodInvoker)(() =>
                     {
                         try { icon.ShowBalloonTip(5000, App.DisplayName, Lang.T(key), ToolTipIcon.Info); } catch { }
+                    }));
+                }
+                catch { }
+            };
+            devServiceGuard.ServiceStopped += name =>
+            {
+                try
+                {
+                    panel.BeginInvoke((MethodInvoker)(() =>
+                    {
+                        try { icon.ShowBalloonTip(6000, App.DisplayName, Lang.F("bal.devsvc", name), ToolTipIcon.Warning); } catch { }
                     }));
                 }
                 catch { }

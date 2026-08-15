@@ -1,4 +1,4 @@
-﻿// @author zenjiro 18967498922@163.com
+// @author zenjiro 18967498922@163.com
 // 文件用途 集中维护界面多语言文本
 
 using System;
@@ -465,6 +465,7 @@ namespace CaelusApp
             { "bal.buildend", new[]{ "编译结束，已恢复后台资源" } },
             { "bal.daily.batt", new[]{ "电池供电：后台压制已加强，建议电源模式调至更长续航" } },
             { "bal.distract", new[]{ "专注模式：检测到分心应用启动（仅提醒，不处理）" } },
+            { "bal.devsvc", new[]{ "开发服务已退出：{0}" } },
             { "set.dev", new[]{ "开发模式" } },
             { "set.dev.n", new[]{ "检测到编译/调试进程（msbuild、gcc、npm 等）时自动压制后台，编译完恢复" } },
             { "set.dev.custom", new[]{ "自定义编译进程（分号分隔）" } },
@@ -475,6 +476,8 @@ namespace CaelusApp
             { "set.focus.n", new[]{ "开启后静默通知、持续压制后台；可配分心应用清单，清单程序启动时提醒一次" } },
             { "set.distract", new[]{ "分心应用清单（分号分隔）" } },
             { "set.distract.n", new[]{ "专注模式期间这些程序启动时托盘提醒一次（如 discord、steam），只提醒不处理" } },
+            { "set.devsvc", new[]{ "开发服务守护（分号分隔）" } },
+            { "set.devsvc.n", new[]{ "这些本地服务进程（如 node、redis-server）运行期间不被后台压制，最后一个实例退出时托盘提醒" } },
             { "sec.daily", new[]{ "日常优化" } },
             { "set.daily", new[]{ "日常场景调度" } },
             { "set.daily.n", new[]{ "浏览器/Office/会议软件活跃时压制后台并提优前台家族；电池供电自动加强压制" } },

@@ -19,6 +19,8 @@ namespace CaelusApp
             "gcc", "g++", "clang", "clang++", "cmake", "make", "ninja", "ld", "lld", "lld-link", "rustc", "cargo",
             // Node/前端
             "tsc", "webpack", "vite", "esbuild", "rollup", "gulp", "babel", "swc", "parcel", "turbo",
+            // 包管理/任务编排（会跑 build 脚本；不含 node/npm/npx 等通用运行时本身）
+            "pnpm", "yarn", "bun", "nx", "lerna", "just", "uv", "poetry",
             // 调试器
             "gdb", "lldb", "msvsmon",
             // Git 大规模 IO 操作（rebase/gc/pack/clone）

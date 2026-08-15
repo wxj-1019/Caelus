@@ -343,7 +343,7 @@ namespace CaelusApp.WpfHost
             }
         }
 
-        private static void OnPressDown(object sender, MouseButtonEventArgs e) { PressTo((FrameworkElement)sender, 0.98); }
+        private static void OnPressDown(object sender, MouseButtonEventArgs e) { PressTo((FrameworkElement)sender, 0.95); }
         private static void OnPressUp(object sender, MouseButtonEventArgs e) { PressTo((FrameworkElement)sender, 1); }
         private static void OnPressEnter(object sender, MouseEventArgs e)
         {
@@ -374,7 +374,7 @@ namespace CaelusApp.WpfHost
         private static void OnPressLeave(object sender, MouseEventArgs e) { PressTo((FrameworkElement)sender, 1); }
         private static void OnPressKeyDown(object sender, KeyEventArgs e)
         {
-            if (e.Key == Key.Space || e.Key == Key.Enter) PressTo((FrameworkElement)sender, 0.98);
+            if (e.Key == Key.Space || e.Key == Key.Enter) PressTo((FrameworkElement)sender, 0.95);
         }
         private static void OnPressKeyUp(object sender, KeyEventArgs e)
         {
@@ -392,8 +392,30 @@ namespace CaelusApp.WpfHost
                 scale.ScaleY = 1;
                 return;
             }
+            if (value >= 1)
+            {
+                // 棉花糖「捏一下」松手：弹簧回弹（轻微过冲再回正 = 软糯感）
+                DoubleAnimation springX = BuildPressSpring(scale.ScaleX, 1);
+                DoubleAnimation springY = BuildPressSpring(scale.ScaleY, 1);
+                springX.Completed += delegate { scale.BeginAnimation(ScaleTransform.ScaleXProperty, null); scale.ScaleX = 1; };
+                springY.Completed += delegate { scale.BeginAnimation(ScaleTransform.ScaleYProperty, null); scale.ScaleY = 1; };
+                scale.BeginAnimation(ScaleTransform.ScaleXProperty, springX, HandoffBehavior.SnapshotAndReplace);
+                scale.BeginAnimation(ScaleTransform.ScaleYProperty, springY, HandoffBehavior.SnapshotAndReplace);
+                return;
+            }
+            // 按下：更快更深的压缩（QuinticEase 快起长收）
             Animate(scale, ScaleTransform.ScaleXProperty, scale.ScaleX, value, UiMotion.ButtonPressMs);
             Animate(scale, ScaleTransform.ScaleYProperty, scale.ScaleY, value, UiMotion.ButtonPressMs);
+        }
+
+        // 棉花糖按压回弹：BackEase 过冲比入场更强（Amplitude 0.5），松手时「啵」地弹回
+        private static DoubleAnimation BuildPressSpring(double from, double to)
+        {
+            return new DoubleAnimation(from, to, TimeSpan.FromMilliseconds(UiMotion.ButtonPressMs * 2))
+            {
+                EasingFunction = new BackEase { Amplitude = 0.5, EasingMode = EasingMode.EaseOut },
+                FillBehavior = FillBehavior.Stop
+            };
         }
 
         public static readonly DependencyProperty SmoothToggleProperty = DependencyProperty.RegisterAttached(

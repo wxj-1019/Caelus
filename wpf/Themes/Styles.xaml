@@ -127,7 +127,7 @@
     <Setter Property="BorderBrush" Value="{DynamicResource DangerEdgeBrush}"/>
   </Style>
 
-  <!-- 空态虚线 chip（未绑定/未接入占位值） -->
+  <!-- 空态虚线 chip（未绑定/未接入占位值）：软糯圆角药丸 -->
   <Style x:Key="EmptyChip" TargetType="ContentControl">
     <Setter Property="HorizontalContentAlignment" Value="Center"/>
     <Setter Property="VerticalContentAlignment" Value="Center"/>
@@ -135,10 +135,10 @@
       <Setter.Value>
         <ControlTemplate TargetType="ContentControl">
           <Grid>
-            <Rectangle RadiusX="6" RadiusY="6"
+            <Rectangle RadiusX="9" RadiusY="9"
                        Stroke="{DynamicResource BorderStrongBrush}"
                        StrokeThickness="1" StrokeDashArray="2 2"/>
-            <ContentPresenter Margin="6,1"/>
+            <ContentPresenter Margin="7,1"/>
           </Grid>
         </ControlTemplate>
       </Setter.Value>

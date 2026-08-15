@@ -1,4 +1,4 @@
-﻿<UserControl x:Class="CaelusApp.WpfHost.Views.OverviewView"
+<UserControl x:Class="CaelusApp.WpfHost.Views.OverviewView"
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:local="clr-namespace:CaelusApp.WpfHost"
@@ -278,7 +278,7 @@
                        FontSize="{DynamicResource FontSizeBody}"
                        FontWeight="SemiBold"
                        Foreground="{DynamicResource TextPrimaryBrush}"/>
-            <TextBlock Text="活动流尚未接入；下列内容仅描述当前预览状态。"
+            <TextBlock Text="活动流还是空的，等一场对局来把它填满。"
                        Margin="0,3,0,10"
                        FontSize="{DynamicResource FontSizeSmall}"
                        Foreground="{DynamicResource TextSecondaryBrush}"/>
@@ -318,7 +318,7 @@
                          FontSize="{DynamicResource FontSizeSmall}"
                          Foreground="{DynamicResource TextSecondaryBrush}"/>
               <ContentControl Grid.Column="1" Style="{DynamicResource EmptyChip}">
-                <TextBlock Text="未接入"
+                <TextBlock Text="待接入"
                            FontSize="{DynamicResource FontSizeXs}"
                            Foreground="{DynamicResource TextTertiaryBrush}"/></ContentControl>
             </Grid>
@@ -334,26 +334,26 @@
                        FontSize="{DynamicResource FontSizeBody}"
                        FontWeight="SemiBold"
                        Foreground="{DynamicResource TextPrimaryBrush}"/>
-            <TextBlock Text="当前 ViewModel 没有硬件型号绑定。"
+            <TextBlock Text="硬件信息还在路上，就快到了。"
                        Margin="0,3,0,10"
                        FontSize="{DynamicResource FontSizeSmall}"
                        Foreground="{DynamicResource TextSecondaryBrush}"
                        TextWrapping="Wrap"/>
             <DockPanel Margin="0,0,0,6">
               <ContentControl DockPanel.Dock="Right" Style="{DynamicResource EmptyChip}">
-                <TextBlock Text="未绑定" FontSize="{DynamicResource FontSizeXs}" Foreground="{DynamicResource TextTertiaryBrush}"/></ContentControl>
+                <TextBlock Text="待接入" FontSize="{DynamicResource FontSizeXs}" Foreground="{DynamicResource TextTertiaryBrush}"/></ContentControl>
               <TextBlock Text="处理器" FontSize="{DynamicResource FontSizeSmall}"
                          Foreground="{DynamicResource TextSecondaryBrush}"/>
             </DockPanel>
             <DockPanel Margin="0,0,0,6">
               <ContentControl DockPanel.Dock="Right" Style="{DynamicResource EmptyChip}">
-                <TextBlock Text="未绑定" FontSize="{DynamicResource FontSizeXs}" Foreground="{DynamicResource TextTertiaryBrush}"/></ContentControl>
+                <TextBlock Text="待接入" FontSize="{DynamicResource FontSizeXs}" Foreground="{DynamicResource TextTertiaryBrush}"/></ContentControl>
               <TextBlock Text="图形设备" FontSize="{DynamicResource FontSizeSmall}"
                          Foreground="{DynamicResource TextSecondaryBrush}"/>
             </DockPanel>
             <DockPanel>
               <ContentControl DockPanel.Dock="Right" Style="{DynamicResource EmptyChip}">
-                <TextBlock Text="未绑定" FontSize="{DynamicResource FontSizeXs}" Foreground="{DynamicResource TextTertiaryBrush}"/></ContentControl>
+                <TextBlock Text="待接入" FontSize="{DynamicResource FontSizeXs}" Foreground="{DynamicResource TextTertiaryBrush}"/></ContentControl>
               <TextBlock Text="内存规格" FontSize="{DynamicResource FontSizeSmall}"
                          Foreground="{DynamicResource TextSecondaryBrush}"/>
             </DockPanel>

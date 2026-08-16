@@ -86,7 +86,7 @@
 | T3 | **快速导航连点**（80ms 间隔连切 6 次页面）：稳定、概览页恢复 | ✅ PASS |
 | T4 | **60 秒稳定性**：内存 109→94→94MB（无增长）、无 crash log、句柄/线程数稳定 | ✅ PASS |
 
-**遗留项**：WPF 预览宿主无单实例互斥（WinForms 版 Program.cs 有 global mutex）。双开实例各自工作正常（无冲突崩溃），但正式宿主接管时应实现单实例互斥，避免双托盘图标与 Settings 写竞争。
+**遗留项**：WPF 预览宿主无单实例互斥（WinForms 版 Program.cs 有 global mutex）。双开实例各自工作正常（无冲突崩溃），但正式宿主接管时应实现单实例互斥，避免双托盘图标与 Settings 写竞争。（2026-08-16 更新：已实现——`WpfRuntime.AcquireSingleInstance`，见 `wpf/WpfRuntime.cs`）
 
 ## 测试方法论沉淀（供后续阶段复用）
 

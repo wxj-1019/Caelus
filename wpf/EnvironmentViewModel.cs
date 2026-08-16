@@ -243,7 +243,7 @@ namespace CaelusApp
             if (!ok)
             {
                 FeedbackKind = "Error";
-                FeedbackText = Lang.T("winopt.failed");
+                FeedbackText = Lang.T("env.failed");
                 return false;
             }
 

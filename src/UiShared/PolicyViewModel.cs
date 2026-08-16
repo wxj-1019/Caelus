@@ -68,15 +68,29 @@ namespace CaelusApp
         public static void GetLockState(string propertyName, PerformancePreset preset,
             out bool locked, out bool lockedValue)
         {
+            // 与旧 WinForms ApplyPresetPolicy 一致：
+            // ・StrictCoreIsolation 任何模式下都可编辑（引擎只在自定义档读它，用户可预配置）
+            // ・PauseSvcIndex 常规/竞技档强制显示 false（引擎 useSvc = custom ? svcPauseOn : false）
+            // ・AggressiveSuppression / PauseDownloads / KillGameDvr 常规档 false、竞技档 true
+            // ・自定义档全部可编辑
             bool isCustom = false;
             foreach (PolicyItem item in custom)
             {
                 if (item.PropertyName == propertyName) { isCustom = true; break; }
             }
-            if (!isCustom) { locked = false; lockedValue = false; return; }
+            if (!isCustom || propertyName == "StrictCoreIsolation")
+            {
+                locked = false; lockedValue = false;
+                return;
+            }
 
             if (preset == PerformancePreset.Standard) { locked = true; lockedValue = false; return; }
-            if (preset == PerformancePreset.Competitive) { locked = true; lockedValue = true; return; }
+            if (preset == PerformancePreset.Competitive)
+            {
+                locked = true;
+                lockedValue = propertyName != "PauseSvcIndex";
+                return;
+            }
             locked = false; lockedValue = false;
         }
 

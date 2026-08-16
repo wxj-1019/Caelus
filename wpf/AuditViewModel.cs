@@ -316,18 +316,35 @@ namespace CaelusApp
 
         private void RenderReport(AuditReport report)
         {
-            FillGroup(CapabilityRows, report.Capability, "NVIDIA 驱动接口", nvProbeText);
-            FillGroup(MachineRows, report.Machine, null, null);
-            FillGroup(PersistentRows, report.Persistent, null, null);
-            FillGroup(VerdictRows, report.Verdicts, "AMD 驱动接口", amdProbeText);
+            // AMD 驱动接口行位于 Capability 组：实测结果必须合并到能力组（跨组匹配会导致永不显示）
+            FillCapability(report);
+            FillGroup(MachineRows, report.Machine, null, null, null);
+            FillGroup(PersistentRows, report.Persistent, null, null, null);
+            FillGroup(VerdictRows, report.Verdicts, null, null, null);
             lastCheck = System.DateTime.Now;
             NotifyHealth();
             SetHasResultData(true);
             State = AuditState.Result;
         }
 
+        private void FillCapability(AuditReport report)
+        {
+            CapabilityRows.Clear();
+            if (report.Capability == null) return;
+            foreach (AuditRow row in report.Capability)
+            {
+                string note = row.Note ?? "";
+                if (nvProbeText != null && row.Name == "NVIDIA 驱动接口")
+                    note = Lang.T("audit.nv.result") + nvProbeText;
+                else if (amdProbeText != null && row.Name == "AMD 驱动接口")
+                    note = Lang.T("audit.amd.result") + amdProbeText;
+                CapabilityRows.Add(new AuditRowView(row.Name, row.Value, note,
+                    Lang.T("audit.evidence") + (row.Evidence ?? ""), row.Warn));
+            }
+        }
+
         private void FillGroup(ObservableCollection<AuditRowView> target,
-            System.Collections.Generic.List<AuditRow> source, string probeRowName, string probeText)
+            System.Collections.Generic.List<AuditRow> source, string probeRowName, string probeText, string probePrefix)
         {
             target.Clear();
             if (source == null) return;
@@ -335,7 +352,7 @@ namespace CaelusApp
             {
                 string note = row.Note ?? "";
                 if (probeText != null && probeRowName != null && row.Name == probeRowName)
-                    note = Lang.T("audit.nv.result") + probeText;
+                    note = (probePrefix ?? "") + probeText;
                 target.Add(new AuditRowView(row.Name, row.Value, note,
                     Lang.T("audit.evidence") + (row.Evidence ?? ""), row.Warn));
             }

@@ -25,9 +25,11 @@ namespace CaelusApp.WpfHost.Views
             Motion.RiseIn(ZoneHeader, 40);
             Motion.RiseIn(ZoneBadge, 100);
             Motion.RiseIn(ZoneHero, 160);
-            Motion.RiseIn(ZoneMetricsLabel, 220);
-            Motion.RiseIn(ZoneMetrics, 220);
-            Motion.RiseIn(ZoneBottom, 280);
+            Motion.RiseIn(ZoneTiles, 200);
+            Motion.RiseIn(ZoneMetricsLabel, 240);
+            Motion.RiseIn(ZoneMetrics, 240);
+            Motion.RiseIn(ZoneBoost, 280);
+            Motion.RiseIn(ZoneBottom, 320);
             Motion.BreathPulse(ReadyDot);
         }
 
@@ -61,6 +63,14 @@ namespace CaelusApp.WpfHost.Views
             var item = e.Item as MetricViewModel;
             if (vm == null || item == null) { e.Accepted = true; return; }
             e.Accepted = vm.Metrics.IndexOf(item) != 0;
+        }
+
+        // 守护总开关：Toggle 视觉态由 OneWay 绑定驱动，动作经 ViewModel 命令执行
+        private void OnGuardToggle(object sender, RoutedEventArgs e)
+        {
+            var vm = DataContext as OverviewViewModel;
+            if (vm != null && vm.ToggleGuardCommand != null)
+                vm.ToggleGuardCommand.Execute(null);
         }
     }
 }

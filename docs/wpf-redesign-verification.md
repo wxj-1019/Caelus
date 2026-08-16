@@ -33,7 +33,7 @@ WPF 前端由 Aurora Bento 全屏玻璃氛围重构为现代桌面工具风：�
 - `dev.cmd test`：`TOTAL 178 / PASS 178 / FAIL 0 / SKIP 0`。
 - `git diff --check`：通过。
 
-WPF 构建仍会输出工作树原有的两类提示：脚本开头的 `'2' 不是内部或外部命令`，以及 MSIL 与 x86 引用架构警告；本次重设计没有扩大这些构建链问题。
+WPF 构建仍会输出工作树原有的两类提示：脚本开头的 `'2' 不是内部或外部命令`，以及 MSIL 与 x86 引用架构警告；本次重设计没有扩大这些构建链问题。（2026-08-16 更新：架构警告与 MSB3644 已治理——csproj 预设参考程序集目录跳过 GetReferenceAssemblyPaths，并加 `ResolveAssemblyWarnOrErrorOnTargetArchitectureMismatch=None`；主构建现无警告输出。）
 
 ## 视觉矩阵
 

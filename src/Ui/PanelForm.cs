@@ -1,4 +1,4 @@
-﻿// @author zenjiro 18967498922@163.com
+// @author zenjiro 18967498922@163.com
 // 文件用途 维护主窗口状态和主要交互事件
 
 using System;
@@ -62,7 +62,7 @@ namespace CaelusApp
         private int pageBaseLeft;
         private Motion pageSlide;
         private Icon appIcon;
-        public bool RealExit;
+        public bool RealExit = false; // 仅自测构建编译；正式退出流程在 WPF 宿主 App.xaml.cs
 
         private Motion introMotion;
         private bool introActive, introPending;

@@ -117,6 +117,7 @@ namespace CaelusApp.WpfHost.Views
         {
             if (vm == null || !IsVisible) { StopRunningTimer(); return; }
             vm.ProbeRunning();
+            try { vm.SyncDeferredNetQos(); } catch { }
         }
 
         private void DetachViewModel()
@@ -163,7 +164,7 @@ namespace CaelusApp.WpfHost.Views
         private void OnAddClick(object sender, RoutedEventArgs e)
         {
             if (vm == null) return;
-            var dlg = new AddGameDialogWpf(vm.Items);
+            var dlg = new AddGameDialogWpf(vm.Items, vm.KnownLearnedPaths(), vm.CanGpuProbe);
             dlg.Owner = Window.GetWindow(this);
             bool? result = dlg.ShowDialog();
             if (result != true || dlg.SelectedHits.Count == 0) return;

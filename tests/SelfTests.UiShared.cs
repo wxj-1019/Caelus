@@ -200,9 +200,9 @@ namespace CaelusApp
         private sealed class StubSource : IOverviewSource
         {
             public bool GuardEnabled = true;
-            public bool GameActive;
-            public bool HasWarning;
-            public bool HasCritical;
+            public bool GameActive = false;   // 测试桩：默认 false，用例内按需赋值
+            public bool HasWarning = false;
+            public bool HasCritical = false;
             public double? GpuTempC = 62;
             public double? MemoryUsedPct = 53;
             public string MemoryUsedText = "8.4 GB";
@@ -219,6 +219,12 @@ namespace CaelusApp
             string IOverviewSource.MemoryUsedText { get { return MemoryUsedText; } }
             string IOverviewSource.ModeText { get { return ModeText; } }
             string IOverviewSource.LastCheckText { get { return LastCheckText; } }
+            string IOverviewSource.ActiveGameText { get { return "未在游戏中"; } }
+            int IOverviewSource.SuppressedCount { get { return 3; } }
+            string IOverviewSource.PowerText { get { return "市电"; } }
+            string IOverviewSource.ThrottleText { get { return null; } }
+            bool IOverviewSource.HasThrottleText { get { return false; } }
+            string IOverviewSource.GrantSuffix { get { return ""; } }
             System.Collections.Generic.IList<double> IOverviewSource.TempHistory
             {
                 get
@@ -361,21 +367,38 @@ namespace CaelusApp
 
         private static void TestPolicyLockMatrix()
         {
+            // 与旧 WinForms ApplyPresetPolicy 一致的锁定语义：
+            // StrictCoreIsolation 任何模式可编辑；PauseSvcIndex 常规/竞技档强制 false；
+            // 其余三项常规 false、竞技 true；自定义档全部放开。
             foreach (PolicyItem item in PolicyViewModel.CustomItems)
             {
                 bool stdLocked, stdValue;
                 PolicyViewModel.GetLockState(item.PropertyName, PerformancePreset.Standard, out stdLocked, out stdValue);
-                if (!stdLocked) throw new Exception(item.PropertyName + " should be locked in Standard");
-                Eq(false, stdValue);
-
                 bool compLocked, compValue;
                 PolicyViewModel.GetLockState(item.PropertyName, PerformancePreset.Competitive, out compLocked, out compValue);
-                if (!compLocked) throw new Exception(item.PropertyName + " should be locked in Competitive");
-                Eq(true, compValue);
-
                 bool custLocked, custValue;
                 PolicyViewModel.GetLockState(item.PropertyName, PerformancePreset.Custom, out custLocked, out custValue);
                 if (custLocked) throw new Exception(item.PropertyName + " should be unlocked in Custom");
+
+                if (item.PropertyName == "StrictCoreIsolation")
+                {
+                    if (stdLocked) throw new Exception("StrictCoreIsolation must stay editable in Standard");
+                    if (compLocked) throw new Exception("StrictCoreIsolation must stay editable in Competitive");
+                    continue;
+                }
+                if (item.PropertyName == "PauseSvcIndex")
+                {
+                    if (!stdLocked) throw new Exception(item.PropertyName + " should be locked in Standard");
+                    Eq(false, stdValue);
+                    if (!compLocked) throw new Exception(item.PropertyName + " should be locked in Competitive");
+                    // 引擎 useSvc = custom ? svcPauseOn : false —— 竞技档强制显示 false
+                    Eq(false, compValue);
+                    continue;
+                }
+                if (!stdLocked) throw new Exception(item.PropertyName + " should be locked in Standard");
+                Eq(false, stdValue);
+                if (!compLocked) throw new Exception(item.PropertyName + " should be locked in Competitive");
+                Eq(true, compValue);
             }
 
             foreach (PolicyItem item in PolicyViewModel.CoreItems)

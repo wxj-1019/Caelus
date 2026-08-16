@@ -1,0 +1,107 @@
+<Window x:Class="CaelusApp.WpfHost.Dialogs.ReleaseNotesDialogWpf"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        x:ClassModifier="internal"
+        Title="更新说明" Width="720" Height="620"
+        WindowStartupLocation="CenterOwner" ResizeMode="CanResize"
+        MinWidth="560" MinHeight="420"
+        Background="{DynamicResource BackgroundBrush}"
+        FontFamily="{DynamicResource FontUi}"
+        PreviewKeyDown="OnWindowKeyDown"
+        ShowInTaskbar="False"
+        AutomationProperties.Name="Caelus 更新说明">
+  <Grid Margin="24,20,24,20">
+    <Grid.RowDefinitions>
+      <RowDefinition Height="Auto"/>
+      <RowDefinition Height="Auto"/>
+      <RowDefinition Height="*"/>
+      <RowDefinition Height="Auto"/>
+    </Grid.RowDefinitions>
+
+    <StackPanel Grid.Row="0" Margin="0,0,0,16">
+      <TextBlock x:Name="LblTitle" Style="{DynamicResource PageHeader}"/>
+      <TextBlock x:Name="LblSubtitle" Style="{DynamicResource PageSubtitle}" Margin="0,4,0,0"/>
+    </StackPanel>
+
+    <Border Grid.Row="1" Style="{DynamicResource StatusBanner}" Margin="0,0,0,12">
+      <TextBlock Text="新版本的更新说明只在第一次启动该版本时自动弹出，之后可在「关于」页随时查看。"
+                 FontSize="{DynamicResource FontSizeSmall}"
+                 Foreground="{DynamicResource TextSecondaryBrush}" TextWrapping="Wrap"/>
+    </Border>
+
+    <ScrollViewer Grid.Row="2" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
+      <ItemsControl x:Name="NotesHost" AutomationProperties.Name="版本更新说明列表">
+        <ItemsControl.ItemTemplate>
+          <DataTemplate>
+            <Border Style="{DynamicResource SettingsGroup}" Margin="0,0,0,12">
+              <StackPanel>
+                <Grid Margin="0,0,0,6">
+                  <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="Auto"/>
+                  </Grid.ColumnDefinitions>
+                  <StackPanel Grid.Column="0" Orientation="Horizontal">
+                    <TextBlock Text="{Binding VersionTag}" FontSize="{DynamicResource FontSizeCaption}" FontWeight="SemiBold">
+                      <TextBlock.Style>
+                        <Style TargetType="TextBlock" BasedOn="{StaticResource {x:Type TextBlock}}">
+                          <Setter Property="Foreground" Value="{DynamicResource TextPrimaryBrush}"/>
+                          <Style.Triggers>
+                            <DataTrigger Binding="{Binding IsCurrent}" Value="True">
+                              <Setter Property="Foreground" Value="{DynamicResource ModeAccentBrush}"/>
+                            </DataTrigger>
+                          </Style.Triggers>
+                        </Style>
+                      </TextBlock.Style>
+                    </TextBlock>
+                    <TextBlock Text="// 当前版本" FontSize="{DynamicResource FontSizeSmall}"
+                               Foreground="{DynamicResource ModeAccentBrush}" Margin="8,0,0,0"
+                               VerticalAlignment="Center">
+                      <TextBlock.Style>
+                        <Style TargetType="TextBlock" BasedOn="{StaticResource {x:Type TextBlock}}">
+                          <Setter Property="Visibility" Value="Collapsed"/>
+                          <Style.Triggers>
+                            <DataTrigger Binding="{Binding IsCurrent}" Value="True">
+                              <Setter Property="Visibility" Value="Visible"/>
+                            </DataTrigger>
+                          </Style.Triggers>
+                        </Style>
+                      </TextBlock.Style>
+                    </TextBlock>
+                  </StackPanel>
+                  <TextBlock Grid.Column="1" Text="{Binding DateText}" FontSize="{DynamicResource FontSizeSmall}"
+                             Foreground="{DynamicResource TextTertiaryBrush}" VerticalAlignment="Center"/>
+                </Grid>
+                <ItemsControl ItemsSource="{Binding Items}">
+                  <ItemsControl.ItemTemplate>
+                    <DataTemplate>
+                      <StackPanel Orientation="Horizontal" Margin="0,0,0,6">
+                        <TextBlock Text="·" FontSize="{DynamicResource FontSizeSmall}" FontWeight="Bold"
+                                   Foreground="{DynamicResource ModeAccentBrush}" Width="14"/>
+                        <TextBlock Text="{Binding}" FontSize="{DynamicResource FontSizeSmall}"
+                                   Foreground="{DynamicResource TextSecondaryBrush}" TextWrapping="Wrap"/>
+                      </StackPanel>
+                    </DataTemplate>
+                  </ItemsControl.ItemTemplate>
+                </ItemsControl>
+              </StackPanel>
+            </Border>
+          </DataTemplate>
+        </ItemsControl.ItemTemplate>
+      </ItemsControl>
+    </ScrollViewer>
+
+    <Grid Grid.Row="3" Margin="0,14,0,0">
+      <Grid.ColumnDefinitions>
+        <ColumnDefinition Width="Auto"/>
+        <ColumnDefinition Width="*"/>
+        <ColumnDefinition Width="Auto"/>
+      </Grid.ColumnDefinitions>
+      <Button Grid.Column="0" x:Name="BtnOnline" Click="OnOnline"
+              Style="{DynamicResource GhostButton}" Padding="14,7"
+              AutomationProperties.Name="在线查看完整版本记录"/>
+      <Button Grid.Column="2" Content="关闭" Click="OnClose" IsCancel="True" IsDefault="True"
+              Style="{DynamicResource PrimaryButton}" Padding="18,7"
+              AutomationProperties.Name="关闭更新说明"/>
+    </Grid>
+  </Grid>
+</Window>

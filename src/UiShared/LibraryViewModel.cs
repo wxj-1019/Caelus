@@ -47,6 +47,10 @@ namespace CaelusApp
         private readonly GameMode gm;
         private string feedbackText = "";
         private string feedbackKind = "Info";
+        private string netQosSignature;
+        private bool netQosDeferred;
+        private int netQosBusy;
+        private readonly object netQosSync = new object();
 
         public ObservableCollection<LibraryItem> Items { get; private set; }
         public string EmptyTitle { get { return "CAELUS LIBRARY"; } }
@@ -117,6 +121,48 @@ namespace CaelusApp
                 Items.Add(new LibraryItem(p.Id, name, displayPath));
             }
             NotifyCounts();
+            SyncNetQosPolicies();
+        }
+
+        // 与旧 WinForms 的 SyncNetQosPolicies 一致：游戏库变更后重同步网络优先级策略
+        //（签名比对防重复；游戏会话进行中推迟到退出游戏后；后台线程执行）
+        private void SyncNetQosPolicies()
+        {
+            var sb = new System.Text.StringBuilder();
+            foreach (GameProfile profile in gm.GetProfiles())
+            {
+                if (string.IsNullOrEmpty(profile.ExecutablePath)) continue;
+                sb.Append(profile.Name).Append('>').Append(profile.ExecutablePath).Append('|');
+            }
+            string signature = sb.ToString();
+            if (netQosSignature == null) { netQosSignature = signature; return; }
+            if (netQosSignature == signature && !netQosDeferred) return;
+            netQosSignature = signature;
+            if (!NetworkAffinityTweak.EnabledByCaelus) { netQosDeferred = false; return; }
+            if (gm.ActiveGame != null)
+            {
+                if (!netQosDeferred)
+                    Logger.Log("网络优先级：游戏会话进行中，游戏库变更的策略同步推迟到退出游戏后执行");
+                netQosDeferred = true;
+                return;
+            }
+            netQosDeferred = false;
+            if (System.Threading.Interlocked.Exchange(ref netQosBusy, 1) == 1) return;
+            System.Threading.ThreadPool.QueueUserWorkItem(_ =>
+            {
+                lock (netQosSync)
+                {
+                    System.Threading.Interlocked.Exchange(ref netQosBusy, 0);
+                    try { NetworkAffinityTweak.Enable(gm.GetProfiles()); }
+                    catch { }
+                }
+            });
+        }
+
+        // 运行态定时刷新时调用：游戏退出后补执行被推迟的策略同步
+        public void SyncDeferredNetQos()
+        {
+            if (netQosDeferred && gm.ActiveGame == null) SyncNetQosPolicies();
         }
 
         public string AddFile(string file)
@@ -141,6 +187,16 @@ namespace CaelusApp
             gm.RemoveProfile(Items[index].Id);
             Refresh();
         }
+
+        // 学习到的真身路径（添加对话框用于标记"已在库中"）
+        public System.Collections.Generic.IEnumerable<string> KnownLearnedPaths()
+        {
+            foreach (GameProfile p in gm.GetProfiles())
+                if (!string.IsNullOrEmpty(p.LearnedExecutablePath)) yield return p.LearnedExecutablePath;
+        }
+
+        // 与 WinForms 一致：仅无进行中游戏会话时允许 GPU 采样识别渲染进程
+        public bool CanGpuProbe { get { return gm.ActiveGame == null; } }
 
         // 与 WinForms 版一致，使用映像路径而不是 MainModule，兼容提权进程。
         public void ProbeRunning()

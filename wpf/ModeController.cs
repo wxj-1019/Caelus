@@ -19,11 +19,12 @@ namespace CaelusApp.WpfHost
         }
 
         public static void SwitchTo(Application app, AppMode mode,
-            SampleOverviewSource source, OverviewViewModel vm)
+            IOverviewSource source, OverviewViewModel vm)
         {
             Settings.SaveStr("PerformancePreset", ((int)ToPreset(mode)).ToString());
             ThemeManager.Apply(app, ThemeManager.CurrentTone, mode);
-            if (source != null) source.SetMode(mode);
+            SampleOverviewSource sample = source as SampleOverviewSource;
+            if (sample != null) sample.SetMode(mode);
             if (vm != null) vm.Refresh();
         }
 

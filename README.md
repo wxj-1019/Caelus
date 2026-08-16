@@ -8,7 +8,7 @@
 
 [![平台](https://img.shields.io/badge/平台-Windows%2010%2F11-%235E5CE6)](https://github.com/wxj-1019/Caelus)
 [![语言](https://img.shields.io/badge/语言-C%23%20.NET%20Framework%204.x-%237A78F0)](https://github.com/wxj-1019/Caelus)
-[![界面](https://img.shields.io/badge/界面-WinForms%20%C2%B7%20WPF-%237A78F0)](https://github.com/wxj-1019/Caelus)
+[![界面](https://img.shields.io/badge/界面-WPF%20棉花糖天空-%237A78F0)](https://github.com/wxj-1019/Caelus)
 [![自测](https://img.shields.io/badge/自测-225%20项%200%20失败-%233DD68C)](https://github.com/wxj-1019/Caelus)
 [![隐私](https://img.shields.io/badge/隐私-纯本地%20%C2%B7%20零上传-%233DD68C)](https://github.com/wxj-1019/Caelus)
 [![许可](https://img.shields.io/badge/许可-禁止销售-%23E5A13D)](LICENSE)
@@ -97,17 +97,18 @@ Caelus 不是给电脑"凭空变出性能"的，也不会让 CPU、显卡突破�
 
 ## 快速开始
 
-项目直接使用 Windows 自带的 .NET Framework C# 编译器，不需要 Visual Studio，也没有需要还原的包。
+项目使用 Windows 自带的 .NET Framework 4.x 编译器与 MSBuild（主界面为 WPF），不需要 Visual Studio，也没有需要还原的包。
 
 ```cmd
-build.cmd              rem 生成图标 + 编译带管理员清单的 Caelus.exe
+build.cmd              rem 两步构建：临时版生成图标 → 编译带图标+管理员清单的 WPF 版 Caelus.exe
 dev.cmd                rem 结束旧实例 → 构建 Caelus.dev.exe → 启动（开发循环）
-dev.cmd test           rem 构建含自测的版本，跑完 225 项自测并输出结果摘要
+dev.cmd test           rem 构建含自测的 WPF 版，跑完 225 项自测并输出结果摘要
+build-winforms.cmd     rem 回退构建：产出旧 WinForms 界面（仅回退用，不参与主构建）
 ```
 
 - 双击 `Caelus.exe` 后程序进入托盘；调整其它进程和系统设置需要管理员权限
 - 源码构建默认没有 Authenticode 数字签名，发布者可用自己的可信代码签名证书改善 SmartScreen 体验
-- 版本号以 `src/Program.cs` 中的 `App.Version` 为准
+- 版本号以 `src/Program.cs` 中的 `App.Version` 为准（`src/Core/App.cs`）
 
 ---
 
@@ -175,9 +176,9 @@ src/Core       目标识别、调度、压制和恢复逻辑
   ├─ Suppression    进程压制内核（快照 / 回读 / 恢复 / 冻结）
   └─ Tweaks         电源计划、NVIDIA / AMD 驱动、HAGS / VBS、中断亲和等
 src/Platform   Windows 原生接口、设置、路径和系统服务封装
-src/Ui         WinForms 界面（Pages 一页一个文件，Controls 自绘控件）
-src/UiShared   WinForms / WPF 双宿主共享的 ViewModel 与调色板
-wpf/           WPF 新版界面（Aurora 设计系统，链接编译 src/Core）
+src/Ui         WinForms 旧界面（保留在仓库，仅自测版链接编译验证 + build-winforms.cmd 可回退构建）
+src/UiShared   WinForms / WPF 双宿主共享的 ViewModel、调色板与图标渲染
+wpf/           主界面（WPF 棉花糖天空设计系统 + 运行时主机 WpfRuntime，链接编译 src/Core）
 tests          项目自测（仅 --selftest 时编入，发布构建不含测试代码）
 scripts        应用冒烟测试
 tools/PerfLab  独立回归守卫台架（真实压制内核上的多进程 A/B 配对）

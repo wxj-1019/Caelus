@@ -13,7 +13,7 @@ namespace CaelusApp.WpfHost
 {
     public partial class MainWindow : Window
     {
-        private readonly SampleOverviewSource source;
+        private readonly IOverviewSource source;
         private readonly OverviewViewModel vm;
         private readonly GameMode gameMode;
         private readonly PolicyPageViewModel policyVm;
@@ -27,6 +27,7 @@ namespace CaelusApp.WpfHost
         private readonly AuditViewModel auditVm;
         private readonly WhitelistViewModel whitelistVm;
         private readonly Tamer tamer;
+        private readonly System.Windows.Threading.DispatcherTimer refreshTimer;
 
         private readonly OverviewView overviewView;
         private readonly PolicyView policyView;
@@ -40,7 +41,10 @@ namespace CaelusApp.WpfHost
         private readonly AuditView auditView;
         private readonly WhitelistView whitelistView;
 
-        public MainWindow() : this(null) { }
+        // 托盘"退出"时置 true，允许真正关闭；平时点 X 只隐藏到托盘
+        public bool RealExit;
+
+        public MainWindow() : this(null, null, null, null) { }
 
         // 启动期间由 App 注入的分块泵送钩子：构建主窗口时让启动屏动画保持滚动
         internal static Action ProgressPump;
@@ -51,7 +55,13 @@ namespace CaelusApp.WpfHost
             if (p != null) p();
         }
 
-        internal MainWindow(GameMode gm)
+        internal MainWindow(GameMode gm) : this(gm, null, null, null) { }
+
+        internal MainWindow(GameMode gm, Tamer runtimeTamer, IOverviewSource runtimeSource)
+            : this(gm, runtimeTamer, runtimeSource, null) { }
+
+        internal MainWindow(GameMode gm, Tamer runtimeTamer, IOverviewSource runtimeSource,
+            DevFocus runtimeDevFocus)
         {
             InitializeComponent();
             Pump();
@@ -59,11 +69,12 @@ namespace CaelusApp.WpfHost
             {
                 "常规", "竞技", "自定义"
             };
-            source = new SampleOverviewSource();
-            vm = new OverviewViewModel(source);
+            // 正式运行时注入真实数据源与 Tamer/DevFocus；截图/压力探针无注入时回退示例数据
+            gameMode = gm ?? new GameMode(Paths.Data, new SuppressionCore());
+            source = runtimeSource ?? new SampleOverviewSource();
+            vm = new OverviewViewModel(source, gameMode);
             vm.Refresh();
             Pump();
-            gameMode = gm ?? new GameMode(Paths.Data, new SuppressionCore());
             policyVm = new PolicyPageViewModel(gameMode);
             libraryVm = new LibraryViewModel(gameMode);
             libraryVm.Refresh();
@@ -71,8 +82,8 @@ namespace CaelusApp.WpfHost
             logVm.Refresh();
             Pump();
             aboutVm = new AboutViewModel();
-            tamer = new Tamer(new SuppressionCore());
-            settingsVm = new SettingsViewModel(gameMode, tamer);
+            tamer = runtimeTamer ?? new Tamer(new SuppressionCore());
+            settingsVm = new SettingsViewModel(gameMode, tamer, runtimeDevFocus);
             antiCheatVm = new AntiCheatViewModel(tamer);
             antiCheatVm.BuildCards();
             Pump();
@@ -103,6 +114,47 @@ namespace CaelusApp.WpfHost
             // 主题/模式换槽统一过渡：ModeChanged 在每次 ThemeManager.Apply（模式或深浅主题）后触发，
             // 在此集中 CrossFade 内容，替代各调用点的零散 CrossFade（含深浅主题切换这一原缺口）。
             ThemeManager.ModeChanged += OnThemeChanged;
+
+            // 任务栏 / Alt-Tab 图标（从 IconArt 运行时生成，与托盘图标同一套视觉）
+            Icon = WindowIcon.Create();
+
+            // 运行时状态轮询：概览结论/指标与策略锁随压制、模式、场景变化刷新
+            refreshTimer = new System.Windows.Threading.DispatcherTimer(
+                System.Windows.Threading.DispatcherPriority.Background)
+            {
+                Interval = TimeSpan.FromSeconds(2)
+            };
+            refreshTimer.Tick += delegate
+            {
+                try { vm.Refresh(); } catch { }
+                try { policyVm.RefreshLocks(); } catch { }
+            };
+            refreshTimer.Start();
+        }
+
+        // 托盘开关改动后回刷界面各页
+        internal void SyncAllToggles()
+        {
+            try { vm.Refresh(); } catch { }
+            try { policyVm.RefreshLocks(); } catch { }
+            try { antiCheatVm.RefreshStatus(); } catch { }
+        }
+
+        internal void NotifyLibraryChanged()
+        {
+            try { libraryVm.Refresh(); } catch { }
+        }
+
+        protected override void OnClosing(System.ComponentModel.CancelEventArgs e)
+        {
+            base.OnClosing(e);
+            if (!RealExit)
+            {
+                e.Cancel = true;
+                Hide();
+                return;
+            }
+            try { refreshTimer.Stop(); } catch { }
         }
 
         private void OnThemeChanged(object sender, System.EventArgs e)
@@ -116,7 +168,8 @@ namespace CaelusApp.WpfHost
         {
             ModePicker.SelectedIndex = mode == AppMode.Competitive ? 1
                 : mode == AppMode.Custom ? 2 : 0;
-            source.SetMode(mode);
+            SampleOverviewSource sample = source as SampleOverviewSource;
+            if (sample != null) sample.SetMode(mode);
             vm.Refresh();
             policyVm.RefreshLocks();
         }
@@ -353,7 +406,8 @@ namespace CaelusApp.WpfHost
             int index = mode == AppMode.Competitive ? 1 : mode == AppMode.Custom ? 2 : 0;
             ModePicker.SelectedIndex = index;
             ThemeManager.Apply(Application.Current, ThemeManager.CurrentTone, mode);
-            source.SetMode(mode);
+            SampleOverviewSource sample = source as SampleOverviewSource;
+            if (sample != null) sample.SetMode(mode);
             vm.Refresh();
             policyVm.RefreshLocks();
             // 内容 CrossFade 由 OnThemeChanged 集中处理

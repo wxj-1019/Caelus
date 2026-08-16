@@ -5,6 +5,7 @@ using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Threading;
@@ -22,11 +23,19 @@ namespace CaelusApp.WpfHost.Dialogs
         {
             public string DisplayName { get; set; }
             public string ExePath { get; set; }
-            public string Tag { get; set; }
-            public bool HasTag { get { return !string.IsNullOrEmpty(Tag); } }
+            private string tag = "";
+            public string Tag
+            {
+                get { return tag; }
+                set { tag = value; Raise("Tag"); Raise("HasTag"); }
+            }
+            public bool HasTag { get { return !string.IsNullOrEmpty(tag); } }
             public bool CanCheck { get; set; }
             public string Name { get; set; }
             public string Root { get; set; }
+            public bool Running { get; set; }
+            public bool RendererLike { get; set; }
+            public double Gpu { get; set; }
 
             private bool isChecked;
             public bool Checked
@@ -41,20 +50,25 @@ namespace CaelusApp.WpfHost.Dialogs
 
         private readonly HashSet<string> existingPaths;
         private readonly ICollectionView rowsView;
+        private readonly bool allowGpuProbe;
         private volatile bool closed;
         private Thread scanThread;
         private int scanVersion;
 
-        // existingLibraryItems 用于传入已有游戏（标记 Already）
-        internal AddGameDialogWpf(System.Collections.Generic.IEnumerable<LibraryItem> existingLibraryItems)
+        // existingLibraryItems 用于传入已有游戏（标记 Already）；learnedPaths 为学习到的真身路径；
+        // allowGpuProbe 与 WinForms 一致：仅无进行中游戏会话时允许 GPU 采样识别渲染进程。
+        internal AddGameDialogWpf(System.Collections.Generic.IEnumerable<LibraryItem> existingLibraryItems,
+            System.Collections.Generic.IEnumerable<string> learnedPaths, bool allowGpuProbe)
         {
             InitializeComponent();
             Rows = new ObservableCollection<ScanRow>();
             rowsView = CollectionViewSource.GetDefaultView(Rows);
             rowsView.Filter = FilterRow;
+            rowsView.SortDescriptions.Add(new SortDescription("Running", ListSortDirection.Descending));
             LstGames.ItemsSource = rowsView;
             SelectedHits = new List<ScanHit>();
             Motion.SetPoliteLiveSetting(LblInfo);
+            this.allowGpuProbe = allowGpuProbe;
 
             existingPaths = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
             if (existingLibraryItems != null)
@@ -65,6 +79,11 @@ namespace CaelusApp.WpfHost.Dialogs
                         existingPaths.Add(item.Path);
                 }
             }
+            if (learnedPaths != null)
+            {
+                foreach (string p in learnedPaths)
+                    if (!string.IsNullOrEmpty(p)) existingPaths.Add(p);
+            }
 
             Loaded += OnLoaded;
         }
@@ -74,6 +93,7 @@ namespace CaelusApp.WpfHost.Dialogs
             FrameworkElement content = Content as FrameworkElement;
             if (content != null) Motion.Reveal(content);
             TbFilter.Focus();
+            StartRunningCollect();
             StartScan(null);
         }
 
@@ -100,7 +120,7 @@ namespace CaelusApp.WpfHost.Dialogs
                 Dispatcher.BeginInvoke(new Action(delegate
                 {
                     if (closed || version != scanVersion) return;
-                    MergeScanResults(hits);
+                    MergeScanResults(hits, false);
                     rowsView.Refresh();
                     BtnBrowse.IsEnabled = true;
                     BtnDeep.IsEnabled = true;
@@ -113,7 +133,145 @@ namespace CaelusApp.WpfHost.Dialogs
             scanThread.Start();
         }
 
-        private void MergeScanResults(List<ScanHit> hits)
+        // 与旧 WinForms 一致：后台收集正在运行的游戏候选进程，随后可选 GPU 采样标记"渲染中"
+        private void StartRunningCollect()
+        {
+            var worker = new Thread(delegate()
+            {
+                List<ScanHit> hits;
+                Dictionary<string, int> pidByPath;
+                try { hits = CollectRunningCandidates(out pidByPath); }
+                catch
+                {
+                    hits = new List<ScanHit>();
+                    pidByPath = new Dictionary<string, int>(StringComparer.OrdinalIgnoreCase);
+                }
+                Dispatcher.BeginInvoke(new Action(delegate
+                {
+                    if (closed) return;
+                    MergeScanResults(hits, true);
+                    rowsView.Refresh();
+                    UpdateAddButton();
+                }));
+
+                if (!allowGpuProbe || closed || pidByPath.Count == 0) return;
+                Dictionary<int, double> util = null;
+                try
+                {
+                    util = GpuEvidence.Sample3D(
+                        GpuEvidence.BurstRounds, GpuEvidence.BurstIntervalMs,
+                        delegate { return closed; });
+                }
+                catch { }
+                if (util == null || closed) return;
+                var utilByPath = new Dictionary<string, double>(StringComparer.OrdinalIgnoreCase);
+                foreach (KeyValuePair<string, int> kv in pidByPath)
+                {
+                    double u;
+                    if (util.TryGetValue(kv.Value, out u) && u > 0) utilByPath[kv.Key] = u;
+                }
+                Dispatcher.BeginInvoke(new Action(delegate
+                {
+                    if (closed) return;
+                    ApplyGpuTags(utilByPath);
+                }));
+            });
+            worker.IsBackground = true;
+            worker.Start();
+        }
+
+        private static List<ScanHit> CollectRunningCandidates(out Dictionary<string, int> pidByPath)
+        {
+            pidByPath = new Dictionary<string, int>(StringComparer.OrdinalIgnoreCase);
+            var hits = new List<ScanHit>();
+            int session = -1, selfPid = 0;
+            try
+            {
+                using (Process current = Process.GetCurrentProcess())
+                {
+                    session = current.SessionId;
+                    selfPid = current.Id;
+                }
+            }
+            catch { }
+            if (session < 0) return hits;
+            string windowsRoot = Environment.GetFolderPath(Environment.SpecialFolder.Windows);
+            windowsRoot = string.IsNullOrEmpty(windowsRoot) ? @"C:\Windows\" : windowsRoot.TrimEnd('\\') + "\\";
+            HashSet<int> visible = GameSessionDetector.VisibleWindowPids(true);
+            var seen = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+            Process[] all = null;
+            try
+            {
+                all = Process.GetProcesses();
+                foreach (Process p in all)
+                {
+                    try
+                    {
+                        if (p.Id <= 4 || p.Id == selfPid || !visible.Contains(p.Id)) continue;
+                        int processSession = -1;
+                        try { processSession = p.SessionId; } catch { }
+                        if (processSession != session) continue;
+                        string path = null;
+                        IntPtr h = Native.OpenProcess(Native.PROCESS_QUERY_LIMITED_INFORMATION, false, p.Id);
+                        if (h != IntPtr.Zero)
+                        {
+                            try { path = Native.ImagePath(h); }
+                            finally { Native.CloseHandle(h); }
+                        }
+                        if (string.IsNullOrEmpty(path) || !seen.Add(path)) continue;
+                        string name = GameSessionDetector.ImageNameFromVerifiedPath(path);
+                        if (!GameSessionDetector.IsLibraryCandidate(name, path, windowsRoot)) continue;
+                        if (GamePlatformCatalog.IsPlatformProcess(name, path)) continue;
+                        pidByPath[path] = p.Id;
+                        hits.Add(new ScanHit
+                        {
+                            Name = DisplayNameOf(path, name),
+                            Proc = name,
+                            Root = GameScan.InferGameRoot(path),
+                            Exe = path
+                        });
+                    }
+                    catch { }
+                }
+            }
+            catch { }
+            finally { if (all != null) foreach (Process p in all) { try { p.Dispose(); } catch { } } }
+            return hits;
+        }
+
+        private static string DisplayNameOf(string executablePath, string fallback)
+        {
+            try
+            {
+                FileVersionInfo info = FileVersionInfo.GetVersionInfo(executablePath);
+                string value = !string.IsNullOrWhiteSpace(info.FileDescription) ? info.FileDescription : info.ProductName;
+                if (!string.IsNullOrWhiteSpace(value)) return value.Trim();
+            }
+            catch { }
+            return fallback;
+        }
+
+        private void ApplyGpuTags(Dictionary<string, double> utilByPath)
+        {
+            ScanRow best = null;
+            foreach (ScanRow r in Rows)
+            {
+                if (!r.Running) continue;
+                double u;
+                if (!utilByPath.TryGetValue(r.ExePath, out u)) continue;
+                r.Gpu = u;
+                if (best == null || u > best.Gpu) best = r;
+            }
+            if (best != null && best.Gpu >= GpuEvidence.MinElectUtilization)
+            {
+                best.RendererLike = true;
+                best.Tag = Lang.F("scan.renderer.tag", ((int)best.Gpu).ToString());
+                if (best.CanCheck) best.Checked = true;
+            }
+            UpdateAddButton();
+        }
+
+        private void MergeScanResults(List<ScanHit> hits, bool running)
         {
             var known = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
             foreach (ScanRow r in Rows) known.Add(r.ExePath);
@@ -131,10 +289,12 @@ namespace CaelusApp.WpfHost.Dialogs
                     ExePath = exe,
                     Name = h.Name,
                     Root = h.Root,
-                    Tag = already ? Lang.T("scan.already") : "",
                     CanCheck = !already,
-                    Checked = false
+                    Checked = false,
+                    Running = running
                 };
+                row.Tag = already ? Lang.T("scan.already")
+                    : running ? Lang.T("scan.running.tag") : "";
                 row.PropertyChanged += OnRowPropertyChanged;
                 Rows.Add(row);
             }

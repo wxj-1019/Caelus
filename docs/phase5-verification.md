@@ -96,11 +96,12 @@ TOTAL 178  PASS 175  FAIL 0  SKIP 3
 - **用户主题编辑/导出 UI**（本期只做 Caelus.theme.xaml 文件加载机制）
 - **真实遥测序列**（Sparkline 当前用固定种子随机游走示例，属遗留项「实时指标」）
 
-沿用既有遗留项（Phase 4 遗留，非本次范围）：
-- 3 个 WinForms 对话框需 WPF 重写
-- 反作弊/环境/显卡页定时轮询
-- 托盘右键菜单
-- WPF 预览宿主无单实例互斥
+沿用既有遗留项（Phase 4 遗留，非本次范围）——状态 2026-08-16 更新：
+- ~~3 个 WinForms 对话框需 WPF 重写~~ → 已重写（`wpf/Dialogs/*DialogWpf.xaml`）
+- ~~反作弊/环境/显卡页定时轮询~~ → 反作弊页已加 `statusTimer`；环境/显卡页导航时刷新
+- ~~托盘右键菜单~~ → `WpfRuntime.BuildTrayMenu` 已实现
+- ~~WPF 预览宿主无单实例互斥~~ → `WpfRuntime.AcquireSingleInstance`（`Global\Caelus_SingleInstance`）已实现
+- 概览页实时指标：GPU 温度已接真实采样；FPS 仍为策略值（见 phase4-verification.md）
 
 ## 7. 技术债记录（记忆）
 

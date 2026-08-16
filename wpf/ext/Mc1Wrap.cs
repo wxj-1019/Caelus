@@ -250,12 +250,15 @@ public class MarkupCompilePass1 : Task
             // References 中"参考程序集目录"的框架文件：ReflectionHelper 对其
             // ReflectionOnlyLoadFrom 会与已加载实例冲突（API restriction）。
             // 直接把 ItemSpec 改为 GAC 路径（保留元数据，临时项目仍可解析）。
+            // 同理覆盖 v4.0.30319 安装目录：本机无 Targeting Pack，csproj 预设
+            // _TargetFrameworkDirectories 指向框架安装目录以消除 MSB3644。
             if (References != null)
             {
                 foreach (ITaskItem ri in References)
                 {
                     string spec = ri.ItemSpec;
-                    if (spec.IndexOf("Reference Assemblies", StringComparison.OrdinalIgnoreCase) >= 0)
+                    if (spec.IndexOf("Reference Assemblies", StringComparison.OrdinalIgnoreCase) >= 0
+                        || spec.IndexOf(@"Microsoft.NET\Framework\v4.0.30319", StringComparison.OrdinalIgnoreCase) >= 0)
                     {
                         string name = System.IO.Path.GetFileNameWithoutExtension(spec);
                         try
@@ -268,6 +271,24 @@ public class MarkupCompilePass1 : Task
                             }
                         }
                         catch (Exception exm) { File.AppendAllText(log, "  REFMAP FAIL " + spec + ": " + exm.Message + Environment.NewLine); }
+                    }
+                }
+            }
+            // KnownReferencePaths 中的框架安装目录同样会被 ReflectionHelper
+            // ReflectionOnlyLoadFrom 逐个探测，与反射域预加载的 GAC 副本冲突
+            // （MC1000 API restriction）。替换为 GAC_MSIL 根目录：无扁平 DLL，
+            // 探测自然落空，改走 ReflectionOnlyAssemblyResolve → GAC 按名解析。
+            if (KnownReferencePaths != null)
+            {
+                for (int i = 0; i < KnownReferencePaths.Length; i++)
+                {
+                    string kp = KnownReferencePaths[i];
+                    if (kp != null
+                        && (kp.IndexOf(@"Microsoft.NET\Framework\v4.0.30319", StringComparison.OrdinalIgnoreCase) >= 0
+                            || kp.IndexOf("Reference Assemblies", StringComparison.OrdinalIgnoreCase) >= 0
+                            || kp.IndexOf("RefPack", StringComparison.OrdinalIgnoreCase) >= 0))
+                    {
+                        KnownReferencePaths[i] = @"C:\Windows\Microsoft.NET\assembly\GAC_MSIL\";
                     }
                 }
             }

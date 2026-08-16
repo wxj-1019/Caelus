@@ -14,21 +14,40 @@
     <Style x:Key="BarGrowFill" TargetType="Border">
       <EventSetter Event="Loaded" Handler="OnBarLoaded"/>
     </Style>
+    <!-- 按数据源切换的文案：ShowWhenSample 仅探针显示，ShowWhenReal 仅正式运行时显示 -->
+    <Style x:Key="ShowWhenSample" TargetType="TextBlock">
+      <Setter Property="Visibility" Value="Collapsed"/>
+      <Style.Triggers>
+        <DataTrigger Binding="{Binding IsSample}" Value="True">
+          <Setter Property="Visibility" Value="Visible"/>
+        </DataTrigger>
+      </Style.Triggers>
+    </Style>
+    <Style x:Key="ShowWhenReal" TargetType="TextBlock">
+      <Setter Property="Visibility" Value="Visible"/>
+      <Style.Triggers>
+        <DataTrigger Binding="{Binding IsSample}" Value="True">
+          <Setter Property="Visibility" Value="Collapsed"/>
+        </DataTrigger>
+      </Style.Triggers>
+    </Style>
   </UserControl.Resources>
 
   <ScrollViewer VerticalScrollBarVisibility="Auto"
                 HorizontalScrollBarVisibility="Disabled"
-                AutomationProperties.Name="概览预览内容">
-    <StackPanel Margin="0,0,0,16">
-      <StackPanel x:Name="ZoneHeader" Margin="0,0,0,16">
-        <TextBlock Text="概览" Style="{DynamicResource PageHeader}"/>
-        <TextBlock Text="WPF 界面预览与样例数据概览"
+                AutomationProperties.Name="概览内容">
+    <StackPanel Margin="0,0,0,10">
+      <StackPanel x:Name="ZoneHeader" Margin="0,0,0,10">
+        <TextBlock Text="概览" Style="{DynamicResource PageHeader}" FontSize="19"/>
+        <TextBlock Text="系统守护状态、关键指标与本机硬件"
                    Style="{DynamicResource PageSubtitle}"
-                   Margin="0,4,0,0"/>
+                   Margin="0,2,0,0"/>
       </StackPanel>
 
+      <!-- 仅截图探针的示例数据源显示预览横幅；正式运行时隐藏 -->
       <Border x:Name="ZoneBadge" Style="{DynamicResource StatusBadge}"
               Margin="0,0,0,16"
+              Visibility="{Binding IsSample, Converter={StaticResource BoolVis}}"
               AutomationProperties.Name="预览状态：当前显示样例数据，不代表实时遥测">
         <DockPanel>
           <TextBlock Text="仅供界面预览"
@@ -59,8 +78,8 @@
       </Border>
 
       <controls:GlassCard x:Name="ZoneHero" Style="{DynamicResource HeroGlassCard}"
-              Margin="0,0,0,16"
-              AutomationProperties.Name="样例主状态与模式">
+              Margin="0,0,0,12"
+              AutomationProperties.Name="主状态与模式">
         <Grid>
           <Grid.ColumnDefinitions>
             <ColumnDefinition Width="148"/>
@@ -79,23 +98,29 @@
           </StackPanel>
 
           <StackPanel Grid.Column="2" VerticalAlignment="Center">
-            <DockPanel Margin="0,0,0,8">
-              <Border DockPanel.Dock="Right"
-                      Style="{DynamicResource StatusBadge}"
-                      Margin="16,0,0,0"
-                      AutomationProperties.Name="当前样例模式">
-                <StackPanel Orientation="Horizontal">
-                  <TextBlock Text="样例模式"
-                             FontSize="{DynamicResource FontSizeXs}"
-                             Foreground="{DynamicResource TextTertiaryBrush}"/>
-                  <TextBlock Text="{Binding ModeText}"
-                             Margin="8,0,0,0"
-                             FontSize="{DynamicResource FontSizeSmall}"
-                             FontWeight="SemiBold"
-                             Foreground="{DynamicResource AccentPrimaryBrush}"/>
-                </StackPanel>
-              </Border>
-              <TextBlock Text="样例结论"
+            <DockPanel Margin="0,0,0,6">
+              <StackPanel DockPanel.Dock="Right" Orientation="Horizontal" Margin="16,0,0,0">
+                <Border Style="{DynamicResource StatusBadge}"
+                        Margin="0,0,10,0"
+                        AutomationProperties.Name="当前模式">
+                  <StackPanel Orientation="Horizontal">
+                    <TextBlock Text="模式"
+                               FontSize="{DynamicResource FontSizeXs}"
+                               Foreground="{DynamicResource TextTertiaryBrush}"/>
+                    <TextBlock Text="{Binding ModeText}"
+                               Margin="8,0,0,0"
+                               FontSize="{DynamicResource FontSizeSmall}"
+                               FontWeight="SemiBold"
+                               Foreground="{DynamicResource AccentPrimaryBrush}"/>
+                  </StackPanel>
+                </Border>
+                <ToggleButton x:Name="BtnGuard" Click="OnGuardToggle"
+                              IsChecked="{Binding GuardEnabled, Mode=OneWay}"
+                              Style="{DynamicResource PolicyToggle}"
+                              VerticalAlignment="Center"
+                              AutomationProperties.Name="游戏守护总开关"/>
+              </StackPanel>
+              <TextBlock Text="游戏守护"
                          VerticalAlignment="Center"
                          FontSize="{DynamicResource FontSizeXs}"
                          Foreground="{DynamicResource TextTertiaryBrush}"/>
@@ -103,58 +128,201 @@
 
             <TextBlock x:Name="ConclusionTitleText"
                        Text="{Binding ConclusionTitle}"
-                       FontSize="20"
+                       FontSize="17"
                        FontWeight="SemiBold"
                        Foreground="{DynamicResource TextPrimaryBrush}"
                        TextWrapping="Wrap"
                        AutomationProperties.Name="{Binding ConclusionTitle}"/>
             <TextBlock Text="{Binding ConclusionDetail}"
-                       Margin="0,5,0,0"
+                       Margin="0,3,0,0"
                        MaxWidth="620"
                        HorizontalAlignment="Left"
                        FontSize="{DynamicResource FontSizeCaption}"
                        Foreground="{DynamicResource TextSecondaryBrush}"
                        TextWrapping="Wrap"/>
             <TextBlock Text="{Binding LastCheckText}"
-                       Margin="0,5,0,0"
+                       Margin="0,3,0,0"
                        FontSize="{DynamicResource FontSizeSmall}"
                        Foreground="{DynamicResource TextTertiaryBrush}"
                        TextWrapping="Wrap"/>
 
             <Button Style="{DynamicResource GhostButton}"
                     HorizontalAlignment="Left"
-                    Margin="-6,8,0,0"
+                    Margin="-6,6,0,0"
                     Content="{Binding DetailVisible, Converter={StaticResource DetailText}}"
                     Command="{Binding ToggleDetailCommand}"
                     AutomationProperties.Name="查看或收起样例诊断详情"/>
 
-            <Border Margin="0,10,0,0"
-                    Padding="0,10,0,0"
+            <Border Margin="0,8,0,0"
+                    Padding="0,8,0,0"
                     BorderBrush="{DynamicResource BorderSubtleBrush}"
                     BorderThickness="0,1,0,0"
                     Visibility="{Binding DetailVisible, Converter={StaticResource BoolVis}}"
-                    AutomationProperties.Name="样例诊断详情说明">
-              <TextBlock Text="诊断详情尚未接入真实数据；当前区域仅演示渐进披露交互与排版状态。"
-                         FontSize="{DynamicResource FontSizeSmall}"
-                         Foreground="{DynamicResource TextSecondaryBrush}"
-                         TextWrapping="Wrap"/>
+                    AutomationProperties.Name="守护诊断详情说明">
+              <StackPanel>
+                <TextBlock Style="{StaticResource ShowWhenReal}"
+                           FontSize="{DynamicResource FontSizeSmall}"
+                           Foreground="{DynamicResource TextSecondaryBrush}"
+                           TextWrapping="Wrap"
+                           Text="游戏提优加速状态与 CPU 拓扑汇总。"/>
+                <TextBlock Style="{StaticResource ShowWhenSample}"
+                           FontSize="{DynamicResource FontSizeSmall}"
+                           Foreground="{DynamicResource TextSecondaryBrush}"
+                           TextWrapping="Wrap"
+                           Text="诊断详情尚未接入真实数据；当前区域仅演示渐进披露交互与排版状态。"/>
+                <TextBlock Text="{Binding BoostText}"
+                           Margin="0,8,0,0"
+                           FontSize="{DynamicResource FontSizeSmall}"
+                           Foreground="{DynamicResource TextSecondaryBrush}"
+                           TextWrapping="Wrap">
+                  <TextBlock.Style>
+                    <Style TargetType="TextBlock" BasedOn="{StaticResource {x:Type TextBlock}}">
+                      <Setter Property="Visibility" Value="Collapsed"/>
+                      <Style.Triggers>
+                        <DataTrigger Binding="{Binding HasBoostText}" Value="True">
+                          <Setter Property="Visibility" Value="Visible"/>
+                        </DataTrigger>
+                      </Style.Triggers>
+                    </Style>
+                  </TextBlock.Style>
+                </TextBlock>
+                <TextBlock Text="{Binding CpuTopologyText}"
+                           Margin="0,6,0,0"
+                           FontSize="{DynamicResource FontSizeSmall}"
+                           Foreground="{DynamicResource TextTertiaryBrush}"
+                           TextWrapping="Wrap"/>
+              </StackPanel>
             </Border>
           </StackPanel>
         </Grid>
       </controls:GlassCard>
 
-      <StackPanel x:Name="ZoneMetricsLabel" Margin="0,0,0,8">
+      <!-- 状态图块：游戏 / 后台压制 / 环境（对应旧 WinForms 的三张仪表盘图块） -->
+      <Grid x:Name="ZoneTiles" Margin="0,0,0,12">
+        <Grid.ColumnDefinitions>
+          <ColumnDefinition Width="*"/>
+          <ColumnDefinition Width="12"/>
+          <ColumnDefinition Width="*"/>
+          <ColumnDefinition Width="12"/>
+          <ColumnDefinition Width="*"/>
+        </Grid.ColumnDefinitions>
+        <Border Grid.Column="0" Style="{DynamicResource MetricPanel}" Padding="12"
+                local:Motion.Lift="True"
+                AutomationProperties.Name="当前游戏状态图块">
+          <StackPanel>
+            <DockPanel Margin="0,0,0,4">
+              <TextBlock Text="游戏" DockPanel.Dock="Right" FontSize="{DynamicResource FontSizeXs}"
+                         Foreground="{DynamicResource TextTertiaryBrush}"/>
+              <TextBlock Text="{Binding ActiveGameText}" FontSize="{DynamicResource FontSizeCaption}"
+                         FontWeight="SemiBold" Foreground="{DynamicResource TextPrimaryBrush}"
+                         TextTrimming="CharacterEllipsis">
+                <TextBlock.Style>
+                  <Style TargetType="TextBlock" BasedOn="{StaticResource {x:Type TextBlock}}">
+                    <Setter Property="Foreground" Value="{DynamicResource TextPrimaryBrush}"/>
+                    <Style.Triggers>
+                      <DataTrigger Binding="{Binding InGame}" Value="True">
+                        <Setter Property="Foreground" Value="{DynamicResource ModeAccentBrush}"/>
+                      </DataTrigger>
+                    </Style.Triggers>
+                  </Style>
+                </TextBlock.Style>
+              </TextBlock>
+            </DockPanel>
+            <TextBlock FontSize="{DynamicResource FontSizeSmall}" Foreground="{DynamicResource TextSecondaryBrush}">
+              <TextBlock.Style>
+                <Style TargetType="TextBlock" BasedOn="{StaticResource {x:Type TextBlock}}">
+                  <Setter Property="Text" Value="待命中：识别到游戏即接管"/>
+                  <Style.Triggers>
+                    <DataTrigger Binding="{Binding InGame}" Value="True">
+                      <Setter Property="Text" Value="游戏中：正在接管资源"/>
+                    </DataTrigger>
+                  </Style.Triggers>
+                </Style>
+              </TextBlock.Style>
+            </TextBlock>
+          </StackPanel>
+        </Border>
+        <Border Grid.Column="2" Style="{DynamicResource MetricPanel}" Padding="12"
+                local:Motion.Lift="True"
+                AutomationProperties.Name="后台压制状态图块">
+          <StackPanel>
+            <DockPanel Margin="0,0,0,4">
+              <TextBlock Text="{Binding SuppressedCountText}" DockPanel.Dock="Right"
+                         Style="{DynamicResource MetricNumber}" FontSize="22"
+                         Foreground="{DynamicResource SuccessBrush}"/>
+              <TextBlock Text="后台压制" FontSize="{DynamicResource FontSizeCaption}"
+                         FontWeight="SemiBold" Foreground="{DynamicResource TextPrimaryBrush}"
+                         VerticalAlignment="Center"/>
+            </DockPanel>
+            <TextBlock Text="个后台进程正在让位"
+                       FontSize="{DynamicResource FontSizeSmall}"
+                       Foreground="{DynamicResource TextSecondaryBrush}"/>
+          </StackPanel>
+        </Border>
+        <Border Grid.Column="4" Style="{DynamicResource MetricPanel}" Padding="12"
+                local:Motion.Lift="True"
+                AutomationProperties.Name="供电与降频状态图块">
+          <StackPanel>
+            <DockPanel Margin="0,0,0,4">
+              <TextBlock Text="{Binding PowerText}" DockPanel.Dock="Right"
+                         Style="{DynamicResource MetricNumber}" FontSize="22"
+                         Foreground="{DynamicResource TextPrimaryBrush}"/>
+              <TextBlock Text="供电方式" FontSize="{DynamicResource FontSizeCaption}"
+                         FontWeight="SemiBold" Foreground="{DynamicResource TextPrimaryBrush}"
+                         VerticalAlignment="Center"/>
+            </DockPanel>
+            <TextBlock Text="{Binding ThrottleText}" FontSize="{DynamicResource FontSizeSmall}"
+                       Foreground="{DynamicResource WarningBrush}" TextWrapping="Wrap">
+              <TextBlock.Style>
+                <Style TargetType="TextBlock" BasedOn="{StaticResource {x:Type TextBlock}}">
+                  <Setter Property="Text" Value="GPU 未被功耗墙或温度墙限制"/>
+                  <Style.Triggers>
+                    <DataTrigger Binding="{Binding HasThrottleText}" Value="True">
+                      <Setter Property="Visibility" Value="Visible"/>
+                    </DataTrigger>
+                    <DataTrigger Binding="{Binding HasThrottleText}" Value="False">
+                      <Setter Property="Visibility" Value="Collapsed"/>
+                    </DataTrigger>
+                  </Style.Triggers>
+                </Style>
+              </TextBlock.Style>
+            </TextBlock>
+            <TextBlock Text="GPU 未被功耗墙或温度墙限制"
+                       FontSize="{DynamicResource FontSizeSmall}"
+                       Foreground="{DynamicResource TextSecondaryBrush}">
+              <TextBlock.Style>
+                <Style TargetType="TextBlock" BasedOn="{StaticResource {x:Type TextBlock}}">
+                  <Setter Property="Visibility" Value="Visible"/>
+                  <Style.Triggers>
+                    <DataTrigger Binding="{Binding HasThrottleText}" Value="True">
+                      <Setter Property="Visibility" Value="Collapsed"/>
+                    </DataTrigger>
+                  </Style.Triggers>
+                </Style>
+              </TextBlock.Style>
+            </TextBlock>
+          </StackPanel>
+        </Border>
+      </Grid>
+
+      <StackPanel x:Name="ZoneMetricsLabel" Margin="0,0,0,6">
         <TextBlock Text="关键指标"
                    FontSize="{DynamicResource FontSizeBody}"
                    FontWeight="SemiBold"
                    Foreground="{DynamicResource TextPrimaryBrush}"/>
-        <TextBlock Text="以下三项均为预览数据，用于检查数字、趋势和状态样式。"
-                   Margin="0,3,0,0"
+        <TextBlock Style="{StaticResource ShowWhenReal}"
+                   Text="实时采集的 GPU 温度、目标帧率与内存占用。"
+                   Margin="0,2,0,0"
+                   FontSize="{DynamicResource FontSizeSmall}"
+                   Foreground="{DynamicResource TextSecondaryBrush}"/>
+        <TextBlock Style="{StaticResource ShowWhenSample}"
+                   Text="以下三项均为预览数据，用于检查数字、趋势和状态样式。"
+                   Margin="0,2,0,0"
                    FontSize="{DynamicResource FontSizeSmall}"
                    Foreground="{DynamicResource TextSecondaryBrush}"/>
       </StackPanel>
 
-      <Grid x:Name="ZoneMetrics" Margin="0,0,0,16">
+      <Grid x:Name="ZoneMetrics" Margin="0,0,0,12">
         <Grid.ColumnDefinitions>
           <ColumnDefinition Width="*"/>
           <ColumnDefinition Width="12"/>
@@ -163,9 +331,9 @@
 
         <Border Grid.Column="0"
                 Style="{DynamicResource MetricPanel}"
-                Padding="16"
+                Padding="14"
                 local:Motion.Lift="True"
-                AutomationProperties.Name="GPU 温度样例指标">
+                AutomationProperties.Name="GPU 温度指标">
           <Grid>
             <Grid.RowDefinitions>
               <RowDefinition Height="Auto"/>
@@ -174,10 +342,6 @@
               <RowDefinition Height="Auto"/>
             </Grid.RowDefinitions>
             <DockPanel>
-              <TextBlock Text="样例值"
-                         DockPanel.Dock="Right"
-                         FontSize="{DynamicResource FontSizeXs}"
-                         Foreground="{DynamicResource TextTertiaryBrush}"/>
               <TextBlock Text="{Binding Metrics[0].Label}"
                          FontSize="{DynamicResource FontSizeSmall}"
                          Foreground="{DynamicResource TextSecondaryBrush}"/>
@@ -187,11 +351,11 @@
                        Style="{DynamicResource MetricNumber}"
                        Margin="0,8,0,0"/>
             <controls:Sparkline Grid.Row="2"
-                                Height="26"
-                                Margin="0,6,0,8"
+                                Height="22"
+                                Margin="0,5,0,6"
                                 Values="{Binding GpuTempSeries}"
                                 Stroke="{DynamicResource AccentPrimaryBrush}"
-                                AutomationProperties.Name="GPU 温度样例趋势"/>
+                                AutomationProperties.Name="GPU 温度趋势"/>
             <Grid Grid.Row="3" Height="3">
               <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="{Binding Metrics[0].Fraction, Converter={StaticResource FracLen}}"/>
@@ -207,7 +371,7 @@
         <ItemsControl Grid.Column="2"
                       ItemsSource="{Binding Source={StaticResource MetricsRest}}"
                       Margin="0,0,-12,0"
-                      AutomationProperties.Name="其余样例指标">
+                      AutomationProperties.Name="其余指标">
           <ItemsControl.ItemsPanel>
             <ItemsPanelTemplate>
               <UniformGrid Columns="2"/>
@@ -216,7 +380,7 @@
           <ItemsControl.ItemTemplate>
             <DataTemplate>
               <Border Style="{DynamicResource MetricPanel}"
-                      Padding="16"
+                      Padding="14"
                       Margin="0,0,12,0"
                       local:Motion.Lift="True"
                       AutomationProperties.Name="{Binding Label}">
@@ -228,10 +392,6 @@
                     <RowDefinition Height="Auto"/>
                   </Grid.RowDefinitions>
                   <DockPanel>
-                    <TextBlock Text="样例值"
-                               DockPanel.Dock="Right"
-                               FontSize="{DynamicResource FontSizeXs}"
-                               Foreground="{DynamicResource TextTertiaryBrush}"/>
                     <TextBlock Text="{Binding Label}"
                                FontSize="{DynamicResource FontSizeSmall}"
                                Foreground="{DynamicResource TextSecondaryBrush}"/>
@@ -241,6 +401,7 @@
                              Style="{DynamicResource MetricNumber}"
                              Margin="0,8,0,0"/>
                   <TextBlock Grid.Row="2"
+                             Style="{StaticResource ShowWhenSample}"
                              Text="来自预览数据源"
                              Margin="0,8,0,8"
                              VerticalAlignment="Bottom"
@@ -262,6 +423,23 @@
         </ItemsControl>
       </Grid>
 
+      <!-- 游戏提优加速状态（有数据时显示；与旧 WinForms 的加速状态卡一致） -->
+      <Border x:Name="ZoneBoost" Style="{DynamicResource SettingsGroup}"
+              Margin="0,0,0,12"
+              Visibility="{Binding HasBoostText, Converter={StaticResource BoolVis}}"
+              AutomationProperties.Name="游戏提优状态">
+        <Border Style="{DynamicResource PolicyRow}">
+          <StackPanel>
+            <TextBlock Text="游戏提优" FontSize="{DynamicResource FontSizeCaption}"
+                       FontWeight="SemiBold" Foreground="{DynamicResource TextPrimaryBrush}"/>
+            <TextBlock Text="{Binding BoostText}" Margin="0,4,0,0"
+                       FontSize="{DynamicResource FontSizeSmall}"
+                       Foreground="{DynamicResource TextSecondaryBrush}"
+                       TextWrapping="Wrap"/>
+          </StackPanel>
+        </Border>
+      </Border>
+
       <Grid x:Name="ZoneBottom">
         <Grid.ColumnDefinitions>
           <ColumnDefinition Width="1.35*"/>
@@ -271,24 +449,30 @@
 
         <Border Grid.Column="0"
                 Style="{DynamicResource SettingsGroup}"
-                Padding="12"
-                AutomationProperties.Name="最近活动预览摘要">
+                Padding="10"
+                AutomationProperties.Name="守护状态与硬件摘要">
           <StackPanel>
-            <TextBlock Text="最近活动"
+            <TextBlock Text="守护状态"
                        FontSize="{DynamicResource FontSizeBody}"
                        FontWeight="SemiBold"
                        Foreground="{DynamicResource TextPrimaryBrush}"/>
-            <TextBlock Text="活动流还是空的，等一场对局来把它填满。"
-                       Margin="0,3,0,10"
+            <TextBlock Style="{StaticResource ShowWhenReal}"
+                       Text="当前守护、调度与硬件一览。"
+                       Margin="0,3,0,6"
+                       FontSize="{DynamicResource FontSizeSmall}"
+                       Foreground="{DynamicResource TextSecondaryBrush}"/>
+            <TextBlock Style="{StaticResource ShowWhenSample}"
+                       Text="活动流还是空的，等一场对局来把它填满。"
+                       Margin="0,3,0,6"
                        FontSize="{DynamicResource FontSizeSmall}"
                        Foreground="{DynamicResource TextSecondaryBrush}"/>
 
-            <Grid Margin="0,0,0,6">
+            <Grid Margin="0,0,0,4">
               <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="*"/>
                 <ColumnDefinition Width="Auto"/>
               </Grid.ColumnDefinitions>
-              <TextBlock Text="当前模式预览"
+              <TextBlock Text="当前模式"
                          FontSize="{DynamicResource FontSizeSmall}"
                          Foreground="{DynamicResource TextSecondaryBrush}"/>
               <TextBlock Grid.Column="1"
@@ -296,65 +480,125 @@
                          FontSize="{DynamicResource FontSizeSmall}"
                          Foreground="{DynamicResource TextPrimaryBrush}"/>
             </Grid>
-            <Grid Margin="0,0,0,6">
+            <Grid Margin="0,0,0,4">
               <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="*"/>
                 <ColumnDefinition Width="Auto"/>
               </Grid.ColumnDefinitions>
-              <TextBlock Text="样例数据刷新"
+              <TextBlock Text="守护总开关"
                          FontSize="{DynamicResource FontSizeSmall}"
                          Foreground="{DynamicResource TextSecondaryBrush}"/>
               <TextBlock Grid.Column="1"
-                         Text="仅宿主启动或切换模式时"
                          FontSize="{DynamicResource FontSizeSmall}"
-                         Foreground="{DynamicResource TextTertiaryBrush}"/>
+                         Foreground="{DynamicResource TextPrimaryBrush}">
+                <TextBlock.Style>
+                  <Style TargetType="TextBlock" BasedOn="{StaticResource {x:Type TextBlock}}">
+                    <Setter Property="Text" Value="已开启"/>
+                    <Setter Property="Foreground" Value="{DynamicResource SuccessBrush}"/>
+                    <Style.Triggers>
+                      <DataTrigger Binding="{Binding GuardEnabled}" Value="False">
+                        <Setter Property="Text" Value="已暂停"/>
+                        <Setter Property="Foreground" Value="{DynamicResource DangerBrush}"/>
+                      </DataTrigger>
+                    </Style.Triggers>
+                  </Style>
+                </TextBlock.Style>
+              </TextBlock>
+            </Grid>
+            <Grid Margin="0,0,0,4">
+              <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*"/>
+                <ColumnDefinition Width="Auto"/>
+              </Grid.ColumnDefinitions>
+              <TextBlock Text="当前场景"
+                         FontSize="{DynamicResource FontSizeSmall}"
+                         Foreground="{DynamicResource TextSecondaryBrush}"/>
+              <TextBlock Grid.Column="1"
+                         FontSize="{DynamicResource FontSizeSmall}"
+                         Foreground="{DynamicResource TextPrimaryBrush}">
+                <TextBlock.Style>
+                  <Style TargetType="TextBlock" BasedOn="{StaticResource {x:Type TextBlock}}">
+                    <Setter Property="Text" Value="待命"/>
+                    <Style.Triggers>
+                      <DataTrigger Binding="{Binding GrantSuffix}" Value=" · 游戏">
+                        <Setter Property="Text" Value="游戏"/>
+                      </DataTrigger>
+                      <DataTrigger Binding="{Binding GrantSuffix}" Value=" · 开发">
+                        <Setter Property="Text" Value="开发专注"/>
+                      </DataTrigger>
+                      <DataTrigger Binding="{Binding GrantSuffix}" Value=" · 日常">
+                        <Setter Property="Text" Value="日常优化"/>
+                      </DataTrigger>
+                    </Style.Triggers>
+                  </Style>
+                </TextBlock.Style>
+              </TextBlock>
             </Grid>
             <Grid>
               <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="*"/>
                 <ColumnDefinition Width="Auto"/>
               </Grid.ColumnDefinitions>
-              <TextBlock Text="真实活动记录"
+              <TextBlock Text="CPU 拓扑"
                          FontSize="{DynamicResource FontSizeSmall}"
                          Foreground="{DynamicResource TextSecondaryBrush}"/>
-              <ContentControl Grid.Column="1" Style="{DynamicResource EmptyChip}">
-                <TextBlock Text="待接入"
-                           FontSize="{DynamicResource FontSizeXs}"
-                           Foreground="{DynamicResource TextTertiaryBrush}"/></ContentControl>
+              <TextBlock Grid.Column="1"
+                         Text="{Binding CpuTopologyText}"
+                         FontSize="{DynamicResource FontSizeSmall}"
+                         Foreground="{DynamicResource TextTertiaryBrush}"/>
             </Grid>
           </StackPanel>
         </Border>
 
         <Border Grid.Column="2"
                 Style="{DynamicResource SettingsGroup}"
-                Padding="12"
-                AutomationProperties.Name="硬件摘要预览状态">
+                Padding="10"
+                AutomationProperties.Name="硬件摘要">
           <StackPanel>
             <TextBlock Text="硬件摘要"
                        FontSize="{DynamicResource FontSizeBody}"
                        FontWeight="SemiBold"
                        Foreground="{DynamicResource TextPrimaryBrush}"/>
-            <TextBlock Text="硬件信息还在路上，就快到了。"
-                       Margin="0,3,0,10"
+            <TextBlock Style="{StaticResource ShowWhenSample}"
+                       Text="硬件信息还在路上，就快到了。"
+                       Margin="0,3,0,6"
                        FontSize="{DynamicResource FontSizeSmall}"
                        Foreground="{DynamicResource TextSecondaryBrush}"
                        TextWrapping="Wrap"/>
-            <DockPanel Margin="0,0,0,6">
-              <ContentControl DockPanel.Dock="Right" Style="{DynamicResource EmptyChip}">
-                <TextBlock Text="待接入" FontSize="{DynamicResource FontSizeXs}" Foreground="{DynamicResource TextTertiaryBrush}"/></ContentControl>
+            <TextBlock Style="{StaticResource ShowWhenReal}"
+                       Text="本机处理器、图形设备与内存规格。"
+                       Margin="0,3,0,6"
+                       FontSize="{DynamicResource FontSizeSmall}"
+                       Foreground="{DynamicResource TextSecondaryBrush}"
+                       TextWrapping="Wrap"/>
+            <DockPanel Margin="0,0,0,4">
+              <TextBlock DockPanel.Dock="Right" Text="{Binding CpuText}" MaxWidth="300"
+                         TextTrimming="CharacterEllipsis" TextAlignment="Right"
+                         FontSize="{DynamicResource FontSizeSmall}"
+                         Foreground="{DynamicResource TextPrimaryBrush}"/>
               <TextBlock Text="处理器" FontSize="{DynamicResource FontSizeSmall}"
                          Foreground="{DynamicResource TextSecondaryBrush}"/>
             </DockPanel>
-            <DockPanel Margin="0,0,0,6">
-              <ContentControl DockPanel.Dock="Right" Style="{DynamicResource EmptyChip}">
-                <TextBlock Text="待接入" FontSize="{DynamicResource FontSizeXs}" Foreground="{DynamicResource TextTertiaryBrush}"/></ContentControl>
+            <DockPanel Margin="0,0,0,4">
+              <TextBlock DockPanel.Dock="Right" Text="{Binding GpuText}" MaxWidth="300"
+                         TextTrimming="CharacterEllipsis" TextAlignment="Right"
+                         FontSize="{DynamicResource FontSizeSmall}"
+                         Foreground="{DynamicResource TextPrimaryBrush}"/>
               <TextBlock Text="图形设备" FontSize="{DynamicResource FontSizeSmall}"
                          Foreground="{DynamicResource TextSecondaryBrush}"/>
             </DockPanel>
-            <DockPanel>
-              <ContentControl DockPanel.Dock="Right" Style="{DynamicResource EmptyChip}">
-                <TextBlock Text="待接入" FontSize="{DynamicResource FontSizeXs}" Foreground="{DynamicResource TextTertiaryBrush}"/></ContentControl>
+            <DockPanel Margin="0,0,0,4">
+              <TextBlock DockPanel.Dock="Right" Text="{Binding MemoryText}"
+                         FontSize="{DynamicResource FontSizeSmall}"
+                         Foreground="{DynamicResource TextPrimaryBrush}"/>
               <TextBlock Text="内存规格" FontSize="{DynamicResource FontSizeSmall}"
+                         Foreground="{DynamicResource TextSecondaryBrush}"/>
+            </DockPanel>
+            <DockPanel>
+              <TextBlock DockPanel.Dock="Right" Text="{Binding OsText}"
+                         FontSize="{DynamicResource FontSizeSmall}"
+                         Foreground="{DynamicResource TextTertiaryBrush}"/>
+              <TextBlock Text="图形调度" FontSize="{DynamicResource FontSizeSmall}"
                          Foreground="{DynamicResource TextSecondaryBrush}"/>
             </DockPanel>
           </StackPanel>

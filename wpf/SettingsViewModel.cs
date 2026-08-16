@@ -13,6 +13,7 @@ namespace CaelusApp
     {
         private readonly GameMode gameMode;
         private readonly Tamer tamer;
+        private readonly DevFocus devFocus;
         private bool autoStart;
         private bool autoHide;
         private bool lightMode;
@@ -25,10 +26,13 @@ namespace CaelusApp
         private bool shaderBusy;
         private int restoreBusy; // 0=空闲 1=进行中（Interlocked 守护）
 
-        public SettingsViewModel(GameMode gameMode, Tamer tamer)
+        public SettingsViewModel(GameMode gameMode, Tamer tamer) : this(gameMode, tamer, null) { }
+
+        public SettingsViewModel(GameMode gameMode, Tamer tamer, DevFocus devFocus)
         {
             this.gameMode = gameMode;
             this.tamer = tamer;
+            this.devFocus = devFocus;
             autoStart = TaskHelper.TaskExistsCached();
             autoHide = Settings.Load("AutoHideOnGame", false);
             lightMode = Settings.Load("UiLight", false);
@@ -36,6 +40,22 @@ namespace CaelusApp
             focusMode = Settings.Load("DevFocusModeOn", false);
             dailyCare = Settings.Load("DailyCareOn", true);
             shaderStatus = Lang.T("set.shader.n");
+
+            // 与旧 WinForms 的 RefreshSlowStateAsync 一致：后台异步测量着色器缓存占用并回显
+            ThreadPool.QueueUserWorkItem(delegate
+            {
+                try
+                {
+                    long bytes = ShaderCache.MeasureBytes();
+                    System.Windows.Application app = System.Windows.Application.Current;
+                    if (app == null || bytes < 0) return;
+                    app.Dispatcher.BeginInvoke(new Action(delegate
+                    {
+                        try { if (!shaderBusy) ShaderStatus = CacheSweep.FmtBytes(bytes); } catch { }
+                    }));
+                }
+                catch { }
+            });
         }
 
         // —— 分组标题 ——
@@ -50,10 +70,9 @@ namespace CaelusApp
                 return enabled == 0 ? "当前未启用自动化偏好" : "已启用 " + enabled + " 项应用偏好";
             }
         }
-        public string DevSummary { get { return devMode ? "开发模式已开启，可编辑自定义编译进程。" : "开发模式已关闭，自定义编译进程保持只读。"; } }
+        public string DevSummary { get { return devMode ? "开发模式已开启。" : "开发模式已关闭。"; } }
         public string PageFeedback { get { return pageFeedback; } private set { SetProperty(ref pageFeedback, value, "PageFeedback"); } }
         public string PageFeedbackKind { get { return pageFeedbackKind; } private set { SetProperty(ref pageFeedbackKind, value, "PageFeedbackKind"); } }
-        public bool IsDevCustomEnabled { get { return devMode; } }
         public bool IsShaderBusy { get { return shaderBusy; } set { SetProperty(ref shaderBusy, value, "IsShaderBusy"); } }
 
         // —— 开机自启 ——
@@ -121,9 +140,8 @@ namespace CaelusApp
             {
                 if (!SetProperty(ref devMode, value, "DevMode")) return;
                 Settings.Save("DevModeOn", value);
-                Raise("IsDevCustomEnabled");
                 Raise("DevSummary");
-                ShowFeedback(value ? "开发模式已开启。" : "开发模式已关闭，自定义编译进程已锁定。", "Success");
+                ShowFeedback(value ? "开发模式已开启。" : "开发模式已关闭。", "Success");
             }
         }
 
@@ -136,7 +154,9 @@ namespace CaelusApp
             set
             {
                 if (!SetProperty(ref focusMode, value, "FocusMode")) return;
-                Settings.Save("DevFocusModeOn", value);
+                // 与托盘菜单一致走 SetFocusMode：写注册表 + 活性重算立即生效 + 关闭时清理分心记录
+                if (devFocus != null) devFocus.SetFocusMode(value);
+                else Settings.Save("DevFocusModeOn", value);
                 ShowFeedback(value ? "专注模式已开启。" : "专注模式已关闭。", "Success");
             }
         }

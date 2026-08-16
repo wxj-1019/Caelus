@@ -56,10 +56,14 @@ TOTAL 175  PASS 172  FAIL 0  SKIP 3
 | 设置 | Defender/Addon 对话框 → MessageBox | 对话框在 src/Ui 未编译 |
 | 反作弊 | 无 1200ms 定时轮询 | 导航时刷新（定时器后续添加） |
 
-## 遗留项
+## 遗留项（状态 2026-08-16 更新）
 
-- DefenderExclusionDialog / LolAddonDialog / RunningPickerDialog 需 WPF 重写（当前 src/Ui 未编译进 WPF）
-- 反作弊/环境/显卡页的状态定时轮询（1200ms tick）待添加
-- 托盘右键菜单
-- 实时指标接线（概览页 FPS/GPU 温度）
+已解决（后续提交陆续实现）：
+- ~~DefenderExclusionDialog / LolAddonDialog / RunningPickerDialog 需 WPF 重写~~ → 已重写为 `wpf/Dialogs/*DialogWpf.xaml`（含 ReleaseNotesDialogWpf）
+- ~~反作弊页定时轮询~~ → `AntiCheatView.statusTimer` 已添加；环境/显卡页沿用导航时刷新
+- ~~托盘右键菜单~~ → `WpfRuntime.BuildTrayMenu` 已实现
+- ~~概览页 GPU 温度~~ → 已接真实采样（`GpuTempProbe` + NVML/NVAPI/ADLX，Sparkline 绑定 `GpuTempSeries`）
+
+仍遗留：
+- 概览页 FPS/目标帧率为策略值，非实时测量
 - 完整动效与可访问性打磨

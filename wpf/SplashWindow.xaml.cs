@@ -32,6 +32,7 @@ namespace CaelusApp.WpfHost
                 BlobC.Opacity = 0.34;
             }
             BuildTitleLetters(light);
+            Icon = WindowIcon.Create();
             Loaded += delegate { StartShow(); };
         }
 

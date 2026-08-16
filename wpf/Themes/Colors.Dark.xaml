@@ -63,10 +63,13 @@
   <SolidColorBrush x:Key="SegSelectedBrush" Color="#3A3246"/>
   <SolidColorBrush x:Key="SegSelectedTextBrush" Color="#F7F1EA"/>
 
-  <!-- 滚动条（无轨道，细胶囊 thumb） -->
-  <SolidColorBrush x:Key="ScrollTrackBrush" Color="Transparent"/>
-  <SolidColorBrush x:Key="ScrollThumbBrush" Color="#4DFFFFFF"/>
-  <SolidColorBrush x:Key="ScrollThumbHoverBrush" Color="#73FFFFFF"/>
+  <!-- 滚动条（2px 玻璃：淡轨道 + 渐变玻璃胶囊 thumb） -->
+  <SolidColorBrush x:Key="ScrollTrackBrush" Color="#0FFFFFFF"/>
+  <SolidColorBrush x:Key="ScrollThumbBrush" Color="#59FFFFFF"/>
+  <SolidColorBrush x:Key="ScrollThumbHoverBrush" Color="#8CFFFFFF"/>
+  <SolidColorBrush x:Key="ScrollGlassBrush" Color="#73FFFFFF"/>
+  <SolidColorBrush x:Key="ScrollGlassEdgeBrush" Color="#33FFFFFF"/>
+  <Color x:Key="ScrollGlassColor">#73FFFFFF</Color>
 
   <!-- 兼容别名层（保留 key 防旧视图/样式解析失败；值已改为极简表面） -->
   <SolidColorBrush x:Key="SurfaceBrush" Color="#FA1E1E23"/>

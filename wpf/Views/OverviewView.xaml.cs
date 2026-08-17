@@ -28,8 +28,7 @@ namespace CaelusApp.WpfHost.Views
             Motion.RiseIn(ZoneTiles, 200);
             Motion.RiseIn(ZoneMetricsLabel, 240);
             Motion.RiseIn(ZoneMetrics, 240);
-            Motion.RiseIn(ZoneBoost, 280);
-            Motion.RiseIn(ZoneBottom, 320);
+            Motion.RiseIn(ZoneBottom, 280);
             Motion.BreathPulse(ReadyDot);
         }
 

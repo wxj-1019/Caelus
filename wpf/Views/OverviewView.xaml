@@ -423,23 +423,7 @@
         </ItemsControl>
       </Grid>
 
-      <!-- 游戏提优加速状态（有数据时显示；与旧 WinForms 的加速状态卡一致） -->
-      <Border x:Name="ZoneBoost" Style="{DynamicResource SettingsGroup}"
-              Margin="0,0,0,12"
-              Visibility="{Binding HasBoostText, Converter={StaticResource BoolVis}}"
-              AutomationProperties.Name="游戏提优状态">
-        <Border Style="{DynamicResource PolicyRow}">
-          <StackPanel>
-            <TextBlock Text="游戏提优" FontSize="{DynamicResource FontSizeCaption}"
-                       FontWeight="SemiBold" Foreground="{DynamicResource TextPrimaryBrush}"/>
-            <TextBlock Text="{Binding BoostText}" Margin="0,4,0,0"
-                       FontSize="{DynamicResource FontSizeSmall}"
-                       Foreground="{DynamicResource TextSecondaryBrush}"
-                       TextWrapping="Wrap"/>
-          </StackPanel>
-        </Border>
-      </Border>
-
+      <!-- 游戏提优状态文案已并入 Hero 诊断详情，独立卡片已移除 -->
       <Grid x:Name="ZoneBottom">
         <Grid.ColumnDefinitions>
           <ColumnDefinition Width="1.35*"/>

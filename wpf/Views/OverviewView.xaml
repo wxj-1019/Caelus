@@ -3,35 +3,77 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:local="clr-namespace:CaelusApp.WpfHost"
              xmlns:controls="clr-namespace:CaelusApp.WpfHost.Controls"
-             AutomationProperties.Name="Caelus WPF 概览预览">
+             AutomationProperties.Name="Caelus 三场景调度总览">
   <UserControl.Resources>
-    <local:KeyBrushConverter x:Key="KeyBrush"/>
     <BooleanToVisibilityConverter x:Key="BoolVis"/>
-    <local:DetailButtonTextConverter x:Key="DetailText"/>
-    <local:FractionGridLengthConverter x:Key="FracLen"/>
-    <CollectionViewSource x:Key="MetricsRest" Source="{Binding Metrics}" Filter="OnMetricsFilter"/>
-    <!-- 占比条入场生长（Loaded 时 Motion.GrowX） -->
-    <Style x:Key="BarGrowFill" TargetType="Border">
-      <EventSetter Event="Loaded" Handler="OnBarLoaded"/>
+
+    <!-- 场景卡片：掌权 → Success 柔色 + 强调描边；关闭 → 降透明 -->
+    <Style x:Key="ScenarioCard" TargetType="Border">
+      <Setter Property="Background" Value="{DynamicResource Surface0Brush}"/>
+      <Setter Property="BorderBrush" Value="{DynamicResource BorderSubtleBrush}"/>
+      <Setter Property="BorderThickness" Value="1"/>
+      <Setter Property="CornerRadius" Value="{DynamicResource RadiusMd}"/>
+      <Setter Property="Padding" Value="16"/>
+      <Setter Property="Margin" Value="0,0,12,0"/>
+      <Setter Property="SnapsToDevicePixels" Value="True"/>
+      <Style.Triggers>
+        <Trigger Property="IsMouseOver" Value="True">
+          <Setter Property="BorderBrush" Value="{DynamicResource BorderStrongBrush}"/>
+        </Trigger>
+        <DataTrigger Binding="{Binding IsGranted}" Value="True">
+          <Setter Property="Background" Value="{DynamicResource SuccessSoftBrush}"/>
+          <Setter Property="BorderBrush" Value="{DynamicResource SuccessEdgeBrush}"/>
+        </DataTrigger>
+        <DataTrigger Binding="{Binding Enabled}" Value="False">
+          <Setter Property="Opacity" Value="0.72"/>
+        </DataTrigger>
+      </Style.Triggers>
+    </Style>
+
+    <!-- 场景状态徽章：语义键驱动柔色底 + 描边 -->
+    <Style x:Key="ScenarioStateBadge" TargetType="Border">
+      <Setter Property="Background" Value="{DynamicResource AccentSoftBrush}"/>
+      <Setter Property="BorderBrush" Value="{DynamicResource AccentPrimaryBrush}"/>
+      <Setter Property="BorderThickness" Value="3,1,1,1"/>
+      <Setter Property="CornerRadius" Value="{DynamicResource RadiusSm}"/>
+      <Setter Property="Padding" Value="10,5"/>
+      <Style.Triggers>
+        <DataTrigger Binding="{Binding StateKey}" Value="Success">
+          <Setter Property="Background" Value="{DynamicResource SuccessSoftBrush}"/>
+          <Setter Property="BorderBrush" Value="{DynamicResource SuccessEdgeBrush}"/>
+        </DataTrigger>
+        <DataTrigger Binding="{Binding StateKey}" Value="Warning">
+          <Setter Property="Background" Value="{DynamicResource WarningSoftBrush}"/>
+          <Setter Property="BorderBrush" Value="{DynamicResource WarningEdgeBrush}"/>
+        </DataTrigger>
+        <DataTrigger Binding="{Binding StateKey}" Value="Neutral">
+          <Setter Property="Background" Value="{DynamicResource NeutralSoftBrush}"/>
+          <Setter Property="BorderBrush" Value="{DynamicResource NeutralEdgeBrush}"/>
+        </DataTrigger>
+        <DataTrigger Binding="{Binding StateKey}" Value="Info">
+          <Setter Property="Background" Value="{DynamicResource InfoSoftBrush}"/>
+          <Setter Property="BorderBrush" Value="{DynamicResource InfoEdgeBrush}"/>
+        </DataTrigger>
+      </Style.Triggers>
     </Style>
   </UserControl.Resources>
 
   <ScrollViewer VerticalScrollBarVisibility="Auto"
                 HorizontalScrollBarVisibility="Disabled"
-                AutomationProperties.Name="概览预览内容">
+                AutomationProperties.Name="三场景调度总览内容">
     <StackPanel Margin="0,0,0,16">
       <StackPanel x:Name="ZoneHeader" Margin="0,0,0,16">
-        <TextBlock Text="概览" Style="{DynamicResource PageHeader}"/>
-        <TextBlock Text="WPF 界面预览与样例数据概览"
+        <TextBlock Text="场景总览" Style="{DynamicResource PageHeader}"/>
+        <TextBlock Text="游戏 · 开发专注 · 日常优化——按严格优先级自动仲裁，任一时刻只有一个场景掌权"
                    Style="{DynamicResource PageSubtitle}"
-                   Margin="0,4,0,0"/>
+                   Margin="0,4,0,0" TextWrapping="Wrap"/>
       </StackPanel>
 
       <Border x:Name="ZoneBadge" Style="{DynamicResource StatusBadge}"
               Margin="0,0,0,16"
-              AutomationProperties.Name="预览状态：当前显示样例数据，不代表实时遥测">
+              AutomationProperties.Name="预览状态：只读探测，不施加系统副作用">
         <DockPanel>
-          <TextBlock Text="仅供界面预览"
+          <TextBlock Text="只读预览"
                      DockPanel.Dock="Right"
                      Margin="20,0,0,0"
                      VerticalAlignment="Center"
@@ -43,12 +85,12 @@
                      Margin="0,0,9,0"
                      VerticalAlignment="Center"
                      Fill="{DynamicResource AccentPrimaryBrush}"/>
-            <TextBlock Text="预览模式"
+            <TextBlock Text="三场景调度"
                        VerticalAlignment="Center"
                        FontSize="{DynamicResource FontSizeCaption}"
                        FontWeight="SemiBold"
                        Foreground="{DynamicResource TextPrimaryBrush}"/>
-            <TextBlock Text="此页由 SampleOverviewSource 提供样例数据，不代表实时系统遥测。"
+            <TextBlock Text="{Binding RefreshedText}"
                        Margin="12,0,0,0"
                        VerticalAlignment="Center"
                        FontSize="{DynamicResource FontSizeSmall}"
@@ -58,20 +100,26 @@
         </DockPanel>
       </Border>
 
+      <!-- 掌权者 Hero：只回答一个问题——现在谁说了算 -->
       <controls:GlassCard x:Name="ZoneHero" Style="{DynamicResource HeroGlassCard}"
               Margin="0,0,0,16"
-              AutomationProperties.Name="样例主状态与模式">
+              AutomationProperties.Name="当前掌权场景">
         <Grid>
           <Grid.ColumnDefinitions>
-            <ColumnDefinition Width="148"/>
+            <ColumnDefinition Width="128"/>
             <ColumnDefinition Width="24"/>
             <ColumnDefinition Width="*"/>
           </Grid.ColumnDefinitions>
 
-          <StackPanel Grid.Column="0" HorizontalAlignment="Center">
-            <controls:CaelusCore x:Name="CaelusCore"
-                                 AutomationProperties.Name="Caelus Core 模式标识"/>
-            <TextBlock Text="CAELUS CORE"
+          <StackPanel Grid.Column="0" HorizontalAlignment="Center" VerticalAlignment="Center">
+            <Border Width="88" Height="88" CornerRadius="44"
+                    Background="{DynamicResource AccentSoftBrush}"
+                    BorderBrush="{DynamicResource AccentEdgeBrush}" BorderThickness="1">
+              <controls:IconView Key="{Binding GrantedIconKey}" Width="38" Height="38"
+                                 HorizontalAlignment="Center" VerticalAlignment="Center"
+                                 Foreground="{DynamicResource AccentPrimaryBrush}"/>
+            </Border>
+            <TextBlock Text="场景仲裁"
                        Margin="0,8,0,0"
                        HorizontalAlignment="Center"
                        FontSize="{DynamicResource FontSizeXs}"
@@ -80,283 +128,245 @@
 
           <StackPanel Grid.Column="2" VerticalAlignment="Center">
             <DockPanel Margin="0,0,0,8">
-              <Border DockPanel.Dock="Right"
-                      Style="{DynamicResource StatusBadge}"
-                      Margin="16,0,0,0"
-                      AutomationProperties.Name="当前样例模式">
-                <StackPanel Orientation="Horizontal">
-                  <TextBlock Text="样例模式"
-                             FontSize="{DynamicResource FontSizeXs}"
-                             Foreground="{DynamicResource TextTertiaryBrush}"/>
-                  <TextBlock Text="{Binding ModeText}"
-                             Margin="8,0,0,0"
-                             FontSize="{DynamicResource FontSizeSmall}"
-                             FontWeight="SemiBold"
-                             Foreground="{DynamicResource AccentPrimaryBrush}"/>
-                </StackPanel>
+              <Border DockPanel.Dock="Right" Style="{DynamicResource NeutralStatusBadge}"
+                      Margin="16,0,0,0" AutomationProperties.Name="场景优先级链条">
+                <TextBlock Text="游戏 › 开发专注 › 日常优化"
+                           FontSize="{DynamicResource FontSizeXs}"
+                           Foreground="{DynamicResource TextSecondaryBrush}"/>
               </Border>
-              <TextBlock Text="样例结论"
+              <TextBlock Text="掌权状态"
                          VerticalAlignment="Center"
                          FontSize="{DynamicResource FontSizeXs}"
                          Foreground="{DynamicResource TextTertiaryBrush}"/>
             </DockPanel>
 
-            <TextBlock x:Name="ConclusionTitleText"
-                       Text="{Binding ConclusionTitle}"
+            <TextBlock Text="{Binding GrantedTitle}"
                        FontSize="{DynamicResource FontSizeConclusion}"
                        FontWeight="SemiBold"
                        Foreground="{DynamicResource TextPrimaryBrush}"
                        TextWrapping="Wrap"
-                       AutomationProperties.Name="{Binding ConclusionTitle}"/>
-            <TextBlock Text="{Binding ConclusionDetail}"
+                       AutomationProperties.Name="{Binding GrantedTitle}"/>
+            <TextBlock Text="{Binding GrantedDetail}"
                        Margin="0,5,0,0"
-                       MaxWidth="620"
+                       MaxWidth="640"
                        HorizontalAlignment="Left"
                        FontSize="{DynamicResource FontSizeCaption}"
                        Foreground="{DynamicResource TextSecondaryBrush}"
                        TextWrapping="Wrap"/>
-            <TextBlock Text="{Binding LastCheckText}"
-                       Margin="0,5,0,0"
-                       FontSize="{DynamicResource FontSizeSmall}"
-                       Foreground="{DynamicResource TextTertiaryBrush}"
-                       TextWrapping="Wrap"/>
 
-            <Button Style="{DynamicResource GhostButton}"
-                    HorizontalAlignment="Left"
-                    Margin="-6,8,0,0"
-                    Content="{Binding DetailVisible, Converter={StaticResource DetailText}}"
-                    Command="{Binding ToggleDetailCommand}"
-                    AutomationProperties.Name="查看或收起样例诊断详情"/>
-
-            <Border Margin="0,10,0,0"
-                    Padding="0,10,0,0"
-                    BorderBrush="{DynamicResource BorderSubtleBrush}"
-                    BorderThickness="0,1,0,0"
-                    Visibility="{Binding DetailVisible, Converter={StaticResource BoolVis}}"
-                    AutomationProperties.Name="样例诊断详情说明">
-              <TextBlock Text="诊断详情尚未接入真实数据；当前区域仅演示渐进披露交互与排版状态。"
-                         FontSize="{DynamicResource FontSizeSmall}"
-                         Foreground="{DynamicResource TextSecondaryBrush}"
-                         TextWrapping="Wrap"/>
-            </Border>
+            <StackPanel Orientation="Horizontal" Margin="0,10,0,0">
+              <Border Style="{DynamicResource NeutralStatusBadge}" Margin="0,0,8,0">
+                <TextBlock Text="{Binding ActiveSummary}"
+                           FontSize="{DynamicResource FontSizeXs}"
+                           Foreground="{DynamicResource TextSecondaryBrush}"/>
+              </Border>
+              <Border Style="{DynamicResource NeutralStatusBadge}">
+                <TextBlock FontSize="{DynamicResource FontSizeXs}"
+                           Foreground="{DynamicResource TextSecondaryBrush}">
+                  <Run Text="游戏性能档位 · "/><Run Text="{Binding ModeText, Mode=OneWay}"/>
+                </TextBlock>
+              </Border>
+            </StackPanel>
           </StackPanel>
         </Grid>
       </controls:GlassCard>
 
-      <StackPanel x:Name="ZoneMetricsLabel" Margin="0,0,0,8">
-        <TextBlock Text="关键指标"
+      <StackPanel x:Name="ZoneCardsLabel" Margin="0,0,0,8">
+        <TextBlock Text="三场景"
                    FontSize="{DynamicResource FontSizeBody}"
                    FontWeight="SemiBold"
                    Foreground="{DynamicResource TextPrimaryBrush}"/>
-        <TextBlock Text="以下三项均为预览数据，用于检查数字、趋势和状态样式。"
+        <TextBlock Text="被抢占的场景不丢检测状态，只还原副作用；高优先级场景退出后自动补位。"
                    Margin="0,3,0,0"
                    FontSize="{DynamicResource FontSizeSmall}"
-                   Foreground="{DynamicResource TextSecondaryBrush}"/>
+                   Foreground="{DynamicResource TextSecondaryBrush}"
+                   TextWrapping="Wrap"/>
       </StackPanel>
 
-      <Grid x:Name="ZoneMetrics" Margin="0,0,0,16">
-        <Grid.ColumnDefinitions>
-          <ColumnDefinition Width="*"/>
-          <ColumnDefinition Width="12"/>
-          <ColumnDefinition Width="2*"/>
-        </Grid.ColumnDefinitions>
-
-        <Border Grid.Column="0"
-                Style="{DynamicResource MetricPanel}"
-                Padding="16"
-                local:Motion.Lift="True"
-                AutomationProperties.Name="GPU 温度样例指标">
-          <Grid>
-            <Grid.RowDefinitions>
-              <RowDefinition Height="Auto"/>
-              <RowDefinition Height="Auto"/>
-              <RowDefinition Height="*"/>
-              <RowDefinition Height="Auto"/>
-            </Grid.RowDefinitions>
-            <DockPanel>
-              <TextBlock Text="样例值"
-                         DockPanel.Dock="Right"
-                         FontSize="{DynamicResource FontSizeXs}"
-                         Foreground="{DynamicResource TextTertiaryBrush}"/>
-              <TextBlock Text="{Binding Metrics[0].Label}"
-                         FontSize="{DynamicResource FontSizeSmall}"
-                         Foreground="{DynamicResource TextSecondaryBrush}"/>
-            </DockPanel>
-            <TextBlock Grid.Row="1"
-                       Text="{Binding Metrics[0].ValueText}"
-                       Style="{DynamicResource MetricNumber}"
-                       Margin="0,8,0,0"/>
-            <controls:Sparkline Grid.Row="2"
-                                Height="26"
-                                Margin="0,6,0,8"
-                                Values="{Binding GpuTempSeries}"
-                                Stroke="{DynamicResource AccentPrimaryBrush}"
-                                AutomationProperties.Name="GPU 温度样例趋势"/>
-            <Grid Grid.Row="3" Height="3">
-              <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="{Binding Metrics[0].Fraction, Converter={StaticResource FracLen}}"/>
-                <ColumnDefinition Width="{Binding Metrics[0].Fraction, Converter={StaticResource FracLen}, ConverterParameter=rest}"/>
-              </Grid.ColumnDefinitions>
-              <Border Grid.ColumnSpan="2" CornerRadius="2" Background="{DynamicResource TrackBrush}"/>
-              <Border Grid.Column="0" CornerRadius="2" Style="{StaticResource BarGrowFill}"
-                      Background="{Binding Metrics[0].ColorKey, Converter={StaticResource KeyBrush}}"/>
-            </Grid>
-          </Grid>
-        </Border>
-
-        <ItemsControl Grid.Column="2"
-                      ItemsSource="{Binding Source={StaticResource MetricsRest}}"
-                      Margin="0,0,-12,0"
-                      AutomationProperties.Name="其余样例指标">
-          <ItemsControl.ItemsPanel>
-            <ItemsPanelTemplate>
-              <UniformGrid Columns="2"/>
-            </ItemsPanelTemplate>
-          </ItemsControl.ItemsPanel>
-          <ItemsControl.ItemTemplate>
-            <DataTemplate>
-              <Border Style="{DynamicResource MetricPanel}"
-                      Padding="16"
-                      Margin="0,0,12,0"
-                      local:Motion.Lift="True"
-                      AutomationProperties.Name="{Binding Label}">
-                <Grid>
-                  <Grid.RowDefinitions>
-                    <RowDefinition Height="Auto"/>
-                    <RowDefinition Height="Auto"/>
-                    <RowDefinition Height="*"/>
-                    <RowDefinition Height="Auto"/>
-                  </Grid.RowDefinitions>
-                  <DockPanel>
-                    <TextBlock Text="样例值"
-                               DockPanel.Dock="Right"
+      <ItemsControl x:Name="ZoneCards" ItemsSource="{Binding Cards}" Margin="0,0,-12,16"
+                    AutomationProperties.Name="三场景卡片">
+        <ItemsControl.ItemsPanel>
+          <ItemsPanelTemplate>
+            <UniformGrid Columns="3"/>
+          </ItemsPanelTemplate>
+        </ItemsControl.ItemsPanel>
+        <ItemsControl.ItemTemplate>
+          <DataTemplate>
+            <Border Style="{StaticResource ScenarioCard}"
+                    AutomationProperties.Name="{Binding Name}">
+              <StackPanel>
+                <DockPanel>
+                  <Border DockPanel.Dock="Left" Width="36" Height="36" CornerRadius="{DynamicResource RadiusSm}"
+                          Background="{DynamicResource AccentSoftBrush}"
+                          BorderBrush="{DynamicResource AccentEdgeBrush}" BorderThickness="1"
+                          VerticalAlignment="Top" Margin="0,0,10,0">
+                    <controls:IconView Key="{Binding IconKey}" Width="18" Height="18"
+                                       HorizontalAlignment="Center" VerticalAlignment="Center"
+                                       Foreground="{DynamicResource AccentPrimaryBrush}"/>
+                  </Border>
+                  <Border DockPanel.Dock="Right" Style="{StaticResource ScenarioStateBadge}"
+                          VerticalAlignment="Top" AutomationProperties.Name="{Binding StateText}">
+                    <TextBlock Text="{Binding StateText}"
+                               FontSize="{DynamicResource FontSizeXs}"
+                               FontWeight="SemiBold"
+                               Foreground="{DynamicResource TextPrimaryBrush}"/>
+                  </Border>
+                  <StackPanel>
+                    <TextBlock Text="{Binding Name}"
+                               FontSize="{DynamicResource FontSizeCaption}"
+                               FontWeight="SemiBold"
+                               Foreground="{DynamicResource TextPrimaryBrush}"/>
+                    <TextBlock Text="{Binding PriorityText}"
+                               Margin="0,2,0,0"
                                FontSize="{DynamicResource FontSizeXs}"
                                Foreground="{DynamicResource TextTertiaryBrush}"/>
-                    <TextBlock Text="{Binding Label}"
-                               FontSize="{DynamicResource FontSizeSmall}"
-                               Foreground="{DynamicResource TextSecondaryBrush}"/>
-                  </DockPanel>
-                  <TextBlock Grid.Row="1"
-                             Text="{Binding ValueText}"
-                             Style="{DynamicResource MetricNumber}"
-                             Margin="0,8,0,0"/>
-                  <TextBlock Grid.Row="2"
-                             Text="来自预览数据源"
-                             Margin="0,8,0,8"
-                             VerticalAlignment="Bottom"
-                             FontSize="{DynamicResource FontSizeXs}"
-                             Foreground="{DynamicResource TextTertiaryBrush}"/>
-                  <Grid Grid.Row="3" Height="3">
-                    <Grid.ColumnDefinitions>
-                      <ColumnDefinition Width="{Binding Fraction, Converter={StaticResource FracLen}}"/>
-                      <ColumnDefinition Width="{Binding Fraction, Converter={StaticResource FracLen}, ConverterParameter=rest}"/>
-                    </Grid.ColumnDefinitions>
-                    <Border Grid.ColumnSpan="2" CornerRadius="2" Background="{DynamicResource TrackBrush}"/>
-                    <Border Grid.Column="0" CornerRadius="2" Style="{StaticResource BarGrowFill}"
-                            Background="{Binding ColorKey, Converter={StaticResource KeyBrush}}"/>
-                  </Grid>
-                </Grid>
-              </Border>
-            </DataTemplate>
-          </ItemsControl.ItemTemplate>
-        </ItemsControl>
-      </Grid>
+                  </StackPanel>
+                </DockPanel>
+
+                <Border Margin="0,10,0,10" BorderBrush="{DynamicResource BorderSubtleBrush}"
+                        BorderThickness="0,1,0,0" Padding="0,10,0,0">
+                  <StackPanel>
+                    <TextBlock FontSize="{DynamicResource FontSizeXs}"
+                               Foreground="{DynamicResource TextSecondaryBrush}" TextWrapping="Wrap">
+                      <Run Text="触发 · " FontWeight="SemiBold" Foreground="{DynamicResource TextTertiaryBrush}"/>
+                      <Run Text="{Binding TriggerText, Mode=OneWay}"/>
+                    </TextBlock>
+                    <TextBlock Margin="0,5,0,0" FontSize="{DynamicResource FontSizeXs}"
+                               Foreground="{DynamicResource TextSecondaryBrush}" TextWrapping="Wrap">
+                      <Run Text="掌权动作 · " FontWeight="SemiBold" Foreground="{DynamicResource TextTertiaryBrush}"/>
+                      <Run Text="{Binding ActionText, Mode=OneWay}"/>
+                    </TextBlock>
+                  </StackPanel>
+                </Border>
+
+                <DockPanel>
+                  <ToggleButton DockPanel.Dock="Right" Style="{DynamicResource PolicyToggle}"
+                                IsChecked="{Binding Enabled}"
+                                VerticalAlignment="Center" Margin="16,0,0,0"
+                                AutomationProperties.Name="{Binding Name, StringFormat=启用或关闭{0}}"/>
+                  <TextBlock Text="{Binding EnabledText}"
+                             VerticalAlignment="Center"
+                             FontSize="{DynamicResource FontSizeSmall}"
+                             Foreground="{DynamicResource TextSecondaryBrush}"/>
+                </DockPanel>
+              </StackPanel>
+            </Border>
+          </DataTemplate>
+        </ItemsControl.ItemTemplate>
+      </ItemsControl>
+
+      <Border x:Name="ZoneRules" Style="{DynamicResource SettingsGroup}" Padding="16" Margin="0,0,0,16"
+              AutomationProperties.Name="场景仲裁规则">
+        <StackPanel>
+          <TextBlock Text="仲裁规则" FontSize="{DynamicResource FontSizeRegion}" FontWeight="SemiBold"
+                     Foreground="{DynamicResource TextPrimaryBrush}"/>
+          <TextBlock Text="游戏场景 › 开发专注 › 日常优化"
+                     Margin="0,5,0,0"
+                     FontSize="{DynamicResource FontSizeBody}"
+                     Foreground="{DynamicResource AccentPrimaryBrush}"/>
+          <TextBlock Text="任一时刻只有最高优先级场景掌权。低优先级场景保持检测、还原式挂起；高优先级场景退出后瞬时补位。"
+                     Margin="0,5,0,0"
+                     FontSize="{DynamicResource FontSizeSmall}"
+                     Foreground="{DynamicResource TextSecondaryBrush}" TextWrapping="Wrap"/>
+          <Grid Margin="0,10,0,0">
+            <Grid.ColumnDefinitions>
+              <ColumnDefinition Width="Auto"/>
+              <ColumnDefinition Width="*"/>
+            </Grid.ColumnDefinitions>
+            <TextBlock Text="游戏性能档位" FontSize="{DynamicResource FontSizeSmall}"
+                       Foreground="{DynamicResource TextTertiaryBrush}" VerticalAlignment="Center"/>
+            <TextBlock Grid.Column="1" Text="{Binding ModeText}" Margin="16,0,0,0"
+                       FontSize="{DynamicResource FontSizeSmall}" FontWeight="SemiBold"
+                       Foreground="{DynamicResource TextPrimaryBrush}" VerticalAlignment="Center"/>
+          </Grid>
+          <TextBlock Text="常规 / 竞技 / 自定义只作用于游戏场景掌权期间；开发与日常使用各自的独立开关与参数。"
+                     Margin="0,5,0,0"
+                     FontSize="{DynamicResource FontSizeXs}"
+                     Foreground="{DynamicResource TextTertiaryBrush}" TextWrapping="Wrap"/>
+        </StackPanel>
+      </Border>
 
       <Grid x:Name="ZoneBottom">
         <Grid.ColumnDefinitions>
-          <ColumnDefinition Width="1.35*"/>
+          <ColumnDefinition Width="1.4*"/>
           <ColumnDefinition Width="12"/>
           <ColumnDefinition Width="*"/>
         </Grid.ColumnDefinitions>
 
-        <Border Grid.Column="0"
-                Style="{DynamicResource SettingsGroup}"
-                Padding="12"
-                AutomationProperties.Name="最近活动预览摘要">
+        <Border Grid.Column="0" Style="{DynamicResource SettingsGroup}" Padding="16"
+                AutomationProperties.Name="硬件摘要">
           <StackPanel>
-            <TextBlock Text="最近活动"
-                       FontSize="{DynamicResource FontSizeRegion}"
-                       FontWeight="SemiBold"
+            <TextBlock Text="硬件摘要" FontSize="{DynamicResource FontSizeRegion}" FontWeight="SemiBold"
                        Foreground="{DynamicResource TextPrimaryBrush}"/>
-            <TextBlock Text="活动流还是空的，等一场对局来把它填满。"
-                       Margin="0,3,0,10"
+            <TextBlock Text="三场景共用同一套硬件与调度底子。" Margin="0,3,0,10"
                        FontSize="{DynamicResource FontSizeSmall}"
                        Foreground="{DynamicResource TextSecondaryBrush}"/>
-
             <Grid Margin="0,0,0,6">
               <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="*"/>
-                <ColumnDefinition Width="Auto"/>
+                <ColumnDefinition Width="Auto"/><ColumnDefinition Width="*"/>
               </Grid.ColumnDefinitions>
-              <TextBlock Text="当前模式预览"
-                         FontSize="{DynamicResource FontSizeSmall}"
-                         Foreground="{DynamicResource TextSecondaryBrush}"/>
-              <TextBlock Grid.Column="1"
-                         Text="{Binding ModeText}"
-                         FontSize="{DynamicResource FontSizeSmall}"
+              <TextBlock Text="处理器" FontSize="{DynamicResource FontSizeSmall}"
+                         Foreground="{DynamicResource TextTertiaryBrush}"/>
+              <TextBlock Grid.Column="1" Text="{Binding CpuText}" Margin="16,0,0,0"
+                         FontSize="{DynamicResource FontSizeSmall}" TextTrimming="CharacterEllipsis"
                          Foreground="{DynamicResource TextPrimaryBrush}"/>
             </Grid>
             <Grid Margin="0,0,0,6">
               <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="*"/>
-                <ColumnDefinition Width="Auto"/>
+                <ColumnDefinition Width="Auto"/><ColumnDefinition Width="*"/>
               </Grid.ColumnDefinitions>
-              <TextBlock Text="样例数据刷新"
-                         FontSize="{DynamicResource FontSizeSmall}"
-                         Foreground="{DynamicResource TextSecondaryBrush}"/>
-              <TextBlock Grid.Column="1"
-                         Text="仅宿主启动或切换模式时"
-                         FontSize="{DynamicResource FontSizeSmall}"
+              <TextBlock Text="图形设备" FontSize="{DynamicResource FontSizeSmall}"
                          Foreground="{DynamicResource TextTertiaryBrush}"/>
+              <TextBlock Grid.Column="1" Text="{Binding GpuText}" Margin="16,0,0,0"
+                         FontSize="{DynamicResource FontSizeSmall}" TextTrimming="CharacterEllipsis"
+                         Foreground="{DynamicResource TextPrimaryBrush}"/>
+            </Grid>
+            <Grid Margin="0,0,0,6">
+              <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="Auto"/><ColumnDefinition Width="*"/>
+              </Grid.ColumnDefinitions>
+              <TextBlock Text="内存规格" FontSize="{DynamicResource FontSizeSmall}"
+                         Foreground="{DynamicResource TextTertiaryBrush}"/>
+              <TextBlock Grid.Column="1" Text="{Binding MemoryText}" Margin="16,0,0,0"
+                         FontSize="{DynamicResource FontSizeSmall}"
+                         Foreground="{DynamicResource TextPrimaryBrush}"/>
             </Grid>
             <Grid>
               <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="*"/>
-                <ColumnDefinition Width="Auto"/>
+                <ColumnDefinition Width="Auto"/><ColumnDefinition Width="*"/>
               </Grid.ColumnDefinitions>
-              <TextBlock Text="真实活动记录"
+              <TextBlock Text="硬件加速 GPU 调度" FontSize="{DynamicResource FontSizeSmall}"
+                         Foreground="{DynamicResource TextTertiaryBrush}"/>
+              <TextBlock Grid.Column="1" Text="{Binding HagsText}" Margin="16,0,0,0"
                          FontSize="{DynamicResource FontSizeSmall}"
-                         Foreground="{DynamicResource TextSecondaryBrush}"/>
-              <ContentControl Grid.Column="1" Style="{DynamicResource EmptyChip}">
-                <TextBlock Text="待接入"
-                           FontSize="{DynamicResource FontSizeXs}"
-                           Foreground="{DynamicResource TextTertiaryBrush}"/></ContentControl>
+                         Foreground="{DynamicResource TextPrimaryBrush}"/>
             </Grid>
           </StackPanel>
         </Border>
 
-        <Border Grid.Column="2"
-                Style="{DynamicResource SettingsGroup}"
-                Padding="12"
-                AutomationProperties.Name="硬件摘要预览状态">
+        <Border Grid.Column="2" Style="{DynamicResource SettingsGroup}" Padding="16"
+                AutomationProperties.Name="三场景如何工作">
           <StackPanel>
-            <TextBlock Text="硬件摘要"
-                       FontSize="{DynamicResource FontSizeRegion}"
-                       FontWeight="SemiBold"
+            <TextBlock Text="三场景如何工作" FontSize="{DynamicResource FontSizeRegion}" FontWeight="SemiBold"
                        Foreground="{DynamicResource TextPrimaryBrush}"/>
-            <TextBlock Text="硬件信息还在路上，就快到了。"
-                       Margin="0,3,0,10"
-                       FontSize="{DynamicResource FontSizeSmall}"
-                       Foreground="{DynamicResource TextSecondaryBrush}"
-                       TextWrapping="Wrap"/>
-            <DockPanel Margin="0,0,0,6">
-              <ContentControl DockPanel.Dock="Right" Style="{DynamicResource EmptyChip}">
-                <TextBlock Text="待接入" FontSize="{DynamicResource FontSizeXs}" Foreground="{DynamicResource TextTertiaryBrush}"/></ContentControl>
-              <TextBlock Text="处理器" FontSize="{DynamicResource FontSizeSmall}"
-                         Foreground="{DynamicResource TextSecondaryBrush}"/>
-            </DockPanel>
-            <DockPanel Margin="0,0,0,6">
-              <ContentControl DockPanel.Dock="Right" Style="{DynamicResource EmptyChip}">
-                <TextBlock Text="待接入" FontSize="{DynamicResource FontSizeXs}" Foreground="{DynamicResource TextTertiaryBrush}"/></ContentControl>
-              <TextBlock Text="图形设备" FontSize="{DynamicResource FontSizeSmall}"
-                         Foreground="{DynamicResource TextSecondaryBrush}"/>
-            </DockPanel>
-            <DockPanel>
-              <ContentControl DockPanel.Dock="Right" Style="{DynamicResource EmptyChip}">
-                <TextBlock Text="待接入" FontSize="{DynamicResource FontSizeXs}" Foreground="{DynamicResource TextTertiaryBrush}"/></ContentControl>
-              <TextBlock Text="内存规格" FontSize="{DynamicResource FontSizeSmall}"
-                         Foreground="{DynamicResource TextSecondaryBrush}"/>
-            </DockPanel>
+            <TextBlock Text="场景不是模式：三者可同时开启，但副作用只会由当前掌权者施加。"
+                       Margin="0,3,0,10" FontSize="{DynamicResource FontSizeSmall}"
+                       Foreground="{DynamicResource TextSecondaryBrush}" TextWrapping="Wrap"/>
+            <TextBlock FontSize="{DynamicResource FontSizeSmall}" Foreground="{DynamicResource TextSecondaryBrush}" TextWrapping="Wrap">
+              <Run Text="1 · " FontWeight="SemiBold" Foreground="{DynamicResource AccentPrimaryBrush}"/>
+              <Run Text="游戏：认出游戏本体即接管，退出后按快照还原。"/>
+            </TextBlock>
+            <TextBlock Margin="0,6,0,0" FontSize="{DynamicResource FontSizeSmall}" Foreground="{DynamicResource TextSecondaryBrush}" TextWrapping="Wrap">
+              <Run Text="2 · " FontWeight="SemiBold" Foreground="{DynamicResource AccentPrimaryBrush}"/>
+              <Run Text="开发专注：编译、IDE 或专注模式激活时暂停索引、提优编译器、静默通知。"/>
+            </TextBlock>
+            <TextBlock Margin="0,6,0,0" FontSize="{DynamicResource FontSizeSmall}" Foreground="{DynamicResource TextSecondaryBrush}" TextWrapping="Wrap">
+              <Run Text="3 · " FontWeight="SemiBold" Foreground="{DynamicResource AccentPrimaryBrush}"/>
+              <Run Text="日常优化：日常家族活跃或电池供电时常规压制后台；到点执行健康维护。"/>
+            </TextBlock>
+            <TextBlock Margin="0,10,0,0" FontSize="{DynamicResource FontSizeXs}"
+                       Foreground="{DynamicResource TextTertiaryBrush}" TextWrapping="Wrap"
+                       Text="开发专注与日常优化的详细触发源、统计与细项开关在左侧导航的对应页面。"/>
           </StackPanel>
         </Border>
       </Grid>

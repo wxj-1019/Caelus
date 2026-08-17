@@ -72,6 +72,7 @@ namespace CaelusApp
                         scMode.AddGameExecutable("NEBULA STRIKE", demoExe);
                     }
                     var scArbiter = new ScenarioArbiter();
+                    scArbiter.Register(new GameScenario());
                     var scDevFocus = new DevFocus(scArbiter, scCore, () => false, (a, b) => false, c => false);
                     using (var f = new PanelForm(scTamer, scMode, scDevFocus, IconArt.MakeIcon(Dpi.S(24)), true))
                     {
@@ -97,6 +98,7 @@ namespace CaelusApp
                 var previewMode = new GameMode(Paths.Data, previewCore);
                 previewMode.Enabled = Settings.Load("GameModeOn", true);
                 var previewArbiter = new ScenarioArbiter();
+                previewArbiter.Register(new GameScenario());
                 var previewDevFocus = new DevFocus(previewArbiter, previewCore, () => false, (a, b) => false, c => false);
                 using (Icon previewIcon = IconArt.MakeMultiIcon(previewMode.ActivePreset, previewMode.Enabled))
                 using (var preview = new PanelForm(previewTamer, previewMode, previewDevFocus, previewIcon, true))
@@ -252,6 +254,9 @@ namespace CaelusApp
             gameMode.Enabled = Settings.Load("GameModeOn", true);
 
             var arbiter = new ScenarioArbiter();
+            // 游戏占仲裁器最高优先级席位：GameMode 自己管理游戏副作用，
+            // 这里保证游戏活跃时开发/日常场景被还原式挂起。
+            arbiter.Register(new GameScenario());
             // 开发服务在 DevFocus/DailyCare 的压制扫描中被豁免（白名单 OR 已注册开发服务）
             Func<string, string, bool> devWhitelist = (name, path) =>
                 gameMode.IsProcessWhitelisted(name, path) || DevServiceCatalog.IsMatch(name);
@@ -321,7 +326,7 @@ namespace CaelusApp
             PerformancePreset runtimeIconMode = gameMode.ActivePreset;
             bool runtimeIconEnabled = gameMode.Enabled;
             Icon appIcon = IconArt.MakeMultiIcon(runtimeIconMode, runtimeIconEnabled);
-            var panel = new PanelForm(tamer, gameMode, devFocus, appIcon, elevated);
+            var panel = new PanelForm(tamer, gameMode, devFocus, appIcon, elevated, dailyCare);
             GC.KeepAlive(panel.Handle);
 
             bool pendingPanel = Settings.Load(PendingPanelKey, false);

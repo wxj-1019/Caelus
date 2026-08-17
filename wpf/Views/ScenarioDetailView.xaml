@@ -1,0 +1,171 @@
+<UserControl x:Class="CaelusApp.WpfHost.Views.ScenarioDetailView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:controls="clr-namespace:CaelusApp.WpfHost.Controls"
+             AutomationProperties.Name="场景详情">
+  <UserControl.Resources>
+    <BooleanToVisibilityConverter x:Key="BoolVis"/>
+
+    <Style x:Key="DetailBanner" TargetType="Border">
+      <Setter Property="Background" Value="{DynamicResource Surface1Brush}"/>
+      <Setter Property="BorderBrush" Value="{DynamicResource BorderSubtleBrush}"/>
+      <Setter Property="BorderThickness" Value="1"/>
+      <Setter Property="CornerRadius" Value="{DynamicResource RadiusSm}"/>
+      <Setter Property="Padding" Value="16,12"/>
+      <Style.Triggers>
+        <DataTrigger Binding="{Binding StateKey}" Value="Success">
+          <Setter Property="Background" Value="{DynamicResource SuccessSoftBrush}"/>
+          <Setter Property="BorderBrush" Value="{DynamicResource SuccessEdgeBrush}"/>
+        </DataTrigger>
+        <DataTrigger Binding="{Binding StateKey}" Value="Warning">
+          <Setter Property="Background" Value="{DynamicResource WarningSoftBrush}"/>
+          <Setter Property="BorderBrush" Value="{DynamicResource WarningEdgeBrush}"/>
+        </DataTrigger>
+        <DataTrigger Binding="{Binding StateKey}" Value="Neutral">
+          <Setter Property="Background" Value="{DynamicResource NeutralSoftBrush}"/>
+          <Setter Property="BorderBrush" Value="{DynamicResource NeutralEdgeBrush}"/>
+        </DataTrigger>
+        <DataTrigger Binding="{Binding StateKey}" Value="Info">
+          <Setter Property="Background" Value="{DynamicResource InfoSoftBrush}"/>
+          <Setter Property="BorderBrush" Value="{DynamicResource InfoEdgeBrush}"/>
+        </DataTrigger>
+      </Style.Triggers>
+    </Style>
+
+    <Style x:Key="SourceChip" TargetType="Border">
+      <Setter Property="CornerRadius" Value="{DynamicResource RadiusSm}"/>
+      <Setter Property="Padding" Value="9,4"/>
+      <Setter Property="Background" Value="{DynamicResource NeutralSoftBrush}"/>
+      <Setter Property="BorderBrush" Value="{DynamicResource BorderSubtleBrush}"/>
+      <Setter Property="BorderThickness" Value="1"/>
+      <Style.Triggers>
+        <DataTrigger Binding="{Binding Live}" Value="True">
+          <Setter Property="Background" Value="{DynamicResource SuccessSoftBrush}"/>
+          <Setter Property="BorderBrush" Value="{DynamicResource SuccessEdgeBrush}"/>
+        </DataTrigger>
+      </Style.Triggers>
+    </Style>
+  </UserControl.Resources>
+
+  <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
+    <StackPanel Margin="0,0,0,16">
+      <StackPanel x:Name="ZoneHeader" Margin="0,0,0,16">
+        <TextBlock Text="{Binding Title}" Style="{DynamicResource PageHeader}"/>
+        <TextBlock Text="{Binding Subtitle}" Style="{DynamicResource PageSubtitle}" Margin="0,4,0,0"/>
+      </StackPanel>
+
+      <Border x:Name="ZoneBanner" Style="{StaticResource DetailBanner}" Margin="0,0,0,16"
+              AutomationProperties.Name="场景当前状态">
+        <DockPanel>
+          <Border DockPanel.Dock="Right" Style="{DynamicResource NeutralStatusBadge}"
+                  VerticalAlignment="Center" Margin="16,0,0,0">
+            <TextBlock Text="{Binding PriorityText}" FontSize="{DynamicResource FontSizeXs}"
+                       Foreground="{DynamicResource TextSecondaryBrush}"/>
+          </Border>
+          <StackPanel>
+            <TextBlock Text="{Binding StateText}" FontSize="{DynamicResource FontSizeBody}" FontWeight="SemiBold"
+                       Foreground="{DynamicResource TextPrimaryBrush}"/>
+            <TextBlock Text="{Binding StateDetail}" Margin="0,4,0,0" MaxWidth="720"
+                       FontSize="{DynamicResource FontSizeSmall}"
+                       Foreground="{DynamicResource TextSecondaryBrush}" TextWrapping="Wrap"/>
+          </StackPanel>
+        </DockPanel>
+      </Border>
+
+      <controls:GlassCard x:Name="ZoneCard" Style="{DynamicResource HeroGlassCard}" Margin="0,0,0,16"
+              AutomationProperties.Name="场景说明与总开关">
+        <StackPanel>
+          <DockPanel>
+            <Border DockPanel.Dock="Left" Width="44" Height="44" CornerRadius="{DynamicResource RadiusSm}"
+                    Background="{DynamicResource AccentSoftBrush}" BorderBrush="{DynamicResource AccentEdgeBrush}"
+                    BorderThickness="1" VerticalAlignment="Top" Margin="0,0,12,0">
+              <controls:IconView Key="{Binding IconKey}" Width="22" Height="22"
+                                 HorizontalAlignment="Center" VerticalAlignment="Center"
+                                 Foreground="{DynamicResource AccentPrimaryBrush}"/>
+            </Border>
+            <ToggleButton DockPanel.Dock="Right" Style="{DynamicResource PolicyToggle}"
+                          IsChecked="{Binding Enabled}" VerticalAlignment="Center" Margin="16,0,0,0"
+                          AutomationProperties.Name="启用或关闭当前场景"/>
+            <StackPanel>
+              <TextBlock Text="{Binding Title}" FontSize="{DynamicResource FontSizeCaption}"
+                         FontWeight="SemiBold" Foreground="{DynamicResource TextPrimaryBrush}"/>
+              <TextBlock Text="关闭后场景退出仲裁，已施加的副作用会立即还原。"
+                         Margin="0,3,0,0" FontSize="{DynamicResource FontSizeXs}"
+                         Foreground="{DynamicResource TextTertiaryBrush}" TextWrapping="Wrap"/>
+            </StackPanel>
+          </DockPanel>
+
+          <Border Margin="0,12,0,0" BorderBrush="{DynamicResource BorderSubtleBrush}"
+                  BorderThickness="0,1,0,0" Padding="0,12,0,0">
+            <StackPanel>
+              <TextBlock FontSize="{DynamicResource FontSizeSmall}" Foreground="{DynamicResource TextSecondaryBrush}" TextWrapping="Wrap">
+                <Run Text="触发 · " FontWeight="SemiBold" Foreground="{DynamicResource TextTertiaryBrush}"/>
+                <Run Text="{Binding TriggerText, Mode=OneWay}"/>
+              </TextBlock>
+              <TextBlock Margin="0,6,0,0" FontSize="{DynamicResource FontSizeSmall}" Foreground="{DynamicResource TextSecondaryBrush}" TextWrapping="Wrap">
+                <Run Text="掌权动作 · " FontWeight="SemiBold" Foreground="{DynamicResource TextTertiaryBrush}"/>
+                <Run Text="{Binding ActionText, Mode=OneWay}"/>
+              </TextBlock>
+            </StackPanel>
+          </Border>
+        </StackPanel>
+      </controls:GlassCard>
+
+      <StackPanel x:Name="ZoneSources" Margin="0,0,0,16">
+        <TextBlock Text="实时触发源" FontSize="{DynamicResource FontSizeBody}" FontWeight="SemiBold"
+                   Foreground="{DynamicResource TextPrimaryBrush}" Margin="0,0,0,3"/>
+        <TextBlock Text="只读探测每 2 秒刷新一次；生产宿主接入后由真实事件流驱动。"
+                   FontSize="{DynamicResource FontSizeSmall}" Foreground="{DynamicResource TextSecondaryBrush}"
+                   Margin="0,0,0,8"/>
+        <ItemsControl ItemsSource="{Binding SourceRows}">
+          <ItemsControl.ItemTemplate>
+            <DataTemplate>
+              <Border Style="{DynamicResource SettingsRow}" BorderThickness="0,0,0,1" Padding="0,10">
+                <DockPanel>
+                  <Border DockPanel.Dock="Right" Style="{StaticResource SourceChip}"
+                          VerticalAlignment="Center" Margin="16,0,0,0">
+                    <TextBlock Text="{Binding ValueText}" FontSize="{DynamicResource FontSizeXs}"
+                               Foreground="{DynamicResource TextPrimaryBrush}"/>
+                  </Border>
+                  <TextBlock Text="{Binding Label}" VerticalAlignment="Center"
+                             FontSize="{DynamicResource FontSizeSmall}"
+                             Foreground="{DynamicResource TextSecondaryBrush}"/>
+                </DockPanel>
+              </Border>
+            </DataTemplate>
+          </ItemsControl.ItemTemplate>
+        </ItemsControl>
+      </StackPanel>
+
+      <Border x:Name="ZoneFocus" Style="{DynamicResource SettingsGroup}" Padding="16,14"
+              Visibility="{Binding FocusModeVisible, Converter={StaticResource BoolVis}}"
+              AutomationProperties.Name="专注模式快捷开关">
+        <DockPanel>
+          <ToggleButton DockPanel.Dock="Right" Style="{DynamicResource PolicyToggle}"
+                        IsChecked="{Binding FocusMode}" VerticalAlignment="Center" Margin="16,0,0,0"
+                        AutomationProperties.Name="专注模式"/>
+          <StackPanel>
+            <TextBlock Text="专注模式" FontSize="{DynamicResource FontSizeCaption}" FontWeight="SemiBold"
+                       Foreground="{DynamicResource TextPrimaryBrush}"/>
+            <TextBlock Text="手动进入开发专注：不依赖编译或 IDE 检测，适合阅读文档、排查问题等场景。"
+                       Margin="0,3,0,0" FontSize="{DynamicResource FontSizeSmall}"
+                       Foreground="{DynamicResource TextSecondaryBrush}" TextWrapping="Wrap"/>
+            <TextBlock Text="{Binding FocusStatsText}" Margin="0,7,0,0"
+                       FontSize="{DynamicResource FontSizeXs}" Foreground="{DynamicResource TextTertiaryBrush}"/>
+          </StackPanel>
+        </DockPanel>
+      </Border>
+
+      <Border x:Name="ZoneNote" Style="{DynamicResource SettingsGroup}" Padding="16" Margin="0,16,0,0"
+              AutomationProperties.Name="场景调度提示">
+        <StackPanel>
+          <TextBlock Text="调度提示" FontSize="{DynamicResource FontSizeRegion}" FontWeight="SemiBold"
+                     Foreground="{DynamicResource TextPrimaryBrush}"/>
+          <TextBlock Text="场景可以同时开启，但任一时刻只有最高优先级场景掌权。被抢占的场景保留检测状态、只还原副作用；高优先级场景退出后自动补位，每个被动过的进程照旧按快照恢复。"
+                     Margin="0,5,0,0" FontSize="{DynamicResource FontSizeSmall}"
+                     Foreground="{DynamicResource TextSecondaryBrush}" TextWrapping="Wrap"/>
+        </StackPanel>
+      </Border>
+    </StackPanel>
+  </ScrollViewer>
+</UserControl>

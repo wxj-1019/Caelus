@@ -7,7 +7,7 @@
     <StackPanel Margin="0,0,0,16">
       <StackPanel x:Name="ZoneHeader" Margin="0,0,0,16">
         <TextBlock Text="设置" Style="{DynamicResource PageHeader}"/>
-        <TextBlock Text="偏好、开发选项与维护工具" Style="{DynamicResource PageSubtitle}" Margin="0,4,0,0"/>
+        <TextBlock Text="三场景开关、应用偏好与维护工具" Style="{DynamicResource PageSubtitle}" Margin="0,4,0,0"/>
       </StackPanel>
 
       <Border x:Name="ZoneSummary" Style="{DynamicResource StatusBanner}" Margin="0,0,0,16" Padding="14,11">

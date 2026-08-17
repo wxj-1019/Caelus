@@ -81,7 +81,7 @@
           <StackPanel DockPanel.Dock="Top" Margin="18,18,18,10">
             <TextBlock Text="caelus" FontSize="18" FontWeight="SemiBold"
                        Foreground="{DynamicResource TextPrimaryBrush}"/>
-            <TextBlock Text="游戏环境控制台" FontSize="{DynamicResource FontSizeXs}" Margin="0,3,0,0"
+            <TextBlock Text="三场景调度控制台" FontSize="{DynamicResource FontSizeXs}" Margin="0,3,0,0"
                        Foreground="{DynamicResource TextTertiaryBrush}"/>
           </StackPanel>
 
@@ -104,14 +104,16 @@
 
           <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
             <StackPanel Margin="0,0,0,8">
-              <TextBlock Text="工作台" Style="{DynamicResource NavGroupLabel}"/>
+              <TextBlock Text="场景" Style="{DynamicResource NavGroupLabel}"/>
               <RadioButton x:Name="NavOverview" Style="{DynamicResource NavItem}" IsChecked="True"
-                           GroupName="nav" Checked="NavChecked" AutomationProperties.Name="导航：概览">
+                           GroupName="nav" Checked="NavChecked" AutomationProperties.Name="导航：场景总览">
                 <StackPanel Orientation="Horizontal">
                   <controls:IconView Key="IconOverview" Width="15" Height="15" VerticalAlignment="Center"/>
-                  <TextBlock Text="概览" Margin="9,0,0,0" VerticalAlignment="Center"/>
+                  <TextBlock Text="场景总览" Margin="9,0,0,0" VerticalAlignment="Center"/>
                 </StackPanel>
               </RadioButton>
+
+              <TextBlock Text="游戏场景" Style="{DynamicResource NavGroupLabel}"/>
               <RadioButton x:Name="NavLibrary" Style="{DynamicResource NavItem}" GroupName="nav"
                            Checked="NavChecked" AutomationProperties.Name="导航：游戏库">
                 <StackPanel Orientation="Horizontal">
@@ -119,8 +121,6 @@
                   <TextBlock Text="游戏库" Margin="9,0,0,0" VerticalAlignment="Center"/>
                 </StackPanel>
               </RadioButton>
-
-              <TextBlock Text="游戏调优" Style="{DynamicResource NavGroupLabel}"/>
               <RadioButton x:Name="NavPolicy" Style="{DynamicResource NavItem}" GroupName="nav"
                            Checked="NavChecked" AutomationProperties.Name="导航：优化策略">
                 <StackPanel Orientation="Horizontal">
@@ -140,6 +140,27 @@
                 <StackPanel Orientation="Horizontal">
                   <controls:IconView Key="IconShield" Width="15" Height="15" VerticalAlignment="Center"/>
                   <TextBlock Text="反作弊专项" Margin="9,0,0,0" VerticalAlignment="Center"/>
+                </StackPanel>
+              </RadioButton>
+              <controls:SegmentedControl x:Name="ModePicker" Margin="8,8,8,4"
+                                         SelectedIndex="0" SelectionChanged="ModeChecked"
+                                         AutomationProperties.Name="游戏性能档位"/>
+              <TextBlock Text="游戏性能档位 · 仅游戏场景掌权时生效" Margin="18,3,14,6"
+                         FontSize="{DynamicResource FontSizeMicro}" Foreground="{DynamicResource TextTertiaryBrush}" TextWrapping="Wrap"/>
+
+              <TextBlock Text="开发与日常" Style="{DynamicResource NavGroupLabel}"/>
+              <RadioButton x:Name="NavDevFocus" Style="{DynamicResource NavItem}" GroupName="nav"
+                           Checked="NavChecked" AutomationProperties.Name="导航：开发专注">
+                <StackPanel Orientation="Horizontal">
+                  <controls:IconView Key="IconCode" Width="15" Height="15" VerticalAlignment="Center"/>
+                  <TextBlock Text="开发专注" Margin="9,0,0,0" VerticalAlignment="Center"/>
+                </StackPanel>
+              </RadioButton>
+              <RadioButton x:Name="NavDailyCare" Style="{DynamicResource NavItem}" GroupName="nav"
+                           Checked="NavChecked" AutomationProperties.Name="导航：日常优化">
+                <StackPanel Orientation="Horizontal">
+                  <controls:IconView Key="IconDaily" Width="15" Height="15" VerticalAlignment="Center"/>
+                  <TextBlock Text="日常优化" Margin="9,0,0,0" VerticalAlignment="Center"/>
                 </StackPanel>
               </RadioButton>
 
@@ -174,13 +195,6 @@
                   <TextBlock Text="日志" Margin="9,0,0,0" VerticalAlignment="Center"/>
                 </StackPanel>
               </RadioButton>
-
-              <TextBlock Text="性能模式" Style="{DynamicResource NavGroupLabel}"/>
-              <controls:SegmentedControl x:Name="ModePicker" Margin="8,0,8,4"
-                                         SelectedIndex="0" SelectionChanged="ModeChecked"
-                                         AutomationProperties.Name="全局性能模式"/>
-              <TextBlock Text="影响调度、压制与页面中的可编辑项" Margin="18,3,14,6"
-                         FontSize="{DynamicResource FontSizeMicro}" Foreground="{DynamicResource TextTertiaryBrush}" TextWrapping="Wrap"/>
             </StackPanel>
           </ScrollViewer>
         </DockPanel>

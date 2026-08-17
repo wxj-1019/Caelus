@@ -103,6 +103,7 @@ namespace CaelusApp
         public string Detail = "";
         public string Glyph = "game";
         public int Channel = 1;
+        public Color StatusColor = Theme.Accent;
 
         public DashboardTile()
         {
@@ -132,22 +133,22 @@ namespace CaelusApp
             int railX = Theme.S(14);
             int railY = Theme.S(16);
             int railSize = Theme.S(34);
-            using (var glow = new SolidBrush(Col.Alpha(Theme.Accent, (int)(10 + hover.Value * 14))))
+            using (var glow = new SolidBrush(Col.Alpha(StatusColor, (int)(10 + hover.Value * 14))))
                 g.FillEllipse(glow, railX - Theme.S(5), railY - Theme.S(5), railSize + Theme.S(10), railSize + Theme.S(10));
             using (var socket = Theme.TechPath(new Rectangle(railX, railY, railSize, railSize), Theme.S(6)))
             {
                 using (var fill = new SolidBrush(Col.Lerp(Theme.Inset, Theme.Sel, 0.22f + hover.Value * 0.22f)))
                     g.FillPath(fill, socket);
-                using (var border = new Pen(Col.Alpha(Theme.Accent, (int)(72 + hover.Value * 92))))
+                using (var border = new Pen(Col.Alpha(StatusColor, (int)(72 + hover.Value * 92))))
                     g.DrawPath(border, socket);
             }
             Glyphs.Draw(g, Glyph,
-                new Rectangle(railX + Theme.S(8), railY + Theme.S(8), Theme.S(18), Theme.S(18)), Theme.Accent);
+                new Rectangle(railX + Theme.S(8), railY + Theme.S(8), Theme.S(18), Theme.S(18)), StatusColor);
 
             int dividerX = Theme.S(60);
             using (var divider = new Pen(Col.Alpha(Theme.StrokeHi, 92)))
                 g.DrawLine(divider, dividerX, Theme.S(13), dividerX, Height - Theme.S(13));
-            using (var live = new Pen(Theme.Accent, Math.Max(1f, Theme.S(1))))
+            using (var live = new Pen(StatusColor, Math.Max(1f, Theme.S(1))))
                 g.DrawLine(live, dividerX, Theme.S(18), dividerX, Theme.S(35));
 
             TextRenderer.DrawText(g, Title, Theme.UI(9.1f, true),
@@ -163,7 +164,7 @@ namespace CaelusApp
             int trackY = Height - Theme.S(4);
             int trackW = Math.Max(Theme.S(18), (Width - Theme.S(92)) / 3);
             int offset = (int)(hover.Value * Theme.S(10));
-            using (var track = new Pen(Col.Alpha(Theme.Accent, 120)))
+            using (var track = new Pen(Col.Alpha(StatusColor, 120)))
                 g.DrawLine(track, Theme.S(72), trackY, Theme.S(72) + trackW + offset, trackY);
         }
     }

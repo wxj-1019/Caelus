@@ -124,6 +124,7 @@ namespace CaelusApp.WpfHost
                 UiTone[] tones = new UiTone[] { UiTone.Dark, UiTone.Dark, UiTone.Dark, UiTone.Light };
                 AppMode[] modes = new AppMode[] { AppMode.Standard, AppMode.Competitive, AppMode.Custom, AppMode.Standard };
                 string[] names = new string[] { "dark-cruise", "dark-combat", "dark-custom", "light-cruise" };
+                Views.OverviewView.InjectSampleData = true;
                 for (int i = 0; i < tones.Length; i++)
                 {
                     ThemeManager.Apply(this, tones[i], modes[i]);
@@ -148,12 +149,13 @@ namespace CaelusApp.WpfHost
                     using (FileStream fs = File.Create(file)) enc.Save(fs);
                     w.Close();
                 }
+                Views.OverviewView.InjectSampleData = false;
                 // 全部工作区页面的深色常规模式截图。
                 ThemeManager.Apply(this, UiTone.Dark, AppMode.Standard);
                 string[] pages = new string[]
                 {
                     "library", "policy", "graphics", "anticheat", "environment",
-                    "whitelist", "audit", "log", "settings", "about"
+                    "whitelist", "audit", "log", "settings", "dev", "daily", "about"
                 };
                 for (int i = 0; i < pages.Length; i++)
                     CapturePage(dir, pages[i]);
@@ -183,7 +185,7 @@ namespace CaelusApp.WpfHost
                 string[] pages = new string[]
                 {
                     "overview", "library", "policy", "graphics", "anticheat",
-                    "environment", "whitelist", "audit", "log", "settings", "about"
+                    "environment", "whitelist", "audit", "log", "settings", "dev", "daily", "about"
                 };
 
                 // Warm every cached page and theme before taking the baseline.
@@ -216,7 +218,7 @@ namespace CaelusApp.WpfHost
                 long managedEnd = GC.GetTotalMemory(true);
                 long privateEnd = process.PrivateMemorySize64;
 
-                string report = "NAVIGATION_SWITCHES_PER_ROUND=110" + Environment.NewLine
+                string report = "NAVIGATION_SWITCHES_PER_ROUND=130" + Environment.NewLine
                     + "MODE_SWITCHES_PER_ROUND=30" + Environment.NewLine
                     + "MANAGED_START_MB=" + Mb(managedStart) + Environment.NewLine
                     + "MANAGED_ROUND1_MB=" + Mb(managedMid) + Environment.NewLine
@@ -285,11 +287,14 @@ namespace CaelusApp.WpfHost
 
         private void CapturePage(string dir, string page)
         {
-            // 游戏库/策略/体检在探针下无真实数据，注入样例以捕获实机图（仅此路径生效）
+            // 游戏库/策略/体检在探针下无真实数据，注入样例以捕获实机图（仅此路径生效）；
+            // 场景页面注入“游戏掌权 / 开发活跃待命”的三场景构图。
             Views.LibraryView.InjectSampleData = (page == "library");
             Views.PolicyView.InjectSampleData = (page == "policy");
             Views.AuditView.InjectSampleData = (page == "audit");
             Views.GraphicsView.InjectSampleData = (page == "graphics");
+            Views.OverviewView.InjectSampleData = (page == "overview");
+            Views.ScenarioDetailView.InjectSampleData = (page == "dev" || page == "daily");
             MainWindow window = new MainWindow(new GameMode(Paths.Data, new SuppressionCore()));
             window.ApplyPersistedMode(AppMode.Standard);
             window.WindowStartupLocation = WindowStartupLocation.Manual;

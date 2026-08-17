@@ -16,6 +16,7 @@ namespace CaelusApp
         private Label lblOverviewBoost, lblEvidenceLive;
         private DeviceSpecBar deviceBar;
         private Label lblHeroMode, lblHeroSource;
+        private DashboardTile tileGame, tileDev, tileDaily;
 
         private void BuildOverviewPage()
         {
@@ -57,9 +58,10 @@ namespace CaelusApp
 
             int tileY = y + coreH + 10;
             int tileW = (ContentW - 28) / 3;
-            MakeDashboardTile(pageOverview, ContentX, tileY, tileW, Lang.T("v15.tile.game"), Lang.T("v15.tile.game.sub"), "game", 1);
-            MakeDashboardTile(pageOverview, ContentX + tileW + 14, tileY, tileW, Lang.T("v15.tile.background"), Lang.T("v15.tile.background.sub"), "settings", 2);
-            MakeDashboardTile(pageOverview, ContentX + (tileW + 14) * 2, tileY, tileW, Lang.T("v15.tile.environment"), Lang.T("v15.tile.environment.sub"), "shield", 3);
+            tileGame = MakeDashboardTile(pageOverview, ContentX, tileY, tileW, "游戏", "…", "game", 1);
+            tileDev = MakeDashboardTile(pageOverview, ContentX + tileW + 14, tileY, tileW, "开发专注", "…", "chip", 2);
+            tileDaily = MakeDashboardTile(pageOverview, ContentX + (tileW + 14) * 2, tileY, tileW, "日常优化", "…", "sun", 3);
+            RefreshScenarioTiles();
 
             int topologyY = tileY + 80;
             var topology = MakeConsolePanel(pageOverview, ContentX, topologyY, ContentW, 68, false);
@@ -99,7 +101,7 @@ namespace CaelusApp
             });
         }
 
-        private void MakeDashboardTile(Control parent, int x, int y, int w, string title, string detail, string glyph, int channel)
+        private DashboardTile MakeDashboardTile(Control parent, int x, int y, int w, string title, string detail, string glyph, int channel)
         {
             var tile = new DashboardTile();
             tile.SetBounds(Theme.S(x), Theme.S(y), Theme.S(w), Theme.S(70));
@@ -109,6 +111,48 @@ namespace CaelusApp
             tile.Glyph = glyph;
             tile.Channel = channel;
             parent.Controls.Add(tile);
+            return tile;
+        }
+
+        /// <summary>三场景状态条：颜色 = 关闭(灰) / 待机(弱) / 活跃等待(强调) / 掌权(绿)。</summary>
+        private void RefreshScenarioTiles()
+        {
+            if (tileGame == null) return;
+
+            bool gameOn = gameMode != null && gameMode.Enabled;
+            bool gameAct = gameOn && gameMode != null && gameMode.IsActive;
+            string gameDetail = gameAct ? "游戏本体保护中，后台已让路"
+                : (gameOn ? "待机 · 等待游戏启动" : "已关闭 · 不参与仲裁");
+            SetScenarioTile(tileGame, gameOn, gameAct, grantedScenario == ScenarioKind.Game, gameDetail);
+
+            bool devOn = Settings.Load("DevModeOn", true);
+            bool devAct = devOn && devFocus != null && devFocus.IsActive;
+            string devDetail;
+            if (!devOn) devDetail = "已关闭 · 不参与仲裁";
+            else if (devAct && devFocus.FocusModeOn) devDetail = "专注模式开启 · 等待掌权";
+            else if (devAct) devDetail = "检测到编译或 IDE · 等待掌权";
+            else devDetail = "待机 · 等待编译 / IDE / 专注模式";
+            SetScenarioTile(tileDev, devOn, devAct, grantedScenario == ScenarioKind.DevFocus, devDetail);
+
+            bool dailyOn = Settings.Load("DailyCareOn", true);
+            bool dailyAct = dailyOn && dailyCare != null && dailyCare.IsActive;
+            string dailyDetail;
+            if (!dailyOn) dailyDetail = "已关闭 · 不参与仲裁";
+            else if (dailyAct) dailyDetail = "日常家族活跃或电池供电 · 等待掌权";
+            else dailyDetail = "待机 · 等待浏览器 / Office / 电池触发";
+            SetScenarioTile(tileDaily, dailyOn, dailyAct, grantedScenario == ScenarioKind.DailyCare, dailyDetail);
+        }
+
+        private void SetScenarioTile(DashboardTile tile, bool on, bool active, bool granted, string detail)
+        {
+            string prefix = granted ? "掌权中 · " : "";
+            if (tile.Detail != prefix + detail) tile.Detail = prefix + detail;
+            Color color = !on ? Theme.Dim
+                : granted ? Theme.Green
+                : active ? Theme.Accent
+                : Theme.Faint;
+            if (tile.StatusColor != color) tile.StatusColor = color;
+            tile.Invalidate();
         }
 
         private string CpuTopologySummary()

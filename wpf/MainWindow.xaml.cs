@@ -13,8 +13,10 @@ namespace CaelusApp.WpfHost
 {
     public partial class MainWindow : Window
     {
-        private readonly SampleOverviewSource source;
-        private readonly OverviewViewModel vm;
+        private readonly ScenarioStatusSource source;
+        private readonly ScenarioOverviewViewModel vm;
+        private readonly ScenarioDetailViewModel devDetailVm;
+        private readonly ScenarioDetailViewModel dailyDetailVm;
         private readonly GameMode gameMode;
         private readonly PolicyPageViewModel policyVm;
         private readonly LibraryViewModel libraryVm;
@@ -39,6 +41,8 @@ namespace CaelusApp.WpfHost
         private readonly GraphicsView graphicsView;
         private readonly AuditView auditView;
         private readonly WhitelistView whitelistView;
+        private readonly ScenarioDetailView devFocusView;
+        private readonly ScenarioDetailView dailyCareView;
 
         public MainWindow() : this(null) { }
 
@@ -59,11 +63,13 @@ namespace CaelusApp.WpfHost
             {
                 "常规", "竞技", "自定义"
             };
-            source = new SampleOverviewSource();
-            vm = new OverviewViewModel(source);
+            gameMode = gm ?? new GameMode(Paths.Data, new SuppressionCore());
+            source = new ScenarioStatusSource(gameMode);
+            vm = new ScenarioOverviewViewModel(source);
+            devDetailVm = new ScenarioDetailViewModel(source, ScenarioKind.DevFocus);
+            dailyDetailVm = new ScenarioDetailViewModel(source, ScenarioKind.DailyCare);
             vm.Refresh();
             Pump();
-            gameMode = gm ?? new GameMode(Paths.Data, new SuppressionCore());
             policyVm = new PolicyPageViewModel(gameMode);
             libraryVm = new LibraryViewModel(gameMode);
             libraryVm.Refresh();
@@ -95,7 +101,13 @@ namespace CaelusApp.WpfHost
             graphicsView = new GraphicsView { DataContext = graphicsVm };
             auditView = new AuditView { DataContext = auditVm };
             whitelistView = new WhitelistView { DataContext = whitelistVm };
+            devFocusView = new ScenarioDetailView { DataContext = devDetailVm };
+            dailyCareView = new ScenarioDetailView { DataContext = dailyDetailVm };
             Pump();
+
+            // 截图探针：注入“游戏掌权 / 开发活跃待命 / 日常待机”的完整三场景构图
+            if (OverviewView.InjectSampleData || ScenarioDetailView.InjectSampleData)
+                source.SetDemo(true, true, false);
 
             DataContext = vm;
             PageHost.Content = overviewView;
@@ -117,7 +129,7 @@ namespace CaelusApp.WpfHost
             ModePicker.SelectedIndex = mode == AppMode.Competitive ? 1
                 : mode == AppMode.Custom ? 2 : 0;
             source.SetMode(mode);
-            vm.Refresh();
+            vm.SetMode(mode);
             policyVm.RefreshLocks();
         }
 
@@ -179,6 +191,7 @@ namespace CaelusApp.WpfHost
         {
             Motion.PolicyChanged -= OnMotionPolicyChanged;
             ThemeManager.ModeChanged -= OnThemeChanged;
+            if (source != null) source.Dispose();
             base.OnClosed(e);
         }
 
@@ -317,6 +330,8 @@ namespace CaelusApp.WpfHost
                 next = antiCheatView;
             }
             else if (rb == NavGraphics) next = graphicsView;
+            else if (rb == NavDevFocus) next = devFocusView;
+            else if (rb == NavDailyCare) next = dailyCareView;
             else if (rb == NavEnvironment)
             {
                 environmentVm.RefreshStatus();
@@ -354,7 +369,7 @@ namespace CaelusApp.WpfHost
             ModePicker.SelectedIndex = index;
             ThemeManager.Apply(Application.Current, ThemeManager.CurrentTone, mode);
             source.SetMode(mode);
-            vm.Refresh();
+            vm.SetMode(mode);
             policyVm.RefreshLocks();
             // 内容 CrossFade 由 OnThemeChanged 集中处理
         }
@@ -370,6 +385,8 @@ namespace CaelusApp.WpfHost
                 : page == "audit" ? NavAudit
                 : page == "log" ? NavLog
                 : page == "settings" ? NavSettings
+                : page == "dev" ? NavDevFocus
+                : page == "daily" ? NavDailyCare
                 : page == "about" ? NavAbout : NavOverview;
             target.IsChecked = true;
             UpdateLayout();

@@ -71,6 +71,7 @@
     <Page Include="Themes\Styles.xaml" />
     <Page Include="Themes\Icons.xaml" />
     <Page Include="Views\OverviewView.xaml" />
+    <Page Include="Views\ScenarioDetailView.xaml" />
     <Page Include="Views\PlaceholderView.xaml" />
     <Page Include="Views\PolicyView.xaml" />
     <Page Include="Views\LibraryView.xaml" />
@@ -115,6 +116,9 @@
     <Compile Include="Views\OverviewView.xaml.cs">
       <DependentUpon>Views\OverviewView.xaml</DependentUpon>
     </Compile>
+    <Compile Include="Views\ScenarioDetailView.xaml.cs">
+      <DependentUpon>Views\ScenarioDetailView.xaml</DependentUpon>
+    </Compile>
     <Compile Include="Views\PlaceholderView.xaml.cs">
       <DependentUpon>Views\PlaceholderView.xaml</DependentUpon>
     </Compile>
@@ -152,6 +156,7 @@
       <DependentUpon>Controls\SegmentedControl.xaml</DependentUpon>
     </Compile>
     <Compile Include="LogViewModel.cs" />
+    <Compile Include="ScenarioViewModel.cs" />
     <Compile Include="AboutViewModel.cs" />
     <Compile Include="SettingsViewModel.cs" />
     <Compile Include="AntiCheatViewModel.cs" />

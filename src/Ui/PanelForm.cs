@@ -1,4 +1,4 @@
-﻿// @author zenjiro 18967498922@163.com
+// @author zenjiro 18967498922@163.com
 // 文件用途 维护主窗口状态和主要交互事件
 
 using System;
@@ -38,6 +38,7 @@ namespace CaelusApp
         private readonly Tamer tamer;
         private readonly GameMode gameMode;
         private readonly DevFocus devFocus;
+        private readonly DailyCare dailyCare;
         private readonly bool elevated;
         private ScenarioKind? grantedScenario;
 
@@ -82,9 +83,10 @@ namespace CaelusApp
         private const int ContentX = 26, ContentW = PageW - ContentX * 2;
         private const int ScrollContentW = PageW - 40 - 12 - 20;
 
-        public PanelForm(Tamer t, GameMode gm, DevFocus devFocus, Icon icon, bool isElevated)
+        public PanelForm(Tamer t, GameMode gm, DevFocus devFocus, Icon icon, bool isElevated, DailyCare dailyCare = null)
         {
-            tamer = t; gameMode = gm; this.devFocus = devFocus; elevated = isElevated; appIcon = (Icon)icon.Clone();
+            tamer = t; gameMode = gm; this.devFocus = devFocus; this.dailyCare = dailyCare;
+            elevated = isElevated; appIcon = (Icon)icon.Clone();
             visualMode = gameMode.ActivePreset; visualEnabled = gameMode.Enabled;
             Theme.SetMode(visualMode, false);
             BuildUi(appIcon);
@@ -537,6 +539,7 @@ namespace CaelusApp
                 lblSub.ForeColor = game != null ? Theme.Green : Theme.Faint;
             }
             RefreshBoostPresentation();
+            RefreshScenarioTiles();
         }
 
         private void ToggleModeFlyout()
@@ -876,6 +879,7 @@ namespace CaelusApp
             grantedScenario = kind;
             if (lblStatus != null)
                 lblStatus.Text = gameMode.StatusText + ScenarioStatusSuffix(kind);
+            RefreshScenarioTiles();
         }
     }
 

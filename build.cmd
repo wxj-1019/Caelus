@@ -1,5 +1,5 @@
 @rem @author zenjiro 18967498922@163.com
-@rem file: build Caelus, icon, and manifest
+@rem file: build Caelus (WPF main host), icon, and manifest
 @rem ASCII ONLY. cmd decodes this file with the codepage the console had at
 @rem startup (936 here) and chcp does NOT change that. One UTF-8 CJK char
 @rem shifts the parser and comment text gets executed as a command.
@@ -13,56 +13,47 @@ chcp 65001 >nul
 :cpready
 setlocal
 cd /d "%~dp0"
-set CSC=%WINDIR%\Microsoft.NET\Framework64\v4.0.30319\csc.exe
-if not exist "%CSC%" set CSC=%WINDIR%\Microsoft.NET\Framework\v4.0.30319\csc.exe
-if not exist "%CSC%" (
-    echo csc.exe not found - install .NET Framework 4.x
+rem 32-bit MSBuild required: on 25H2 the WPF assemblies were native-AOT'd and
+rem the 64-bit XAML compiler cannot load them (see Caelus.Wpf.csproj notes).
+set MSB=%WINDIR%\Microsoft.NET\Framework\v4.0.30319\MSBuild.exe
+if not exist "%MSB%" (
+    echo MSBuild.exe not found - install .NET Framework 4.x
     exit /b 1
 )
-
-set REFS=-reference:System.dll -reference:System.Drawing.dll -reference:System.Windows.Forms.dll -reference:System.Core.dll -reference:System.Management.dll -reference:System.Xml.dll
 set OUT=Caelus.exe
 if not "%~1"=="" set OUT=%~1
-set TESTARGS=
-if /i "%~2"=="--selftest" set TESTARGS=-define:CAELUS_SELFTEST -recurse:tests\*.cs
+set NAME=%~n1
+if "%NAME%"=="" set NAME=Caelus
+if /i "%~2"=="--selftest" goto selftest
 
-echo [1/3] compiling temp exe...
-"%CSC%" -nologo -target:winexe -optimize+ -codepage:65001 -out:Caelus.tmp.exe %REFS% %TESTARGS% -recurse:src\*.cs
+rem [1/3] build iconless temp exe without the admin manifest so --genicon
+rem can run without a UAC prompt, then generate Caelus.ico from IconArt.
+"%MSB%" wpf\Caelus.Wpf.csproj /p:Configuration=Release /p:AssemblyName=Caelus.tmp /p:OutputPath=..\ /p:IntermediateOutputPath=obj\ReleaseMain\ /p:ApplicationManifest= /v:m /nologo
 if errorlevel 1 goto err
-
 echo [2/3] generating Caelus.ico...
 .\Caelus.tmp.exe --genicon
 
-echo [3/3] compiling...
-set MANIFEST=Caelus.manifest.tmp
->  "%MANIFEST%" echo ^<?xml version="1.0" encoding="UTF-8" standalone="yes"?^>
->> "%MANIFEST%" echo ^<assembly xmlns="urn:schemas-microsoft-com:asm.v1" manifestVersion="1.0"^>
->> "%MANIFEST%" echo   ^<trustInfo xmlns="urn:schemas-microsoft-com:asm.v3"^>
->> "%MANIFEST%" echo     ^<security^>
->> "%MANIFEST%" echo       ^<requestedPrivileges^>
->> "%MANIFEST%" echo         ^<requestedExecutionLevel level="requireAdministrator" uiAccess="false"/^>
->> "%MANIFEST%" echo       ^</requestedPrivileges^>
->> "%MANIFEST%" echo     ^</security^>
->> "%MANIFEST%" echo   ^</trustInfo^>
->> "%MANIFEST%" echo   ^<application xmlns="urn:schemas-microsoft-com:asm.v3"^>
->> "%MANIFEST%" echo     ^<windowsSettings^>
->> "%MANIFEST%" echo       ^<dpiAware xmlns="http://schemas.microsoft.com/SMI/2005/WindowsSettings"^>true/pm^</dpiAware^>
->> "%MANIFEST%" echo       ^<dpiAwareness xmlns="http://schemas.microsoft.com/SMI/2016/WindowsSettings"^>PerMonitorV2^</dpiAwareness^>
->> "%MANIFEST%" echo     ^</windowsSettings^>
->> "%MANIFEST%" echo   ^</application^>
->> "%MANIFEST%" echo ^</assembly^>
-"%CSC%" -nologo -target:winexe -optimize+ -codepage:65001 -win32icon:Caelus.ico -win32manifest:"%MANIFEST%" -out:"%OUT%" %REFS% %TESTARGS% -recurse:src\*.cs
+rem [3/3] build final exe with icon + requireAdministrator manifest
+"%MSB%" wpf\Caelus.Wpf.csproj /p:Configuration=Release /p:AssemblyName=%NAME% /p:OutputPath=..\ /p:IntermediateOutputPath=obj\ReleaseMain\ /v:m /nologo
 if errorlevel 1 goto err
-
-del Caelus.tmp.exe "%MANIFEST%" >nul 2>&1
+del Caelus.tmp.exe >nul 2>&1
 echo.
 echo Build OK -^> %OUT%
 call :restorecp
-goto :eof
+exit /b 0
+
+:selftest
+rem selftest build: links tests\*.cs and the WinForms UI sources so the 225
+rem self-tests keep running inside the WPF host (single pass, no icon needed)
+"%MSB%" wpf\Caelus.Wpf.csproj /p:Configuration=Release /p:AssemblyName=%NAME% /p:OutputPath=..\ /p:IntermediateOutputPath=obj\ReleaseTest\ /p:DefineConstants=CAELUS_SELFTEST /p:CaelusSelfTest=true /v:m /nologo
+if errorlevel 1 goto err
+echo.
+echo Build OK -^> %OUT%
+call :restorecp
+exit /b 0
 
 :err
 echo Build failed
-del Caelus.tmp.exe "%MANIFEST%" >nul 2>&1
 call :restorecp
 exit /b 1
 

@@ -21,6 +21,17 @@
     <AlwaysCompileMarkupFilesInSeparateDomain>false</AlwaysCompileMarkupFilesInSeparateDomain>
     <!-- No LangVersion: the in-framework csc.exe (4.0.30319) only knows
          ISO-1/2/3/4/5/Default, so the default matches the legacy build.cmd. -->
+    <!-- 本机未安装 .NET Framework 4.x Targeting Pack。预设这两个私有属性可让
+         GetReferenceAssemblyPaths 任务被跳过（其找不到参考程序集目录正是
+         MSB3644 的来源），框架程序集改由 v4.0.30319 安装目录（真实 DLL，
+         经 RedistList 外机制直接命中）解析；Mc1Wrap.cs 会在标记编译前把
+         这类路径重写回 GAC，避免与预加载副本冲突。 -->
+    <_TargetFrameworkDirectories>$(WINDIR)\Microsoft.NET\Framework\v4.0.30319\</_TargetFrameworkDirectories>
+    <_FullFrameworkReferenceAssemblyPaths>$(WINDIR)\Microsoft.NET\Framework\v4.0.30319\</_FullFrameworkReferenceAssemblyPaths>
+    <!-- 显式引用指向 x86 GAC 副本是刻意的：build.cmd 必须用 32 位 MSBuild
+         （25H2 上 64 位 XAML 编译器加载不了原生 AOT 化的 WPF 程序集），运行时
+         CLR 按标识从 GAC 加载 64 位版本。此处的 MSB3270 架构不匹配无实害，静音。 -->
+    <ResolveAssemblyWarnOrErrorOnTargetArchitectureMismatch>None</ResolveAssemblyWarnOrErrorOnTargetArchitectureMismatch>
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="mscorlib">
@@ -35,10 +46,22 @@
       <HintPath>C:\Windows\Microsoft.NET\assembly\GAC_MSIL\System.Core\v4.0_4.0.0.0__b77a5c561934e089\System.Core.dll</HintPath>
       <Private>False</Private>
     </Reference>
-    <Reference Include="System.Drawing" />
-    <Reference Include="System.Windows.Forms" />
-    <Reference Include="System.Management" />
-    <Reference Include="System.Xml" />
+    <Reference Include="System.Drawing">
+      <HintPath>C:\Windows\Microsoft.NET\assembly\GAC_MSIL\System.Drawing\v4.0_4.0.0.0__b03f5f7f11d50a3a\System.Drawing.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="System.Windows.Forms">
+      <HintPath>C:\Windows\Microsoft.NET\assembly\GAC_MSIL\System.Windows.Forms\v4.0_4.0.0.0__b77a5c561934e089\System.Windows.Forms.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="System.Management">
+      <HintPath>C:\Windows\Microsoft.NET\assembly\GAC_MSIL\System.Management\v4.0_4.0.0.0__b03f5f7f11d50a3a\System.Management.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="System.Xml">
+      <HintPath>C:\Windows\Microsoft.NET\assembly\GAC_MSIL\System.Xml\v4.0_4.0.0.0__b77a5c561934e089\System.Xml.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
     <!-- 编译用标准 4.8 程序集（从官方独立安装包提取，与运行时 GAC 版本无关） -->
     <Reference Include="PresentationCore">
       <HintPath>C:\Windows\Microsoft.NET\assembly\GAC_32\PresentationCore\v4.0_4.0.0.0__31bf3856ad364e35\PresentationCore.dll</HintPath>
@@ -88,6 +111,7 @@
     <Page Include="Dialogs\RunningPickerDialogWpf.xaml" />
     <Page Include="Dialogs\DefenderExclusionDialogWpf.xaml" />
     <Page Include="Dialogs\LolAddonDialogWpf.xaml" />
+    <Page Include="Dialogs\ReleaseNotesDialogWpf.xaml" />
   </ItemGroup>
   <ItemGroup>
     <Compile Include="ThemeManager.cs" />
@@ -96,6 +120,8 @@
     <Compile Include="Converters.cs" />
     <Compile Include="Motion.cs" />
     <Compile Include="Spotlight.cs" />
+    <Compile Include="WpfRuntime.cs" />
+    <Compile Include="WindowIcon.cs" />
     <Compile Include="Controls\IconView.cs" />
     <Compile Include="Controls\Sparkline.cs" />
     <Compile Include="Controls\ProgressRing.cs" />
@@ -176,19 +202,23 @@
     <Compile Include="Dialogs\LolAddonDialogWpf.xaml.cs">
       <DependentUpon>LolAddonDialogWpf.xaml</DependentUpon>
     </Compile>
+    <Compile Include="Dialogs\ReleaseNotesDialogWpf.xaml.cs">
+      <DependentUpon>ReleaseNotesDialogWpf.xaml</DependentUpon>
+    </Compile>
 
     <!-- Link-compile framework-agnostic Core sources so new files auto-enter
          both the legacy (build.cmd) and WPF builds. WinForms-only sources
-         (src/Ui, src/Program.cs) are intentionally excluded. -->
-    <!-- NOTE: these globs are per-subdir and NON-recursive; a new subdirectory
-         under src/Core (e.g. src/Core/NewSubdir) needs its own glob line here. -->
-    <Compile Include="..\src\Core\*.cs" />
-    <Compile Include="..\src\Core\Detection\*.cs" />
-    <Compile Include="..\src\Core\Suppression\*.cs" />
-    <Compile Include="..\src\Core\Scenario\*.cs" />
-    <Compile Include="..\src\Core\Tweaks\*.cs" />
-    <Compile Include="..\src\Platform\*.cs" />
-    <Compile Include="..\src\UiShared\*.cs" />
+         (src/Ui, src/Program.cs) are intentionally excluded from the release
+         build; the selftest build (CaelusSelfTest=true) links them so the
+         225 self-tests and the WinForms UI probes keep running inside the WPF host. -->
+    <!-- 递归通配：src 下新增子目录自动进入编译，无需再手工加行。
+         刻意排除 src/Ui（WinForms 界面源码，仅自测构建链入）。 -->
+    <Compile Include="..\src\Core\**\*.cs" />
+    <Compile Include="..\src\Platform\**\*.cs" />
+    <Compile Include="..\src\UiShared\**\*.cs" />
+    <!-- 自测版：链入测试与 WinForms 界面源码（仅 dev.cmd test 构建） -->
+    <Compile Include="..\tests\**\*.cs" Condition="'$(CaelusSelfTest)'=='true'" />
+    <Compile Include="..\src\Ui\**\*.cs" Condition="'$(CaelusSelfTest)'=='true'" />
     <None Include="app.manifest" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />

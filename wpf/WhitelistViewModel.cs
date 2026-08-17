@@ -294,7 +294,9 @@ namespace CaelusApp
             {
                 if (Required) return Lang.T("white.required.badge");
                 if (CurrentMatches < 0) return Lang.T("white.matches.pending");
-                return CurrentMatches + " 个运行进程";
+                return CurrentMatches == 0
+                    ? Lang.T("white.state.idle")
+                    : Lang.F("white.state.running", CurrentMatches.ToString());
             }
         }
         public string LockReason

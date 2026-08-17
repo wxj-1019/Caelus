@@ -97,6 +97,27 @@ namespace CaelusApp.WpfHost
             }
         }
 
+        // 与旧 WinForms 的 SetSilently 一致：锁定只做视觉同步，
+        // 绝不写回 GameMode / 注册表（避免覆盖用户在自定义档的真实偏好）。
+        public void SyncVisual(bool locked, bool lockedValue)
+        {
+            if (isLocked != locked)
+            {
+                isLocked = locked;
+                UpdateDisplayTitle();
+                Raise("IsLocked");
+                Raise("IsEnabled");
+                Raise("LockNote");
+                Raise("ToggleAutomationName");
+            }
+            bool visual = locked ? lockedValue : PolicyViewModel.GetProperty(gm, item.PropertyName);
+            if (isOn != visual)
+            {
+                isOn = visual;
+                Raise("IsOn");
+            }
+        }
+
         private void ReassertToggleState()
         {
             System.Windows.Application app = System.Windows.Application.Current;
@@ -164,9 +185,9 @@ namespace CaelusApp.WpfHost
             get
             {
                 PerformancePreset p = gm.ActivePreset;
-                if (p == PerformancePreset.Competitive) return "竞技";
-                if (p == PerformancePreset.Custom) return "自定义";
-                return "巡航";
+                if (p == PerformancePreset.Competitive) return Lang.T("preset.competitive");
+                if (p == PerformancePreset.Custom) return Lang.T("preset.custom");
+                return Lang.T("preset.standard");
             }
         }
         public string ModeBadgeText { get { return ModeText + "模式"; } }
@@ -208,23 +229,15 @@ namespace CaelusApp.WpfHost
         public void RefreshLocks()
         {
             PerformancePreset preset = gm.ActivePreset;
+            // 与旧 WinForms 一致：锁定只做视觉同步（SetSilently），不写入 GameMode/注册表
             foreach (PolicyCardViewModel card in CustomCards)
             {
                 bool locked, lockedValue;
                 PolicyViewModel.GetLockState(card.PropertyName, preset, out locked, out lockedValue);
-                card.IsLocked = locked;
-                if (locked)
-                {
-                    PolicyViewModel.SetProperty(gm, card.PropertyName, lockedValue);
-                    card.RefreshFromGameMode();
-                }
-                else
-                {
-                    card.RefreshFromGameMode();
-                }
+                card.SyncVisual(locked, lockedValue);
             }
-            foreach (PolicyCardViewModel card in CoreCards) card.RefreshFromGameMode();
-            foreach (PolicyCardViewModel card in ExtraCards) card.RefreshFromGameMode();
+            foreach (PolicyCardViewModel card in CoreCards) card.SyncVisual(false, false);
+            foreach (PolicyCardViewModel card in ExtraCards) card.SyncVisual(false, false);
             Raise("ModeText");
             Raise("ModeBadgeText");
             Raise("ModeAutomationName");

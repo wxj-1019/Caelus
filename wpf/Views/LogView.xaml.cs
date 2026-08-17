@@ -2,6 +2,8 @@
 // 文件用途 WPF 日志页：展示运行日志尾部并提供筛选、刷新、打开和清空
 
 using System;
+using System.IO;
+using System.Text;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Threading;
@@ -61,12 +63,16 @@ namespace CaelusApp.WpfHost.Views
             LogViewModel vm = DataContext as LogViewModel;
             try
             {
-                System.Diagnostics.Process.Start("explorer.exe", Logger.LogPath);
-                if (vm != null) vm.ShowFeedback("已打开日志文件位置。", "Success");
+                // 与旧 WinForms 一致：文件不存在先创建空文件，用 notepad 打开
+                string path = Logger.LogPath;
+                if (!File.Exists(path)) File.WriteAllText(path, "", Encoding.UTF8);
+                System.Diagnostics.Process.Start(
+                    System.IO.Path.Combine(Environment.SystemDirectory, "notepad.exe"), "\"" + path + "\"");
+                if (vm != null) vm.ShowFeedback("已用记事本打开日志文件。", "Success");
             }
             catch
             {
-                if (vm != null) vm.ShowFeedback("无法打开日志文件位置，请确认文件路径可用。", "Error");
+                if (vm != null) vm.ShowFeedback("无法打开日志文件，请确认文件路径可用。", "Error");
             }
         }
 
@@ -79,6 +85,7 @@ namespace CaelusApp.WpfHost.Views
             try
             {
                 Logger.Clear();
+                Logger.Log("运行日志已手动清除");
                 if (vm != null)
                 {
                     vm.Refresh();

@@ -15,12 +15,17 @@ namespace CaelusApp
         public string RepoText { get { return App.RepoUrl; } }
         public string RepoDisplayText { get { return App.RepoUrl.Replace("https://", ""); } }
         public string ReleaseUrl { get { return App.ReleasesUrl; } }
-        public string LicenseText { get { return "MIT License"; } }
+        public string LicenseText { get { return Lang.T("about.lic.value"); } }
         public string DiagnosticsText { get { return "数据目录: " + (Paths.Data ?? "未初始化"); } }
         public string UpdateTitle { get { return Lang.T("v15.about.update"); } }
         public string UpdateSubText { get { return Lang.T("v15.about.update.sub"); } }
         public string CheckUpdateText { get { return Lang.T("btn.checkupd"); } }
         public string DownloadText { get { return "前往下载"; } }
+        public string NotesButtonText
+        {
+            get { return Lang.T("notes.open") + (ReleaseNotes.HasUnseen ? "  ·  NEW" : ""); }
+        }
+        public bool NotesUnseen { get { return ReleaseNotes.HasUnseen; } }
         public string UpdateStatus { get { return updateStatus; } set { SetProperty(ref updateStatus, value, "UpdateStatus"); } }
         public string UpdateKind { get { return updateKind; } set { SetProperty(ref updateKind, value, "UpdateKind"); } }
         public string DownloadUrl { get { return downloadUrl; } private set { SetProperty(ref downloadUrl, value, "DownloadUrl"); } }
@@ -30,6 +35,13 @@ namespace CaelusApp
         {
             DownloadUrl = result == null ? "" : (result.Url ?? "");
             UpdateAvailable = result != null && result.Ok && result.Newer && DownloadUrl.Length > 0;
+        }
+
+        // 发布说明看过之后刷新按钮文案（去掉 NEW 标记）
+        public void RefreshNotesButton()
+        {
+            Raise("NotesButtonText");
+            Raise("NotesUnseen");
         }
     }
 }

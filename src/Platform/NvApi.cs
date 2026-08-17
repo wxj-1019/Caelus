@@ -1,4 +1,4 @@
-﻿// @author zenjiro 18967498922@163.com
+// @author zenjiro 18967498922@163.com
 // 文件用途 NVAPI 驱动配置与数码振动封装 全部函数经 QueryInterface 动态解析 驱动缺失时整体降级
 
 using System;
@@ -278,6 +278,8 @@ namespace CaelusApp
         [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
         private delegate int FnGetBaseProfile(IntPtr session, out IntPtr profile);
         [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
+        private delegate int FnGpuThermal(IntPtr gpu, uint sensorIndex, ref NvThermalSettings settings);
+        [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
         private delegate int FnSettingName(uint settingId, IntPtr nameBuffer);
         [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
         private delegate int FnEnumSettingIds([Out] uint[] ids, ref uint maxCount);
@@ -294,6 +296,7 @@ namespace CaelusApp
         private static FnEnumSettingIds drsEnumSettingIds;
         private static FnEnumGpus enumGpus;
         private static FnGpuDwordOut gpuPerfDecrease;
+        private static FnGpuThermal gpuThermal;
         private static FnDriverVersion sysDriverVersion;
         private static int driverVersionCache = -1;
 
@@ -307,6 +310,7 @@ namespace CaelusApp
                 drsEnumSettingIds = Resolve<FnEnumSettingIds>(IdDrsEnumAvailableSettingIds);
                 enumGpus = Resolve<FnEnumGpus>(IdEnumPhysicalGPUs);
                 gpuPerfDecrease = Resolve<FnGpuDwordOut>(IdGpuGetPerfDecreaseInfo);
+                gpuThermal = Resolve<FnGpuThermal>(IdGpuGetThermalSettings);
                 sysDriverVersion = Resolve<FnDriverVersion>(IdSysGetDriverAndBranchVersion);
             }
             catch { }
@@ -376,6 +380,78 @@ namespace CaelusApp
         public const uint PerfDecreaseAcBatt = 0x00000004;
         public const uint PerfDecreaseApi = 0x00000008;
         public const uint PerfDecreaseInsufficientPower = 0x00000010;
+
+        private const uint IdGpuGetThermalSettings = 0xE3640A56;
+
+        [StructLayout(LayoutKind.Sequential)]
+        private struct NvThermalSensor
+        {
+            public int Controller;
+            public uint DefaultMinTemp;
+            public uint DefaultMaxTemp;
+            public uint CurrentTemp;
+            public int Target;
+        }
+
+        // NV_GPU_THERMAL_SETTINGS_V2：version + count + 3 个传感器（68 字节）。
+        // 驱动只接受 V2 布局，单传感器（V1/28 字节）会返回 NVAPI_INVALID_POINTER(-9)。
+        [StructLayout(LayoutKind.Sequential)]
+        private struct NvThermalSettings
+        {
+            public uint Version;
+            public uint Count;
+            [MarshalAs(UnmanagedType.ByValArray, SizeConst = 3)]
+            public NvThermalSensor[] Sensor;
+        }
+
+        // 读取 GPU 核心温度（NvAPI_GPU_GetThermalSettings）；失败返回 false。
+        // 版本号 = MAKE_NVAPI_VERSION(V2, 2) = sizeof(68=0x44) | (2 << 16) = 0x00020044。
+        // count 必须为 3（全部传感器），sensorIndex=NVAPI_THERMAL_TARGET_NONE(0)，
+        // 否则驱动返回 NVAPI_INVALID_ARGUMENT(-220)。
+        public static bool TryGetGpuTemperature(IntPtr gpu, out int celsius)
+        {
+            celsius = 0;
+            EnsureExtResolved();
+            if (gpuThermal == null || gpu == IntPtr.Zero) return false;
+            try
+            {
+                var settings = new NvThermalSettings();
+                settings.Sensor = new NvThermalSensor[3];
+                settings.Version = 0x00020044; // NV_GPU_THERMAL_SETTINGS_VER_2
+                settings.Count = 3;
+                int rc = gpuThermal(gpu, 0, ref settings);
+                if (rc != 0)
+                {
+                    ThermalDiagLastRc = rc;
+                    return false;
+                }
+                // 取 GPU 核心传感器读数（target=GPU）；没有标记时取全部传感器中的最大有效值
+                int best = 0;
+                for (int i = 0; i < 3 && i < settings.Sensor.Length; i++)
+                {
+                    int value = (int)settings.Sensor[i].CurrentTemp;
+                    if (settings.Sensor[i].Target == 1 && value > 0) { celsius = value; ThermalDiagLastRc = 0; return true; }
+                    if (value > best) best = value;
+                }
+                if (best <= 0) { ThermalDiagLastRc = -1; return false; }
+                celsius = best;
+                ThermalDiagLastRc = 0;
+                return true;
+            }
+            catch
+            {
+                ThermalDiagLastRc = -2;
+                return false;
+            }
+        }
+
+        // 诊断：最近一次温度读取结果（0=成功 -1=读数为零 -2=异常 -4=版本不兼容 其它=NVAPI 返回码）；
+        // 另可用 ThermalDiagResolved 判断接口是否解析成功。
+        public static int ThermalDiagLastRc;
+        public static bool ThermalDiagResolved
+        {
+            get { EnsureExtResolved(); return gpuThermal != null; }
+        }
 
         public static bool TryGetPerfDecrease(IntPtr gpu, out uint mask)
         {

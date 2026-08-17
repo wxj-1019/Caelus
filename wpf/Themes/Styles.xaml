@@ -1,4 +1,4 @@
-<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+﻿<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
                     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
                     xmlns:controls="clr-namespace:CaelusApp.WpfHost.Controls"
                     xmlns:local="clr-namespace:CaelusApp.WpfHost">
@@ -653,46 +653,45 @@
     <Setter Property="Typography.NumeralAlignment" Value="Tabular"/>
   </Style>
 
-  <!-- ========== [系统] 滚动条 ========== -->
-  <!-- macOS overlay：默认极细淡出（30% 不透明度），hover 淡入 + thumb 展开 -->
+  <!-- ========== [系统] 滚动条（2px 玻璃：渐变胶囊 thumb，悬停提亮，拖动主题色） ==========
+       注意：WPF 中隐式 ScrollBar 样式对模板内生成的 ScrollBar 命中不可靠（模板边界规则），
+       因此 ScrollViewer 模板用 StaticResource 显式引用 ScrollBarStyle，双保险保证样式生效。 -->
   <Style x:Key="ScrollThumb" TargetType="Thumb">
-    <Setter Property="Background" Value="{DynamicResource ScrollThumbBrush}"/>
     <Setter Property="Template">
       <Setter.Value>
         <ControlTemplate TargetType="Thumb">
-          <Border x:Name="ThumbBody" Background="{TemplateBinding Background}"
-                  CornerRadius="2" Margin="2,1" MinHeight="20"/>
+          <Border x:Name="ThumbBody" CornerRadius="1" Margin="0,2" MinHeight="20">
+            <Border.Background>
+              <!-- 玻璃管：中间亮、两端透明；中间色取主题 ScrollGlassColor（暗=白 / 亮=黑） -->
+              <LinearGradientBrush StartPoint="0,0" EndPoint="1,0">
+                <GradientStop Offset="0" Color="Transparent"/>
+                <GradientStop Offset="0.5" Color="{DynamicResource ScrollGlassColor}"/>
+                <GradientStop Offset="1" Color="Transparent"/>
+              </LinearGradientBrush>
+            </Border.Background>
+            <!-- 玻璃高光边：1px 淡白（两主题通用，营造玻璃折射感） -->
+            <Border CornerRadius="1" IsHitTestVisible="False">
+              <Border.Background>
+                <LinearGradientBrush StartPoint="0,0" EndPoint="0,1">
+                  <GradientStop Offset="0" Color="#33FFFFFF"/>
+                  <GradientStop Offset="1" Color="#00FFFFFF"/>
+                </LinearGradientBrush>
+              </Border.Background>
+            </Border>
+          </Border>
           <ControlTemplate.Triggers>
             <Trigger Property="IsMouseOver" Value="True">
-              <Trigger.EnterActions>
-                <BeginStoryboard>
-                  <Storyboard>
-                    <ThicknessAnimation Storyboard.TargetName="ThumbBody" Storyboard.TargetProperty="Margin"
-                                        To="0.5,1" Duration="0:0:0.15">
-                      <ThicknessAnimation.EasingFunction><CubicEase EasingMode="EaseOut"/></ThicknessAnimation.EasingFunction>
-                    </ThicknessAnimation>
-                  </Storyboard>
-                </BeginStoryboard>
-              </Trigger.EnterActions>
-              <Trigger.ExitActions>
-                <BeginStoryboard>
-                  <Storyboard>
-                    <ThicknessAnimation Storyboard.TargetName="ThumbBody" Storyboard.TargetProperty="Margin"
-                                        To="2,1" Duration="0:0:0.3" BeginTime="0:0:0.3"/>
-                  </Storyboard>
-                </BeginStoryboard>
-              </Trigger.ExitActions>
               <Setter TargetName="ThumbBody" Property="Background" Value="{DynamicResource ScrollThumbHoverBrush}"/>
+              <Setter TargetName="ThumbBody" Property="CornerRadius" Value="1.5"/>
             </Trigger>
             <Trigger Property="IsDragging" Value="True">
-              <Setter TargetName="ThumbBody" Property="Margin" Value="0.5,1"/>
               <Setter TargetName="ThumbBody" Property="Background" Value="{DynamicResource ModeAccentBrush}"/>
+              <Setter TargetName="ThumbBody" Property="CornerRadius" Value="1.5"/>
             </Trigger>
             <DataTrigger Binding="{Binding Orientation, RelativeSource={RelativeSource AncestorType=ScrollBar}}"
                          Value="Horizontal">
               <Setter TargetName="ThumbBody" Property="MinHeight" Value="0"/>
               <Setter TargetName="ThumbBody" Property="MinWidth" Value="20"/>
-              <Setter TargetName="ThumbBody" Property="Margin" Value="1,2"/>
             </DataTrigger>
           </ControlTemplate.Triggers>
         </ControlTemplate>
@@ -700,14 +699,17 @@
     </Setter>
   </Style>
 
-  <Style TargetType="ScrollBar">
-    <Setter Property="Width" Value="6"/>
+  <!-- 显式命名样式：ScrollViewer 模板与隐式样式都引用它 -->
+  <Style x:Key="ScrollBarStyle" TargetType="ScrollBar">
+    <Setter Property="Width" Value="2"/>
+    <Setter Property="Height" Value="2"/>
     <Setter Property="Background" Value="Transparent"/>
-    <Setter Property="Opacity" Value="0.3"/>
     <Setter Property="Template">
       <Setter.Value>
         <ControlTemplate TargetType="ScrollBar">
           <Grid Background="{TemplateBinding Background}">
+            <Border x:Name="TrackBody" Background="{DynamicResource ScrollTrackBrush}"
+                    CornerRadius="1" Margin="0,2"/>
             <Track x:Name="PART_Track" IsDirectionReversed="True">
               <Track.DecreaseRepeatButton>
                 <RepeatButton Command="ScrollBar.PageUpCommand" Opacity="0" Focusable="False"/>
@@ -718,32 +720,46 @@
               </Track.IncreaseRepeatButton>
             </Track>
           </Grid>
+          <ControlTemplate.Triggers>
+            <Trigger Property="Orientation" Value="Horizontal">
+              <Setter TargetName="TrackBody" Property="Margin" Value="2,0"/>
+            </Trigger>
+          </ControlTemplate.Triggers>
         </ControlTemplate>
       </Setter.Value>
     </Setter>
-    <Style.Triggers>
-      <Trigger Property="Orientation" Value="Horizontal">
-        <Setter Property="Height" Value="6"/>
-        <Setter Property="Width" Value="Auto"/>
-      </Trigger>
-      <Trigger Property="IsMouseOver" Value="True">
-        <Trigger.EnterActions>
-          <BeginStoryboard>
-            <Storyboard>
-              <DoubleAnimation To="1" Duration="0:0:0.12" Storyboard.TargetProperty="Opacity">
-                <DoubleAnimation.EasingFunction><CubicEase EasingMode="EaseOut"/></DoubleAnimation.EasingFunction>
-              </DoubleAnimation>
-            </Storyboard>
-          </BeginStoryboard>
-        </Trigger.EnterActions>
-        <Trigger.ExitActions>
-          <BeginStoryboard>
-            <Storyboard>
-              <DoubleAnimation To="0.3" Duration="0:0:0.6" BeginTime="0:0:0.4" Storyboard.TargetProperty="Opacity"/>
-            </Storyboard>
-          </BeginStoryboard>
-        </Trigger.ExitActions>
-      </Trigger>
-    </Style.Triggers>
+  </Style>
+
+  <!-- 隐式命中：外部直接使用的 ScrollBar 也走同一样式 -->
+  <Style TargetType="ScrollBar" BasedOn="{StaticResource ScrollBarStyle}"/>
+
+  <!-- ScrollViewer：显式模板引用 ScrollBarStyle，保证所有滚动场景都是细玻璃滚动条 -->
+  <Style TargetType="ScrollViewer">
+    <Setter Property="Template">
+      <Setter.Value>
+        <ControlTemplate TargetType="ScrollViewer">
+          <Grid Background="{TemplateBinding Background}">
+            <ScrollContentPresenter x:Name="PART_ScrollContentPresenter"
+                                    Content="{TemplateBinding Content}"
+                                    ContentTemplate="{TemplateBinding ContentTemplate}"
+                                    CanContentScroll="{TemplateBinding CanContentScroll}"
+                                    CanHorizontallyScroll="False" CanVerticallyScroll="False"
+                                    Margin="{TemplateBinding Padding}"/>
+            <ScrollBar x:Name="PART_VerticalScrollBar" Orientation="Vertical" HorizontalAlignment="Right"
+                       Minimum="0" Maximum="{TemplateBinding ScrollableHeight}"
+                       ViewportSize="{TemplateBinding ViewportHeight}"
+                       Value="{TemplateBinding VerticalOffset}"
+                       Visibility="{TemplateBinding ComputedVerticalScrollBarVisibility}"
+                       Style="{StaticResource ScrollBarStyle}"/>
+            <ScrollBar x:Name="PART_HorizontalScrollBar" Orientation="Horizontal" VerticalAlignment="Bottom"
+                       Minimum="0" Maximum="{TemplateBinding ScrollableWidth}"
+                       ViewportSize="{TemplateBinding ViewportWidth}"
+                       Value="{TemplateBinding HorizontalOffset}"
+                       Visibility="{TemplateBinding ComputedHorizontalScrollBarVisibility}"
+                       Style="{StaticResource ScrollBarStyle}"/>
+          </Grid>
+        </ControlTemplate>
+      </Setter.Value>
+    </Setter>
   </Style>
 </ResourceDictionary>

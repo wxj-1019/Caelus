@@ -1023,7 +1023,7 @@ namespace CaelusApp
             test("模式色板：三模式互异且巡航/战备色相距足够远", TestModePaletteDistinct);
             test("模式色板：ModeAccent 深浅两档对比度达到 AA", TestModeAccentContrast);
             test("策略项：三分组共 21 项，标题/说明/属性名齐全", TestPolicyItemsCompleteness);
-            test("策略锁定矩阵：5 自定义项在 Standard/Competitive 锁定，Custom 放开", TestPolicyLockMatrix);
+            test("策略锁定矩阵：与 WinForms 一致的锁定语义（StrictCore 可编辑、PauseSvc 恒 false、Custom 放开）", TestPolicyLockMatrix);
             test("策略属性映射：21 项 get/set 正确读写 GameMode", TestPolicyPropertyAccess);
             test("游戏库 VM：列表刷新 + 添加 + 移除", TestLibraryRefresh);
             test("游戏库 VM：重复添加检测", TestLibraryAddDuplicate);
@@ -1312,14 +1312,14 @@ namespace CaelusApp
             });
             test("实例接管：只有严格更新的版本才能接管正在运行的实例", () =>
             {
-                if (Program.CompareVersions("1.6.3", "1.6.2") <= 0) throw new Exception("newer build must win");
-                if (Program.CompareVersions("1.7.0", "1.6.9") <= 0) throw new Exception("minor bump must win");
-                if (Program.CompareVersions("1.6.3", "1.6.3") != 0) throw new Exception("same build must tie");
-                if (Program.CompareVersions("1.6.2", "1.6.3") >= 0) throw new Exception("older build must lose");
-                if (Program.CompareVersions("v1.6.3", "1.6.2") <= 0) throw new Exception("v-prefix must parse");
-                if (Program.CompareVersions("1.6.3", "1.6.3.0") != 0) throw new Exception("1.6.3 must equal 1.6.3.0");
-                if (Program.CompareVersions("1.0", null) <= 0) throw new Exception("unknown version must be treated as older");
-                if (Program.CompareVersions("1.0", "garbage") <= 0) throw new Exception("unparsable version must be treated as older");
+                if (App.CompareVersions("1.6.3", "1.6.2") <= 0) throw new Exception("newer build must win");
+                if (App.CompareVersions("1.7.0", "1.6.9") <= 0) throw new Exception("minor bump must win");
+                if (App.CompareVersions("1.6.3", "1.6.3") != 0) throw new Exception("same build must tie");
+                if (App.CompareVersions("1.6.2", "1.6.3") >= 0) throw new Exception("older build must lose");
+                if (App.CompareVersions("v1.6.3", "1.6.2") <= 0) throw new Exception("v-prefix must parse");
+                if (App.CompareVersions("1.6.3", "1.6.3.0") != 0) throw new Exception("1.6.3 must equal 1.6.3.0");
+                if (App.CompareVersions("1.0", null) <= 0) throw new Exception("unknown version must be treated as older");
+                if (App.CompareVersions("1.0", "garbage") <= 0) throw new Exception("unparsable version must be treated as older");
             });
             test("体检页：滚动后重建列表会回到顶部", TestScrolledRebuild);
             test("体检页：条目滑入动画不会闪出横向滚动条", TestEnterSlideKeepsScrollbarsStable);

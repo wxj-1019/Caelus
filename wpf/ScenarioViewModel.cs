@@ -457,6 +457,11 @@ namespace CaelusApp
         }
 
         private readonly GameMode gameMode;
+        private readonly Tamer tamer;
+        private readonly SuppressionCore core;
+        private readonly DevFocus devFocus;
+        private readonly DailyCare dailyCare;
+        private readonly bool runtimeMode;
         private readonly ScenarioArbiter arbiter;
         private readonly bool[] reported = new bool[3];
         private readonly DispatcherTimer timer;
@@ -488,12 +493,32 @@ namespace CaelusApp
         public event Action Changed;
 
         public ScenarioStatusSource(GameMode gameMode)
+            : this(gameMode, null, null, null, null, null)
+        {
+        }
+
+        /// <summary>正式运行时构造：传入 WpfRuntimeHost 的真实仲裁器/DevFocus/DailyCare，
+        /// 场景状态直接读运行时结果；预览/截图路径传 null 时使用无副作用代理镜像。</summary>
+        public ScenarioStatusSource(GameMode gameMode, Tamer tamer, SuppressionCore core,
+            ScenarioArbiter arbiter, DevFocus devFocus, DailyCare dailyCare)
         {
             this.gameMode = gameMode;
-            arbiter = new ScenarioArbiter();
-            arbiter.Register(new ProxyScenario(ScenarioKind.Game, 100));
-            arbiter.Register(new ProxyScenario(ScenarioKind.DevFocus, 50));
-            arbiter.Register(new ProxyScenario(ScenarioKind.DailyCare, 10));
+            this.tamer = tamer;
+            this.core = core;
+            this.devFocus = devFocus;
+            this.dailyCare = dailyCare;
+            runtimeMode = arbiter != null;
+            if (runtimeMode)
+            {
+                this.arbiter = arbiter;
+            }
+            else
+            {
+                this.arbiter = new ScenarioArbiter();
+                this.arbiter.Register(new ProxyScenario(ScenarioKind.Game, 100));
+                this.arbiter.Register(new ProxyScenario(ScenarioKind.DevFocus, 50));
+                this.arbiter.Register(new ProxyScenario(ScenarioKind.DailyCare, 10));
+            }
             try
             {
                 mode = ModePalette.FromPreset(gameMode != null
@@ -529,7 +554,12 @@ namespace CaelusApp
 
         public string LastProbeText
         {
-            get { return "状态每 2 秒刷新 · 只读探测（设置 + 进程名 + 电池），预览宿主不施加系统副作用"; }
+            get
+            {
+                return runtimeMode
+                    ? "状态每 2 秒刷新 · 已接入 WPF 运行时（真实仲裁器 / 进程事件 / 电池）"
+                    : "状态每 2 秒刷新 · 只读探测（设置 + 进程名 + 电池），预览宿主不施加系统副作用";
+            }
         }
 
         public void SetMode(AppMode value)
@@ -560,13 +590,22 @@ namespace CaelusApp
 
         public void SetFocusMode(bool value)
         {
-            Settings.Save("DevFocusModeOn", value);
+            if (runtimeMode && devFocus != null)
+            {
+                devFocus.SetFocusMode(value);
+            }
+            else
+            {
+                Settings.Save("DevFocusModeOn", value);
+            }
             scanDirty = true;
             Poll();
         }
 
         public void SetDemo(bool? gameActive, bool? devActive, bool? dailyActive)
         {
+            // 正式运行时状态由真实仲裁器决定，不允许演示覆盖。
+            if (runtimeMode) return;
             demoGame = gameActive;
             demoDev = devActive;
             demoDaily = dailyActive;
@@ -591,34 +630,59 @@ namespace CaelusApp
             string prevNames = dailyFamilyNames;
             ScenarioKind? prevGranted = granted;
 
-            gameEnabled = gameMode == null ? Settings.Load("GameModeOn", true) : gameMode.Enabled;
-            devEnabled = Settings.Load("DevModeOn", true);
-            dailyEnabled = Settings.Load("DailyCareOn", true);
-            devFocusSwitch = Settings.Load("DevFocusModeOn", false);
-
-            try
+            if (runtimeMode)
             {
-                dailyOnBattery = SystemInformation.PowerStatus.PowerLineStatus == PowerLineStatus.Offline;
+                // 正式运行时：直接读真实仲裁器与场景实例，不重复报告活性。
+                gameEnabled = gameMode == null ? Settings.Load("GameModeOn", true) : gameMode.Enabled;
+                devEnabled = Settings.Load("DevModeOn", true);
+                dailyEnabled = Settings.Load("DailyCareOn", true);
+                devFocusSwitch = devFocus != null && devFocus.FocusModeOn;
+
+                try
+                {
+                    dailyOnBattery = SystemInformation.PowerStatus.PowerLineStatus == PowerLineStatus.Offline;
+                }
+                catch { dailyOnBattery = false; }
+
+                bool needScan = scanDirty || (DateTime.UtcNow - lastProcessScan).TotalSeconds >= 3;
+                if (needScan) ScanProcesses();
+
+                gameActive = gameEnabled && gameMode != null && gameMode.IsActive;
+                devActive = devEnabled && devFocus != null && devFocus.IsActive;
+                dailyActive = dailyEnabled && dailyCare != null && dailyCare.IsActive;
+                granted = arbiter.CurrentGranted;
             }
-            catch { dailyOnBattery = false; }
+            else
+            {
+                gameEnabled = gameMode == null ? Settings.Load("GameModeOn", true) : gameMode.Enabled;
+                devEnabled = Settings.Load("DevModeOn", true);
+                dailyEnabled = Settings.Load("DailyCareOn", true);
+                devFocusSwitch = Settings.Load("DevFocusModeOn", false);
 
-            bool needScan = scanDirty || (DateTime.UtcNow - lastProcessScan).TotalSeconds >= 3;
-            if (needScan) ScanProcesses();
+                try
+                {
+                    dailyOnBattery = SystemInformation.PowerStatus.PowerLineStatus == PowerLineStatus.Offline;
+                }
+                catch { dailyOnBattery = false; }
 
-            gameActive = gameEnabled && (demoGame.HasValue
-                ? demoGame.Value
-                : (gameMode != null && gameMode.IsActive));
-            devActive = devEnabled && (demoDev.HasValue
-                ? demoDev.Value
-                : (devFocusSwitch || devBuildActive || devIdeActive));
-            dailyActive = dailyEnabled && (demoDaily.HasValue
-                ? demoDaily.Value
-                : (dailyFamilyActive || dailyOnBattery));
+                bool needScan = scanDirty || (DateTime.UtcNow - lastProcessScan).TotalSeconds >= 3;
+                if (needScan) ScanProcesses();
 
-            Report(0, ScenarioKind.Game, gameActive);
-            Report(1, ScenarioKind.DevFocus, devActive);
-            Report(2, ScenarioKind.DailyCare, dailyActive);
-            granted = arbiter.CurrentGranted;
+                gameActive = gameEnabled && (demoGame.HasValue
+                    ? demoGame.Value
+                    : (gameMode != null && gameMode.IsActive));
+                devActive = devEnabled && (demoDev.HasValue
+                    ? demoDev.Value
+                    : (devFocusSwitch || devBuildActive || devIdeActive));
+                dailyActive = dailyEnabled && (demoDaily.HasValue
+                    ? demoDaily.Value
+                    : (dailyFamilyActive || dailyOnBattery));
+
+                Report(0, ScenarioKind.Game, gameActive);
+                Report(1, ScenarioKind.DevFocus, devActive);
+                Report(2, ScenarioKind.DailyCare, dailyActive);
+                granted = arbiter.CurrentGranted;
+            }
 
             if (prevGameEnabled != gameEnabled || prevGameActive != gameActive
                 || prevDevEnabled != devEnabled || prevDevActive != devActive

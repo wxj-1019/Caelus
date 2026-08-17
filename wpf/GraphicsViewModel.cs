@@ -153,7 +153,31 @@ namespace CaelusApp
             }
         }
         public string NvRebarTitle { get { return Lang.T("set.nvrebar"); } }
-        public string NvRebarNote { get { return NvAvailable ? Lang.T("set.nvrebar.n") : Lang.T("set.nv.none"); } }
+        private string rebarNoteCache;
+        public string NvRebarNote
+        {
+            get
+            {
+                // 与旧 WinForms 一致：说明中追加 RebarProbe 硬件检测结果（是否开启/窗口大小）
+                if (!NvAvailable) return Lang.T("set.nv.none");
+                if (rebarNoteCache == null)
+                {
+                    string text = Lang.T("set.nvrebar.n");
+                    bool rebarOn;
+                    ulong rebarWindow;
+                    string rebarGpu;
+                    try
+                    {
+                        if (RebarProbe.TryDetect(out rebarOn, out rebarWindow, out rebarGpu))
+                            text += Lang.F(rebarOn ? "set.nvrebar.det.on" : "set.nvrebar.det.off",
+                                RebarProbe.WindowText(rebarWindow));
+                    }
+                    catch { }
+                    rebarNoteCache = text;
+                }
+                return rebarNoteCache;
+            }
+        }
 
         public bool NvAnselOff
         {

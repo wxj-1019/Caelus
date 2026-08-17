@@ -9,20 +9,6 @@ using System.Windows.Forms;
 
 namespace CaelusApp
 {
-    internal static class Col
-    {
-        public static Color Lerp(Color a, Color b, float t)
-        {
-            if (t < 0f) t = 0f; if (t > 1f) t = 1f;
-            return Color.FromArgb(
-                (int)(a.A + (b.A - a.A) * t),
-                (int)(a.R + (b.R - a.R) * t),
-                (int)(a.G + (b.G - a.G) * t),
-                (int)(a.B + (b.B - a.B) * t));
-        }
-        public static Color Alpha(Color c, int a) { return Color.FromArgb(a < 0 ? 0 : a > 255 ? 255 : a, c.R, c.G, c.B); }
-    }
-
     internal static class Theme
     {
         public static int S(int v) { return Dpi.S(v); }

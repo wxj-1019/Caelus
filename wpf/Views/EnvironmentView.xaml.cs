@@ -36,17 +36,19 @@ namespace CaelusApp.WpfHost.Views
 
             bool desired = toggle.IsChecked == true;
 
+            // 与旧 WinForms 保持一致：除游戏模式守护（gmguard 无需管理员）外，
+            // 全部内核/驱动项先查管理员权限；无权限时提示并回滚 Toggle。
+            if (item.Id != "gmguard" && !IsAdministrator())
+            {
+                MessageBox.Show(Lang.T("vbs.needadmin"), "Caelus",
+                    MessageBoxButton.OK, MessageBoxImage.Warning);
+                RollBack(toggle, item);
+                return;
+            }
+
             // 与旧 WinForms 保持一致：关闭 VBS 前警告；无权限或取消时立即回滚 Toggle。
             if (item.Id == "vbs")
             {
-                if (!IsAdministrator())
-                {
-                    MessageBox.Show(Lang.T("vbs.needadmin"), "Caelus",
-                        MessageBoxButton.OK, MessageBoxImage.Warning);
-                    RollBack(toggle, item);
-                    return;
-                }
-
                 if (desired)
                 {
                     MessageBoxResult result = MessageBox.Show(Lang.T("vbs.warn"), "Caelus",
@@ -63,7 +65,7 @@ namespace CaelusApp.WpfHost.Views
             {
                 string message = item.Id == "vbs" && !desired
                     ? Lang.T("vbs.restorefail")
-                    : Lang.T("winopt.failed");
+                    : Lang.T("env.failed");
                 MessageBox.Show(message, "Caelus", MessageBoxButton.OK, MessageBoxImage.Warning);
                 RollBack(toggle, item);
                 return;

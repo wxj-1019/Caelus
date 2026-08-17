@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Caelus 构建专用的最小 FrameworkList：本机未安装 .NET Framework 4.x
+     Targeting Pack，此文件让 RAR 将下述程序集按"框架程序集"分类；
+     RefPack 目录内故意不放置任何 DLL，RAR 对缺失文件逐项回退到 GAC 解析
+     （与原 MSB3644 提示的 GAC 回退路径完全一致）。
+     若日后安装了官方 Targeting Pack，可删除 ext\RefPack 与 csproj 中
+     预设的两个 _TargetFramework* 私有属性。 -->
+<FileList Redist="Microsoft-Windows-CLRCoreComp-v4.0-caelus">
+  <File AssemblyName="mscorlib" Version="4.0.0.0" PublicKeyToken="b77a5c561934e089" Culture="neutral" ProcessorArchitecture="MSIL" InGAC="true" />
+  <File AssemblyName="System" Version="4.0.0.0" PublicKeyToken="b77a5c561934e089" Culture="neutral" ProcessorArchitecture="MSIL" InGAC="true" />
+  <File AssemblyName="System.Core" Version="4.0.0.0" PublicKeyToken="b77a5c561934e089" Culture="neutral" ProcessorArchitecture="MSIL" InGAC="true" />
+  <File AssemblyName="System.Xml" Version="4.0.0.0" PublicKeyToken="b77a5c561934e089" Culture="neutral" ProcessorArchitecture="MSIL" InGAC="true" />
+  <File AssemblyName="System.Data" Version="4.0.0.0" PublicKeyToken="b77a5c561934e089" Culture="neutral" ProcessorArchitecture="MSIL" InGAC="true" />
+  <File AssemblyName="System.Drawing" Version="4.0.0.0" PublicKeyToken="b03f5f7f11d50a3a" Culture="neutral" ProcessorArchitecture="MSIL" InGAC="true" />
+  <File AssemblyName="System.Windows.Forms" Version="4.0.0.0" PublicKeyToken="b77a5c561934e089" Culture="neutral" ProcessorArchitecture="MSIL" InGAC="true" />
+  <File AssemblyName="System.Management" Version="4.0.0.0" PublicKeyToken="b03f5f7f11d50a3a" Culture="neutral" ProcessorArchitecture="MSIL" InGAC="true" />
+  <File AssemblyName="System.Configuration" Version="4.0.0.0" PublicKeyToken="b03f5f7f11d50a3a" Culture="neutral" ProcessorArchitecture="MSIL" InGAC="true" />
+  <File AssemblyName="Microsoft.CSharp" Version="4.0.0.0" PublicKeyToken="b03f5f7f11d50a3a" Culture="neutral" ProcessorArchitecture="MSIL" InGAC="true" />
+  <File AssemblyName="WindowsBase" Version="4.0.0.0" PublicKeyToken="31bf3856ad364e35" Culture="neutral" ProcessorArchitecture="MSIL" InGAC="true" />
+  <File AssemblyName="PresentationCore" Version="4.0.0.0" PublicKeyToken="31bf3856ad364e35" Culture="neutral" ProcessorArchitecture="MSIL" InGAC="true" />
+  <File AssemblyName="PresentationFramework" Version="4.0.0.0" PublicKeyToken="31bf3856ad364e35" Culture="neutral" ProcessorArchitecture="MSIL" InGAC="true" />
+  <File AssemblyName="System.Xaml" Version="4.0.0.0" PublicKeyToken="b77a5c561934e089" Culture="neutral" ProcessorArchitecture="MSIL" InGAC="true" />
+</FileList>

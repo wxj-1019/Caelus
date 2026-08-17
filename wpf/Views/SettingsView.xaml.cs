@@ -42,7 +42,7 @@ namespace CaelusApp.WpfHost.Views
         private void OnDevSave(object sender, RoutedEventArgs e)
         {
             SettingsViewModel vm = DataContext as SettingsViewModel;
-            if (vm == null || !vm.IsDevCustomEnabled) return;
+            if (vm == null) return;
             vm.SaveDevCustom(TbDevCustom.Text);
             Motion.Emphasize(PageFeedbackBanner);
         }
@@ -50,7 +50,7 @@ namespace CaelusApp.WpfHost.Views
         private void OnDistractSave(object sender, RoutedEventArgs e)
         {
             SettingsViewModel vm = DataContext as SettingsViewModel;
-            if (vm == null || !vm.IsDevCustomEnabled) return;
+            if (vm == null) return;
             vm.SaveDistract(TbDistract.Text);
             Motion.Emphasize(PageFeedbackBanner);
         }
@@ -58,7 +58,7 @@ namespace CaelusApp.WpfHost.Views
         private void OnDevSvcSave(object sender, RoutedEventArgs e)
         {
             SettingsViewModel vm = DataContext as SettingsViewModel;
-            if (vm == null || !vm.IsDevCustomEnabled) return;
+            if (vm == null) return;
             vm.SaveDevSvc(TbDevSvc.Text);
             Motion.Emphasize(PageFeedbackBanner);
         }
@@ -99,6 +99,10 @@ namespace CaelusApp.WpfHost.Views
                     if (!completed) message += " " + Lang.F("panic.failedcount", failed, attempted);
                     vm.ShowFeedback(message, completed ? "Success" : "Warning");
                     Motion.Emphasize(PageFeedbackBanner);
+                    // 与旧 WinForms 一致：恢复完成后全局回刷各页开关
+                    Window w = Window.GetWindow(this);
+                    MainWindow mw = w as MainWindow;
+                    if (mw != null) mw.SyncAllToggles();
                 }));
             });
         }

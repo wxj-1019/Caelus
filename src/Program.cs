@@ -543,24 +543,6 @@ namespace CaelusApp
             GC.KeepAlive(mtx);
         }
 
-        internal static int CompareVersions(string left, string right)
-        {
-            Version a, b;
-            if (!Version.TryParse(NormalizeVersion(left), out a)) a = new Version(0, 0);
-            if (!Version.TryParse(NormalizeVersion(right), out b)) b = new Version(0, 0);
-            return a.CompareTo(b);
-        }
-
-        private static string NormalizeVersion(string raw)
-        {
-            if (string.IsNullOrWhiteSpace(raw)) return "0.0.0.0";
-            string text = raw.Trim();
-            if (text.StartsWith("v", StringComparison.OrdinalIgnoreCase)) text = text.Substring(1);
-            int parts = text.Split('.').Length;
-            for (int i = parts; i < 4; i++) text += ".0";
-            return text;
-        }
-
         private static bool TryReplaceOlderInstance()
         {
             Process older = null;
@@ -574,7 +556,7 @@ namespace CaelusApp
                     string version = null;
                     try { version = p.MainModule.FileVersionInfo.FileVersion; }
                     catch { }
-                    if (version != null && CompareVersions(App.Version, version) > 0 && older == null) older = p;
+                    if (version != null && App.CompareVersions(App.Version, version) > 0 && older == null) older = p;
                     else p.Dispose();
                 }
                 if (older == null) return false;

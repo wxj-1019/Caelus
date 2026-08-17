@@ -10,7 +10,6 @@ namespace CaelusApp.WpfHost.Controls
     public partial class CaelusCore : UserControl
     {
         private Window hostWindow;
-        private bool spinActive;
         private AppMode currentMode;
 
         public CaelusCore()
@@ -95,7 +94,6 @@ namespace CaelusApp.WpfHost.Controls
         {
             Motion.StopSpin(RingOuter);
             Motion.StopSpin(RingMid);
-            spinActive = false;
         }
 
         private void RefreshModeLabel()

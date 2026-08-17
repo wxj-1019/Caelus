@@ -25,6 +25,19 @@ namespace CaelusApp.WpfHost.Views
             Motion.RiseIn(ZoneUpdate, 220);
         }
 
+        private void OnOpenNotes(object sender, RoutedEventArgs e)
+        {
+            try
+            {
+                var dlg = new Dialogs.ReleaseNotesDialogWpf();
+                dlg.Owner = Window.GetWindow(this);
+                dlg.ShowDialog();
+                AboutViewModel vm = DataContext as AboutViewModel;
+                if (vm != null) vm.RefreshNotesButton();
+            }
+            catch { }
+        }
+
         private void OnNavigate(object sender, RequestNavigateEventArgs e)
         {
             OpenExternalUrl(e.Uri == null ? null : e.Uri.AbsoluteUri);

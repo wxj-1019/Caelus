@@ -1,5 +1,5 @@
 // @author zenjiro 18967498922@163.com
-// 文件用途 WPF 预览宿主入口：正常启动与 --wpf-shot 截图探针
+// 文件用途 WPF 宿主入口：正式运行时启动（单实例/提权/自愈/运行时/托盘）与 --wpf-shot 截图探针
 
 using System;
 using System.Diagnostics;
@@ -9,29 +9,51 @@ using System.Windows;
 using System.Windows.Threading;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
+using Microsoft.Win32;
 
 namespace CaelusApp.WpfHost
 {
     public partial class App : Application
     {
+        private const string PendingPanelKey = "ShowPanelOnNextStart";
+
         private System.Windows.Forms.NotifyIcon tray;
+        private Mutex mutex;
+        private WpfRuntimeHost host;
+        private MainWindow window;
+        private EventWaitHandle showEvt;
+        private EventWaitHandle exitEvt;
+        private bool elevated;
+        private DispatcherTimer trayIconTimer;
+        private bool realExit;
 
         protected override void OnExit(ExitEventArgs e)
         {
             Motion.PolicyChanged -= OnMotionPolicyChanged;
             try
             {
-                if (tray != null) { tray.Visible = false; tray.Dispose(); }
+                if (trayIconTimer != null) { trayIconTimer.Stop(); trayIconTimer = null; }
             }
             catch { }
+            try
+            {
+                if (tray != null) { tray.Visible = false; tray.Dispose(); tray = null; }
+            }
+            catch { }
+            if (!realExit && host != null)
+            {
+                try { host.Shutdown(); } catch { }
+            }
+            try { if (mutex != null) mutex.ReleaseMutex(); } catch { }
             base.OnExit(e);
         }
 
         protected override void OnStartup(StartupEventArgs e)
         {
             base.OnStartup(e);
+            ShutdownMode = ShutdownMode.OnExplicitShutdown;
             Motion.PolicyChanged += OnMotionPolicyChanged;
-            // 预览宿主不因单个绑定/布局异常静默丢窗口：记日志后标记已处理，界面保持存活
+            // 宿主不因单个绑定/布局异常静默丢窗口：记日志后标记已处理，界面保持存活
             DispatcherUnhandledException += (s, ex) =>
             {
                 try
@@ -43,6 +65,7 @@ namespace CaelusApp.WpfHost
                 catch { }
                 ex.Handled = true;
             };
+
             if (e.Args.Length >= 2 && e.Args[0] == "--wpf-shot")
             {
                 int code = RunShot(e.Args[1]);
@@ -55,60 +78,316 @@ namespace CaelusApp.WpfHost
                 Shutdown(code);
                 return;
             }
+
+            // 工具参数（--genicon/--geniconpng/--freeze-watchdog）与自测入口（自测版编译）
+            if (WpfRuntimeHost.HandleEarlyExit(e.Args))
+            {
+                Shutdown();
+                return;
+            }
+
+            // 单实例：已有实例时触发其面板并退出
+            mutex = WpfRuntimeHost.AcquireSingleInstance();
+            if (mutex == null)
+            {
+                Shutdown();
+                return;
+            }
+
+            bool autoStarted = false;
+            if (e.Args != null)
+                foreach (string a in e.Args)
+                    if (string.Equals(a, TaskHelper.AutostartArgument, StringComparison.OrdinalIgnoreCase))
+                        autoStarted = true;
+            SetAutoStarted(autoStarted);
+
+            elevated = WpfRuntimeHost.IsElevated();
+
+            // 未提权且有开机自启任务：走计划任务提升重启（与 src/Program.cs 一致）
+            if (!elevated && TaskHelper.TaskExists())
+            {
+                try { mutex.ReleaseMutex(); mutex.Close(); } catch { }
+                mutex = null;
+                Settings.Save(PendingPanelKey, true);
+                if (TaskHelper.Run("/Run /TN " + TaskHelper.TaskName) == 0)
+                {
+                    Shutdown();
+                    return;
+                }
+                Settings.Save(PendingPanelKey, false);
+                mutex = WpfRuntimeHost.AcquireSingleInstance();
+                if (mutex == null)
+                {
+                    Shutdown();
+                    return;
+                }
+            }
+
+            Paths.Init();
+            Lang.Init();
+            string dir = Paths.Data;
+            Logger.LogPath = Path.Combine(dir, "Caelus.log");
+            Settings.Remove("EvidenceMode");
+
+            // UiShared 的概览 ViewModel 通过该钩子把后台结果调度回 UI 线程
+            OverviewViewModel.PostToUi = a => Dispatcher.BeginInvoke(new Action(a));
+
             AppMode initial = ModeController.LoadPersisted();
             UiTone tone = Settings.Load("UiLight", false) ? UiTone.Light : UiTone.Dark;
             ThemeManager.Apply(this, tone, initial);
             ThemeManager.TryApplyUserTheme(this);
-            Paths.Init();
-            // 棉花糖启动屏：强制首帧渲染后立即把消息循环还给调度器，
-            // 启动动画全速滚动；GameMode 在后台线程加载，完成后回主线程
-            // 分块构建主窗口（边构建边泵送），全部就绪才 Show 并淡出启动屏。
+
+            // 棉花糖启动屏：强制首帧渲染后立即把消息循环还给调度器，启动动画全速滚动；
+            // 自愈链 + GameMode/Tamer 启动在 host.Boot 的后台线程里完成，全部就绪才
+            // 构建主窗口（边构建边泵送）并淡出启动屏。
             var splash = new SplashWindow();
             splash.Show();
             splash.UpdateLayout();
             Dispatcher.Invoke(DispatcherPriority.Render, new Action(delegate { }));
 
-            var gameCore = new SuppressionCore();
-            var gmThread = new Thread(delegate ()
+            host = new WpfRuntimeHost(dir);
+            host.Boot(delegate
             {
-                GameMode gameMode = null;
-                try { gameMode = new GameMode(Paths.Data, gameCore); }
-                catch { }
-                Dispatcher.BeginInvoke(DispatcherPriority.Background, new Action(delegate ()
+                Dispatcher.BeginInvoke(DispatcherPriority.Background, new Action(delegate
                 {
-                    CaelusApp.WpfHost.MainWindow.ProgressPump = delegate
+                    try { BuildMainWindow(initial, splash); }
+                    catch (Exception ex)
                     {
-                        Dispatcher.Invoke(DispatcherPriority.Background, new Action(delegate { }));
-                    };
-                    MainWindow w = new MainWindow(gameMode);
-                    CaelusApp.WpfHost.MainWindow.ProgressPump = null;
-                    w.ApplyPersistedMode(initial);
-                    w.Show();
-                    // 启动屏先 Show，会成为 Application.MainWindow；归位给真正的主窗口
-                    MainWindow = w;
-                    splash.CloseAnimated();
+                        try { File.AppendAllText(Path.Combine(dir, "crash.log"),
+                            DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss") + "  [WPF boot] " + ex + Environment.NewLine); } catch { }
+                    }
                 }));
             });
-            gmThread.IsBackground = true;
-            gmThread.Start();
-            // 托盘图标延迟到消息循环运行后创建（OnStartup 阶段 Dispatcher 尚未泵消息，
-            // 此时创建的 NotifyIcon 不会在通知区域显示）
-            Dispatcher.BeginInvoke(new Action(CreateTray));
+
+            // ShowPanel/Exit 全局事件（每用户 ACL，防其它本地用户诱导弹窗/退出）
+            showEvt = WpfRuntimeHost.CreateGuardedEvent("Global\\Caelus_ShowPanel");
+            exitEvt = WpfRuntimeHost.CreateGuardedEvent("Global\\Caelus_Exit");
+
+            Thread evtThread = new Thread(new ThreadStart(delegate
+            {
+                while (true)
+                {
+                    showEvt.WaitOne();
+                    try { Dispatcher.BeginInvoke(new Action(ShowPanel)); } catch { }
+                }
+            }));
+            evtThread.IsBackground = true;
+            evtThread.Start();
+
+            Thread exitThread = new Thread(new ThreadStart(delegate
+            {
+                exitEvt.WaitOne();
+                try { Dispatcher.BeginInvoke(new Action(DoExit)); } catch { }
+            }));
+            exitThread.IsBackground = true;
+            exitThread.Start();
+
+            SystemEvents.SessionEnded += OnSessionEnded;
+
+            if (elevated)
+                ThreadPool.QueueUserWorkItem(delegate { TaskHelper.RefreshStartupTask(); });
+
+            // 启动后延迟检查一次更新（不阻塞启动）
+            DispatcherTimer updTimer = new DispatcherTimer(DispatcherPriority.Background)
+            {
+                Interval = TimeSpan.FromSeconds(6)
+            };
+            updTimer.Tick += delegate
+            {
+                updTimer.Stop();
+                UpdateChecker.CheckAsync(r =>
+                {
+                    if (r.Ok && r.Newer)
+                    {
+                        Logger.Log("启动检查更新：发现新版本 " + r.Latest + "（当前 " + CaelusApp.App.VersionTag + "）");
+                        try
+                        {
+                            Dispatcher.BeginInvoke(new Action(delegate
+                            {
+                                try { ShowBalloon(Lang.F("bal.update", r.Latest), 8000); } catch { }
+                            }));
+                        }
+                        catch { }
+                    }
+                    else if (r.Ok) Logger.Log("启动检查更新：已是最新版本（" + CaelusApp.App.VersionTag + "）");
+                    else Logger.Log("启动检查更新失败：" + r.Error);
+                });
+            };
+            updTimer.Start();
+        }
+
+        private void BuildMainWindow(AppMode initial, SplashWindow splash)
+        {
+            CaelusApp.WpfHost.MainWindow.ProgressPump = delegate
+            {
+                Dispatcher.Invoke(DispatcherPriority.Background, new Action(delegate { }));
+            };
+            window = new MainWindow(host.GameMode, host.Tamer,
+                new ScenarioStatusSource(host.GameMode, host.Tamer, host.Core,
+                    host.Arbiter, host.DevFocus, host.DailyCare),
+                host.DevFocus);
+            CaelusApp.WpfHost.MainWindow.ProgressPump = null;
+            window.ApplyPersistedMode(initial);
+            window.Show();
+            // 启动屏先 Show，会成为 Application.MainWindow；归位给真正的主窗口
+            MainWindow = window;
+            splash.CloseAnimated();
+            CreateTray();
+            SubscribeRuntimeEvents();
+
+            bool pendingPanel = Settings.Load(PendingPanelKey, false);
+            if (pendingPanel) Settings.Save(PendingPanelKey, false);
+            bool showingPanel = !WasAutoStarted || pendingPanel;
+            if (!showingPanel && window != null)
+            {
+                // 开机自启：静默驻留托盘，不弹主窗口
+                window.Hide();
+            }
+            else if (window != null && !window.IsVisible)
+            {
+                ShowPanel();
+            }
+            // 新版本首次启动弹发布说明（与 WinForms 版一致：显示即标记已读）
+            if (showingPanel && ReleaseNotes.HasUnseen && window != null && window.IsVisible)
+            {
+                try
+                {
+                    var notes = new Dialogs.ReleaseNotesDialogWpf();
+                    notes.Owner = window;
+                    notes.ShowDialog();
+                    try { window.SyncAllToggles(); } catch { }
+                }
+                catch { }
+            }
+        }
+
+        private bool WasAutoStarted;
+        internal void SetAutoStarted(bool value) { WasAutoStarted = value; }
+
+        private void CreateTray()
+        {
+            if (tray != null) return;
+            tray = new System.Windows.Forms.NotifyIcon();
+            RefreshTrayIcon(true);
+            tray.Text = elevated ? Lang.T("tray.idle") : Lang.T("tray.noelev");
+            tray.ContextMenuStrip = host.BuildTrayMenu(
+                ShowPanel, DoExit, delegate { try { if (window != null) window.SyncAllToggles(); } catch { } });
+            tray.DoubleClick += (s, e) => ShowPanel();
+            tray.Visible = true;
+            if (!elevated)
+                tray.ShowBalloonTip(8000, CaelusApp.App.DisplayName, Lang.T("bal.noelev"), System.Windows.Forms.ToolTipIcon.Warning);
+
+            trayIconTimer = new DispatcherTimer(DispatcherPriority.Background)
+            {
+                Interval = TimeSpan.FromMilliseconds(1500)
+            };
+            trayIconTimer.Tick += delegate { RefreshTrayIcon(false); };
+            trayIconTimer.Start();
+        }
+
+        private void RefreshTrayIcon(bool force)
+        {
+            if (tray == null || host == null) return;
+            PerformancePreset mode = host.GameMode.ActivePreset;
+            bool enabled = host.GameMode.Enabled;
+            if (!force && mode == runtimeIconMode && enabled == runtimeIconEnabled) return;
+            runtimeIconMode = mode;
+            runtimeIconEnabled = enabled;
+            using (System.Drawing.Icon next = IconArt.MakeMultiIcon(mode, enabled))
+            {
+                System.Drawing.Icon old = tray.Icon;
+                tray.Icon = (System.Drawing.Icon)next.Clone();
+                if (old != null) old.Dispose();
+            }
+            string text;
+            if (!elevated) text = Lang.T("tray.noelev");
+            else
+            {
+                string g = host.GameMode.ActiveGame;
+                string a = g == null ? host.GameMode.ArmedGame : null;
+                text = g != null ? Lang.F("tray.active", g)
+                    : (a != null ? Lang.F("tray.armed", a) : Lang.T("tray.idle"));
+            }
+            if (text.Length > 63) text = text.Substring(0, 62) + "…";
+            if (tray.Text != text) tray.Text = text;
+        }
+
+        private PerformancePreset runtimeIconMode;
+        private bool runtimeIconEnabled;
+
+        private void SubscribeRuntimeEvents()
+        {
+            host.GameMode.SessionEnded += msg => Dispatcher.BeginInvoke(new Action(delegate
+            {
+                try { ShowBalloon(msg, 10000); } catch { }
+            }));
+            host.GameMode.GameAutoAdded += name => Dispatcher.BeginInvoke(new Action(delegate
+            {
+                try { ShowBalloon(Lang.F("bal.autoadd", name), 10000); } catch { }
+            }));
+            host.GameMode.LibraryChanged += delegate
+            {
+                Dispatcher.BeginInvoke(new Action(delegate
+                {
+                    try { if (window != null) window.NotifyLibraryChanged(); } catch { }
+                }));
+            };
+            host.DevFocus.SessionChanged += key => Dispatcher.BeginInvoke(new Action(delegate
+            {
+                try { ShowBalloon(Lang.T(key), 5000); } catch { }
+            }));
+            host.DailyCare.SessionChanged += key => Dispatcher.BeginInvoke(new Action(delegate
+            {
+                try { ShowBalloon(Lang.T(key), 5000); } catch { }
+            }));
+            host.DevServiceGuard.ServiceStopped += name => Dispatcher.BeginInvoke(new Action(delegate
+            {
+                try { ShowBalloon(Lang.F("bal.devsvc", name), 6000); } catch { }
+            }));
+        }
+
+        private void ShowBalloon(string text, int ms)
+        {
+            if (tray != null)
+                tray.ShowBalloonTip(ms, CaelusApp.App.DisplayName, text, System.Windows.Forms.ToolTipIcon.Info);
+        }
+
+        private void ShowPanel()
+        {
+            if (window == null) { Settings.Save(PendingPanelKey, true); return; }
+            window.Show();
+            if (window.WindowState == WindowState.Minimized) window.WindowState = WindowState.Normal;
+            window.Activate();
+        }
+
+        // 退出/还原链静默容错：单项失败记日志，不中断退出流程
+        private static void Quiet(string what, Exception ex)
+        {
+            try { Logger.Log(what + " 失败：" + ex.GetType().Name + " - " + ex.Message); } catch { }
+        }
+
+        private void DoExit()
+        {
+            realExit = true;
+            try { if (window != null) window.RealExit = true; } catch (Exception ex) { Quiet("退出：窗口标记", ex); }
+            try { if (tray != null) { tray.Visible = false; tray.Dispose(); tray = null; } } catch (Exception ex) { Quiet("退出：托盘释放", ex); }
+            try { if (host != null) host.Shutdown(); } catch (Exception ex) { Quiet("退出：运行时停止", ex); }
+            Shutdown();
+        }
+
+        private void OnSessionEnded(object sender, SessionEndedEventArgs e)
+        {
+            realExit = true;
+            try { if (window != null) window.RealExit = true; } catch (Exception ex) { Quiet("会话结束：窗口标记", ex); }
+            try { if (host != null) host.RestorePersistentChanges(); } catch (Exception ex) { Quiet("会话结束：持久改动还原", ex); }
+            try { if (host != null) host.Shutdown(); } catch (Exception ex) { Quiet("会话结束：运行时停止", ex); }
+            try { if (tray != null) { tray.Visible = false; tray.Dispose(); tray = null; } } catch (Exception ex) { Quiet("会话结束：托盘释放", ex); }
+            try { Shutdown(); } catch (Exception ex) { Quiet("会话结束：应用退出", ex); }
         }
 
         private void OnMotionPolicyChanged(object sender, EventArgs e)
         {
             ThemeManager.Apply(this, ThemeManager.CurrentTone, ThemeManager.CurrentMode);
-        }
-
-        private void CreateTray()
-        {
-            tray = new System.Windows.Forms.NotifyIcon
-            {
-                Text = "Caelus",
-                Visible = true,
-                Icon = System.Drawing.SystemIcons.Application
-            };
         }
 
         // 离屏渲染模式×主题矩阵 PNG，供视觉验收与回归基线（规格 §7.5）
@@ -147,6 +426,7 @@ namespace CaelusApp.WpfHost
                     enc.Frames.Add(BitmapFrame.Create(rtb));
                     string file = Path.Combine(dir, "wpf-overview-" + names[i] + ".png");
                     using (FileStream fs = File.Create(file)) enc.Save(fs);
+                    w.RealExit = true;
                     w.Close();
                 }
                 Views.OverviewView.InjectSampleData = false;
@@ -231,6 +511,7 @@ namespace CaelusApp.WpfHost
                     + "PRIVATE_ROUND1_DELTA_MB=" + Mb(privateMid - privateStart) + Environment.NewLine
                     + "PRIVATE_ROUND2_DELTA_MB=" + Mb(privateEnd - privateMid) + Environment.NewLine;
                 File.WriteAllText(outputPath, report);
+                window.RealExit = true;
                 window.Close();
                 return 0;
             }
@@ -317,6 +598,7 @@ namespace CaelusApp.WpfHost
             encoder.Frames.Add(BitmapFrame.Create(bitmap));
             string file = Path.Combine(dir, "wpf-" + page + "-dark-cruise.png");
             using (FileStream stream = File.Create(file)) encoder.Save(stream);
+            window.RealExit = true;
             window.Close();
         }
     }

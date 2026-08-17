@@ -140,7 +140,7 @@
         <TextBlock Text="{Binding NvUnavailableText}" FontSize="{DynamicResource FontSizeSmall}"
                    Foreground="{DynamicResource TextSecondaryBrush}" TextWrapping="Wrap"/>
       </Border>
-      <Border x:Name="ZoneNvidia" Style="{DynamicResource SettingsGroup}">
+      <Border x:Name="ZoneNvidia" Style="{DynamicResource SettingsGroup}" IsEnabled="{Binding NvAvailable}">
         <StackPanel>
           <Border Style="{DynamicResource PolicyRow}" BorderThickness="0,0,0,1" local:RowToggle.Enabled="True">
             <DockPanel>
@@ -296,7 +296,7 @@
         <TextBlock Text="{Binding AmdUnavailableText}" FontSize="{DynamicResource FontSizeSmall}"
                    Foreground="{DynamicResource TextSecondaryBrush}" TextWrapping="Wrap"/>
       </Border>
-      <Border x:Name="ZoneAmd" Style="{DynamicResource SettingsGroup}">
+      <Border x:Name="ZoneAmd" Style="{DynamicResource SettingsGroup}" IsEnabled="{Binding AmdAvailable}">
         <StackPanel>
           <Border Style="{DynamicResource PolicyRow}" BorderThickness="0,0,0,1" local:RowToggle.Enabled="True">
             <DockPanel>

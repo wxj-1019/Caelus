@@ -63,7 +63,7 @@ namespace CaelusApp
         private int pageBaseLeft;
         private Motion pageSlide;
         private Icon appIcon;
-        public bool RealExit;
+        public bool RealExit = false; // 仅自测构建编译；正式退出流程在 WPF 宿主 App.xaml.cs
 
         private Motion introMotion;
         private bool introActive, introPending;

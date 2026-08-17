@@ -373,6 +373,7 @@ namespace CaelusApp
             { "audit.nv.unavailable", new[]{ "本机无 NVIDIA 驱动接口" } },
             { "audit.nv.failed", new[]{ "写入实测失败" } },
             { "audit.nv.result", new[]{ "写入实测：" } },
+            { "audit.amd.result", new[]{ "写入实测：" } },
             { "audit.sec.capability", new[]{ "写入能力 · 这些功能在本机能不能用" } },
             { "audit.sec.machine", new[]{ "本机实测 · 这台机器的实际情况" } },
             { "audit.sec.persistent", new[]{ "持久系统设置 · 重启生效，卸载后保留" } },
@@ -407,6 +408,7 @@ namespace CaelusApp
             { "vbs.done", new[]{ "已关闭 VBS 并停用 hypervisor。\r\n请重启电脑生效。重启后 WSL2 / Docker / Hyper-V / 沙盒将无法使用；要恢复请回到这里关掉此开关再重启。" } },
             { "vbs.restored", new[]{ "已恢复 VBS 与 hypervisor（hypervisorlaunchtype → 原值）。\r\n请重启电脑生效，之后 WSL2 / Docker 等恢复可用。" } },
             { "vbs.restorefail", new[]{ "还原未完全成功（bcdedit 可能失败），原状态快照已保留，可再试一次。详见日志。" } },
+            { "env.failed", new[]{ "系统设置未能写入，当前状态保持原样。请确认已以管理员身份运行 Caelus，详情见日志。" } },
 
             { "btn.shader", new[]{ "清理着色器缓存" } },
             { "set.shader.n", new[]{ "怀疑缓存坏了可以清一次；清完游戏要重新编译，前几次进游戏可能更卡。" } },

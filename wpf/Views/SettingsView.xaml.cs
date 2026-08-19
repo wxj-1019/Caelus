@@ -63,6 +63,14 @@ namespace CaelusApp.WpfHost.Views
             Motion.Emphasize(PageFeedbackBanner);
         }
 
+        private void OnHealthFreqSave(object sender, RoutedEventArgs e)
+        {
+            SettingsViewModel vm = DataContext as SettingsViewModel;
+            if (vm == null) return;
+            vm.SaveHealthFreq(TbHealthFreq.Text);
+            Motion.Emphasize(PageFeedbackBanner);
+        }
+
         private void OnDevEnvRun(object sender, RoutedEventArgs e)
         {
             SettingsViewModel vm = DataContext as SettingsViewModel;

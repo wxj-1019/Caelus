@@ -33,9 +33,19 @@ namespace CaelusApp
         /// <summary>场景气球（bal.daily.batt 等文案 key）</summary>
         public event Action<string> SessionChanged;
 
+        /// <summary>电池供电优化开关（默认开）。关闭后电池不再作为活性来源，也不升档。</summary>
+        public bool BatteryOn { get { return Settings.Load("DailyCareBatteryOn", true); } }
+
         protected override bool WantsActiveLocked
         {
-            get { return enabled() && (familyVisible || onBattery); }
+            get { return enabled() && (familyVisible || (BatteryOn && onBattery)); }
+        }
+
+        /// <summary>电池优化开关（设置页调用）。写注册表 + 活性重算。</summary>
+        public void SetBatteryOn(bool on)
+        {
+            Settings.Save("DailyCareBatteryOn", on);
+            RecomputeActivity();
         }
 
         public DailyCare(ScenarioArbiter arbiter, SuppressionCore core,

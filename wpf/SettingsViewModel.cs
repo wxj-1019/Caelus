@@ -19,7 +19,9 @@ namespace CaelusApp
         private bool lightMode;
         private bool devMode;
         private bool focusMode;
+        private bool ideOn;
         private bool dailyCare;
+        private bool batteryOn;
         private string shaderStatus;
         private string pageFeedback = "";
         private string pageFeedbackKind = "Info";
@@ -38,7 +40,9 @@ namespace CaelusApp
             lightMode = Settings.Load("UiLight", false);
             devMode = Settings.Load("DevModeOn", true);
             focusMode = Settings.Load("DevFocusModeOn", false);
+            ideOn = Settings.Load("DevFocusIdeOn", true);
             dailyCare = Settings.Load("DailyCareOn", true);
+            batteryOn = Settings.Load("DailyCareBatteryOn", true);
             shaderStatus = Lang.T("set.shader.n");
 
             // 与旧 WinForms 的 RefreshSlowStateAsync 一致：后台异步测量着色器缓存占用并回显
@@ -172,6 +176,22 @@ namespace CaelusApp
             }
         }
 
+        // —— IDE 优化 ——
+        public string IdeTitle { get { return Lang.T("set.ide"); } }
+        public string IdeNote { get { return Lang.T("set.ide.n"); } }
+        public bool IdeOn
+        {
+            get { return ideOn; }
+            set
+            {
+                if (!SetProperty(ref ideOn, value, "IdeOn")) return;
+                // 与专注模式一致走 SetIdeOn：写注册表 + 活性重算 + 关闭时清空已追踪 IDE 集合
+                if (devFocus != null) devFocus.SetIdeOn(value);
+                else Settings.Save("DevFocusIdeOn", value);
+                ShowFeedback(value ? "IDE 优化已开启。" : "IDE 优化已关闭。", "Success");
+            }
+        }
+
         // —— 分心应用清单 ——
         public string DistractTitle { get { return Lang.T("set.distract"); } }
         public string DistractNote { get { return Lang.T("set.distract.n"); } }
@@ -298,6 +318,36 @@ namespace CaelusApp
                 string news = Settings.LoadStr("HealthStartupNews", "");
                 return news.Length == 0 ? Lang.T("set.startup.none") : news;
             }
+        }
+
+        // —— 电池供电增强 ——
+        public string BatteryTitle { get { return Lang.T("set.battery"); } }
+        public string BatteryNote { get { return Lang.T("set.battery.n"); } }
+        public bool BatteryOn
+        {
+            get { return batteryOn; }
+            set
+            {
+                if (!SetProperty(ref batteryOn, value, "BatteryOn")) return;
+                Settings.Save("DailyCareBatteryOn", value);
+                ShowFeedback(value ? "电池供电增强已开启。" : "电池供电增强已关闭。", "Success");
+            }
+        }
+
+        // —— 健康维护频率（1-30 天） ——
+        public string HealthFreqTitle { get { return Lang.T("set.health.freq"); } }
+        public string HealthFreqNote { get { return Lang.T("set.health.freq.n"); } }
+        public string HealthFreqInitial { get { return HealthCare.IntervalDays().ToString(); } }
+        public void SaveHealthFreq(string text)
+        {
+            int days;
+            if (!int.TryParse((text ?? "").Trim(), out days) || days < 1 || days > 30)
+            {
+                ShowFeedback("请输入 1-30 之间的天数。", "Error");
+                return;
+            }
+            Settings.SaveStr("HealthIntervalDays", days.ToString());
+            ShowFeedback("健康维护频率已保存（每 " + days + " 天一次）。", "Success");
         }
 
         // —— 维护：着色器缓存 ——

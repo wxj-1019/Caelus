@@ -36,15 +36,18 @@ namespace CaelusApp
         /// <summary>专注模式开关状态。实时读注册表——WPF 宿主（独立进程）修改后本进程下次评估即生效</summary>
         public bool FocusModeOn { get { return Settings.Load("DevFocusModeOn", false); } }
 
+        /// <summary>IDE 优化开关（默认开）。关闭后 IDE 家族不再提优、也不再作为活性来源。</summary>
+        public bool IdeOn { get { return Settings.Load("DevFocusIdeOn", true); } }
+
         /// <summary>三来源任一活跃：编译进程、专注模式、IDE 进程</summary>
         private bool AnyActive
         {
-            get { return activeBuildPids.Count > 0 || FocusModeOn || activeIdePids.Count > 0; }
+            get { return activeBuildPids.Count > 0 || FocusModeOn || (IdeOn && activeIdePids.Count > 0); }
         }
 
         protected override bool WantsActiveLocked
         {
-            get { return enabled() && (activeBuildPids.Count > 0 || FocusModeOn || activeIdePids.Count > 0); }
+            get { return enabled() && (activeBuildPids.Count > 0 || FocusModeOn || (IdeOn && activeIdePids.Count > 0)); }
         }
 
         /// <summary>检测状态：是否存在任一活性来源（与是否掌权无关）</summary>
@@ -71,6 +74,14 @@ namespace CaelusApp
         {
             Settings.Save("DevFocusModeOn", on);
             if (!on) { lock (sync) { distractNotified.Clear(); } }
+            RecomputeActivity();
+        }
+
+        /// <summary>IDE 优化开关（设置页调用）。关闭时清空已追踪的 IDE 集合，避免 Grant 仍提优。</summary>
+        public void SetIdeOn(bool on)
+        {
+            Settings.Save("DevFocusIdeOn", on);
+            if (!on) { lock (sync) { activeIdePids.Clear(); } }
             RecomputeActivity();
         }
 
@@ -116,7 +127,7 @@ namespace CaelusApp
                     }
 
                     // IDE 进程匹配（Task 4 接线，当前 IsIdeProcess 为 stub）
-                    if (pc.Kind == ProcessChangeKind.Started && IsIdeProcess(pc.Pid, pc.Name, pc.Path))
+                    if (pc.Kind == ProcessChangeKind.Started && IdeOn && IsIdeProcess(pc.Pid, pc.Name, pc.Path))
                         activeIdePids.Add(pc.Pid);
                     else if (pc.Kind == ProcessChangeKind.Stopped)
                         activeIdePids.Remove(pc.Pid);

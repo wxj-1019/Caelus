@@ -171,6 +171,24 @@
         </Grid>
       </controls:GlassCard>
 
+      <!-- 游戏性能档位：概览内的全局档位切换（原侧栏入口） -->
+      <Border x:Name="ZoneMode" Style="{DynamicResource SettingsGroup}" Padding="14,12" Margin="0,0,0,16"
+              AutomationProperties.Name="游戏性能档位">
+        <DockPanel>
+          <StackPanel DockPanel.Dock="Left" VerticalAlignment="Center" Margin="0,0,16,0">
+            <TextBlock Text="游戏性能档位" FontSize="{DynamicResource FontSizeSmall}" FontWeight="SemiBold"
+                       Foreground="{DynamicResource TextPrimaryBrush}"/>
+            <TextBlock Text="仅游戏场景掌权时生效"
+                       Margin="0,2,0,0" FontSize="{DynamicResource FontSizeXs}"
+                       Foreground="{DynamicResource TextTertiaryBrush}"/>
+          </StackPanel>
+          <controls:SegmentedControl x:Name="ModePicker" HorizontalAlignment="Right"
+                                     VerticalAlignment="Center" SelectedIndex="0"
+                                     SelectionChanged="OnModePicked"
+                                     AutomationProperties.Name="游戏性能档位"/>
+        </DockPanel>
+      </Border>
+
       <StackPanel x:Name="ZoneCardsLabel" Margin="0,0,0,8">
         <TextBlock Text="三场景"
                    FontSize="{DynamicResource FontSizeBody}"

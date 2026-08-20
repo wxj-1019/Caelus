@@ -70,10 +70,6 @@ namespace CaelusApp.WpfHost
         {
             InitializeComponent();
             Pump();
-            ModePicker.ItemsSource = new System.Collections.Generic.List<string>
-            {
-                "常规", "竞技", "自定义"
-            };
             // 正式运行时注入真实数据源与 Tamer/DevFocus；截图/压力探针无注入时回退只读场景探测
             gameMode = gm ?? new GameMode(Paths.Data, new SuppressionCore());
             source = runtimeSource ?? new ScenarioStatusSource(gameMode);
@@ -103,6 +99,7 @@ namespace CaelusApp.WpfHost
 
             Pump();
             overviewView = new OverviewView { DataContext = vm };
+            overviewView.ModePicked += ModeChecked;
             policyView = new PolicyView { DataContext = policyVm };
             libraryView = new LibraryView { DataContext = libraryVm };
             logView = new LogView { DataContext = logVm };
@@ -179,8 +176,9 @@ namespace CaelusApp.WpfHost
 
         internal void ApplyPersistedMode(AppMode mode)
         {
-            ModePicker.SelectedIndex = mode == AppMode.Competitive ? 1
+            int index = mode == AppMode.Competitive ? 1
                 : mode == AppMode.Custom ? 2 : 0;
+            overviewView.SetModeSelection(index);
             source.SetMode(mode);
             vm.SetMode(mode);
             policyVm.RefreshLocks();
@@ -419,7 +417,7 @@ namespace CaelusApp.WpfHost
         internal void SwitchModeForStress(AppMode mode)
         {
             int index = mode == AppMode.Competitive ? 1 : mode == AppMode.Custom ? 2 : 0;
-            ModePicker.SelectedIndex = index;
+            overviewView.SetModeSelection(index);
             ThemeManager.Apply(Application.Current, ThemeManager.CurrentTone, mode);
             source.SetMode(mode);
             vm.SetMode(mode);

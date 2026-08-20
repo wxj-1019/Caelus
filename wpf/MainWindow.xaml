@@ -142,11 +142,6 @@
                   <TextBlock Text="反作弊专项" Margin="9,0,0,0" VerticalAlignment="Center"/>
                 </StackPanel>
               </RadioButton>
-              <controls:SegmentedControl x:Name="ModePicker" Margin="8,8,8,4"
-                                         SelectedIndex="0" SelectionChanged="ModeChecked"
-                                         AutomationProperties.Name="游戏性能档位"/>
-              <TextBlock Text="游戏性能档位 · 仅游戏场景掌权时生效" Margin="18,3,14,6"
-                         FontSize="{DynamicResource FontSizeMicro}" Foreground="{DynamicResource TextTertiaryBrush}" TextWrapping="Wrap"/>
 
               <TextBlock Text="开发与日常" Style="{DynamicResource NavGroupLabel}"/>
               <RadioButton x:Name="NavDevFocus" Style="{DynamicResource NavItem}" GroupName="nav"

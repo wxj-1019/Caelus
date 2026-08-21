@@ -8,7 +8,7 @@
     <StackPanel Margin="0,0,0,16">
       <StackPanel x:Name="ZoneHeader" Margin="0,0,0,16">
         <TextBlock Text="设置" Style="{DynamicResource PageHeader}"/>
-        <TextBlock Text="三场景开关、应用偏好与维护工具" Style="{DynamicResource PageSubtitle}" Margin="0,4,0,0"/>
+        <TextBlock Text="三场景开关、应用偏好与维护工具" Style="{DynamicResource PageSubtitle}"/>
       </StackPanel>
 
       <Border x:Name="ZoneSummary" Style="{DynamicResource StatusBanner}" Margin="0,0,0,16" Padding="14,11">
@@ -208,8 +208,19 @@
       </StackPanel>
 
       <StackPanel x:Name="ZoneDanger">
-        <TextBlock Text="危险区" FontSize="{DynamicResource FontSizeBody}" FontWeight="SemiBold" Foreground="{DynamicResource DangerBrush}" Margin="0,0,0,3"/>
-        <TextBlock Text="操作前会再次确认，并尝试恢复所有已记录项。" FontSize="{DynamicResource FontSizeXs}" Foreground="{DynamicResource TextTertiaryBrush}" Margin="0,0,0,8"/>
+        <StackPanel Orientation="Horizontal" Margin="0,0,0,8">
+          <Border Width="28" Height="28" CornerRadius="{DynamicResource RadiusSm}"
+                  Background="{DynamicResource DangerSoftBrush}" BorderBrush="{DynamicResource DangerEdgeBrush}"
+                  BorderThickness="1" VerticalAlignment="Center" Margin="0,0,10,0">
+            <TextBlock Text="!" FontSize="16" FontWeight="Bold"
+                       Foreground="{DynamicResource DangerBrush}"
+                       HorizontalAlignment="Center" VerticalAlignment="Center"/>
+          </Border>
+          <StackPanel VerticalAlignment="Center">
+            <TextBlock Text="危险区" FontSize="{DynamicResource FontSizeBody}" FontWeight="SemiBold" Foreground="{DynamicResource DangerBrush}"/>
+            <TextBlock Text="操作前会再次确认，并尝试恢复所有已记录项。" FontSize="{DynamicResource FontSizeXs}" Foreground="{DynamicResource TextTertiaryBrush}" Margin="0,2,0,0"/>
+          </StackPanel>
+        </StackPanel>
         <Border Style="{DynamicResource SettingsGroup}"><Border Style="{DynamicResource PolicyRow}"><DockPanel><StackPanel DockPanel.Dock="Right" Orientation="Horizontal" VerticalAlignment="Center" Margin="16,0,0,0"><ProgressBar Width="72" Height="3" IsIndeterminate="True" Margin="0,0,10,0"><ProgressBar.Style><Style TargetType="ProgressBar"><Setter Property="Visibility" Value="Collapsed"/><Style.Triggers><DataTrigger Binding="{Binding IsRestoreBusy}" Value="True"><Setter Property="Visibility" Value="Visible"/></DataTrigger></Style.Triggers></Style></ProgressBar.Style></ProgressBar><Button x:Name="BtnRestore" Content="{Binding RestoreText}" Click="OnRestore" Padding="12,6" AutomationProperties.Name="恢复所有已记录的系统项"><Button.Style><Style TargetType="Button" BasedOn="{StaticResource DangerButton}"><Style.Triggers><DataTrigger Binding="{Binding IsRestoreBusy}" Value="True"><Setter Property="IsEnabled" Value="False"/></DataTrigger></Style.Triggers></Style></Button.Style></Button></StackPanel><StackPanel VerticalAlignment="Center"><TextBlock Text="{Binding RestoreTitle}" FontSize="{DynamicResource FontSizeCaption}" FontWeight="SemiBold" Foreground="{DynamicResource TextPrimaryBrush}"/><TextBlock Text="{Binding RestoreDesc}" FontSize="{DynamicResource FontSizeSmall}" Foreground="{DynamicResource TextSecondaryBrush}" TextWrapping="Wrap" Margin="0,3,0,0"/></StackPanel></DockPanel></Border></Border>
       </StackPanel>
 

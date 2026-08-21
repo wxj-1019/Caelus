@@ -22,7 +22,7 @@
       </Style.Triggers>
     </Style>
     <Style x:Key="AcStatusText" TargetType="TextBlock">
-      <Setter Property="FontSize" Value="10"/>
+      <Setter Property="FontSize" Value="{DynamicResource FontSizeXs}"/>
       <Setter Property="FontWeight" Value="SemiBold"/>
       <Setter Property="Foreground" Value="{DynamicResource TextTertiaryBrush}"/>
       <Style.Triggers>
@@ -43,7 +43,7 @@
     <StackPanel Margin="0,0,0,16">
       <StackPanel x:Name="ZoneHeader" Margin="0,0,0,16">
         <TextBlock Text="{Binding PageTitle}" Style="{DynamicResource PageHeader}"/>
-        <TextBlock Text="{Binding PageSub}" Style="{DynamicResource PageSubtitle}" Margin="0,4,0,0"/>
+        <TextBlock Text="{Binding PageSub}" Style="{DynamicResource PageSubtitle}"/>
       </StackPanel>
 
       <!-- 顶部总开关与运行摘要 -->

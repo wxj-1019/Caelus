@@ -51,7 +51,7 @@
     <StackPanel Margin="0,0,0,16">
       <StackPanel x:Name="ZoneHeader" Margin="0,0,0,16">
         <TextBlock Text="{Binding Title}" Style="{DynamicResource PageHeader}"/>
-        <TextBlock Text="{Binding Subtitle}" Style="{DynamicResource PageSubtitle}" Margin="0,4,0,0"/>
+        <TextBlock Text="{Binding Subtitle}" Style="{DynamicResource PageSubtitle}"/>
       </StackPanel>
 
       <Border x:Name="ZoneBanner" Style="{StaticResource DetailBanner}" Margin="0,0,0,16"

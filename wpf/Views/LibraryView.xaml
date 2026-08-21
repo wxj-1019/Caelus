@@ -1,4 +1,4 @@
-﻿<UserControl x:Class="CaelusApp.WpfHost.Views.LibraryView"
+<UserControl x:Class="CaelusApp.WpfHost.Views.LibraryView"
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:local="clr-namespace:CaelusApp.WpfHost"
@@ -13,7 +13,7 @@
     <StackPanel x:Name="ZoneHeader" Grid.Row="0" Margin="0,0,0,16">
       <TextBlock Text="游戏库" Style="{DynamicResource PageHeader}"/>
       <TextBlock Text="管理游戏主程序并查看当前运行状态"
-                 Style="{DynamicResource PageSubtitle}" Margin="0,4,0,0"/>
+                 Style="{DynamicResource PageSubtitle}"/>
     </StackPanel>
 
     <Grid Grid.Row="1">

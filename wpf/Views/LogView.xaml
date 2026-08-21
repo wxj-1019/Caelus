@@ -10,7 +10,7 @@
 
     <StackPanel x:Name="ZoneHeader" Grid.Row="0" Margin="0,0,0,16">
       <TextBlock Text="日志" Style="{DynamicResource PageHeader}"/>
-      <TextBlock Text="运行记录与诊断" Style="{DynamicResource PageSubtitle}" Margin="0,4,0,0"/>
+      <TextBlock Text="运行记录与诊断" Style="{DynamicResource PageSubtitle}"/>
     </StackPanel>
 
     <Border Grid.Row="1" Style="{DynamicResource CardBorder}" Padding="0" ClipToBounds="True">

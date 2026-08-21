@@ -12,7 +12,7 @@
     <StackPanel Margin="0,0,0,16">
       <StackPanel x:Name="ZoneHeader" Margin="0,0,0,16">
         <TextBlock Text="{Binding PageTitle}" Style="{DynamicResource PageHeader}"/>
-        <TextBlock Text="{Binding PageSub}" Style="{DynamicResource PageSubtitle}" Margin="0,4,0,0"/>
+        <TextBlock Text="{Binding PageSub}" Style="{DynamicResource PageSubtitle}"/>
       </StackPanel>
 
       <!-- 响应式摘要：明确计数含义，并用语义色徽章展示厂商可用性。 -->

@@ -38,6 +38,14 @@ namespace CaelusApp
 
         public static readonly ReleaseNote[] All = new[]
         {
+            new ReleaseNote("1.9.0", "2026-08-21", new[]
+            {
+                new[]{ "主题定制系统：设置页外观区新增三模式强调色自定义（10 色预设色板 + hex 输入 + 即时预览），深浅模式三态（手动深 / 手动浅 / 跟随系统 WM_SETTINGCHANGE 即时响应），一键恢复默认棉花糖配色。强调色单色输入自动派生全套 ModeKeys（渐变/柔色/描边/Aurora 三档/明暗变体/OnAccent 对比度自适应按钮文字）。" },
+                new[]{ "场景系统 UI 完善：游戏性能档位从侧栏移入概览页掌权 Hero 下方；设置页新增 IDE 优化开关、电池供电增强开关、健康维护频率配置（1-30 天）；三模式强调色注册表键（AccentStandard/AccentCompetitive/AccentCustom）支持外部工具写入。" },
+                new[]{ "启动屏动画重做：棉花糖天空风格分层动态场景——漂移极光 / 差速旋环 / 呼吸棉花糖 / 轨道糖豆 / 逐字弹跳 / 蹦跳加载豆；启动流程改为非阻塞 + 分块泵送保流畅。" },
+                new[]{ "UI/UX 精打磨：滚动条改为 macOS overlay 风格（默认 30% 淡出 + hover 淡入 + 延迟淡出）；105 处 FontSize 字面值 → token 化（FontSizeCaption/Small/Body 等）；浅色主题次级文字对比度 3.4:1 → 6:1 达 WCAG AA；分组头图标统一（Graphics/Policy 补 30px 图标）；GraphicsView/EnvironmentView 补 FeedbackBanner；PageSubtitle Margin 内置到样式（9 处清理）。" },
+                new[]{ "内置自测 225 → 229 项，全部通过（新增 AccentMath 色派生 4 项：hex 解析 / HSL 单调性 / OnAccent 对比度 / 暗化对比度）。" },
+            }),
             new ReleaseNote("1.8.0", "2026-08-15", new[]
             {
                 new[]{ "三场景调度：游戏 > 开发专注 > 日常优化按严格优先级自动仲裁。编译时真后台压制并暂停索引服务；专注模式静默通知、分心应用提醒一次；IDE（VS / VS Code / JetBrains 系）自动提优；浏览器 / Office 家族活跃或电池供电时日常优化；每日到点健康维护（着色器缓存清理 + 启动项基线审查）。" },

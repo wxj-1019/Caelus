@@ -11,8 +11,8 @@ namespace CaelusApp
         private bool amdCacheBusy;
         private string amdCacheFeedback = string.Empty;
         private bool amdCacheError;
-        private string pageFeedback = string.Empty;
-        private string pageFeedbackKind = "Info";
+        private string feedbackText = string.Empty;
+        private string feedbackKind = "Info";
 
         public GraphicsViewModel(GameMode gameMode) { this.gameMode = gameMode; }
 
@@ -28,12 +28,12 @@ namespace CaelusApp
         public string AmdTitle { get { return Lang.T("sec.amd"); } }
 
         // —— 页面反馈（FeedbackBanner 样式消费） ——
-        public string PageFeedback { get { return pageFeedback; } private set { SetProperty(ref pageFeedback, value, "PageFeedback"); } }
-        public string PageFeedbackKind { get { return pageFeedbackKind; } private set { SetProperty(ref pageFeedbackKind, value, "PageFeedbackKind"); } }
+        public string FeedbackText { get { return feedbackText; } private set { SetProperty(ref feedbackText, value, "FeedbackText"); } }
+        public string FeedbackKind { get { return feedbackKind; } private set { SetProperty(ref feedbackKind, value, "FeedbackKind"); } }
         public void ShowFeedback(string text, string kind)
         {
-            PageFeedbackKind = string.IsNullOrEmpty(kind) ? "Info" : kind;
-            PageFeedback = text ?? "";
+            FeedbackKind = string.IsNullOrEmpty(kind) ? "Info" : kind;
+            FeedbackText = text ?? "";
         }
 
         // —— 可用性 ——

@@ -97,6 +97,69 @@
     <Setter Property="Background" Value="{DynamicResource Surface0Brush}"/>
   </Style>
 
+  <!-- FeedbackBanner：页面内反馈横幅（共享样式）。
+       绑定约定：Content="{Binding FeedbackText}" / FeedbackKind（Info/Success/Warning/Error），
+       空文案自动折叠；Motion.Emphasize 可触发强调动画。 -->
+  <Style x:Key="FeedbackBanner" TargetType="ContentControl">
+    <Setter Property="HorizontalContentAlignment" Value="Stretch"/>
+    <Setter Property="Focusable" Value="False"/>
+    <Setter Property="Template">
+      <Setter.Value>
+        <ControlTemplate TargetType="ContentControl">
+          <Border x:Name="bd" Background="{DynamicResource Surface1Brush}"
+                  BorderBrush="{DynamicResource BorderSubtleBrush}"
+                  BorderThickness="1" CornerRadius="{DynamicResource RadiusSm}"
+                  Padding="12,8">
+            <StackPanel Orientation="Horizontal">
+              <controls:IconView x:Name="glyph" Key="IconInfo" Width="13" Height="13"
+                                 Margin="0,0,8,0" VerticalAlignment="Top"
+                                 Foreground="{DynamicResource InfoBrush}"/>
+              <ContentPresenter VerticalAlignment="Center">
+                <ContentPresenter.Resources>
+                  <Style TargetType="TextBlock">
+                    <Setter Property="TextWrapping" Value="Wrap"/>
+                  </Style>
+                </ContentPresenter.Resources>
+              </ContentPresenter>
+            </StackPanel>
+          </Border>
+          <ControlTemplate.Triggers>
+            <Trigger Property="Content" Value="{x:Null}">
+              <Setter Property="Visibility" Value="Collapsed"/>
+            </Trigger>
+            <Trigger Property="Content" Value="">
+              <Setter Property="Visibility" Value="Collapsed"/>
+            </Trigger>
+            <DataTrigger Binding="{Binding FeedbackKind}" Value="Info">
+              <Setter TargetName="bd" Property="Background" Value="{DynamicResource InfoSoftBrush}"/>
+              <Setter TargetName="bd" Property="BorderBrush" Value="{DynamicResource InfoEdgeBrush}"/>
+              <Setter TargetName="glyph" Property="Key" Value="IconInfo"/>
+              <Setter TargetName="glyph" Property="Foreground" Value="{DynamicResource InfoBrush}"/>
+            </DataTrigger>
+            <DataTrigger Binding="{Binding FeedbackKind}" Value="Success">
+              <Setter TargetName="bd" Property="Background" Value="{DynamicResource SuccessSoftBrush}"/>
+              <Setter TargetName="bd" Property="BorderBrush" Value="{DynamicResource SuccessEdgeBrush}"/>
+              <Setter TargetName="glyph" Property="Key" Value="IconCheck"/>
+              <Setter TargetName="glyph" Property="Foreground" Value="{DynamicResource SuccessBrush}"/>
+            </DataTrigger>
+            <DataTrigger Binding="{Binding FeedbackKind}" Value="Warning">
+              <Setter TargetName="bd" Property="Background" Value="{DynamicResource WarningSoftBrush}"/>
+              <Setter TargetName="bd" Property="BorderBrush" Value="{DynamicResource WarningEdgeBrush}"/>
+              <Setter TargetName="glyph" Property="Key" Value="IconWarn"/>
+              <Setter TargetName="glyph" Property="Foreground" Value="{DynamicResource WarningBrush}"/>
+            </DataTrigger>
+            <DataTrigger Binding="{Binding FeedbackKind}" Value="Error">
+              <Setter TargetName="bd" Property="Background" Value="{DynamicResource DangerSoftBrush}"/>
+              <Setter TargetName="bd" Property="BorderBrush" Value="{DynamicResource DangerEdgeBrush}"/>
+              <Setter TargetName="glyph" Property="Key" Value="IconError"/>
+              <Setter TargetName="glyph" Property="Foreground" Value="{DynamicResource DangerBrush}"/>
+            </DataTrigger>
+          </ControlTemplate.Triggers>
+        </ControlTemplate>
+      </Setter.Value>
+    </Setter>
+  </Style>
+
   <!-- ========== [徽章/标签] ========== -->
   <!-- 状态徽章：圆角矩形 + 左侧 3px 强调竖条（Linear/Raycast 式状态标签），五种语义变体 -->
   <Style x:Key="StatusBadge" TargetType="Border">

@@ -350,6 +350,107 @@ namespace CaelusApp
             ShowFeedback("健康维护频率已保存（每 " + days + " 天一次）。", "Success");
         }
 
+        // —— 外观：深浅模式与三模式强调色 ——
+        public string ThemeSectionTitle { get { return Lang.T("set.theme"); } }
+        public string ThemeSectionNote { get { return Lang.T("set.theme.n"); } }
+        public string ToneModeTitle { get { return Lang.T("set.theme.tone"); } }
+        public string AccentSectionTitle { get { return Lang.T("set.theme.accent"); } }
+        public string AccentHexLabel { get { return Lang.T("set.theme.accent.hex"); } }
+
+        /// <summary>深浅三态：0=深色 1=浅色 2=跟随系统（注册表 UiToneMode；−1=未设置回退 UiLight）。</summary>
+        public int ToneMode
+        {
+            get
+            {
+                int raw;
+                if (!int.TryParse(Settings.LoadStr("UiToneMode", "-1"), out raw)) raw = -1;
+                if (raw >= 0 && raw <= 2) return raw;
+                // 兼容旧键 UiLight
+                return Settings.Load("UiLight", false) ? 1 : 0;
+            }
+            set
+            {
+                if (value < 0 || value > 2) return;
+                Settings.SaveStr("UiToneMode", value.ToString());
+                Raise("ToneMode");
+                ApplyToneFromSetting();
+            }
+        }
+
+        /// <summary>根据当前 UiToneMode 解析并应用深浅主题。</summary>
+        public void ApplyToneFromSetting()
+        {
+            int mode = ToneMode;
+            UiTone tone;
+            if (mode == 2)
+            {
+                // 跟随系统：读 Windows 个性化注册表
+                tone = ProbeSystemTone();
+            }
+            else
+            {
+                tone = mode == 1 ? UiTone.Light : UiTone.Dark;
+            }
+            try
+            {
+                ThemeManager.Apply(Application.Current, tone, ThemeManager.CurrentMode);
+            }
+            catch { }
+        }
+
+        /// <summary>探测当前系统深浅主题（AppsUseLightTheme：1=浅 0=深）。</summary>
+        public static UiTone ProbeSystemTone()
+        {
+            try
+            {
+                using (var key = Microsoft.Win32.Registry.CurrentUser.OpenSubKey(
+                    @"SOFTWARE\Microsoft\Windows\CurrentVersion\Themes\Personalize"))
+                {
+                    if (key != null)
+                    {
+                        object val = key.GetValue("AppsUseLightTheme");
+                        if (val is int) return (int)val == 1 ? UiTone.Light : UiTone.Dark;
+                    }
+                }
+            }
+            catch { }
+            return UiTone.Dark;
+        }
+
+        /// <summary>预设色板（10 色），供设置页色板 UI 消费。</summary>
+        public static readonly System.Collections.Generic.List<string> AccentPresetColors =
+            new System.Collections.Generic.List<string>(AccentMath.PresetColors);
+
+        public string AccentStandardDisplay { get { return Settings.LoadStr("AccentStandard", ""); } }
+        public string AccentCompetitiveDisplay { get { return Settings.LoadStr("AccentCompetitive", ""); } }
+        public string AccentCustomDisplay { get { return Settings.LoadStr("AccentCustom", ""); } }
+
+        /// <summary>应用强调色（色板点击或 hex 保存时调用），即时预览。</summary>
+        public void ApplyAccent(string registryKey, string hex)
+        {
+            Settings.SaveStr(registryKey, hex ?? "");
+            try { ThemeManager.ApplyAccentOverride(Application.Current); } catch { }
+            ShowFeedback(Lang.T("set.theme.accent.applied"), "Success");
+        }
+
+        /// <summary>重置单个模式强调色为预设。</summary>
+        public void ResetAccent(string registryKey)
+        {
+            Settings.SaveStr(registryKey, "");
+            try { ThemeManager.ApplyAccentOverride(Application.Current); } catch { }
+            ShowFeedback(Lang.T("set.theme.accent.reset"), "Success");
+        }
+
+        /// <summary>重置三模式强调色为默认棉花糖配色。</summary>
+        public void ResetAllAccents()
+        {
+            Settings.SaveStr("AccentStandard", "");
+            Settings.SaveStr("AccentCompetitive", "");
+            Settings.SaveStr("AccentCustom", "");
+            try { ThemeManager.ApplyAccentOverride(Application.Current); } catch { }
+            ShowFeedback(Lang.T("set.theme.accent.resetall"), "Success");
+        }
+
         // —— 维护：着色器缓存 ——
         public string ShaderTitle { get { return Lang.T("btn.shader"); } }
         public string ShaderText { get { return Lang.T("btn.clean"); } }

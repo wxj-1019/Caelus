@@ -1,6 +1,7 @@
 <UserControl x:Class="CaelusApp.WpfHost.Views.SettingsView"
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:ctl="clr-namespace:CaelusApp.WpfHost.Controls"
              xmlns:local="clr-namespace:CaelusApp.WpfHost"
              AutomationProperties.Name="设置">
   <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
@@ -109,6 +110,76 @@
             <Border Style="{DynamicResource PolicyRow}" BorderThickness="0,0,0,1" local:RowToggle.Enabled="True"><DockPanel><ToggleButton Style="{DynamicResource PolicyToggle}" IsChecked="{Binding BatteryOn}" DockPanel.Dock="Right" VerticalAlignment="Center" Margin="16,0,0,0" AutomationProperties.Name="电池供电增强"/><StackPanel VerticalAlignment="Center"><TextBlock Text="{Binding BatteryTitle}" FontSize="{DynamicResource FontSizeCaption}" FontWeight="SemiBold" Foreground="{DynamicResource TextPrimaryBrush}"/><TextBlock Text="{Binding BatteryNote}" FontSize="{DynamicResource FontSizeSmall}" Foreground="{DynamicResource TextSecondaryBrush}" TextWrapping="Wrap" Margin="0,3,0,0"/></StackPanel></DockPanel></Border>
             <Border Style="{DynamicResource PolicyRow}" BorderThickness="0,0,0,1"><StackPanel><DockPanel Margin="0,0,0,8"><Button x:Name="BtnHealthFreqSave" Content="{Binding DevCustomSaveText}" Click="OnHealthFreqSave" Style="{DynamicResource GhostButton}" Padding="10,5" DockPanel.Dock="Right" VerticalAlignment="Center" Margin="16,0,0,0" AutomationProperties.Name="保存健康维护频率"/><TextBlock Text="{Binding HealthFreqTitle}" FontSize="{DynamicResource FontSizeCaption}" FontWeight="SemiBold" Foreground="{DynamicResource TextPrimaryBrush}" VerticalAlignment="Center"/></DockPanel><TextBox x:Name="TbHealthFreq" Text="{Binding HealthFreqInitial, Mode=OneTime}" Style="{DynamicResource InputBox}" Width="120" HorizontalAlignment="Left" Padding="10,5" FontSize="{DynamicResource FontSizeMono}" AutomationProperties.Name="健康维护频率（天）"/><TextBlock Text="{Binding HealthFreqNote}" FontSize="{DynamicResource FontSizeSmall}" Foreground="{DynamicResource TextSecondaryBrush}" TextWrapping="Wrap" Margin="0,7,0,0"/></StackPanel></Border>
             <Border Style="{DynamicResource PolicyRow}"><StackPanel><TextBlock Text="{Binding StartupNewsTitle}" FontSize="{DynamicResource FontSizeCaption}" FontWeight="SemiBold" Foreground="{DynamicResource TextPrimaryBrush}"/><TextBlock Text="{Binding StartupNews}" FontSize="{DynamicResource FontSizeSmall}" Foreground="{DynamicResource TextSecondaryBrush}" TextWrapping="Wrap" Margin="0,3,0,0"/></StackPanel></Border>
+          </StackPanel>
+        </Border>
+      </StackPanel>
+
+      <StackPanel x:Name="ZoneTheme">
+        <StackPanel Orientation="Horizontal" Margin="0,0,0,8">
+          <Border Width="28" Height="28" CornerRadius="{DynamicResource RadiusSm}"
+                  Background="{DynamicResource AccentSoftBrush}" BorderBrush="{DynamicResource AccentEdgeBrush}"
+                  BorderThickness="1" VerticalAlignment="Center" Margin="0,0,10,0">
+            <ctl:IconView Key="IconSettings" Width="15" Height="15"
+                          Foreground="{DynamicResource ModeAccentBrush}"
+                          HorizontalAlignment="Center" VerticalAlignment="Center"/>
+          </Border>
+          <TextBlock Text="{Binding ThemeSectionTitle}" FontSize="{DynamicResource FontSizeBody}"
+                     FontWeight="SemiBold" Foreground="{DynamicResource TextPrimaryBrush}" VerticalAlignment="Center"/>
+        </StackPanel>
+        <TextBlock Text="{Binding ThemeSectionNote}" FontSize="{DynamicResource FontSizeXs}" Foreground="{DynamicResource TextTertiaryBrush}" Margin="0,0,0,8"/>
+        <Border Style="{DynamicResource SettingsGroup}" Margin="0,0,0,16">
+          <StackPanel>
+            <Border Style="{DynamicResource PolicyRow}" BorderThickness="0,0,0,1">
+              <StackPanel>
+                <TextBlock Text="{Binding ToneModeTitle}" FontSize="{DynamicResource FontSizeCaption}" FontWeight="SemiBold" Foreground="{DynamicResource TextPrimaryBrush}" Margin="0,0,0,8"/>
+                <ctl:SegmentedControl x:Name="TonePicker" HorizontalAlignment="Left" SelectedIndex="0"
+                                       SelectionChanged="OnToneModeChanged" AutomationProperties.Name="深浅模式"/>
+              </StackPanel>
+            </Border>
+            <Border Style="{DynamicResource PolicyRow}" BorderThickness="0,0,0,1">
+              <StackPanel>
+                <DockPanel>
+                  <TextBlock Text="常规 · 强调色" FontSize="{DynamicResource FontSizeCaption}" FontWeight="SemiBold" Foreground="{DynamicResource TextPrimaryBrush}" VerticalAlignment="Center"/>
+                  <Button Content="重置" DockPanel.Dock="Right" Click="OnAccentResetStandard" Style="{DynamicResource GhostButton}" Padding="8,4" Margin="16,0,0,0" AutomationProperties.Name="重置常规强调色"/>
+                </DockPanel>
+                <StackPanel x:Name="SwatchStandard" Orientation="Horizontal" Margin="0,8,0,0"/>
+                <DockPanel Margin="0,8,0,0">
+                  <Button Content="应用" DockPanel.Dock="Right" Click="OnAccentSaveStandard" Style="{DynamicResource GhostButton}" Padding="8,4" Margin="8,0,0,0" AutomationProperties.Name="应用自定义常规强调色"/>
+                  <TextBox x:Name="HexStandard" Style="{DynamicResource InputBox}" Padding="8,4" Width="120" FontSize="{DynamicResource FontSizeMono}" AutomationProperties.Name="常规强调色 hex"/>
+                </DockPanel>
+              </StackPanel>
+            </Border>
+            <Border Style="{DynamicResource PolicyRow}" BorderThickness="0,0,0,1">
+              <StackPanel>
+                <DockPanel>
+                  <TextBlock Text="竞技 · 强调色" FontSize="{DynamicResource FontSizeCaption}" FontWeight="SemiBold" Foreground="{DynamicResource TextPrimaryBrush}" VerticalAlignment="Center"/>
+                  <Button Content="重置" DockPanel.Dock="Right" Click="OnAccentResetCompetitive" Style="{DynamicResource GhostButton}" Padding="8,4" Margin="16,0,0,0" AutomationProperties.Name="重置竞技强调色"/>
+                </DockPanel>
+                <StackPanel x:Name="SwatchCompetitive" Orientation="Horizontal" Margin="0,8,0,0"/>
+                <DockPanel Margin="0,8,0,0">
+                  <Button Content="应用" DockPanel.Dock="Right" Click="OnAccentSaveCompetitive" Style="{DynamicResource GhostButton}" Padding="8,4" Margin="8,0,0,0" AutomationProperties.Name="应用自定义竞技强调色"/>
+                  <TextBox x:Name="HexCompetitive" Style="{DynamicResource InputBox}" Padding="8,4" Width="120" FontSize="{DynamicResource FontSizeMono}" AutomationProperties.Name="竞技强调色 hex"/>
+                </DockPanel>
+              </StackPanel>
+            </Border>
+            <Border Style="{DynamicResource PolicyRow}">
+              <StackPanel>
+                <DockPanel>
+                  <TextBlock Text="自定义 · 强调色" FontSize="{DynamicResource FontSizeCaption}" FontWeight="SemiBold" Foreground="{DynamicResource TextPrimaryBrush}" VerticalAlignment="Center"/>
+                  <Button Content="重置" DockPanel.Dock="Right" Click="OnAccentResetCustom" Style="{DynamicResource GhostButton}" Padding="8,4" Margin="16,0,0,0" AutomationProperties.Name="重置自定义强调色"/>
+                </DockPanel>
+                <StackPanel x:Name="SwatchCustom" Orientation="Horizontal" Margin="0,8,0,0"/>
+                <DockPanel Margin="0,8,0,0">
+                  <Button Content="应用" DockPanel.Dock="Right" Click="OnAccentSaveCustom" Style="{DynamicResource GhostButton}" Padding="8,4" Margin="8,0,0,0" AutomationProperties.Name="应用自定义自定义强调色"/>
+                  <TextBox x:Name="HexCustom" Style="{DynamicResource InputBox}" Padding="8,4" Width="120" FontSize="{DynamicResource FontSizeMono}" AutomationProperties.Name="自定义强调色 hex"/>
+                </DockPanel>
+              </StackPanel>
+            </Border>
+            <Border Style="{DynamicResource PolicyRow}">
+              <StackPanel>
+                <Button Content="恢复默认配色（靛蓝/蜜桃橙/暗金）" Click="OnAccentResetAll" Style="{DynamicResource GhostButton}" Padding="10,5" AutomationProperties.Name="恢复三模式默认配色"/>
+              </StackPanel>
+            </Border>
           </StackPanel>
         </Border>
       </StackPanel>

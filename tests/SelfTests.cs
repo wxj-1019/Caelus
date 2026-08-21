@@ -1009,6 +1009,10 @@ namespace CaelusApp
             test("调色板：深浅主题 13 个 Token 齐全且为合法 hex", TestPaletteCompleteness);
             test("调色板：语义色互异，品牌色跨主题固定为 #D4A847", TestPaletteSemantics);
             test("调色板：正文/次级文字与底色对比度达到 AA", TestPaletteContrast);
+            test("强调色派生：hex 解析（#RGB/#RRGGBB/非法/空）", TestAccentParseHex);
+            test("强调色派生：HSL 亮化/暗化单调性", TestAccentBrightenDarken);
+            test("强调色派生：OnAccent 对比度取大者（蜜桃橙→深可可，黑→白）", TestAccentOnContrast);
+            test("强调色派生：暗化后与浅底对比度 ≥ 3:1（10 预设色）", TestAccentOnLightContrast);
             test("动效：规格 §6 六档时长 Token 固定", TestMotionTokens);
             test("动效：减少动态效果时时长减半且禁用位移", TestMotionReducedPolicy);
             test("MVVM：SetProperty 同值静默、异值通知一次", TestViewModelBase);

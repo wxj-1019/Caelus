@@ -519,5 +519,80 @@ namespace CaelusApp
             }
             finally { try { System.IO.Directory.Delete(dir, true); } catch { } }
         }
+
+        // —— 强调色派生测试（AccentMath 纯数学，无 WPF 依赖） ——
+
+        private static void TestAccentParseHex()
+        {
+            byte r, g, b;
+            // 合法 #RRGGBB
+            Eq(true, AccentMath.ParseHex("#FF8A5C", out r, out g, out b));
+            Eq(255, r); Eq(138, g); Eq(92, b);
+            // 合法 #RGB 短格式
+            Eq(true, AccentMath.ParseHex("#F85", out r, out g, out b));
+            Eq(255, r); Eq(136, g); Eq(85, b);
+            // 无 #
+            Eq(true, AccentMath.ParseHex("5E5CE6", out r, out g, out b));
+            Eq(0x5E, r); Eq(0x5C, g); Eq(0xE6, b);
+            // 非法值
+            Eq(false, AccentMath.ParseHex(null, out r, out g, out b));
+            Eq(false, AccentMath.ParseHex("", out r, out g, out b));
+            Eq(false, AccentMath.ParseHex("#GGG", out r, out g, out b));
+            Eq(false, AccentMath.ParseHex("#1234", out r, out g, out b));
+        }
+
+        private static void TestAccentBrightenDarken()
+        {
+            // 亮化单调递增亮度
+            byte r = 0x5E, g = 0x5C, b = 0xE6; // 靛蓝
+            double h1, s1, l1;
+            AccentMath.RgbToHsl(r, g, b, out h1, out s1, out l1);
+            byte r2, g2, b2;
+            AccentMath.BrightenHsl(r, g, b, 0.1, out r2, out g2, out b2);
+            double h2, s2, l2;
+            AccentMath.RgbToHsl(r2, g2, b2, out h2, out s2, out l2);
+            Eq(true, l2 > l1);
+            // 暗化单调递减亮度
+            byte r3, g3, b3;
+            AccentMath.DarkenHsl(r, g, b, 0.1, out r3, out g3, out b3);
+            double h3, s3, l3;
+            AccentMath.RgbToHsl(r3, g3, b3, out h3, out s3, out l3);
+            Eq(true, l3 < l1);
+        }
+
+        private static void TestAccentOnContrast()
+        {
+            byte r, g, b;
+            // 蜜桃橙 #FF8A5C → 应选深可可（对比度 ~6.4 vs 白 ~2.3）
+            AccentMath.ParseHex("#FF8A5C", out r, out g, out b);
+            byte oR, oG, oB;
+            AccentMath.ChooseOnAccent(r, g, b, out oR, out oG, out oB);
+            Eq(0x2B, oR); Eq(0x1F, oG); Eq(0x1A, oB); // 深可可
+            // 纯黑 → 白字（对比度 21 vs ~1.3）
+            AccentMath.ChooseOnAccent(0, 0, 0, out oR, out oG, out oB);
+            Eq(255, oR); Eq(255, oG); Eq(255, oB);
+            // 纯白 → 深可可（对比度 21 vs ~1.3）
+            AccentMath.ChooseOnAccent(255, 255, 255, out oR, out oG, out oB);
+            Eq(0x2B, oR); Eq(0x1F, oG); Eq(0x1A, oB);
+            // 验证蜜桃橙配深可可对比度 ≥ 4.5（WCAG AA）
+            double ratio = AccentMath.ContrastRatio(255, 138, 92, 0x2B, 0x1F, 0x1A);
+            Eq(true, ratio >= 4.5);
+        }
+
+        private static void TestAccentOnLightContrast()
+        {
+            // 10 预设色暗化 25% 后与浅白底 (#FAFAFB) 对比度 ≥ 3:1
+            // （浅色主题按钮背景 Surface0 ≈ #FCFFFFFF）
+            byte bgR = 0xFC, bgG = 0xFF, bgB = 0xFF;
+            foreach (string hex in AccentMath.PresetColors)
+            {
+                byte r, g, b;
+                Eq(true, AccentMath.ParseHex(hex, out r, out g, out b));
+                byte lr, lg, lb;
+                AccentMath.DarkenHsl(r, g, b, 0.25, out lr, out lg, out lb);
+                double ratio = AccentMath.ContrastRatio(lr, lg, lb, bgR, bgG, bgB);
+                Eq(true, ratio >= 3.0);
+            }
+        }
     }
 }

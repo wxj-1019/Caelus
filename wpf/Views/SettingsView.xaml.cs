@@ -14,6 +14,7 @@ using System.Windows.Controls.Primitives;
 using System.Windows.Data;
 using System.Windows.Input;
 using System.Windows.Media;
+using CaelusApp.WpfHost.Controls;
 using CaelusApp.WpfHost.Dialogs;
 
 namespace CaelusApp.WpfHost.Views
@@ -35,8 +36,176 @@ namespace CaelusApp.WpfHost.Views
             Motion.RiseIn(ZoneApp, 140);
             Motion.RiseIn(ZoneDev, 190);
             Motion.RiseIn(ZoneDaily, 215);
-            Motion.RiseIn(ZoneMaint, 240);
-            Motion.RiseIn(ZoneDanger, 290);
+            Motion.RiseIn(ZoneTheme, 225);
+            Motion.RiseIn(ZoneMaint, 250);
+            Motion.RiseIn(ZoneDanger, 300);
+            InitTonePicker();
+            InitAccentSwatches();
+        }
+
+        // —— 深浅模式三态 ——
+
+        private void InitTonePicker()
+        {
+            SettingsViewModel vm = DataContext as SettingsViewModel;
+            if (vm == null) return;
+            TonePicker.ItemsSource = new System.Collections.Generic.List<string>
+            {
+                Lang.T("set.theme.tone.dark"),
+                Lang.T("set.theme.tone.light"),
+                Lang.T("set.theme.tone.follow"),
+            };
+            TonePicker.SetCurrentValue(SegmentedControl.SelectedIndexProperty, vm.ToneMode);
+        }
+
+        private void OnToneModeChanged(object sender, int index)
+        {
+            SettingsViewModel vm = DataContext as SettingsViewModel;
+            if (vm == null) return;
+            vm.ToneMode = index;
+            vm.ApplyToneFromSetting();
+            Motion.Emphasize(PageFeedbackBanner);
+        }
+
+        // —— 强调色色板 ——
+
+        private void InitAccentSwatches()
+        {
+            SettingsViewModel vm = DataContext as SettingsViewModel;
+            if (vm == null) return;
+            PopulateSwatch(SwatchStandard, "AccentStandard", vm.AccentStandardDisplay);
+            PopulateSwatch(SwatchCompetitive, "AccentCompetitive", vm.AccentCompetitiveDisplay);
+            PopulateSwatch(SwatchCustom, "AccentCustom", vm.AccentCustomDisplay);
+            // 设置 hex 输入框占位
+            HexStandard.Text = vm.AccentStandardDisplay ?? "";
+            HexCompetitive.Text = vm.AccentCompetitiveDisplay ?? "";
+            HexCustom.Text = vm.AccentCustomDisplay ?? "";
+        }
+
+        private void PopulateSwatch(StackPanel target, string modeKey, string currentHex)
+        {
+            target.Children.Clear();
+            bool hasCustom = !string.IsNullOrEmpty(currentHex);
+            for (int i = 0; i < SettingsViewModel.AccentPresetColors.Count; i++)
+            {
+                string hex = SettingsViewModel.AccentPresetColors[i];
+                byte r, g, b;
+                if (!AccentMath.ParseHex(hex, out r, out g, out b)) continue;
+                var circle = new Border
+                {
+                    Width = 26, Height = 26,
+                    CornerRadius = new CornerRadius(13),
+                    Margin = new Thickness(0, 0, 6, 0),
+                    Cursor = Cursors.Hand,
+                    Tag = new AccentSwatchTag { ModeKey = modeKey, Hex = hex },
+                    ToolTip = hex,
+                    Background = new SolidColorBrush(Color.FromRgb(r, g, b)),
+                };
+                // 选中态：非自定义且匹配默认预设色时描边
+                bool isSelected = !hasCustom && i == PresetIndexForMode(modeKey);
+                if (isSelected || (hasCustom && string.Equals(hex, currentHex, StringComparison.OrdinalIgnoreCase)))
+                {
+                    circle.BorderBrush = new SolidColorBrush(Colors.White);
+                    circle.BorderThickness = new Thickness(2.5);
+                }
+                else
+                {
+                    circle.BorderBrush = new SolidColorBrush(Color.FromArgb(0x26, 0, 0, 0));
+                    circle.BorderThickness = new Thickness(1);
+                }
+                circle.MouseLeftButtonDown += OnSwatchClick;
+                target.Children.Add(circle);
+            }
+        }
+
+        private static int PresetIndexForMode(string modeKey)
+        {
+            // 常规默认靛蓝(0)、竞技默认蜜桃橙(1)、自定义默认暗金(2)
+            if (modeKey == "AccentCompetitive") return 1;
+            if (modeKey == "AccentCustom") return 2;
+            return 0;
+        }
+
+        private sealed class AccentSwatchTag
+        {
+            public string ModeKey;
+            public string Hex;
+        }
+
+        private void OnSwatchClick(object sender, MouseButtonEventArgs e)
+        {
+            Border circle = sender as Border;
+            AccentSwatchTag tag = circle == null ? null : circle.Tag as AccentSwatchTag;
+            SettingsViewModel vm = DataContext as SettingsViewModel;
+            if (tag == null || vm == null) return;
+            vm.ApplyAccent(tag.ModeKey, tag.Hex);
+            // 刷新色板高亮
+            InitAccentSwatches();
+            Motion.Emphasize(PageFeedbackBanner);
+        }
+
+        private void OnAccentSaveStandard(object sender, RoutedEventArgs e)
+        {
+            ApplyAccentFromHex("AccentStandard", HexStandard);
+        }
+
+        private void OnAccentSaveCompetitive(object sender, RoutedEventArgs e)
+        {
+            ApplyAccentFromHex("AccentCompetitive", HexCompetitive);
+        }
+
+        private void OnAccentSaveCustom(object sender, RoutedEventArgs e)
+        {
+            ApplyAccentFromHex("AccentCustom", HexCustom);
+        }
+
+        private void ApplyAccentFromHex(string modeKey, TextBox hexBox)
+        {
+            SettingsViewModel vm = DataContext as SettingsViewModel;
+            if (vm == null) return;
+            string hex = (hexBox.Text ?? "").Trim();
+            byte r, g, b;
+            if (!AccentMath.ParseHex(hex, out r, out g, out b))
+            {
+                vm.ShowFeedback("请输入合法的十六进制色值，如 #FF8A5C 或 #F85。", "Error");
+                return;
+            }
+            vm.ApplyAccent(modeKey, "#" + r.ToString("X2") + g.ToString("X2") + b.ToString("X2"));
+            InitAccentSwatches();
+            Motion.Emphasize(PageFeedbackBanner);
+        }
+
+        private void OnAccentResetStandard(object sender, RoutedEventArgs e)
+        {
+            ResetAccentKey("AccentStandard");
+        }
+
+        private void OnAccentResetCompetitive(object sender, RoutedEventArgs e)
+        {
+            ResetAccentKey("AccentCompetitive");
+        }
+
+        private void OnAccentResetCustom(object sender, RoutedEventArgs e)
+        {
+            ResetAccentKey("AccentCustom");
+        }
+
+        private void ResetAccentKey(string modeKey)
+        {
+            SettingsViewModel vm = DataContext as SettingsViewModel;
+            if (vm == null) return;
+            vm.ResetAccent(modeKey);
+            InitAccentSwatches();
+            Motion.Emphasize(PageFeedbackBanner);
+        }
+
+        private void OnAccentResetAll(object sender, RoutedEventArgs e)
+        {
+            SettingsViewModel vm = DataContext as SettingsViewModel;
+            if (vm == null) return;
+            vm.ResetAllAccents();
+            InitAccentSwatches();
+            Motion.Emphasize(PageFeedbackBanner);
         }
 
         private void OnDevSave(object sender, RoutedEventArgs e)

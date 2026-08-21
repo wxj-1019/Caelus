@@ -133,7 +133,7 @@ namespace CaelusApp.WpfHost
             OverviewViewModel.PostToUi = a => Dispatcher.BeginInvoke(new Action(a));
 
             AppMode initial = ModeController.LoadPersisted();
-            UiTone tone = Settings.Load("UiLight", false) ? UiTone.Light : UiTone.Dark;
+            UiTone tone = ThemeManager.ResolveTone();
             ThemeManager.Apply(this, tone, initial);
             ThemeManager.TryApplyUserTheme(this);
 

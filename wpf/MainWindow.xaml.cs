@@ -217,6 +217,8 @@ namespace CaelusApp.WpfHost
             // Win11 22H2+：窗口圆角（DWMWCP_ROUND）+ Mica 主窗口材质（DWMSBT_MAINWINDOW）。
             // 两者都要求 AllowsTransparency=False（layered 窗口不参与 DWM 形状与材质）。
             ApplyWindowChrome(hwnd);
+            // 跟随系统深浅模式：挂 WM_SETTINGCHANGE 监听（500ms 去抖）
+            ThemeManager.StartSystemThemeMonitor(Application.Current, hwnd);
         }
 
         private void OnMotionPolicyChanged(object sender, EventArgs e)
@@ -242,6 +244,7 @@ namespace CaelusApp.WpfHost
         {
             Motion.PolicyChanged -= OnMotionPolicyChanged;
             ThemeManager.ModeChanged -= OnThemeChanged;
+            ThemeManager.StopSystemThemeMonitor();
             if (source != null) source.Dispose();
             base.OnClosed(e);
         }

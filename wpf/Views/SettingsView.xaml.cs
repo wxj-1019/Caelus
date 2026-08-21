@@ -402,6 +402,13 @@ namespace CaelusApp.WpfHost.Dialogs
             };
         }
 
+        /// <summary>从主题资源读取字号 token（如 "FontSizeSmall"），失败回退 12。</summary>
+        internal static double FontSize(string key)
+        {
+            object val = Application.Current == null ? null : Application.Current.TryFindResource(key);
+            return val is double ? (double)val : 12.0;
+        }
+
         internal static Binding Bind(string path)
         {
             return new Binding(path) { Mode = BindingMode.OneWay };
@@ -511,9 +518,9 @@ namespace CaelusApp.WpfHost.Dialogs
             root.RowDefinitions.Add(new RowDefinition { Height = GridLength.Auto });
 
             StackPanel header = new StackPanel { Margin = new Thickness(0, 0, 0, 16) };
-            TextBlock title = DialogUi.Text(Lang.T("def.title"), 24, DialogUi.Brush("TextPrimaryBrush", Brushes.Black));
+            TextBlock title = DialogUi.Text(Lang.T("def.title"), DialogUi.FontSize("FontSizeMetric"), DialogUi.Brush("TextPrimaryBrush", Brushes.Black));
             DialogUi.Style(title, "PageHeader");
-            TextBlock subtitle = DialogUi.Text("按游戏目录管理实时扫描排除；只移除由 Caelus 添加的项目", 11,
+            TextBlock subtitle = DialogUi.Text("按游戏目录管理实时扫描排除；只移除由 Caelus 添加的项目", DialogUi.FontSize("FontSizeSmall"),
                 DialogUi.Brush("TextSecondaryBrush", Brushes.Gray));
             DialogUi.Style(subtitle, "PageSubtitle"); subtitle.Margin = new Thickness(0, 4, 0, 0);
             header.Children.Add(title); header.Children.Add(subtitle);
@@ -524,9 +531,9 @@ namespace CaelusApp.WpfHost.Dialogs
             warning.SetResourceReference(Border.BorderBrushProperty, "DangerBrush");
             Border warningRow = new Border(); DialogUi.Style(warningRow, "PolicyRow");
             StackPanel warningText = new StackPanel();
-            warningText.Children.Add(DialogUi.Text(Lang.T("def.warn.title"), 13,
+            warningText.Children.Add(DialogUi.Text(Lang.T("def.warn.title"), DialogUi.FontSize("FontSizeRegion"),
                 DialogUi.Brush("DangerBrush", Brushes.Firebrick)));
-            TextBlock body = DialogUi.Text(Lang.T("def.warn.body"), 11,
+            TextBlock body = DialogUi.Text(Lang.T("def.warn.body"), DialogUi.FontSize("FontSizeSmall"),
                 DialogUi.Brush("TextSecondaryBrush", Brushes.Gray));
             body.Margin = new Thickness(0, 5, 0, 0); warningText.Children.Add(body);
             warningRow.Child = warningText; warning.Child = warningRow;
@@ -538,7 +545,7 @@ namespace CaelusApp.WpfHost.Dialogs
             progress = new ProgressBar { Width = 92, Height = 4, IsIndeterminate = true,
                 Visibility = Visibility.Collapsed, Margin = new Thickness(12, 0, 0, 0) };
             DockPanel.SetDock(progress, Dock.Right);
-            status = DialogUi.Text("正在读取 Defender 状态…", 11,
+            status = DialogUi.Text("正在读取 Defender 状态…", DialogUi.FontSize("FontSizeSmall"),
                 DialogUi.Brush("TextSecondaryBrush", Brushes.Gray));
             AutomationProperties.SetName(status, "Defender 状态");
             statusDock.Children.Add(progress); statusDock.Children.Add(status);
@@ -900,16 +907,16 @@ namespace CaelusApp.WpfHost.Dialogs
             root.RowDefinitions.Add(new RowDefinition { Height = GridLength.Auto });
 
             StackPanel header = new StackPanel { Margin = new Thickness(0, 0, 0, 16) };
-            TextBlock title = DialogUi.Text(Lang.T("addon.title"), 24, DialogUi.Brush("TextPrimaryBrush", Brushes.Black));
+            TextBlock title = DialogUi.Text(Lang.T("addon.title"), DialogUi.FontSize("FontSizeMetric"), DialogUi.Brush("TextPrimaryBrush", Brushes.Black));
             DialogUi.Style(title, "PageHeader");
-            TextBlock subtitle = DialogUi.Text("检查并删除客户端附加组件，不触碰游戏本体与登录链路", 11,
+            TextBlock subtitle = DialogUi.Text("检查并删除客户端附加组件，不触碰游戏本体与登录链路", DialogUi.FontSize("FontSizeSmall"),
                 DialogUi.Brush("TextSecondaryBrush", Brushes.Gray));
             DialogUi.Style(subtitle, "PageSubtitle"); subtitle.Margin = new Thickness(0, 4, 0, 0);
             header.Children.Add(title); header.Children.Add(subtitle); Grid.SetRow(header, 0); root.Children.Add(header);
 
             Border note = new Border { Margin = new Thickness(0, 0, 0, 12) }; DialogUi.Style(note, "SettingsGroup");
             Border noteRow = new Border(); DialogUi.Style(noteRow, "PolicyRow");
-            noteRow.Child = DialogUi.Text(Lang.T("addon.desc"), 11,
+            noteRow.Child = DialogUi.Text(Lang.T("addon.desc"), DialogUi.FontSize("FontSizeSmall"),
                 DialogUi.Brush("TextSecondaryBrush", Brushes.Gray));
             note.Child = noteRow; Grid.SetRow(note, 1); root.Children.Add(note);
 
@@ -933,7 +940,7 @@ namespace CaelusApp.WpfHost.Dialogs
             progress = new ProgressBar { Width = 92, Height = 4, IsIndeterminate = true,
                 Visibility = Visibility.Collapsed, Margin = new Thickness(12, 0, 0, 0) };
             DockPanel.SetDock(progress, Dock.Right);
-            status = DialogUi.Text(Lang.T("addon.hint.pick"), 11,
+            status = DialogUi.Text(Lang.T("addon.hint.pick"), DialogUi.FontSize("FontSizeSmall"),
                 DialogUi.Brush("TextSecondaryBrush", Brushes.Gray));
             AutomationProperties.SetName(status, "附加层检查状态");
             statusDock.Children.Add(progress); statusDock.Children.Add(status); statusBanner.Child = statusDock;
@@ -942,7 +949,7 @@ namespace CaelusApp.WpfHost.Dialogs
             Border listBorder = new Border { Padding = new Thickness(6) }; DialogUi.Style(listBorder, "SettingsGroup");
             Grid listGrid = new Grid(); listGrid.RowDefinitions.Add(new RowDefinition { Height = GridLength.Auto });
             listGrid.RowDefinitions.Add(new RowDefinition { Height = new GridLength(1, GridUnitType.Star) });
-            TextBlock resultTitle = DialogUi.Text("检查结果", 13, DialogUi.Brush("TextPrimaryBrush", Brushes.Black));
+            TextBlock resultTitle = DialogUi.Text("检查结果", DialogUi.FontSize("FontSizeRegion"), DialogUi.Brush("TextPrimaryBrush", Brushes.Black));
             resultTitle.FontWeight = FontWeights.SemiBold; resultTitle.Margin = new Thickness(10, 8, 10, 6);
             list = new ListBox { Background = Brushes.Transparent, BorderThickness = new Thickness(0),
                 ItemsSource = candidates, ItemTemplate = BuildCandidateTemplate() };

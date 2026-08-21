@@ -41,52 +41,96 @@
                        TextWrapping="Wrap"/>
           </StackPanel>
           <WrapPanel Grid.Column="2" VerticalAlignment="Center">
-            <Border Style="{DynamicResource StatusBadge}" Padding="10,4" Margin="0,2,8,2"
-                    Background="{DynamicResource SuccessSoftBrush}"
-                    BorderBrush="{DynamicResource SuccessEdgeBrush}"
-                    Visibility="{Binding NvAvailable, Converter={StaticResource BoolVis}}"
-                    AutomationProperties.Name="NVIDIA 可用">
+            <!-- NVIDIA 状态 Badge（合并可用/不可用为单个元素 + DataTrigger） -->
+            <Border Padding="10,4" Margin="0,2,8,2" CornerRadius="{DynamicResource RadiusSm}"
+                    BorderThickness="1" VerticalAlignment="Center"
+                    AutomationProperties.Name="{Binding NvStatusText}">
+              <Border.Style>
+                <Style TargetType="Border" BasedOn="{StaticResource StatusBadge}">
+                  <Style.Triggers>
+                    <DataTrigger Binding="{Binding NvAvailable}" Value="True">
+                      <Setter Property="Background" Value="{DynamicResource SuccessSoftBrush}"/>
+                      <Setter Property="BorderBrush" Value="{DynamicResource SuccessEdgeBrush}"/>
+                    </DataTrigger>
+                    <DataTrigger Binding="{Binding NvAvailable}" Value="False">
+                      <Setter Property="Background" Value="{DynamicResource WarningSoftBrush}"/>
+                      <Setter Property="BorderBrush" Value="{DynamicResource WarningEdgeBrush}"/>
+                    </DataTrigger>
+                  </Style.Triggers>
+                </Style>
+              </Border.Style>
               <StackPanel Orientation="Horizontal">
-                <Ellipse Width="6" Height="6" Fill="{DynamicResource SuccessBrush}"
-                         VerticalAlignment="Center" Margin="0,0,7,0"/>
+                <Ellipse Width="6" Height="6" VerticalAlignment="Center" Margin="0,0,7,0">
+                  <Ellipse.Style>
+                    <Style TargetType="Ellipse">
+                      <Setter Property="Fill" Value="{DynamicResource SuccessBrush}"/>
+                      <Style.Triggers>
+                        <DataTrigger Binding="{Binding NvAvailable}" Value="False">
+                          <Setter Property="Fill" Value="{DynamicResource WarningBrush}"/>
+                        </DataTrigger>
+                      </Style.Triggers>
+                    </Style>
+                  </Ellipse.Style>
+                </Ellipse>
                 <TextBlock Text="{Binding NvStatusText}" FontSize="{DynamicResource FontSizeXs}" FontWeight="SemiBold"
-                           Foreground="{DynamicResource SuccessBrush}"/>
+                           VerticalAlignment="Center">
+                  <TextBlock.Style>
+                    <Style TargetType="TextBlock">
+                      <Setter Property="Foreground" Value="{DynamicResource SuccessBrush}"/>
+                      <Style.Triggers>
+                        <DataTrigger Binding="{Binding NvAvailable}" Value="False">
+                          <Setter Property="Foreground" Value="{DynamicResource WarningBrush}"/>
+                        </DataTrigger>
+                      </Style.Triggers>
+                    </Style>
+                  </TextBlock.Style>
+                </TextBlock>
               </StackPanel>
             </Border>
-            <Border Style="{DynamicResource StatusBadge}" Padding="10,4" Margin="0,2,8,2"
-                    Background="{DynamicResource WarningSoftBrush}"
-                    BorderBrush="{DynamicResource WarningEdgeBrush}"
-                    Visibility="{Binding NvUnavailable, Converter={StaticResource BoolVis}}"
-                    AutomationProperties.Name="NVIDIA 不可用">
+            <!-- AMD 状态 Badge（合并可用/不可用为单个元素 + DataTrigger） -->
+            <Border Padding="10,4" Margin="0,2,0,2" CornerRadius="{DynamicResource RadiusSm}"
+                    BorderThickness="1" VerticalAlignment="Center"
+                    AutomationProperties.Name="{Binding AmdStatusText}">
+              <Border.Style>
+                <Style TargetType="Border" BasedOn="{StaticResource StatusBadge}">
+                  <Style.Triggers>
+                    <DataTrigger Binding="{Binding AmdAvailable}" Value="True">
+                      <Setter Property="Background" Value="{DynamicResource SuccessSoftBrush}"/>
+                      <Setter Property="BorderBrush" Value="{DynamicResource SuccessEdgeBrush}"/>
+                    </DataTrigger>
+                    <DataTrigger Binding="{Binding AmdAvailable}" Value="False">
+                      <Setter Property="Background" Value="{DynamicResource WarningSoftBrush}"/>
+                      <Setter Property="BorderBrush" Value="{DynamicResource WarningEdgeBrush}"/>
+                    </DataTrigger>
+                  </Style.Triggers>
+                </Style>
+              </Border.Style>
               <StackPanel Orientation="Horizontal">
-                <Ellipse Width="6" Height="6" Fill="{DynamicResource WarningBrush}"
-                         VerticalAlignment="Center" Margin="0,0,7,0"/>
-                <TextBlock Text="{Binding NvStatusText}" FontSize="{DynamicResource FontSizeXs}" FontWeight="SemiBold"
-                           Foreground="{DynamicResource WarningBrush}"/>
-              </StackPanel>
-            </Border>
-            <Border Style="{DynamicResource StatusBadge}" Padding="10,4" Margin="0,2,0,2"
-                    Background="{DynamicResource SuccessSoftBrush}"
-                    BorderBrush="{DynamicResource SuccessEdgeBrush}"
-                    Visibility="{Binding AmdAvailable, Converter={StaticResource BoolVis}}"
-                    AutomationProperties.Name="AMD 可用">
-              <StackPanel Orientation="Horizontal">
-                <Ellipse Width="6" Height="6" Fill="{DynamicResource SuccessBrush}"
-                         VerticalAlignment="Center" Margin="0,0,7,0"/>
+                <Ellipse Width="6" Height="6" VerticalAlignment="Center" Margin="0,0,7,0">
+                  <Ellipse.Style>
+                    <Style TargetType="Ellipse">
+                      <Setter Property="Fill" Value="{DynamicResource SuccessBrush}"/>
+                      <Style.Triggers>
+                        <DataTrigger Binding="{Binding AmdAvailable}" Value="False">
+                          <Setter Property="Fill" Value="{DynamicResource WarningBrush}"/>
+                        </DataTrigger>
+                      </Style.Triggers>
+                    </Style>
+                  </Ellipse.Style>
+                </Ellipse>
                 <TextBlock Text="{Binding AmdStatusText}" FontSize="{DynamicResource FontSizeXs}" FontWeight="SemiBold"
-                           Foreground="{DynamicResource SuccessBrush}"/>
-              </StackPanel>
-            </Border>
-            <Border Style="{DynamicResource StatusBadge}" Padding="10,4" Margin="0,2,0,2"
-                    Background="{DynamicResource WarningSoftBrush}"
-                    BorderBrush="{DynamicResource WarningEdgeBrush}"
-                    Visibility="{Binding AmdUnavailable, Converter={StaticResource BoolVis}}"
-                    AutomationProperties.Name="AMD 不可用">
-              <StackPanel Orientation="Horizontal">
-                <Ellipse Width="6" Height="6" Fill="{DynamicResource WarningBrush}"
-                         VerticalAlignment="Center" Margin="0,0,7,0"/>
-                <TextBlock Text="{Binding AmdStatusText}" FontSize="{DynamicResource FontSizeXs}" FontWeight="SemiBold"
-                           Foreground="{DynamicResource WarningBrush}"/>
+                           VerticalAlignment="Center">
+                  <TextBlock.Style>
+                    <Style TargetType="TextBlock">
+                      <Setter Property="Foreground" Value="{DynamicResource SuccessBrush}"/>
+                      <Style.Triggers>
+                        <DataTrigger Binding="{Binding AmdAvailable}" Value="False">
+                          <Setter Property="Foreground" Value="{DynamicResource WarningBrush}"/>
+                        </DataTrigger>
+                      </Style.Triggers>
+                    </Style>
+                  </TextBlock.Style>
+                </TextBlock>
               </StackPanel>
             </Border>
           </WrapPanel>

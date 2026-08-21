@@ -346,7 +346,7 @@
   <Style x:Key="CloseWindowButton" TargetType="Button" BasedOn="{StaticResource WindowButton}">
     <Style.Triggers>
       <Trigger Property="IsMouseOver" Value="True">
-        <Setter Property="Background" Value="#C42B1C"/>
+        <Setter Property="Background" Value="{DynamicResource CloseHoverBrush}"/>
         <Setter Property="Foreground" Value="White"/>
       </Trigger>
     </Style.Triggers>

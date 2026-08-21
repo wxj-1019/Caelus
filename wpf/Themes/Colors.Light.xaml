@@ -71,6 +71,9 @@
   <SolidColorBrush x:Key="ScrollGlassEdgeBrush" Color="#33000000"/>
   <Color x:Key="ScrollGlassColor">#73000000</Color>
 
+  <!-- 关闭按钮悬停（Windows 11 系统规范红） -->
+  <SolidColorBrush x:Key="CloseHoverBrush" Color="#C42B1C"/>
+
   <!-- 兼容别名层（保留 key 防旧视图/样式解析失败；值已改为极简表面） -->
   <SolidColorBrush x:Key="SurfaceBrush" Color="#FCFFFFFF"/>
   <SolidColorBrush x:Key="SurfaceRaisedBrush" Color="#FFF6F6F8"/>

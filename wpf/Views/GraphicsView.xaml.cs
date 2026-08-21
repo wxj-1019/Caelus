@@ -82,11 +82,12 @@ namespace CaelusApp.WpfHost.Views
             }
         }
 
-        // AMD 着色器缓存重置（后台线程执行，状态在行内反馈）
+        // AMD 着色器缓存重置（后台线程执行，状态在行内反馈 + 页面 FeedbackBanner）
         private void OnAmdCache(object sender, RoutedEventArgs e)
         {
             GraphicsViewModel vm = DataContext as GraphicsViewModel;
             if (vm == null || !vm.BeginAmdCacheReset()) return;
+            vm.ShowFeedback("正在清理着色器缓存…", "Info");
             Motion.Emphasize(AmdCacheFeedback);
 
             ThreadPool.QueueUserWorkItem(delegate
@@ -98,6 +99,9 @@ namespace CaelusApp.WpfHost.Views
                 Dispatcher.BeginInvoke(new System.Action(delegate
                 {
                     vm.CompleteAmdCacheReset(ok);
+                    vm.ShowFeedback(ok
+                        ? "着色器缓存清理完成（释放 " + CacheSweep.FmtBytes(done) + "）。"
+                        : "着色器缓存清理失败，请稍后重试。", ok ? "Success" : "Error");
                     Motion.Emphasize(AmdCacheFeedback);
                 }));
             });

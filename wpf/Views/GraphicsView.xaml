@@ -15,6 +15,12 @@
         <TextBlock Text="{Binding PageSub}" Style="{DynamicResource PageSubtitle}"/>
       </StackPanel>
 
+      <ContentControl x:Name="PageFeedbackBanner" Grid.Row="1"
+                      Style="{DynamicResource FeedbackBanner}"
+                      Content="{Binding PageFeedback}"
+                      Margin="0,0,0,12"
+                      AutomationProperties.Name="显卡页操作反馈"/>
+
       <!-- 响应式摘要：明确计数含义，并用语义色徽章展示厂商可用性。 -->
       <Border x:Name="ZoneSummary" Style="{DynamicResource StatusBanner}"
               Padding="14,12" Margin="0,0,0,16"
@@ -133,7 +139,7 @@
 
       <!-- NVIDIA：未检测时仅显示说明 Banner，详细区域折叠。 -->
       <TextBlock Text="{Binding NvidiaTitle}" FontSize="{DynamicResource FontSizeBody}"
-                 FontWeight="SemiBold" Foreground="{DynamicResource TextPrimaryBrush}" Margin="0,16,0,8"/>
+                 FontWeight="SemiBold" Foreground="{DynamicResource TextPrimaryBrush}" Margin="0,0,0,8"/>
       <Border Style="{DynamicResource StatusBanner}" Margin="0,0,0,0"
               Visibility="{Binding NvUnavailable, Converter={StaticResource BoolVis}}"
               AutomationProperties.Name="{Binding NvUnavailableText}">
@@ -250,7 +256,7 @@
       <!-- 会话：当前由 NVIDIA 后台限帧能力提供。 -->
       <StackPanel Visibility="{Binding NvAvailable, Converter={StaticResource BoolVis}}">
         <TextBlock Text="{Binding SessionTitle}" FontSize="{DynamicResource FontSizeBody}"
-                   FontWeight="SemiBold" Foreground="{DynamicResource TextPrimaryBrush}" Margin="0,16,0,8"/>
+                   FontWeight="SemiBold" Foreground="{DynamicResource TextPrimaryBrush}" Margin="0,0,0,8"/>
         <Border x:Name="ZoneSession" Style="{DynamicResource SettingsGroup}">
           <Border Style="{DynamicResource PolicyRow}" local:RowToggle.Enabled="True">
             <DockPanel>
@@ -270,7 +276,7 @@
 
       <!-- Windows 呈现 -->
       <TextBlock Text="{Binding PresentTitle}" FontSize="{DynamicResource FontSizeBody}"
-                 FontWeight="SemiBold" Foreground="{DynamicResource TextPrimaryBrush}" Margin="0,16,0,8"/>
+                 FontWeight="SemiBold" Foreground="{DynamicResource TextPrimaryBrush}" Margin="0,0,0,8"/>
       <Border x:Name="ZonePresent" Style="{DynamicResource SettingsGroup}">
         <Border Style="{DynamicResource PolicyRow}" local:RowToggle.Enabled="True">
           <DockPanel>
@@ -289,7 +295,7 @@
 
       <!-- AMD：未检测时折叠详细项并显示说明。 -->
       <TextBlock Text="{Binding AmdTitle}" FontSize="{DynamicResource FontSizeBody}"
-                 FontWeight="SemiBold" Foreground="{DynamicResource TextPrimaryBrush}" Margin="0,16,0,8"/>
+                 FontWeight="SemiBold" Foreground="{DynamicResource TextPrimaryBrush}" Margin="0,0,0,8"/>
       <Border Style="{DynamicResource StatusBanner}"
               Visibility="{Binding AmdUnavailable, Converter={StaticResource BoolVis}}"
               AutomationProperties.Name="{Binding AmdUnavailableText}">

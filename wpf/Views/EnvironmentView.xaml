@@ -108,6 +108,12 @@
         <TextBlock Text="{Binding PageSub}" Style="{DynamicResource PageSubtitle}" TextWrapping="Wrap"/>
       </StackPanel>
 
+      <ContentControl x:Name="PageFeedbackBanner"
+                      Style="{DynamicResource FeedbackBanner}"
+                      Content="{Binding FeedbackText}"
+                      Margin="0,0,0,12"
+                      AutomationProperties.Name="系统环境页操作反馈"/>
+
       <StackPanel x:Name="ZoneGraphics" Margin="0,0,0,16">
         <StackPanel Orientation="Horizontal" Margin="0,0,0,8">
           <Border Width="30" Height="30" CornerRadius="{DynamicResource RadiusSm}"

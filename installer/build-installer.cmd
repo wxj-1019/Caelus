@@ -30,20 +30,20 @@ echo.
 
 rem [3/4] create portable package
 echo [3/4] creating portable package...
-mkdir "release\Caelus-1.9.0-portable"
-copy /y Caelus.exe "release\Caelus-1.9.0-portable\" >nul
-copy /y Caelus.ico "release\Caelus-1.9.0-portable\" >nul
-copy /y LICENSE "release\Caelus-1.9.0-portable\" >nul
-copy /y README.md "release\Caelus-1.9.0-portable\" >nul
-echo portable > "release\Caelus-1.9.0-portable\Caelus.portable"
+mkdir "release\Caelus-1.9.1-portable"
+copy /y Caelus.exe "release\Caelus-1.9.1-portable\" >nul
+copy /y Caelus.ico "release\Caelus-1.9.1-portable\" >nul
+copy /y LICENSE "release\Caelus-1.9.1-portable\" >nul
+copy /y README.md "release\Caelus-1.9.1-portable\" >nul
+echo portable > "release\Caelus-1.9.1-portable\Caelus.portable"
 
 rem create portable zip using PowerShell
 echo [3/4] packaging portable ZIP...
-powershell -NoProfile -Command "Compress-Archive -Path 'release\Caelus-1.9.0-portable\*' -DestinationPath 'release\Caelus-1.9.0-portable.zip' -Force"
+powershell -NoProfile -Command "Compress-Archive -Path 'release\Caelus-1.9.1-portable\*' -DestinationPath 'release\Caelus-1.9.1-portable.zip' -Force"
 if errorlevel 1 (
     echo Warning: PowerShell Compress-Archive failed, portable folder is still available
 ) else (
-    echo Portable ZIP created: release\Caelus-1.9.0-portable.zip
+    echo Portable ZIP created: release\Caelus-1.9.1-portable.zip
 )
 echo.
 
@@ -52,6 +52,7 @@ echo [4/4] checking for Inno Setup...
 set ISCC=
 if exist "C:\Program Files (x86)\Inno Setup 6\ISCC.exe" set "ISCC=C:\Program Files (x86)\Inno Setup 6\ISCC.exe"
 if exist "C:\Program Files\Inno Setup 6\ISCC.exe" set "ISCC=C:\Program Files\Inno Setup 6\ISCC.exe"
+if exist "%LOCALAPPDATA%\Programs\Inno Setup 6\ISCC.exe" set "ISCC=%LOCALAPPDATA%\Programs\Inno Setup 6\ISCC.exe"
 if defined ISCC (
     echo Found Inno Setup: %ISCC%
     echo Building installer...
@@ -59,7 +60,7 @@ if defined ISCC (
     if errorlevel 1 (
         echo Installer build failed!
     ) else (
-        echo Installer created: release\Caelus-1.9.0-Setup.exe
+        echo Installer created: release\Caelus-1.9.1-Setup.exe
     )
 ) else (
     echo Inno Setup not found. Skipping installer build.

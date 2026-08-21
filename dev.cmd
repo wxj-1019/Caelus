@@ -60,7 +60,10 @@ echo.
 findstr /b /c:"FAIL" /c:"TOTAL" "%REPORT%"
 echo Full report: %REPORT%
 call :restorecp
-exit /b 0
+rem 自测有 FAIL 时以非零退出码结束（CI 可据此判断失败）
+findstr /b /c:"FAIL" "%REPORT%" >nul 2>&1
+if errorlevel 1 exit /b 0
+exit /b 1
 
 :restorecp
 rem restore the host codepage: leaving the console on 65001 makes the

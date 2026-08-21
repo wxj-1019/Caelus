@@ -48,6 +48,27 @@ namespace CaelusApp
             RecomputeActivity();
         }
 
+        /// <summary>场景总开关（设置页/场景总览调用）。关闭时立即退出仲裁器活性集合并还原副作用，
+        /// 避免「被游戏抢占后关闭开关、游戏退出时场景又恢复掌权」的残留。
+        /// 提优快照由 Suspend→RestoreFamilyBoost 在 ForceReportInactive 内同步还原，此处不提前清空。</summary>
+        public void SetEnabled(bool on)
+        {
+            Settings.Save("DailyCareOn", on);
+            if (!on)
+            {
+                lock (sync)
+                {
+                    dailyPids.Clear();
+                    familyVisible = false;
+                }
+                ForceReportInactive();
+            }
+            else
+            {
+                RecomputeActivity();
+            }
+        }
+
         public DailyCare(ScenarioArbiter arbiter, SuppressionCore core,
             Func<bool> enabled, Func<string, string, bool> isWhitelisted)
             : base(arbiter)
@@ -125,6 +146,12 @@ namespace CaelusApp
             {
                 lock (sync) dailyPids.Add(change.Pid);
             }
+        }
+
+        /// <summary>初始扫描完成后补算家族可见性，否则已运行的浏览器/Office 不会激活场景。</summary>
+        protected override void OnInitialScanComplete()
+        {
+            RefreshFamilyVisible(true);
         }
 
         /// <summary>节流窗口复查：进程事件驱动，最多 5 秒一次全量枚举</summary>
@@ -344,7 +371,8 @@ namespace CaelusApp
             // 快照创建时间与 IO 优先级：还原时按创建时间校验防 PID 复用改到新进程，
             // IO 优先级还原本值而非写死 2（与 DevFocus.RestoreIdeBoost 同语义）。
             long creation = 0;
-            try { using (var p = Process.GetProcessById(pid)) creation = p.StartTime.Ticks; }
+            string name = null;
+            try { using (var p = Process.GetProcessById(pid)) { creation = p.StartTime.Ticks; name = p.ProcessName; } }
             catch { }
 
             IntPtr h = Native.OpenProcess(
@@ -363,6 +391,15 @@ namespace CaelusApp
                 // IO 优先级写入需要 SeIncreaseBasePriorityPrivilege（与 GameMode 提优同要求）
                 try { Native.EnsureBoostPrivilege(); } catch { }
                 Native.TrySetIoPriority(h, 3);
+
+                // 崩溃自愈：快照持久化到 CrashGuard 日志，Caelus 崩溃后下次启动自动还原
+                try
+                {
+                    if (creation > 0 && !string.IsNullOrEmpty(name))
+                        CrashGuard.MarkBoostProcess(pid, creation, name, orig, 0, origIo, 0, 0, null);
+                }
+                catch { }
+
                 lock (sync)
                 {
                     dailyBoosted[pid] = orig;
@@ -419,6 +456,10 @@ namespace CaelusApp
                             ioMap.TryGetValue(kv.Key, out origIo) && origIo >= 0 ? origIo : 2);
                     }
                     finally { Native.CloseHandle(h); }
+                    // 清除崩溃自愈快照（已正常还原）
+                    long creation;
+                    if (creationMap.TryGetValue(kv.Key, out creation) && creation > 0)
+                        CrashGuard.ReleaseBoostProcess(kv.Key, creation);
                 }
                 catch { }
             }

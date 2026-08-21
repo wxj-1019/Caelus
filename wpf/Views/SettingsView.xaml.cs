@@ -62,8 +62,8 @@ namespace CaelusApp.WpfHost.Views
         {
             SettingsViewModel vm = DataContext as SettingsViewModel;
             if (vm == null) return;
+            // ToneMode setter 已调用 ApplyToneFromSetting，这里不重复应用（避免双重换肤）
             vm.ToneMode = index;
-            vm.ApplyToneFromSetting();
             Motion.Emphasize(PageFeedbackBanner);
         }
 

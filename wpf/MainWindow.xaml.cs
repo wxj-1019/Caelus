@@ -49,7 +49,7 @@ namespace CaelusApp.WpfHost
         // 托盘"退出"时置 true，允许真正关闭；平时点 X 只隐藏到托盘
         public bool RealExit;
 
-        public MainWindow() : this(null, null, null, null) { }
+        public MainWindow() : this(null, null, null, null, null) { }
 
         // 启动期间由 App 注入的分块泵送钩子：构建主窗口时让启动屏动画保持滚动
         internal static Action ProgressPump;
@@ -60,13 +60,17 @@ namespace CaelusApp.WpfHost
             if (p != null) p();
         }
 
-        internal MainWindow(GameMode gm) : this(gm, null, null, null) { }
+        internal MainWindow(GameMode gm) : this(gm, null, null, null, null) { }
 
         internal MainWindow(GameMode gm, Tamer runtimeTamer, ScenarioStatusSource runtimeSource)
-            : this(gm, runtimeTamer, runtimeSource, null) { }
+            : this(gm, runtimeTamer, runtimeSource, null, null) { }
 
         internal MainWindow(GameMode gm, Tamer runtimeTamer, ScenarioStatusSource runtimeSource,
             DevFocus runtimeDevFocus)
+            : this(gm, runtimeTamer, runtimeSource, runtimeDevFocus, null) { }
+
+        internal MainWindow(GameMode gm, Tamer runtimeTamer, ScenarioStatusSource runtimeSource,
+            DevFocus runtimeDevFocus, DailyCare runtimeDailyCare)
         {
             InitializeComponent();
             Pump();
@@ -86,7 +90,7 @@ namespace CaelusApp.WpfHost
             Pump();
             aboutVm = new AboutViewModel();
             tamer = runtimeTamer ?? new Tamer(new SuppressionCore());
-            settingsVm = new SettingsViewModel(gameMode, tamer, runtimeDevFocus);
+            settingsVm = new SettingsViewModel(gameMode, tamer, runtimeDevFocus, runtimeDailyCare);
             antiCheatVm = new AntiCheatViewModel(tamer);
             antiCheatVm.BuildCards();
             Pump();

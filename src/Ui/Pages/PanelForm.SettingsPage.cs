@@ -41,7 +41,8 @@ namespace CaelusApp
 
             swDev = MakeSwitch(Settings.Load("DevModeOn", true), delegate
             {
-                Settings.Save("DevModeOn", swDev.Checked);
+                // 走 SetEnabled：关闭时立即退出仲裁器并还原副作用
+                devFocus.SetEnabled(swDev.Checked);
             });
             MakeAutoCard(scroll, 6, sy, ScrollContentW, 76, Lang.T("set.dev"), Lang.T("set.dev.n"), swDev, out cardH);
             sy += cardH + 8;
@@ -177,7 +178,9 @@ namespace CaelusApp
 
             swDaily = MakeSwitch(Settings.Load("DailyCareOn", true), delegate
             {
-                Settings.Save("DailyCareOn", swDaily.Checked);
+                // 走 SetEnabled：关闭时立即退出仲裁器并还原副作用
+                if (dailyCare != null) dailyCare.SetEnabled(swDaily.Checked);
+                else Settings.Save("DailyCareOn", swDaily.Checked);
             });
             MakeAutoCard(scroll, 6, sy, ScrollContentW, 76, Lang.T("set.daily"), Lang.T("set.daily.n"), swDaily, out cardH);
             sy += cardH + 8;

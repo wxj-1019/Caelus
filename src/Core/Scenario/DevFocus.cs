@@ -39,15 +39,19 @@ namespace CaelusApp
         /// <summary>IDE 优化开关（默认开）。关闭后 IDE 家族不再提优、也不再作为活性来源。</summary>
         public bool IdeOn { get { return Settings.Load("DevFocusIdeOn", true); } }
 
-        /// <summary>三来源任一活跃：编译进程、专注模式、IDE 进程</summary>
+        /// <summary>IDE 进程有可见窗口才计入活性（后台挂起的常驻程序不激活场景）。</summary>
+        private bool ideVisible;
+        private long lastIdeWindowCheckTicks;
+
+        /// <summary>三来源任一活跃：编译进程、专注模式、IDE 进程（须有可见窗口）</summary>
         private bool AnyActive
         {
-            get { return activeBuildPids.Count > 0 || FocusModeOn || (IdeOn && activeIdePids.Count > 0); }
+            get { return activeBuildPids.Count > 0 || FocusModeOn || (IdeOn && ideVisible); }
         }
 
         protected override bool WantsActiveLocked
         {
-            get { return enabled() && (activeBuildPids.Count > 0 || FocusModeOn || (IdeOn && activeIdePids.Count > 0)); }
+            get { return enabled() && (activeBuildPids.Count > 0 || FocusModeOn || (IdeOn && ideVisible)); }
         }
 
         /// <summary>检测状态：是否存在任一活性来源（与是否掌权无关）</summary>
@@ -81,8 +85,38 @@ namespace CaelusApp
         public void SetIdeOn(bool on)
         {
             Settings.Save("DevFocusIdeOn", on);
-            if (!on) { lock (sync) { activeIdePids.Clear(); } }
+            if (!on)
+            {
+                lock (sync)
+                {
+                    activeIdePids.Clear();
+                    ideVisible = false;
+                }
+            }
             RecomputeActivity();
+        }
+
+        /// <summary>场景总开关（设置页/场景总览调用）。关闭时立即退出仲裁器活性集合并还原副作用，
+        /// 避免「被游戏抢占后关闭开关、游戏退出时场景又恢复掌权」的残留。
+        /// IDE/编译提优快照由 Suspend→RestoreIdeBoost 在 ForceReportInactive 内同步还原。</summary>
+        public void SetEnabled(bool on)
+        {
+            Settings.Save("DevModeOn", on);
+            if (!on)
+            {
+                lock (sync)
+                {
+                    activeBuildPids.Clear();
+                    activeIdePids.Clear();
+                    ideVisible = false;
+                    distractNotified.Clear();
+                }
+                ForceReportInactive();
+            }
+            else
+            {
+                RecomputeActivity();
+            }
         }
 
         public void NotifyProcessChanges(ProcessChangeBatch batch)
@@ -108,6 +142,7 @@ namespace CaelusApp
             bool becameActive = false;
             bool becameIdle = false;
             bool wasBuildActive;
+            bool ideChanged = false;
 
             lock (sync)
             {
@@ -128,9 +163,13 @@ namespace CaelusApp
 
                     // IDE 进程匹配（Task 4 接线，当前 IsIdeProcess 为 stub）
                     if (pc.Kind == ProcessChangeKind.Started && IdeOn && IsIdeProcess(pc.Pid, pc.Name, pc.Path))
-                        activeIdePids.Add(pc.Pid);
+                    {
+                        if (activeIdePids.Add(pc.Pid)) ideChanged = true;
+                    }
                     else if (pc.Kind == ProcessChangeKind.Stopped)
-                        activeIdePids.Remove(pc.Pid);
+                    {
+                        if (activeIdePids.Remove(pc.Pid)) ideChanged = true;
+                    }
 
                     // 专注模式下新进程的分心提醒
                     if (pc.Kind == ProcessChangeKind.Started && granted && FocusModeOn
@@ -166,6 +205,9 @@ namespace CaelusApp
 
                 buildActivity = wasBuildActive != (activeBuildPids.Count > 0);
             }
+
+            // IDE 集合变化时复查可见窗口（节流）：无窗口的常驻 IDE 不激活场景
+            if (ideChanged) RefreshIdeVisible(false);
 
             // 活性变化只向仲裁器报告；副作用由仲裁器经 Grant/Suspend 回调控制
             if (becameActive)
@@ -424,6 +466,8 @@ namespace CaelusApp
                 bool focus;
                 lock (sync) { build = activeBuildPids.Count > 0; }
                 focus = FocusModeOn;
+                // IDE 窗口条件复查（节流），无可见窗口的 IDE 不再维持场景活性
+                RefreshIdeVisible(false);
                 // 专注开关可能已被 WPF 宿主跨进程关闭：本进程没有进程事件时，靠节拍重算活性
                 // 触发仲裁器挂起（还原 Notif 静默等副作用），避免开关失效延迟到下一个进程事件。
                 RecomputeActivity();
@@ -435,6 +479,39 @@ namespace CaelusApp
                 lock (sync) { if (!granted && core != null) core.ReleaseReason(SuppressReason.Build); }
             }
             catch { }
+        }
+
+        /// <summary>IDE 可见窗口复查（2 秒节流）：有可见窗口的 IDE 才计入场景活性。
+        /// 在进程事件、初始扫描完成与校正节拍中调用。</summary>
+        private void RefreshIdeVisible(bool force)
+        {
+            long now = DateTime.UtcNow.Ticks;
+            lock (sync)
+            {
+                if (!force && now - lastIdeWindowCheckTicks < 2L * TimeSpan.TicksPerSecond) return;
+                lastIdeWindowCheckTicks = now;
+            }
+            if (activeIdePids.Count == 0)
+            {
+                lock (sync) ideVisible = false;
+                return;
+            }
+            HashSet<int> visible;
+            try { visible = GameSessionDetector.VisibleWindowPids(true); }
+            catch { return; }
+            bool anyVisible = false;
+            lock (sync)
+            {
+                foreach (int pid in activeIdePids)
+                    if (visible.Contains(pid)) { anyVisible = true; break; }
+                ideVisible = anyVisible;
+            }
+        }
+
+        /// <summary>初始扫描完成后补算 IDE 可见窗口，避免无窗口的常驻 IDE 立即激活场景。</summary>
+        protected override void OnInitialScanComplete()
+        {
+            RefreshIdeVisible(true);
         }
 
         private void ReconcileIdeBoost()
@@ -453,6 +530,7 @@ namespace CaelusApp
 
             bool anyVisible = false;
             foreach (int pid in ides) if (visible.Contains(pid)) { anyVisible = true; break; }
+            lock (sync) { ideVisible = anyVisible; }
             if (!anyVisible) { RestoreIdeBoost(); return; }
 
             foreach (int pid in ides) BoostOneIde(pid);
@@ -463,7 +541,8 @@ namespace CaelusApp
             lock (sync) { if (ideBoosted.ContainsKey(pid)) return; }
 
             long creation = 0;
-            try { using (var p = Process.GetProcessById(pid)) creation = p.StartTime.Ticks; }
+            string name = null;
+            try { using (var p = Process.GetProcessById(pid)) { creation = p.StartTime.Ticks; name = p.ProcessName; } }
             catch { }
 
             IntPtr h = Native.OpenProcess(
@@ -482,6 +561,14 @@ namespace CaelusApp
                 // IO 优先级写入需要 SeIncreaseBasePriorityPrivilege（与 GameMode 提优同要求）
                 try { Native.EnsureBoostPrivilege(); } catch { }
                 Native.TrySetIoPriority(h, 3);
+
+                // 崩溃自愈：快照持久化到 CrashGuard 日志，Caelus 崩溃后下次启动自动还原
+                try
+                {
+                    if (creation > 0 && !string.IsNullOrEmpty(name))
+                        CrashGuard.MarkBoostProcess(pid, creation, name, orig, 0, origIo, 0, 0, null);
+                }
+                catch { }
 
                 lock (sync)
                 {
@@ -539,6 +626,10 @@ namespace CaelusApp
                             ioMap.TryGetValue(kv.Key, out origIo) && origIo >= 0 ? origIo : 2);
                     }
                     finally { Native.CloseHandle(h); }
+                    // 清除崩溃自愈快照（已正常还原）
+                    long creation;
+                    if (creationMap.TryGetValue(kv.Key, out creation) && creation > 0)
+                        CrashGuard.ReleaseBoostProcess(kv.Key, creation);
                 }
                 catch { }
             }

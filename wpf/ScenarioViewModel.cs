@@ -578,11 +578,14 @@ namespace CaelusApp
             }
             else if (kind == ScenarioKind.DevFocus)
             {
-                Settings.Save("DevModeOn", value);
+                // 走 SetEnabled：关闭时立即退出仲裁器并还原副作用
+                if (runtimeMode && devFocus != null) devFocus.SetEnabled(value);
+                else Settings.Save("DevModeOn", value);
             }
             else
             {
-                Settings.Save("DailyCareOn", value);
+                if (runtimeMode && dailyCare != null) dailyCare.SetEnabled(value);
+                else Settings.Save("DailyCareOn", value);
             }
             scanDirty = true;
             Poll();

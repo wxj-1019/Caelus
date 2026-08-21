@@ -14,6 +14,7 @@ namespace CaelusApp
         private readonly GameMode gameMode;
         private readonly Tamer tamer;
         private readonly DevFocus devFocus;
+        private readonly DailyCare dailyCareRuntime;
         private bool autoStart;
         private bool autoHide;
         private bool lightMode;
@@ -28,20 +29,24 @@ namespace CaelusApp
         private bool shaderBusy;
         private int restoreBusy; // 0=空闲 1=进行中（Interlocked 守护）
 
-        public SettingsViewModel(GameMode gameMode, Tamer tamer) : this(gameMode, tamer, null) { }
+        public SettingsViewModel(GameMode gameMode, Tamer tamer) : this(gameMode, tamer, null, null) { }
 
         public SettingsViewModel(GameMode gameMode, Tamer tamer, DevFocus devFocus)
+            : this(gameMode, tamer, devFocus, null) { }
+
+        public SettingsViewModel(GameMode gameMode, Tamer tamer, DevFocus devFocus, DailyCare dailyCare)
         {
             this.gameMode = gameMode;
             this.tamer = tamer;
             this.devFocus = devFocus;
+            this.dailyCareRuntime = dailyCare;
             autoStart = TaskHelper.TaskExistsCached();
             autoHide = Settings.Load("AutoHideOnGame", false);
             lightMode = Settings.Load("UiLight", false);
             devMode = Settings.Load("DevModeOn", true);
             focusMode = Settings.Load("DevFocusModeOn", false);
             ideOn = Settings.Load("DevFocusIdeOn", true);
-            dailyCare = Settings.Load("DailyCareOn", true);
+            this.dailyCare = Settings.Load("DailyCareOn", true);
             batteryOn = Settings.Load("DailyCareBatteryOn", true);
             shaderStatus = Lang.T("set.shader.n");
 
@@ -116,7 +121,7 @@ namespace CaelusApp
             }
         }
 
-        // —— 明暗主题 ——
+        // —— 明暗主题（兼容代理：旧二态开关同步写 UiToneMode，避免与三态控件冲突） ——
         public string LightModeTitle { get { return Lang.T("set.light"); } }
         public string LightModeNote { get { return Lang.T("set.light.n"); } }
         public bool LightMode
@@ -125,6 +130,8 @@ namespace CaelusApp
             set
             {
                 if (!SetProperty(ref lightMode, value, "LightMode")) return;
+                // 同步写 UiToneMode：0=深 1=浅，保证重启后与新三态控件一致
+                Settings.SaveStr("UiToneMode", value ? "1" : "0");
                 Settings.Save("UiLight", value);
                 if (Application.Current != null)
                     ThemeManager.Apply(Application.Current,
@@ -143,7 +150,9 @@ namespace CaelusApp
             set
             {
                 if (!SetProperty(ref devMode, value, "DevMode")) return;
-                Settings.Save("DevModeOn", value);
+                // 走 SetEnabled：关闭时立即退出仲裁器并还原副作用（避免被游戏抢占时开关失效）
+                if (devFocus != null) devFocus.SetEnabled(value);
+                else Settings.Save("DevModeOn", value);
                 Raise("DevSummary");
                 ShowFeedback(value ? "开发模式已开启。" : "开发模式已关闭。", "Success");
             }
@@ -306,7 +315,9 @@ namespace CaelusApp
             set
             {
                 if (!SetProperty(ref dailyCare, value, "DailyCare")) return;
-                Settings.Save("DailyCareOn", value);
+                // 走 SetEnabled：关闭时立即退出仲裁器并还原副作用
+                if (dailyCareRuntime != null) dailyCareRuntime.SetEnabled(value);
+                else Settings.Save("DailyCareOn", value);
                 ShowFeedback(value ? "日常场景调度已开启。" : "日常场景调度已关闭。", "Success");
             }
         }
@@ -329,7 +340,9 @@ namespace CaelusApp
             set
             {
                 if (!SetProperty(ref batteryOn, value, "BatteryOn")) return;
-                Settings.Save("DailyCareBatteryOn", value);
+                // 走 SetBatteryOn：写注册表 + 活性重算立即生效
+                if (dailyCareRuntime != null) dailyCareRuntime.SetBatteryOn(value);
+                else Settings.Save("DailyCareBatteryOn", value);
                 ShowFeedback(value ? "电池供电增强已开启。" : "电池供电增强已关闭。", "Success");
             }
         }
@@ -372,6 +385,12 @@ namespace CaelusApp
             {
                 if (value < 0 || value > 2) return;
                 Settings.SaveStr("UiToneMode", value.ToString());
+                // 同步旧二态开关字段，避免两个控件显示不一致
+                if (value != 2 && lightMode != (value == 1))
+                {
+                    lightMode = value == 1;
+                    Raise("LightMode");
+                }
                 Raise("ToneMode");
                 ApplyToneFromSetting();
             }

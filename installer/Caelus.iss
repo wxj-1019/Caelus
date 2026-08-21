@@ -4,7 +4,7 @@
 [Setup]
 AppId={{A7B8C9D0-E1F2-4A5B-8C9D-0E1F2A3B4C5D}
 AppName=Caelus
-AppVersion=1.9.0
+AppVersion=1.9.1
 AppPublisher=zenjiro
 AppPublisherURL=https://github.com/wxj-1019/Caelus
 AppCopyright=Copyright 2026 zenjiro
@@ -12,7 +12,7 @@ DefaultDirName={autopf}\Caelus
 DefaultGroupName=Caelus
 DisableProgramGroupPage=yes
 OutputDir=..\release
-OutputBaseFilename=Caelus-1.9.0-Setup
+OutputBaseFilename=Caelus-1.9.1-Setup
 Compression=lzma2/ultra64
 SolidCompression=yes
 ; 安装需要管理员权限（Caelus 需要管理员权限运行）
@@ -51,28 +51,33 @@ Name: "{userstartup}\Caelus"; Filename: "{app}\Caelus.exe"; IconFilename: "{app}
 Filename: "{app}\Caelus.exe"; Description: "启动 Caelus"; Flags: nowait postinstall skipifsilent runascurrentuser
 
 [Registry]
-; 注册表根键（与 Caelus 代码一致）
-Root: HKCU; Subkey: "Software\Caelus"; ValueType: string; ValueName: "InstallPath"; ValueData: "{app}"; Flags: uninsdeletekey
+; 注册表根键（与 Caelus 代码一致）。只删除安装路径值，保留恢复快照
+; （PrevSvcPaused/PrevToast/电源计划等）——卸载后重装仍能完成上次未还原的系统修改。
+Root: HKCU; Subkey: "Software\Caelus"; ValueType: string; ValueName: "InstallPath"; ValueData: "{app}"; Flags: uninsdeletevalue
 
 [Code]
-// 安装前检查是否有运行中的 Caelus 实例
-function InitializeSetup(): Boolean;
+// 发送退出信号并等待 Caelus 完成副作用还原后自行退出（最多 10 秒）；仍存在才强杀。
+// Caelus 退出时会先还原服务/电源/通知等副作用——强杀会中断恢复，注册表恢复凭据
+// 已保留（见 [Registry]），下次启动续还原，但等待总是更干净。
+procedure StopCaelusGracefully;
 var
   ResultCode: Integer;
 begin
-  Result := True;
-  // 尝试发送退出信号
   Exec('powershell', '-NoProfile -Command "try{[System.Threading.EventWaitHandle]::OpenExisting(''Global\Caelus_Exit'').Set()}catch{}"', '', SW_HIDE, ewWaitUntilTerminated, ResultCode);
-  Sleep(1000);
+  Exec('powershell', '-NoProfile -Command "Get-Process Caelus -ErrorAction SilentlyContinue | Wait-Process -Timeout 10 -ErrorAction SilentlyContinue"', '', SW_HIDE, ewWaitUntilTerminated, ResultCode);
+  Exec('taskkill', '/f /im Caelus.exe', '', SW_HIDE, ewWaitUntilTerminated, ResultCode);
+end;
+
+// 安装前检查是否有运行中的 Caelus 实例
+function InitializeSetup(): Boolean;
+begin
+  Result := True;
+  StopCaelusGracefully;
 end;
 
 // 卸载前停止运行中的实例
 function InitializeUninstall(): Boolean;
-var
-  ResultCode: Integer;
 begin
-  Exec('powershell', '-NoProfile -Command "try{[System.Threading.EventWaitHandle]::OpenExisting(''Global\Caelus_Exit'').Set()}catch{}"', '', SW_HIDE, ewWaitUntilTerminated, ResultCode);
-  Sleep(1000);
-  Exec('taskkill', '/f /im Caelus.exe', '', SW_HIDE, ewWaitUntilTerminated, ResultCode);
+  StopCaelusGracefully;
   Result := True;
 end;

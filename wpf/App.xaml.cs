@@ -225,7 +225,7 @@ namespace CaelusApp.WpfHost
             window = new MainWindow(host.GameMode, host.Tamer,
                 new ScenarioStatusSource(host.GameMode, host.Tamer, host.Core,
                     host.Arbiter, host.DevFocus, host.DailyCare),
-                host.DevFocus);
+                host.DevFocus, host.DailyCare);
             CaelusApp.WpfHost.MainWindow.ProgressPump = null;
             window.ApplyPersistedMode(initial);
             window.Show();

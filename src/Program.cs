@@ -320,6 +320,10 @@ namespace CaelusApp
             gameMode.ProcessEventsAvailable = procNotify.IsActive;
             tamer.ProcessEventsAvailable = procNotify.IsActive;
 
+            // 初始全量扫描：检测启动前已运行的场景进程（如已开的 VS Code、浏览器）
+            try { devFocus.InitialScan(); } catch { }
+            try { dailyCare.InitialScan(); } catch { }
+
             if (elevated)
                 ThreadPool.QueueUserWorkItem(_ => TaskHelper.RefreshStartupTask());
 

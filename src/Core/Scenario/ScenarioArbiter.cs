@@ -83,7 +83,13 @@ namespace CaelusApp
                 if (toGrant != null)
                 {
                     try { toGrant.Grant(); }
-                    catch (Exception ex) { Logger.LogFailure("场景授权失败（" + toGrant.Kind + "）", ex); }
+                    catch (Exception ex)
+                    {
+                        // 授权失败：回滚记账为无人掌权，避免 UI 显示掌权但副作用未施加。
+                        Logger.LogFailure("场景授权失败（" + toGrant.Kind + "）", ex);
+                        lock (sync) granted = null;
+                        nowGranted = null;
+                    }
                 }
                 var handler = GrantedChanged;
                 if (handler != null)

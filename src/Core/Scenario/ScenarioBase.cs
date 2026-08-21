@@ -114,6 +114,7 @@ namespace CaelusApp
                     catch { }
                     finally { p.Dispose(); }
                 }
+                OnInitialScanComplete();
                 RecomputeActivity();
             }
             catch (Exception ex) { Logger.LogFailure("初始全量扫描失败", ex); }
@@ -121,5 +122,8 @@ namespace CaelusApp
 
         /// <summary>子类实现：处理初始扫描发现的进程（与进程事件的逻辑一致）。</summary>
         protected abstract void OnInitialProcess(ProcessChange change);
+
+        /// <summary>初始扫描完成钩子：子类可在此补算派生状态（如可见窗口），默认空实现。</summary>
+        protected virtual void OnInitialScanComplete() { }
     }
 }

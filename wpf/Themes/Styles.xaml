@@ -700,10 +700,12 @@
   </Style>
 
   <!-- 显式命名样式：ScrollViewer 模板与隐式样式都引用它 -->
+  <!-- overlay 行为：默认 30% 淡出，hover 0.12s 淡入，离开 0.4s 延迟后 0.6s 淡出 -->
   <Style x:Key="ScrollBarStyle" TargetType="ScrollBar">
     <Setter Property="Width" Value="2"/>
     <Setter Property="Height" Value="2"/>
     <Setter Property="Background" Value="Transparent"/>
+    <Setter Property="Opacity" Value="0.3"/>
     <Setter Property="Template">
       <Setter.Value>
         <ControlTemplate TargetType="ScrollBar">
@@ -728,6 +730,26 @@
         </ControlTemplate>
       </Setter.Value>
     </Setter>
+    <Style.Triggers>
+      <Trigger Property="IsMouseOver" Value="True">
+        <Trigger.EnterActions>
+          <BeginStoryboard>
+            <Storyboard>
+              <DoubleAnimation To="1" Duration="0:0:0.12" Storyboard.TargetProperty="Opacity">
+                <DoubleAnimation.EasingFunction><CubicEase EasingMode="EaseOut"/></DoubleAnimation.EasingFunction>
+              </DoubleAnimation>
+            </Storyboard>
+          </BeginStoryboard>
+        </Trigger.EnterActions>
+        <Trigger.ExitActions>
+          <BeginStoryboard>
+            <Storyboard>
+              <DoubleAnimation To="0.3" Duration="0:0:0.6" BeginTime="0:0:0.4" Storyboard.TargetProperty="Opacity"/>
+            </Storyboard>
+          </BeginStoryboard>
+        </Trigger.ExitActions>
+      </Trigger>
+    </Style.Triggers>
   </Style>
 
   <!-- 隐式命中：外部直接使用的 ScrollBar 也走同一样式 -->

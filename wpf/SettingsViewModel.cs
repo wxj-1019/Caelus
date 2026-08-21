@@ -385,7 +385,7 @@ namespace CaelusApp
             if (mode == 2)
             {
                 // 跟随系统：读 Windows 个性化注册表
-                tone = ProbeSystemTone();
+                tone = ThemeManager.ProbeSystemTheme();
             }
             else
             {
@@ -396,25 +396,6 @@ namespace CaelusApp
                 ThemeManager.Apply(Application.Current, tone, ThemeManager.CurrentMode);
             }
             catch { }
-        }
-
-        /// <summary>探测当前系统深浅主题（AppsUseLightTheme：1=浅 0=深）。</summary>
-        public static UiTone ProbeSystemTone()
-        {
-            try
-            {
-                using (var key = Microsoft.Win32.Registry.CurrentUser.OpenSubKey(
-                    @"SOFTWARE\Microsoft\Windows\CurrentVersion\Themes\Personalize"))
-                {
-                    if (key != null)
-                    {
-                        object val = key.GetValue("AppsUseLightTheme");
-                        if (val is int) return (int)val == 1 ? UiTone.Light : UiTone.Dark;
-                    }
-                }
-            }
-            catch { }
-            return UiTone.Dark;
         }
 
         /// <summary>预设色板（10 色），供设置页色板 UI 消费。</summary>

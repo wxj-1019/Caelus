@@ -18,10 +18,11 @@ namespace CaelusApp.WpfHost.Views
             InitializeComponent();
             ModePicker.ItemsSource = new System.Collections.Generic.List<string>
             {
-                "常规", "竞技", "自定义"
+                ModePalette.DisplayName(AppMode.Standard),
+                ModePalette.DisplayName(AppMode.Competitive),
+                ModePalette.DisplayName(AppMode.Custom)
             };
             Loaded += OnLoaded;
-            Unloaded += OnUnloaded;
         }
 
         /// <summary>程序化同步档位选中态（持久化恢复 / 压力测试），不重入触发 ModePicked。</summary>
@@ -50,10 +51,6 @@ namespace CaelusApp.WpfHost.Views
             Motion.RiseIn(ZoneRules, 300);
             Motion.RiseIn(ZoneBottom, 340);
             Motion.BreathPulse(ReadyDot);
-        }
-
-        private void OnUnloaded(object sender, RoutedEventArgs e)
-        {
         }
     }
 }

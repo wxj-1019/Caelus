@@ -203,6 +203,8 @@ namespace CaelusApp.WpfHost.Views
         {
             SettingsViewModel vm = DataContext as SettingsViewModel;
             if (vm == null) return;
+            if (MessageBox.Show("确定恢复三模式默认配色（靛蓝/蜜桃橙/暗金）吗？自定义强调色将被清除。",
+                "Caelus", MessageBoxButton.YesNo, MessageBoxImage.Warning) != MessageBoxResult.Yes) return;
             vm.ResetAllAccents();
             InitAccentSwatches();
             Motion.Emphasize(PageFeedbackBanner);

@@ -117,6 +117,16 @@ namespace CaelusApp
             RecomputeActivity();
         }
 
+        /// <summary>初始扫描发现的进程：与进程事件逻辑一致，直接加入追踪集合。</summary>
+        protected override void OnInitialProcess(ProcessChange change)
+        {
+            if (string.IsNullOrEmpty(change.Name)) return;
+            if (IsDailyProcess(change.Pid, change.Name, change.Path))
+            {
+                lock (sync) dailyPids.Add(change.Pid);
+            }
+        }
+
         /// <summary>节流窗口复查：进程事件驱动，最多 5 秒一次全量枚举</summary>
         private void RefreshFamilyVisible(bool force)
         {

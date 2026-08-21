@@ -82,5 +82,44 @@ namespace CaelusApp
             }
             foreach (int pid in dead) pids.Remove(pid);
         }
+
+        /// <summary>初始全量扫描：枚举当前运行中的进程，匹配的场景进程当作 Started 事件处理。
+        /// 解决「启动前已运行的进程（如已开的 VS Code）不被检测」的问题。</summary>
+        public void InitialScan()
+        {
+            try
+            {
+                var all = System.Diagnostics.Process.GetProcesses();
+                foreach (var p in all)
+                {
+                    try
+                    {
+                        string name = p.ProcessName;
+                        string path = null;
+                        IntPtr h = Native.OpenProcess(Native.PROCESS_QUERY_LIMITED_INFORMATION, false, p.Id);
+                        if (h != IntPtr.Zero)
+                        {
+                            try { path = Native.ImagePath(h); }
+                            finally { Native.CloseHandle(h); }
+                        }
+                        var change = new ProcessChange
+                        {
+                            Pid = p.Id,
+                            Name = name,
+                            Path = path,
+                            Kind = ProcessChangeKind.Started
+                        };
+                        OnInitialProcess(change);
+                    }
+                    catch { }
+                    finally { p.Dispose(); }
+                }
+                RecomputeActivity();
+            }
+            catch (Exception ex) { Logger.LogFailure("初始全量扫描失败", ex); }
+        }
+
+        /// <summary>子类实现：处理初始扫描发现的进程（与进程事件的逻辑一致）。</summary>
+        protected abstract void OnInitialProcess(ProcessChange change);
     }
 }

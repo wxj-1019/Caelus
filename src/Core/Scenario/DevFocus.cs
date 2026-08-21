@@ -186,6 +186,20 @@ namespace CaelusApp
             }
         }
 
+        /// <summary>初始扫描发现的进程：与进程事件逻辑一致，直接加入追踪集合。</summary>
+        protected override void OnInitialProcess(ProcessChange change)
+        {
+            if (string.IsNullOrEmpty(change.Name)) return;
+            if (BuildCatalog.IsMatch(change.Name))
+            {
+                lock (sync) activeBuildPids.Add(change.Pid);
+            }
+            if (IdeOn && IsIdeProcess(change.Pid, change.Name, change.Path))
+            {
+                lock (sync) activeIdePids.Add(change.Pid);
+            }
+        }
+
         /// <summary>清理 PID 集合中已死进程。</summary>
         private static void CleanDeadPids(HashSet<int> pids)
         {

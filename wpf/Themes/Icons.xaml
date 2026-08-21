@@ -18,4 +18,8 @@
   <StreamGeometry x:Key="IconGame">M7 8h10a4 4 0 0 1 4 4a4 4 0 0 1-4 4H7a4 4 0 0 1-4-4a4 4 0 0 1 4-4z M9 10v4 M7 12h4 M16.5 11h.01 M18.5 13h.01</StreamGeometry>
   <StreamGeometry x:Key="IconCode">M8 6L2 12l6 6 M16 6l6 6-6 6</StreamGeometry>
   <StreamGeometry x:Key="IconDaily">M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20z M12 6v6l4 2</StreamGeometry>
+  <!-- 反馈状态图标：勾选 / 感叹号 / 错误 -->
+  <StreamGeometry x:Key="IconCheck">M20 6L9 17l-5-5</StreamGeometry>
+  <StreamGeometry x:Key="IconWarn">M12 2L1 21h22L12 2z M12 9v5 M12 17h0.01</StreamGeometry>
+  <StreamGeometry x:Key="IconError">M3 12a9 9 0 1 0 18 0 9 9 0 0 0-18 0z M15 9l-6 6 M9 9l6 6</StreamGeometry>
 </ResourceDictionary>

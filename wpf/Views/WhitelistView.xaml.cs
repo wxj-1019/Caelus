@@ -175,7 +175,9 @@ namespace CaelusApp.WpfHost.Views
             if (vm == null) return;
             string error = vm.AddFiles(files);
             if (!string.IsNullOrEmpty(error))
-                MessageBox.Show(error, "Caelus", MessageBoxButton.OK, MessageBoxImage.Warning);
+                MessageDialogWpf.Show(Window.GetWindow(this), "白名单操作失败",
+                    "详细信息见技术详情。", MsgSeverity.Danger, MsgButtons.Ok,
+                    error, null, MessageBoxResult.OK);
         }
 
         // 移除当前选中
@@ -189,13 +191,15 @@ namespace CaelusApp.WpfHost.Views
             if (vm == null || vm.Selected == null) return;
             if (vm.Selected.Required)
             {
-                MessageBox.Show(Lang.T("white.required.locked"), "Caelus",
-                    MessageBoxButton.OK, MessageBoxImage.Information);
+                MessageDialogWpf.Show(Window.GetWindow(this), "系统内置项不可删除",
+                    "这是系统必需的内置项。", MsgSeverity.Info, MsgButtons.Ok);
                 return;
             }
             string error;
             if (!vm.RemoveSelected(out error) && !string.IsNullOrEmpty(error))
-                MessageBox.Show(error, "Caelus", MessageBoxButton.OK, MessageBoxImage.Warning);
+                MessageDialogWpf.Show(Window.GetWindow(this), "白名单操作失败",
+                    "详细信息见技术详情。", MsgSeverity.Danger, MsgButtons.Ok,
+                    error, null, MessageBoxResult.OK);
         }
 
         // 缩窄：family → exact
@@ -204,7 +208,9 @@ namespace CaelusApp.WpfHost.Views
             if (vm == null) return;
             string error;
             if (!vm.NarrowSelected(out error) && !string.IsNullOrEmpty(error))
-                MessageBox.Show(error, "Caelus", MessageBoxButton.OK, MessageBoxImage.Warning);
+                MessageDialogWpf.Show(Window.GetWindow(this), "白名单操作失败",
+                    "详细信息见技术详情。", MsgSeverity.Danger, MsgButtons.Ok,
+                    error, null, MessageBoxResult.OK);
         }
 
         // 扩展：exact → family
@@ -213,19 +219,24 @@ namespace CaelusApp.WpfHost.Views
             if (vm == null) return;
             string error;
             if (!vm.WidenSelected(out error) && !string.IsNullOrEmpty(error))
-                MessageBox.Show(error, "Caelus", MessageBoxButton.OK, MessageBoxImage.Warning);
+                MessageDialogWpf.Show(Window.GetWindow(this), "白名单操作失败",
+                    "详细信息见技术详情。", MsgSeverity.Danger, MsgButtons.Ok,
+                    error, null, MessageBoxResult.OK);
         }
 
         // 重置
         private void OnResetClick(object sender, RoutedEventArgs e)
         {
             if (vm == null) return;
-            MessageBoxResult r = MessageBox.Show(Lang.T("white.reset.confirm"), "Caelus",
-                MessageBoxButton.YesNo, MessageBoxImage.Warning, MessageBoxResult.No);
+            MessageBoxResult r = MessageDialogWpf.Show(Window.GetWindow(this), "恢复默认白名单预设？",
+                "会删除全部自定义白名单规则，且无法撤销。",
+                MsgSeverity.Danger, MsgButtons.YesNo, null, "恢复默认", MessageBoxResult.No);
             if (r != MessageBoxResult.Yes) return;
             string error;
             if (!vm.Reset(out error) && !string.IsNullOrEmpty(error))
-                MessageBox.Show(error, "Caelus", MessageBoxButton.OK, MessageBoxImage.Warning);
+                MessageDialogWpf.Show(Window.GetWindow(this), "白名单重置失败",
+                    "详细信息见技术详情。", MsgSeverity.Danger, MsgButtons.Ok,
+                    error, null, MessageBoxResult.OK);
         }
 
         // 拖放

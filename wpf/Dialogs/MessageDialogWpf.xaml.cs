@@ -49,6 +49,7 @@ namespace CaelusApp.WpfHost.Dialogs
             {
                 BtnSecondary.Visibility = Visibility.Visible;
                 BtnSecondary.Content = buttons.SecondaryText;
+                System.Windows.Automation.AutomationProperties.SetName(BtnSecondary, buttons.SecondaryText);
             }
             else
             {
@@ -84,6 +85,7 @@ namespace CaelusApp.WpfHost.Dialogs
         private Brush BuildGlowBrush(Brush source)
         {
             SolidColorBrush solid = source as SolidColorBrush;
+            if (solid == null) solid = Brushes.White;
             RadialGradientBrush radial = new RadialGradientBrush();
             radial.GradientStops.Add(new GradientStop(
                 Color.FromArgb(0x2E, solid.Color.R, solid.Color.G, solid.Color.B), 0.0));
@@ -175,8 +177,7 @@ namespace CaelusApp.WpfHost.Dialogs
                     : (buttonSet == MsgButtons.OkCancel ? MessageBoxButton.OKCancel : MessageBoxButton.YesNo);
                 MessageBoxImage img = severity == MsgSeverity.Danger ? MessageBoxImage.Error
                     : (severity == MsgSeverity.Warning ? MessageBoxImage.Warning : MessageBoxImage.Information);
-                MessageBox.Show(owner, title + "\r\n\r\n" + body, "Caelus", native, img);
-                return MessageBoxResult.Cancel;
+                return MessageBox.Show(owner, title + "\r\n\r\n" + body, "Caelus", native, img);
             }
         }
 

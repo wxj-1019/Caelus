@@ -334,7 +334,7 @@ namespace CaelusApp.WpfHost.Views
                 return;
             }
             if (MessageDialogWpf.Show(Window.GetWindow(this), "清空显卡着色器缓存？",
-                    "怀疑缓存损坏可清一次排查，不保证更流畅。清理前先退出游戏；之后每个游戏首次启动要重新编译，开头可能更卡。",
+                    "怀疑驱动更新后缓存损坏，可清一次排查（NVIDIA / AMD / Intel / DirectX）；不保证更流畅。清理前先退出游戏；之后每个游戏首次启动要重新编译，开头可能更卡。",
                     MsgSeverity.Warning, MsgButtons.OkCancel, null, "清理", MessageBoxResult.Cancel)
                 != MessageBoxResult.OK) return;
             shaderCleaning = true;

@@ -866,6 +866,9 @@ namespace CaelusApp
             test("主题契约：色板档字典 key 完整", TestThemeContractToneFiles);
             test("主题契约：模式档字典 key 完整", TestThemeContractModeFiles);
             test("主题契约：校验器正反样例", TestThemeContractValidator);
+            test("消息弹窗：级别→图标/画刷/样式映射", TestMsgDialogSeverityMaps);
+            test("消息弹窗：按钮组解析与默认文案", TestMsgDialogButtonSets);
+            test("消息弹窗：单字符串标题正文拆分", TestMsgDialogSplitTitleBody);
             test("白名单规则：旧版名称、带版本号路径与精确边界", TestWhitelistRules);
             test("白名单家族：后代仅在 PID 身份一致时保留", TestWhitelistFamilyIdentity);
             test("白名单家族事件：事件顺序与父进程创建时间阻断 PID 继承", TestWhitelistFamilyEvents);

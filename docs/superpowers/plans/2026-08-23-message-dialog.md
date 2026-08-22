@@ -21,6 +21,7 @@
 5. **csproj 是显式逐文件清单**（规格 §9 "免登记"表述有误）：wpf/ 下每个新增 .cs/.xaml 都必须补 `<Compile>`/`<Page>` 行；只有 `..\src\` 和 `..\tests\` 是递归 glob。
 6. **WPF XAML `Path` 不支持 `StrokeLineCap`**（MC3072），如需线帽用 `StrokeStartLineCap`/`StrokeEndLineCap`；本计划图标走 `IconView` 控件无此问题。
 7. 提交信息风格照仓库惯例（中文、`类型: 摘要——细节`）。
+8. **owner 参数传 `Window`**（Task 2 审查修正）：视图（SettingsView 等）是 UserControl 不是 Window，直接传 `this` 会 CS1503——统一写 `Window.GetWindow(this)`（仓库既有惯例，如 SettingsView.xaml.cs:305）；AddGameDialogWpf 自身是 Window 同样写法成立；无窗口上下文（ViewModel/PolicyRuntime/托盘）传 null 或显式 Window 变量。
 
 ## 文件结构总览
 
@@ -644,7 +645,7 @@ using CaelusApp.WpfHost.Dialogs;
 ① L206 附近（恢复配色确认）：
 
 ```csharp
-            if (MessageDialogWpf.Show(this, "恢复三模式默认配色？",
+            if (MessageDialogWpf.Show(Window.GetWindow(this), "恢复三模式默认配色？",
                     "自定义强调色将被清除，恢复为靛蓝/蜜桃橙/暗金。",
                     MsgSeverity.Warning, MsgButtons.YesNo, null, "恢复默认", MessageBoxResult.No)
                 != MessageBoxResult.Yes) return;
@@ -653,7 +654,7 @@ using CaelusApp.WpfHost.Dialogs;
 ② L266 附近（OnRestore 确认）：
 
 ```csharp
-            if (MessageDialogWpf.Show(this, "恢复所有已记录的系统项？",
+            if (MessageDialogWpf.Show(Window.GetWindow(this), "恢复所有已记录的系统项？",
                     "这会退出当前优化状态，并尝试撤销 Caelus 记录的相关修改。",
                     MsgSeverity.Warning, MsgButtons.YesNo, null, "恢复", MessageBoxResult.No)
                 != MessageBoxResult.Yes) return;
@@ -662,7 +663,7 @@ using CaelusApp.WpfHost.Dialogs;
 ③ L300 附近（def.unavailable）：
 
 ```csharp
-                MessageDialogWpf.Show(this, "无法读取 Defender 设置",
+                MessageDialogWpf.Show(Window.GetWindow(this), "无法读取 Defender 设置",
                     "可能未安装、已被第三方杀软接管，或当前权限不足。",
                     MsgSeverity.Danger, MsgButtons.Ok);
 ```
@@ -670,7 +671,7 @@ using CaelusApp.WpfHost.Dialogs;
 ④ L332 附近（shader.confirm）：
 
 ```csharp
-            if (MessageDialogWpf.Show(this, "清空显卡着色器缓存？",
+            if (MessageDialogWpf.Show(Window.GetWindow(this), "清空显卡着色器缓存？",
                     "怀疑缓存损坏可清一次排查，不保证更流畅。清理前先退出游戏；之后每个游戏首次启动要重新编译，开头可能更卡。",
                     MsgSeverity.Warning, MsgButtons.OkCancel, null, "清理", MessageBoxResult.Cancel)
                 != MessageBoxResult.OK) return;
@@ -679,7 +680,7 @@ using CaelusApp.WpfHost.Dialogs;
 ⑤ L740 附近（def.notours）：
 
 ```csharp
-                MessageDialogWpf.Show(this, "这条排除不是 Caelus 添加的",
+                MessageDialogWpf.Show(Window.GetWindow(this), "这条排除不是 Caelus 添加的",
                     "可能是你在 Windows 安全中心手动加的，Caelus 不会去动它。需要取消请到 Windows 安全中心操作。",
                     MsgSeverity.Info, MsgButtons.Ok);
 ```
@@ -687,7 +688,7 @@ using CaelusApp.WpfHost.Dialogs;
 ⑥ L744 附近（def.confirm，路径进技术详情）：
 
 ```csharp
-            if (want && MessageDialogWpf.Show(this, "把《" + row.Name + "》排除出实时扫描？",
+            if (want && MessageDialogWpf.Show(Window.GetWindow(this), "把《" + row.Name + "》排除出实时扫描？",
                     "该目录下的文件将不再被查杀。只有确信游戏来源可靠时才继续。",
                     MsgSeverity.Warning, MsgButtons.OkCancel, row.Root, "排除", MessageBoxResult.Cancel)
                 != MessageBoxResult.OK) return;
@@ -696,7 +697,7 @@ using CaelusApp.WpfHost.Dialogs;
 ⑦ L770 附近（def.failed）：
 
 ```csharp
-                    if (!ok) MessageDialogWpf.Show(this, "Defender 操作失败",
+                    if (!ok) MessageDialogWpf.Show(Window.GetWindow(this), "Defender 操作失败",
                         "系统未接受这次修改，可能被安全策略或第三方杀软阻止。",
                         MsgSeverity.Danger, MsgButtons.Ok);
 ```
@@ -704,7 +705,7 @@ using CaelusApp.WpfHost.Dialogs;
 ⑧ L781 附近（def.clearall.none）：
 
 ```csharp
-                MessageDialogWpf.Show(this, "没有可取消的排除项",
+                MessageDialogWpf.Show(Window.GetWindow(this), "没有可取消的排除项",
                     "Caelus 目前没有添加过任何排除。",
                     MsgSeverity.Info, MsgButtons.Ok);
 ```
@@ -712,7 +713,7 @@ using CaelusApp.WpfHost.Dialogs;
 ⑨ L785 附近（全部取消确认）：
 
 ```csharp
-            if (MessageDialogWpf.Show(this, "取消全部 " + count + " 个 Defender 排除？",
+            if (MessageDialogWpf.Show(Window.GetWindow(this), "取消全部 " + count + " 个 Defender 排除？",
                     "仅移除由 Caelus 添加的项目，手工添加的排除不受影响。",
                     MsgSeverity.Warning, MsgButtons.OkCancel, null, "全部取消", MessageBoxResult.Cancel)
                 != MessageBoxResult.OK) return;
@@ -721,7 +722,7 @@ using CaelusApp.WpfHost.Dialogs;
 ⑩ L810 附近（def.clearall.done → Success）：
 
 ```csharp
-                    MessageDialogWpf.Show(this, "已取消 " + removed + " 个排除项",
+                    MessageDialogWpf.Show(Window.GetWindow(this), "已取消 " + removed + " 个排除项",
                         "你手工添加的不受影响。",
                         MsgSeverity.Success, MsgButtons.Ok, null, "好", MessageBoxResult.OK);
 ```
@@ -729,7 +730,7 @@ using CaelusApp.WpfHost.Dialogs;
 ⑪ L812 附近（def.unavailable 二次弹）：
 
 ```csharp
-                    if (fresh == null) MessageDialogWpf.Show(this, "无法读取 Defender 设置",
+                    if (fresh == null) MessageDialogWpf.Show(Window.GetWindow(this), "无法读取 Defender 设置",
                         "可能未安装、已被第三方杀软接管，或当前权限不足。",
                         MsgSeverity.Danger, MsgButtons.Ok);
 ```
@@ -737,7 +738,7 @@ using CaelusApp.WpfHost.Dialogs;
 ⑫ L1095 附近（addon.confirm → Danger，路径进技术详情）：
 
 ```csharp
-            if (MessageDialogWpf.Show(this, "删除附加层目录？",
+            if (MessageDialogWpf.Show(Window.GetWindow(this), "删除附加层目录？",
                     "删除不可撤销。游戏本体、登录链路和更新器不在删除范围。",
                     MsgSeverity.Danger, MsgButtons.YesNo, resolvedRoot, "删除", MessageBoxResult.No)
                 != MessageBoxResult.Yes) return;
@@ -769,14 +770,14 @@ git commit -m "wpf: 设置页 12 处弹窗换用 MessageDialogWpf（Defender/配
 L178/198/207/216 四处错误弹（模式相同，error 变量名随现场）：
 
 ```csharp
-                MessageDialogWpf.Show(this, "白名单操作失败", "详细信息见技术详情。",
+                MessageDialogWpf.Show(Window.GetWindow(this), "白名单操作失败", "详细信息见技术详情。",
                     MsgSeverity.Danger, MsgButtons.Ok, error, null, MessageBoxResult.OK);
 ```
 
 L192（white.required.locked）：
 
 ```csharp
-                MessageDialogWpf.Show(this, "系统内置项不可删除",
+                MessageDialogWpf.Show(Window.GetWindow(this), "系统内置项不可删除",
                     "这是系统必需的内置项。",
                     MsgSeverity.Info, MsgButtons.Ok);
 ```
@@ -784,7 +785,7 @@ L192（white.required.locked）：
 L223（white.reset.confirm → Danger，原比较 `!= MessageBoxResult.Yes` 保留）：
 
 ```csharp
-            MessageBoxResult r = MessageDialogWpf.Show(this, "恢复默认白名单预设？",
+            MessageBoxResult r = MessageDialogWpf.Show(Window.GetWindow(this), "恢复默认白名单预设？",
                 "会删除全部自定义白名单规则，且无法撤销。",
                 MsgSeverity.Danger, MsgButtons.YesNo, null, "恢复默认", MessageBoxResult.No);
 ```
@@ -792,7 +793,7 @@ L223（white.reset.confirm → Danger，原比较 `!= MessageBoxResult.Yes` 保�
 L228（重置失败）：
 
 ```csharp
-                MessageDialogWpf.Show(this, "白名单重置失败", "详细信息见技术详情。",
+                MessageDialogWpf.Show(Window.GetWindow(this), "白名单重置失败", "详细信息见技术详情。",
                     MsgSeverity.Danger, MsgButtons.Ok, error, null, MessageBoxResult.OK);
 ```
 
@@ -821,7 +822,7 @@ git commit -m "wpf: 白名单页 7 处弹窗换用 MessageDialogWpf（错误详�
 L43（vbs.needadmin）：
 
 ```csharp
-                MessageDialogWpf.Show(this, "需要管理员权限",
+                MessageDialogWpf.Show(Window.GetWindow(this), "需要管理员权限",
                     "修改 VBS / hypervisor 需要管理员身份运行 Caelus。",
                     MsgSeverity.Warning, MsgButtons.Ok);
 ```
@@ -829,7 +830,7 @@ L43（vbs.needadmin）：
 L54（vbs.warn → Danger，原按钮 OkCancel、比较 `!= MessageBoxResult.OK` 保留）：
 
 ```csharp
-                    MessageBoxResult result = MessageDialogWpf.Show(this, "关闭 VBS / 内存完整性？",
+                    MessageBoxResult result = MessageDialogWpf.Show(Window.GetWindow(this), "关闭 VBS / 内存完整性？",
                         "系统安全性会下降，WSL2 / Docker / Hyper-V / 沙盒将不可用。重启后生效，将来恢复需再重启一次。",
                         MsgSeverity.Danger, MsgButtons.OkCancel, null, "关闭 VBS", MessageBoxResult.Cancel);
 ```
@@ -837,7 +838,7 @@ L54（vbs.warn → Danger，原按钮 OkCancel、比较 `!= MessageBoxResult.OK`
 L69（VBS 操作失败，message 进技术详情）：
 
 ```csharp
-                MessageDialogWpf.Show(this, "VBS 设置失败", "系统设置保持原样。",
+                MessageDialogWpf.Show(Window.GetWindow(this), "VBS 设置失败", "系统设置保持原样。",
                     MsgSeverity.Danger, MsgButtons.Ok, message, null, MessageBoxResult.OK);
 ```
 
@@ -923,7 +924,7 @@ L466（白名单写入失败）：
 - [ ] **Step 6.2: LogView L81（原按钮 YesNo、比较 Yes 保留）**
 
 ```csharp
-            MessageBoxResult r = MessageDialogWpf.Show(this, "清空运行日志？",
+            MessageBoxResult r = MessageDialogWpf.Show(Window.GetWindow(this), "清空运行日志？",
                 "Caelus.log 将被清空；已归档的 Caelus.log.old 不受影响。",
                 MsgSeverity.Warning, MsgButtons.YesNo, null, "清空", MessageBoxResult.No);
 ```
@@ -931,7 +932,7 @@ L466（白名单写入失败）：
 - [ ] **Step 6.3: LibraryView L183**
 
 ```csharp
-            if (MessageDialogWpf.Show(this, "从游戏库移除《" + item.Name + "》？",
+            if (MessageDialogWpf.Show(Window.GetWindow(this), "从游戏库移除《" + item.Name + "》？",
                     "移除后可随时重新添加。",
                     MsgSeverity.Warning, MsgButtons.YesNo, null, "移除", MessageBoxResult.No)
                 != MessageBoxResult.Yes) return;
@@ -940,7 +941,7 @@ L466（白名单写入失败）：
 - [ ] **Step 6.4: AddGameDialogWpf L363**
 
 ```csharp
-                    MessageDialogWpf.Show(this, "添加游戏失败", "详细信息见技术详情。",
+                    MessageDialogWpf.Show(Window.GetWindow(this), "添加游戏失败", "详细信息见技术详情。",
                         MsgSeverity.Danger, MsgButtons.Ok, error, null, MessageBoxResult.OK);
 ```
 

@@ -2,6 +2,7 @@
 // 文件用途 WPF 显卡页 ViewModel：逐游戏 NV 项、会话项、呈现项、AMD 项的开关与档位
 
 using System.Collections.Generic;
+using CaelusApp.WpfHost.Dialogs;
 
 namespace CaelusApp
 {
@@ -239,8 +240,9 @@ namespace CaelusApp
                 bool ok = value ? WindowedOptTweak.Enable() : WindowedOptTweak.Restore();
                 if (!ok)
                 {
-                    System.Windows.MessageBox.Show(Lang.T("winopt.failed"), "Caelus",
-                        System.Windows.MessageBoxButton.OK, System.Windows.MessageBoxImage.Warning);
+                    MessageDialogWpf.Show(null, "窗口化优化写入失败",
+                        "系统设置保持原样。",
+                        MsgSeverity.Danger, MsgButtons.Ok);
                 }
                 Raise("WindowedOpt");
                 NotifyEnabledCount();

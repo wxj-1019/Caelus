@@ -14,6 +14,7 @@ using System.Security.AccessControl;
 using System.Security.Principal;
 using System.Threading;
 using System.Windows.Forms;
+using CaelusApp.WpfHost.Dialogs;
 using Microsoft.Win32;
 
 namespace CaelusApp.WpfHost
@@ -435,8 +436,12 @@ namespace CaelusApp.WpfHost
 
         private void ResetDefaults()
         {
-            if (System.Windows.Forms.MessageBox.Show(Lang.T("tray.resetask"), "Caelus",
-                MessageBoxButtons.OKCancel, MessageBoxIcon.Question) != DialogResult.OK) return;
+            System.Windows.Window owner = System.Windows.Application.Current == null
+                ? null : System.Windows.Application.Current.MainWindow;
+            if (MessageDialogWpf.Show(owner, "恢复默认配置？",
+                    "所有开关、反作弊选择和白名单恢复为默认，游戏列表保留。",
+                    MsgSeverity.Warning, MsgButtons.OkCancel, null, "恢复默认", System.Windows.MessageBoxResult.Cancel)
+                != System.Windows.MessageBoxResult.OK) return;
 
             gameMode.SuppressBackground = true;
             gameMode.BoostGame = true;
@@ -463,9 +468,9 @@ namespace CaelusApp.WpfHost
             Changed();
             if (!whitelistReset)
             {
-                System.Windows.Forms.MessageBox.Show(
-                    gameMode.WhitelistLastError, "Caelus",
-                    MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                MessageDialogWpf.Show(owner, "白名单写入失败", "默认配置已部分恢复。",
+                    MsgSeverity.Danger, MsgButtons.Ok, gameMode.WhitelistLastError,
+                    null, System.Windows.MessageBoxResult.OK);
                 Logger.Log("默认配置已部分恢复，但白名单写入失败");
             }
             else Logger.Log("已恢复默认配置");

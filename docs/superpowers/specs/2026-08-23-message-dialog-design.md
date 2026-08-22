@@ -1,7 +1,7 @@
 # WPF 消息弹窗主题化：MessageDialogWpf
 
 日期：2026-08-23
-状态：已确认（brainstorm 定稿，待写实施计划）
+状态：已实施（feature/message-dialog 分支，2026-08-23；29 处调用全部迁移，执行偏差已回写本文）
 
 ## 0. 现状与目标
 
@@ -28,7 +28,7 @@
 
 ## 2. 组件与 API
 
-新增文件（`wpf/Dialogs/`，该目录已在 csproj glob 内，无需改 csproj）：
+新增文件（`wpf/Dialogs/`；执行修正：wpf csproj 为逐文件清单，新文件需补 `<Compile>`/`<Page>` 登记，见 §9）：
 
 - **`MessageDialogWpf.xaml` + `.xaml.cs`** —— 弹窗本体
 - **`MsgSeverity.cs`** —— `enum MsgSeverity { Info, Success, Warning, Danger }`、`enum MsgButtons { Ok, OkCancel, YesNo }`（含级别→图标/画刷/按钮样式映射纯函数，供自测）
@@ -49,7 +49,7 @@ public static MessageBoxResult Show(Window owner, string message,
 - 返回值直接复用 `System.Windows.MessageBoxResult`，调用点只改调用本身，后续 `!= MessageBoxResult.Yes` 等判断原样保留
 - `detail` 传 null → 技术详情折叠区整体隐藏；`okText` 传 null → 按钮组默认文案（Ok=“知道了”/OkCancel=“取消|确定”/YesNo=“否|是”）；`defaultResult` 决定 Enter 键触发哪个按钮，同时该按钮获得初始焦点
 - **自动拆分规则**（形式二）：按首个空行（`\r\n\r\n` 或 `\n\n`）拆分——首段为标题，其余段合并为正文；无空行则整句为标题、正文区隐藏。首段超 24 字时截到段内最后一个句末标点（。！？!?)），无标点则硬截 24 字加省略号；首段以"确定/继续吗？"收尾的疑问句去掉该后缀改以"？"结尾。PolicyRuntime 的动态 `ConfirmKey` 文案因此免登记直接生效
-- WinForms 托盘 2 处（`WpfRuntime.cs`）：owner 传主窗口引用，主窗隐藏时 CenterScreen 兜底
+- WinForms 托盘 2 处（`WpfRuntime.cs`）：owner 传主窗口引用；主窗隐藏时仍作 Owner（CenterOwner 于其最后可见矩形），仅遮罩跳过；MainWindow 为 null 或未加载才 CenterScreen
 
 ### 2.2 与现有对话框的关系
 
@@ -59,18 +59,26 @@ public static MessageBoxResult Show(Window owner, string message,
 
 | 元素 | 规格 |
 |---|---|
-| 窗体 | `WindowStyle=None` + `ResizeMode=NoResize` + `SizeToContent=Height`，宽 400；卡片 Surface1 底、圆角 RadiusMd(18)、1px 严重级 Edge 描边；投影优先 DropShadowEffect（0 8 32 黑 45%），实测不渲染（既有工具链陷阱）则退化为"遮罩+描边"层次，不阻塞 |
-| 图标 | 复用 `Icons.xaml` 现有四枚状态几何（IconInfo/IconCheck/IconWarn/IconError），32px、Stroke 1.8、圆角接头、严重级颜色，不新画图标 |
+| 窗体 | `WindowStyle=None` + `ResizeMode=NoResize` + `SizeToContent=Height`，宽 400；卡片 Surface1 底、圆角 RadiusMd(18)、1px 严重级 Edge 描边；不使用 DropShadowEffect（本机实测完全不渲染），卡片层次 = 1px 严重级描边 + owner 遮罩（Adorner） |
+| 图标 | 复用 `Icons.xaml` 现有四枚状态几何（IconInfo/IconCheck/IconWarn/IconError），32px、共享 IconView 固定 2.0 线宽（与全应用图标体系一致）、圆角接头、严重级颜色，不新画图标 |
 | 光晕 | 58px `RadialGradientBrush`（严重级色 ~18% → 70% 处透明），入场完成后 `Motion.BreathPulse` 微呼吸 |
 | 标题 | FontSizeTitle(17) SemiBold TextPrimary，最多 2 行截断省略 |
 | 正文 | 13px TextSecondary，行高 1.55，自动换行，居中 |
 | 技术详情 | 折叠行（中性描边、圆角 10px、“技术详情 ▾/▴”）+ 展开区 Surface0 底 + FontMono 12px 左对齐，最高 200px 内部 ScrollViewer |
 | 按钮区 | 等宽并排铺满；主按钮 PrimaryButton（随模式强调色）/ Danger 级换 DangerButton；次按钮 GhostButton；高 34 |
 | 遮罩 | Show 前 owner 内容根部叠半透明黑 ~40% 遮罩（拦截鼠标），Closed 后移除；无 owner 不遮罩 |
-| 动效 | 入场 FadeIn + 0.96→1 缩放 180ms EaseOut；退场 120ms 淡出后 Close；复用 Motion 现有方法 |
+| 动效 | 入场 0.96→1 缩放 180ms EaseOut（无透明度渐入）；退场 120ms 淡出后 Close；光晕 `Motion.BreathPulse` 微呼吸（已节流） |
 | 键盘 | Esc=取消/No（无取消键则=OK）；Enter=defaultResult 对应按钮；Tab 在按钮+折叠行间循环 |
 | 无障碍 | 全元素 AutomationProperties.Name；弹窗容器设 AutomationProperties.HelpText=级别名 |
 | 主题 | Soft/Edge/语义色画刷全部已有；Light/Dark × 三模式强调色自动跟随（DynamicResource），无需新增画刷 |
+
+### 3.1 实施精修（评审循环中落地的细化）
+
+- null owner 自动回落 `Application.Current.MainWindow`，恢复模态与遮罩；主窗隐藏（托盘）时遮罩自动跳过；
+- 正文区限高 220px 内部滚动（ScrollViewer，动态长文案安全）；
+- `SplitTitleBody` 追加规则：尾段仅为「继续吗？/确定吗？」等重复问句时移除；
+- 光晕刷非纯色时兜底 Brushes.White；原生降级路径返回真实 MessageBox 结果；
+- 主按钮字段/图标元素命名 `SeverityIcon`（避开 Window.Icon 冲突）。
 
 ## 4. 内容改写规则
 
@@ -113,7 +121,7 @@ public static MessageBoxResult Show(Window owner, string message,
 | # | 位置 | 现文案 | 级别 | 按钮组 / 主按钮文案 | detail |
 |---|---|---|---|---|---|
 | 20 | L43 | `vbs.needadmin`（权限不足） | Warning | Ok / “知道了” | — |
-| 21 | L54 | `vbs.warn`（四段长文案） | **Danger** | YesNo / “关闭 VBS” | —（多段正文合并显示） |
+| 21 | L54 | `vbs.warn`（四段长文案） | **Danger** | OkCancel / “关闭 VBS”（执行修正：原代码即 OkCancel，草稿误写 YesNo，实现保留原按钮组） | —（多段正文合并显示） |
 | 22 | L69 | VBS 操作失败 message | Danger | Ok / “知道了” | 失败原因 |
 
 ### 其他（7 处）
@@ -122,13 +130,19 @@ public static MessageBoxResult Show(Window owner, string message,
 |---|---|---|---|---|---|
 | 23 | WpfRuntime L438 | `tray.resetask`（托盘恢复默认） | Warning | OkCancel / “恢复默认” | — |
 | 24 | WpfRuntime L466 | `WhitelistLastError` | Danger | Ok / “知道了” | LastError 原文 |
-| 25 | LogView L81 | `rep.clear.ask`（清空日志，归档保留） | Warning | OkCancel / “清空” | — |
+| 25 | LogView L81 | `rep.clear.ask`（清空日志，归档保留） | Warning | YesNo / “清空”（执行修正：原代码即 YesNo，草稿误写 OkCancel，实现保留原按钮组） | — |
 | 26 | LibraryView L183 | 移除游戏（可重新添加） | Warning | YesNo / “移除” | — |
 | 27 | PolicyRuntime L56 | 动态 `ConfirmKey`（数据驱动） | Warning | OkCancel / “继续” | —（自动拆分） |
 | 28 | GraphicsViewModel L242 | `winopt.failed` | Danger | Ok / “知道了” | — |
 | 29 | AddGameDialogWpf L363 | 添加游戏 error | Danger | Ok / “知道了” | error 全文 |
 
 注：行号为 2026-08-23 main（c34d140）快照，实施时以就近语义定位为准。
+
+### 5.1 文案与交互策略备注（实施定稿）
+
+- 弹窗文案采用调用点硬编码中文（与仓库现状一致；Lang key 仍由 WinForms 宿主使用，接受双份维护，后续如做多语言再统一收编）；
+- YesNo 弹窗 Esc=No（原生 YesNo 无 Esc 行为，此为安全向差异）；
+- 失败类弹窗标题按页面泛化（“白名单操作失败/环境项设置失败”），机器详情进折叠区。
 
 ## 6. 健壮性
 
@@ -143,6 +157,7 @@ public static MessageBoxResult Show(Window owner, string message,
   - 级别→图标几何/画刷/按钮样式映射函数
   - 按钮组合→返回值/默认焦点映射
   - 单字符串自动拆分（有空行/无空行/超长首段/多段正文/空串）
+  - **实际结果**：上述 3 项（+3 断言含尾问句裁剪）随 Task 1 落地，全量 TOTAL 232 / FAIL 0 / SKIP 3；启动冒烟与人工 10 项视觉清单见实施计划 Task 7（人工清单由人工执行）
 - **编译**：`build-wpf.cmd` 零警告基线（沿用既有构建约束：32 位 MSBuild）
 - **视觉人工验收清单**（GUI 渲染不可自动化——UIA/PrintWindow 对本程序不渲染的既有结论）：
   - 4 级别 × 3 按钮组合 × 明暗主题 × 三模式强调色矩阵抽查（至少 Info/Danger × 亮暗 × 靛蓝/暗金 全交叉）
@@ -157,6 +172,6 @@ public static MessageBoxResult Show(Window owner, string message,
 ## 9. 风险与备注
 
 - **C# 5 语法上限**（无字符串插值/表达式体/null 条件运算符），API 与实现均按 C# 5 编写
-- **csproj glob**：`wpf/Dialogs/` 已登记，同目录新增文件免登记；若实现中拆出新子目录需补 glob 行
-- WinForms 托盘线程调用 WPF 窗口：托盘命令在共享 UI 线程执行（WPF 应用内 WinForms 控件同线程），实施时以实际验证为准；若出现跨线程异常，该 2 处降级保留原生并注明
+- **csproj 登记**（执行修正）：wpf csproj 为逐文件显式清单（无 glob），"免登记"判断有误；新增 Dialogs 文件均以 `<Compile>`/`<Page>` 行登记（7df20d5/3b4abcb），后续同目录新增文件同样需补登记
+- **已解决**——WinForms 托盘线程调用 WPF 窗口：托盘菜单创建与事件泵均在 WPF UI 线程（App.xaml.cs `CreateTray`/`BuildTrayMenu` 在 UI 线程构造，既有托盘处理器已直接触碰 WPF UI），无跨线程风险，托盘 2 处已正常迁移
 - 模态遮罩叠放：owner 根 Grid 动态追加/移除 Border，不与现有 GlassCard/DropShadow 冲突（遮罩无 Effect）

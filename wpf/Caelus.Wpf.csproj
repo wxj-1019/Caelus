@@ -112,6 +112,7 @@
     <Page Include="Dialogs\DefenderExclusionDialogWpf.xaml" />
     <Page Include="Dialogs\LolAddonDialogWpf.xaml" />
     <Page Include="Dialogs\ReleaseNotesDialogWpf.xaml" />
+    <Page Include="Dialogs\MessageDialogWpf.xaml" />
   </ItemGroup>
   <ItemGroup>
     <Compile Include="ThemeManager.cs" />
@@ -204,6 +205,10 @@
     </Compile>
     <Compile Include="Dialogs\ReleaseNotesDialogWpf.xaml.cs">
       <DependentUpon>ReleaseNotesDialogWpf.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Dialogs\MsgSeverity.cs" />
+    <Compile Include="Dialogs\MessageDialogWpf.xaml.cs">
+      <DependentUpon>MessageDialogWpf.xaml</DependentUpon>
     </Compile>
 
     <!-- Link-compile framework-agnostic Core sources so new files auto-enter

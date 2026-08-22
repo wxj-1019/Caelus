@@ -60,7 +60,7 @@ echo.
 findstr /b /c:"FAIL" /c:"TOTAL" "%REPORT%"
 echo Full report: %REPORT%
 call :restorecp
-rem 自测有 FAIL 时以非零退出码结束（CI 可据此判断失败）
+rem selftest exits nonzero when any FAIL line is found (CI gate)
 findstr /b /c:"FAIL" "%REPORT%" >nul 2>&1
 if errorlevel 1 exit /b 0
 exit /b 1

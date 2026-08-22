@@ -203,8 +203,10 @@ namespace CaelusApp.WpfHost.Views
         {
             SettingsViewModel vm = DataContext as SettingsViewModel;
             if (vm == null) return;
-            if (MessageBox.Show("确定恢复三模式默认配色（靛蓝/蜜桃橙/暗金）吗？自定义强调色将被清除。",
-                "Caelus", MessageBoxButton.YesNo, MessageBoxImage.Warning) != MessageBoxResult.Yes) return;
+            if (MessageDialogWpf.Show(Window.GetWindow(this), "恢复三模式默认配色？",
+                    "自定义强调色将被清除，恢复为靛蓝/蜜桃橙/暗金。",
+                    MsgSeverity.Warning, MsgButtons.YesNo, null, "恢复默认", MessageBoxResult.No)
+                != MessageBoxResult.Yes) return;
             vm.ResetAllAccents();
             InitAccentSwatches();
             Motion.Emphasize(PageFeedbackBanner);
@@ -262,9 +264,10 @@ namespace CaelusApp.WpfHost.Views
         {
             SettingsViewModel vm = DataContext as SettingsViewModel;
             if (vm == null || vm.IsRestoreBusy) return;
-            string ask = "确定恢复所有已记录的系统项吗？\r\n\r\n这会退出当前优化状态，并尝试撤销 Caelus 记录的相关修改。";
-            if (MessageBox.Show(ask, CaelusApp.App.DisplayName, MessageBoxButton.YesNo,
-                    MessageBoxImage.Warning, MessageBoxResult.No) != MessageBoxResult.Yes) return;
+            if (MessageDialogWpf.Show(Window.GetWindow(this), "恢复所有已记录的系统项？",
+                    "这会退出当前优化状态，并尝试撤销 Caelus 记录的相关修改。",
+                    MsgSeverity.Warning, MsgButtons.YesNo, null, "恢复", MessageBoxResult.No)
+                != MessageBoxResult.Yes) return;
             vm.IsRestoreBusy = true;
             vm.ShowFeedback("正在恢复所有已记录项，请勿关闭应用。", "Info");
             ThreadPool.QueueUserWorkItem(delegate
@@ -297,8 +300,9 @@ namespace CaelusApp.WpfHost.Views
             GameMode gameMode = CurrentGameMode();
             if (gameMode == null)
             {
-                MessageBox.Show(Lang.T("def.unavailable"), CaelusApp.App.DisplayName,
-                    MessageBoxButton.OK, MessageBoxImage.Warning);
+                MessageDialogWpf.Show(Window.GetWindow(this), "无法读取 Defender 设置",
+                    "可能未安装、已被第三方杀软接管，或当前权限不足。",
+                    MsgSeverity.Danger, MsgButtons.Ok);
                 return;
             }
             var dialog = new DefenderExclusionDialogWpf(gameMode);
@@ -329,8 +333,10 @@ namespace CaelusApp.WpfHost.Views
                 vm.ShaderStatus = Lang.T("shader.busy");
                 return;
             }
-            if (MessageBox.Show(Lang.T("shader.confirm"), "Caelus",
-                    MessageBoxButton.OKCancel, MessageBoxImage.Warning) != MessageBoxResult.OK) return;
+            if (MessageDialogWpf.Show(Window.GetWindow(this), "清空显卡着色器缓存？",
+                    "怀疑驱动更新后缓存损坏，可清一次排查（NVIDIA / AMD / Intel / DirectX）；不保证更流畅。清理前先退出游戏；之后每个游戏首次启动要重新编译，开头可能更卡。",
+                    MsgSeverity.Warning, MsgButtons.OkCancel, null, "清理", MessageBoxResult.Cancel)
+                != MessageBoxResult.OK) return;
             shaderCleaning = true;
             vm.IsShaderBusy = true;
             vm.ShaderStatus = Lang.T("shader.busy");
@@ -737,13 +743,15 @@ namespace CaelusApp.WpfHost.Dialogs
             if (busy != 0 || want == row.Excluded) return;
             if (!want && !row.Owned)
             {
-                MessageBox.Show(this, Lang.T("def.notours"), CaelusApp.App.DisplayName,
-                    MessageBoxButton.OK, MessageBoxImage.Information);
+                MessageDialogWpf.Show(Window.GetWindow(this), "这条排除不是 Caelus 添加的",
+                    "可能是你在 Windows 安全中心手动加的，Caelus 不会去动它。需要取消请到 Windows 安全中心操作。",
+                    MsgSeverity.Info, MsgButtons.Ok);
                 return;
             }
-            if (want && MessageBox.Show(this, Lang.F("def.confirm", row.Name, row.Root),
-                    CaelusApp.App.DisplayName, MessageBoxButton.OKCancel,
-                    MessageBoxImage.Warning, MessageBoxResult.Cancel) != MessageBoxResult.OK) return;
+            if (want && MessageDialogWpf.Show(Window.GetWindow(this), "把《" + row.Name + "》排除出实时扫描？",
+                    "该目录下的文件将不再被查杀。只有确信游戏来源可靠时才继续。",
+                    MsgSeverity.Warning, MsgButtons.OkCancel, row.Root, "排除", MessageBoxResult.Cancel)
+                != MessageBoxResult.OK) return;
             RunToggle(row, want);
         }
 
@@ -767,8 +775,9 @@ namespace CaelusApp.WpfHost.Dialogs
                     UpdateRow(row);
                     SetBusy(false, ok ? (want ? "已添加排除" : "已取消排除") : Lang.T("def.failed"));
                     clearAll.IsEnabled = DefenderExclusion.OwnedByCaelus().Count > 0;
-                    if (!ok) MessageBox.Show(this, Lang.T("def.failed"), CaelusApp.App.DisplayName,
-                        MessageBoxButton.OK, MessageBoxImage.Error);
+                    if (!ok) MessageDialogWpf.Show(Window.GetWindow(this), "Defender 操作失败",
+                        "系统未接受这次修改，可能被安全策略或第三方杀软阻止。",
+                        MsgSeverity.Danger, MsgButtons.Ok);
                 }));
             });
         }
@@ -778,12 +787,14 @@ namespace CaelusApp.WpfHost.Dialogs
             int count = DefenderExclusion.OwnedByCaelus().Count;
             if (count == 0)
             {
-                MessageBox.Show(this, Lang.T("def.clearall.none"), CaelusApp.App.DisplayName,
-                    MessageBoxButton.OK, MessageBoxImage.Information); return;
+                MessageDialogWpf.Show(Window.GetWindow(this), "没有可取消的排除项",
+                    "Caelus 目前没有添加过任何排除。",
+                    MsgSeverity.Info, MsgButtons.Ok); return;
             }
-            string ask = "确定取消全部 " + count + " 个由 Caelus 添加的 Defender 排除吗？\r\n\r\n手工添加的排除不会被修改。";
-            if (MessageBox.Show(this, ask, CaelusApp.App.DisplayName, MessageBoxButton.OKCancel,
-                    MessageBoxImage.Warning, MessageBoxResult.Cancel) != MessageBoxResult.OK) return;
+            if (MessageDialogWpf.Show(Window.GetWindow(this), "取消全部 " + count + " 个 Defender 排除？",
+                    "仅移除由 Caelus 添加的项目，手工添加的排除不受影响。",
+                    MsgSeverity.Warning, MsgButtons.OkCancel, null, "全部取消", MessageBoxResult.Cancel)
+                != MessageBoxResult.OK) return;
             if (Interlocked.Exchange(ref busy, 1) != 0) return;
             SetBusy(true, "正在取消全部排除…");
             ThreadPool.QueueUserWorkItem(delegate
@@ -807,10 +818,12 @@ namespace CaelusApp.WpfHost.Dialogs
                     string message = Lang.F("def.clearall.done", removed);
                     SetBusy(false, fresh == null ? message + "\r\n" + Lang.T("def.unavailable") : message);
                     clearAll.IsEnabled = DefenderExclusion.OwnedByCaelus().Count > 0;
-                    MessageBox.Show(this, message, CaelusApp.App.DisplayName,
-                        MessageBoxButton.OK, MessageBoxImage.Information);
-                    if (fresh == null) MessageBox.Show(this, Lang.T("def.unavailable"),
-                        CaelusApp.App.DisplayName, MessageBoxButton.OK, MessageBoxImage.Warning);
+                    MessageDialogWpf.Show(Window.GetWindow(this), "已取消 " + removed + " 个排除项",
+                        "你手工添加的不受影响。",
+                        MsgSeverity.Success, MsgButtons.Ok, null, "好", MessageBoxResult.OK);
+                    if (fresh == null) MessageDialogWpf.Show(Window.GetWindow(this), "无法读取 Defender 设置",
+                        "可能未安装、已被第三方杀软接管，或当前权限不足。",
+                        MsgSeverity.Danger, MsgButtons.Ok);
                 }));
             });
         }
@@ -1092,9 +1105,10 @@ namespace CaelusApp.WpfHost.Dialogs
         private void OnDelete(object sender, RoutedEventArgs e)
         {
             if (string.IsNullOrEmpty(resolvedRoot) || busy != 0) return;
-            if (MessageBox.Show(this, Lang.F("addon.confirm", resolvedRoot), CaelusApp.App.DisplayName,
-                    MessageBoxButton.YesNo, MessageBoxImage.Warning,
-                    MessageBoxResult.No) != MessageBoxResult.Yes) return;
+            if (MessageDialogWpf.Show(Window.GetWindow(this), "删除附加层目录？",
+                    "删除不可撤销。游戏本体、登录链路和更新器不在删除范围。",
+                    MsgSeverity.Danger, MsgButtons.YesNo, resolvedRoot, "删除", MessageBoxResult.No)
+                != MessageBoxResult.Yes) return;
             if (Interlocked.Exchange(ref busy, 1) != 0) return;
             string root = resolvedRoot; SetBusy(true, Lang.T("addon.hint.deleting"));
             ThreadPool.QueueUserWorkItem(delegate

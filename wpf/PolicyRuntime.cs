@@ -4,6 +4,7 @@
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Windows;
+using CaelusApp.WpfHost.Dialogs;
 
 namespace CaelusApp.WpfHost
 {
@@ -53,8 +54,8 @@ namespace CaelusApp.WpfHost
                 // 绑定已先改变 ToggleButton 的视觉态；取消时主动重发旧值，确保可靠回滚。
                 if (value && !string.IsNullOrEmpty(item.ConfirmKey))
                 {
-                    MessageBoxResult r = MessageBox.Show(Lang.T(item.ConfirmKey), "Caelus",
-                        MessageBoxButton.OKCancel, MessageBoxImage.Warning);
+                    MessageBoxResult r = MessageDialogWpf.Show(null, Lang.T(item.ConfirmKey),
+                        MsgSeverity.Warning, MsgButtons.OkCancel, MessageBoxResult.Cancel);
                     if (r != MessageBoxResult.OK)
                     {
                         ReassertToggleState();

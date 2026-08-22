@@ -5,6 +5,7 @@ using System.Security.Principal;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Controls.Primitives;
+using CaelusApp.WpfHost.Dialogs;
 
 namespace CaelusApp.WpfHost.Views
 {
@@ -40,8 +41,9 @@ namespace CaelusApp.WpfHost.Views
             // 全部内核/驱动项先查管理员权限；无权限时提示并回滚 Toggle。
             if (item.Id != "gmguard" && !IsAdministrator())
             {
-                MessageBox.Show(Lang.T("vbs.needadmin"), "Caelus",
-                    MessageBoxButton.OK, MessageBoxImage.Warning);
+                MessageDialogWpf.Show(Window.GetWindow(this), "需要管理员权限",
+                    "修改 VBS / hypervisor 需要管理员身份运行 Caelus。",
+                    MsgSeverity.Warning, MsgButtons.Ok);
                 RollBack(toggle, item);
                 return;
             }
@@ -51,8 +53,9 @@ namespace CaelusApp.WpfHost.Views
             {
                 if (desired)
                 {
-                    MessageBoxResult result = MessageBox.Show(Lang.T("vbs.warn"), "Caelus",
-                        MessageBoxButton.OKCancel, MessageBoxImage.Warning);
+                    MessageBoxResult result = MessageDialogWpf.Show(Window.GetWindow(this), "关闭 VBS / 内存完整性？",
+                        "系统安全性会下降，WSL2 / Docker / Hyper-V / 沙盒将不可用。重启后生效，将来恢复需再重启一次。",
+                        MsgSeverity.Danger, MsgButtons.OkCancel, null, "关闭 VBS", MessageBoxResult.Cancel);
                     if (result != MessageBoxResult.OK)
                     {
                         RollBack(toggle, item);
@@ -66,7 +69,8 @@ namespace CaelusApp.WpfHost.Views
                 string message = item.Id == "vbs" && !desired
                     ? Lang.T("vbs.restorefail")
                     : Lang.T("env.failed");
-                MessageBox.Show(message, "Caelus", MessageBoxButton.OK, MessageBoxImage.Warning);
+                MessageDialogWpf.Show(Window.GetWindow(this), "环境项设置失败", "系统设置保持原样。",
+                    MsgSeverity.Danger, MsgButtons.Ok, message, null, MessageBoxResult.OK);
                 RollBack(toggle, item);
                 return;
             }

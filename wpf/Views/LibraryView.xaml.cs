@@ -180,7 +180,10 @@ namespace CaelusApp.WpfHost.Views
             int index = GameList.SelectedIndex;
             if (index < 0 || index >= vm.Items.Count) return;
             LibraryItem item = vm.Items[index];
-            if (MessageBox.Show("确定从游戏库移除“" + item.Name + "”吗？", "Caelus", MessageBoxButton.YesNo, MessageBoxImage.Warning, MessageBoxResult.No) != MessageBoxResult.Yes) return;
+            if (MessageDialogWpf.Show(Window.GetWindow(this), "从游戏库移除《" + item.Name + "》？",
+                    "移除后可随时重新添加。",
+                    MsgSeverity.Warning, MsgButtons.YesNo, null, "移除", MessageBoxResult.No)
+                != MessageBoxResult.Yes) return;
             vm.RemoveAt(index);
             vm.SetFeedback("已移除“" + item.Name + "”。", "Success");
             if (vm.Items.Count > 0)

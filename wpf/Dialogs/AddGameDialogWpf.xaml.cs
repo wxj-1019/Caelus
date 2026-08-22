@@ -360,7 +360,8 @@ namespace CaelusApp.WpfHost.Dialogs
             if (!GameExecutableResolver.TryResolve(dlg.FileName, out resolved, out error))
             {
                 if (!string.IsNullOrEmpty(error))
-                    MessageBox.Show(error, "Caelus", MessageBoxButton.OK, MessageBoxImage.Warning);
+                    MessageDialogWpf.Show(Window.GetWindow(this), "添加游戏失败", "详细信息见技术详情。",
+                        MsgSeverity.Danger, MsgButtons.Ok, error, null, MessageBoxResult.OK);
                 return;
             }
             // 浏览模式：清空列表只放一条

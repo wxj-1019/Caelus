@@ -7,6 +7,7 @@ using System.Text;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Threading;
+using CaelusApp.WpfHost.Dialogs;
 
 namespace CaelusApp.WpfHost.Views
 {
@@ -78,8 +79,9 @@ namespace CaelusApp.WpfHost.Views
 
         private void OnClearLog(object sender, RoutedEventArgs e)
         {
-            MessageBoxResult r = MessageBox.Show(Lang.T("rep.clear.ask"), "Caelus",
-                MessageBoxButton.YesNo, MessageBoxImage.Question);
+            MessageBoxResult r = MessageDialogWpf.Show(Window.GetWindow(this), "清空运行日志？",
+                "Caelus.log 将被清空；已归档的 Caelus.log.old 不受影响。",
+                MsgSeverity.Warning, MsgButtons.YesNo, null, "清空", MessageBoxResult.No);
             if (r != MessageBoxResult.Yes) return;
             LogViewModel vm = DataContext as LogViewModel;
             try

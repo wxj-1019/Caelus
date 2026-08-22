@@ -1,0 +1,211 @@
+// @author zenjiro 18967498922@163.com
+// 文件用途 WPF 主题化消息弹窗：无边框模态小窗（规格 2026-08-23 §2/§3）
+
+using System;
+using System.Windows;
+using System.Windows.Controls;
+using System.Windows.Documents;
+using System.Windows.Input;
+using System.Windows.Media;
+using System.Windows.Media.Animation;
+
+namespace CaelusApp.WpfHost.Dialogs
+{
+    internal partial class MessageDialogWpf : Window
+    {
+        private MsgButtonSet buttons;
+        private MessageBoxResult chosen;
+        private MessageBoxResult enterResult;
+        private bool choseExplicitly;
+        private bool closing;
+        private MaskAdorner mask;
+
+        private MessageDialogWpf(Window owner, string title, string body,
+            MsgSeverity severity, MsgButtons buttonSet, string detail, string okText,
+            MessageBoxResult defaultResult)
+        {
+            InitializeComponent();
+            buttons = MsgDialogMaps.ResolveButtons(buttonSet, okText);
+
+            Brush sevBrush = TryFindResource(MsgDialogMaps.BrushKey(severity)) as Brush;
+            if (sevBrush == null) sevBrush = Brushes.White;
+            SeverityIcon.Key = MsgDialogMaps.IconKey(severity);
+            SeverityIcon.Foreground = sevBrush;
+            Brush edge = TryFindResource(MsgDialogMaps.EdgeKey(severity)) as Brush;
+            if (edge != null) Card.BorderBrush = edge;
+            Glow.Fill = BuildGlowBrush(sevBrush);
+
+            LblTitle.Text = title;
+            if (string.IsNullOrEmpty(body)) LblBody.Visibility = Visibility.Collapsed;
+            else LblBody.Text = body;
+
+            if (string.IsNullOrEmpty(detail)) BtnDetail.Visibility = Visibility.Collapsed;
+            else LblDetailText.Text = detail;
+
+            Style primaryStyle = TryFindResource(MsgDialogMaps.PrimaryStyleKey(severity)) as Style;
+            if (primaryStyle != null) BtnPrimary.Style = primaryStyle;
+            BtnPrimary.Content = buttons.PrimaryText;
+            if (buttons.HasSecondary)
+            {
+                BtnSecondary.Visibility = Visibility.Visible;
+                BtnSecondary.Content = buttons.SecondaryText;
+            }
+            else
+            {
+                Grid.SetColumn(BtnPrimary, 0);
+                Grid.SetColumnSpan(BtnPrimary, 2);
+                BtnPrimary.Margin = new Thickness(0);
+            }
+
+            if (owner != null && owner.IsLoaded) Owner = owner;
+            else WindowStartupLocation = WindowStartupLocation.CenterScreen;
+
+            Loaded += delegate
+            {
+                ScaleTransform st = new ScaleTransform(0.96, 0.96);
+                Card.RenderTransform = st;
+                Card.RenderTransformOrigin = new Point(0.5, 0.5);
+                DoubleAnimation grow = new DoubleAnimation(1, TimeSpan.FromMilliseconds(180));
+                grow.EasingFunction = new CubicEase { EasingMode = EasingMode.EaseOut };
+                st.BeginAnimation(ScaleTransform.ScaleXProperty, grow);
+                st.BeginAnimation(ScaleTransform.ScaleYProperty, grow);
+                Motion.BreathPulse(Glow); // 内部已 8fps 节流
+                mask = AttachMask(owner);
+                FocusDefault(defaultResult);
+            };
+            Closed += delegate
+            {
+                if (!choseExplicitly) chosen = buttons.EscResult;
+                DetachMask();
+            };
+        }
+
+        // 光晕：严重级色 18% → 70% 处透明的径向渐变
+        private Brush BuildGlowBrush(Brush source)
+        {
+            SolidColorBrush solid = source as SolidColorBrush;
+            RadialGradientBrush radial = new RadialGradientBrush();
+            radial.GradientStops.Add(new GradientStop(
+                Color.FromArgb(0x2E, solid.Color.R, solid.Color.G, solid.Color.B), 0.0));
+            radial.GradientStops.Add(new GradientStop(Color.FromArgb(0, 0, 0, 0), 0.7));
+            if (radial.CanFreeze) radial.Freeze();
+            return radial;
+        }
+
+        private void FocusDefault(MessageBoxResult defaultResult)
+        {
+            if (buttons.HasSecondary && defaultResult == buttons.SecondaryResult)
+            {
+                BtnSecondary.Focus();
+                enterResult = buttons.SecondaryResult;
+            }
+            else
+            {
+                BtnPrimary.Focus();
+                enterResult = buttons.PrimaryResult;
+            }
+        }
+
+        private MaskAdorner AttachMask(Window owner)
+        {
+            if (owner == null || owner.Visibility != Visibility.Visible) return null;
+            UIElement adornable = owner.Content as UIElement;
+            if (adornable == null) return null;
+            AdornerLayer layer = AdornerLayer.GetAdornerLayer(adornable);
+            if (layer == null) return null;
+            MaskAdorner a = new MaskAdorner(adornable);
+            layer.Add(a);
+            return a;
+        }
+
+        private void DetachMask()
+        {
+            if (mask == null) return;
+            UIElement target = mask.AdornedElement;
+            AdornerLayer layer = AdornerLayer.GetAdornerLayer(target);
+            if (layer != null) layer.Remove(mask);
+            mask = null;
+        }
+
+        private void OnPrimaryClick(object sender, RoutedEventArgs e) { CloseWith(buttons.PrimaryResult); }
+        private void OnSecondaryClick(object sender, RoutedEventArgs e) { CloseWith(buttons.SecondaryResult); }
+
+        private void CloseWith(MessageBoxResult r)
+        {
+            if (closing) return;
+            closing = true;
+            choseExplicitly = true;
+            chosen = r;
+            DoubleAnimation fade = new DoubleAnimation(0, TimeSpan.FromMilliseconds(120));
+            fade.Completed += delegate { Close(); };
+            Card.BeginAnimation(UIElement.OpacityProperty, fade);
+        }
+
+        private bool detailOpen;
+        private void OnDetailClick(object sender, RoutedEventArgs e)
+        {
+            detailOpen = !detailOpen;
+            DetailHost.Visibility = detailOpen ? Visibility.Visible : Visibility.Collapsed;
+            BtnDetail.Content = detailOpen ? "技术详情 ▴" : "技术详情 ▾";
+        }
+
+        private void OnWindowKeyDown(object sender, KeyEventArgs e)
+        {
+            if (e.Key == Key.Escape) { e.Handled = true; CloseWith(buttons.EscResult); }
+            else if (e.Key == Key.Enter) { e.Handled = true; CloseWith(enterResult); }
+        }
+
+        // —— 静态入口 ——
+
+        internal static MessageBoxResult Show(Window owner, string title, string body,
+            MsgSeverity severity, MsgButtons buttonSet, string detail, string okText,
+            MessageBoxResult defaultResult)
+        {
+            try
+            {
+                MessageDialogWpf dlg = new MessageDialogWpf(owner, title, body, severity,
+                    buttonSet, detail, okText, defaultResult);
+                dlg.ShowDialog();
+                return dlg.chosen;
+            }
+            catch (Exception ex)
+            {
+                Logger.Log("MessageDialogWpf 异常，降级原生弹窗：" + ex.Message);
+                MessageBoxButton native = buttonSet == MsgButtons.Ok ? MessageBoxButton.OK
+                    : (buttonSet == MsgButtons.OkCancel ? MessageBoxButton.OKCancel : MessageBoxButton.YesNo);
+                MessageBoxImage img = severity == MsgSeverity.Danger ? MessageBoxImage.Error
+                    : (severity == MsgSeverity.Warning ? MessageBoxImage.Warning : MessageBoxImage.Information);
+                MessageBox.Show(owner, title + "\r\n\r\n" + body, "Caelus", native, img);
+                return MessageBoxResult.Cancel;
+            }
+        }
+
+        // 便捷重载：无详情/无自定义文案/默认焦点在主按钮
+        internal static MessageBoxResult Show(Window owner, string title, string body,
+            MsgSeverity severity, MsgButtons buttonSet)
+        {
+            return Show(owner, title, body, severity, buttonSet, null, null, MessageBoxResult.None);
+        }
+
+        // 单字符串自动拆分（动态 ConfirmKey 等场景）
+        internal static MessageBoxResult Show(Window owner, string message,
+            MsgSeverity severity, MsgButtons buttonSet, MessageBoxResult defaultResult)
+        {
+            string[] parts = MsgDialogMaps.SplitTitleBody(message);
+            return Show(owner, parts[0], parts[1], severity, buttonSet, null, null, defaultResult);
+        }
+
+        private sealed class MaskAdorner : Adorner
+        {
+            public MaskAdorner(UIElement adorned) : base(adorned) { }
+
+            protected override void OnRender(DrawingContext dc)
+            {
+                base.OnRender(dc);
+                SolidColorBrush b = new SolidColorBrush(Color.FromArgb(0x66, 0, 0, 0));
+                if (b.CanFreeze) b.Freeze();
+                dc.DrawRectangle(b, null, new Rect(AdornedElement.RenderSize));
+            }
+        }
+    }
+}

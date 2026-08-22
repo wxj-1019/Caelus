@@ -1,0 +1,59 @@
+<Window x:Class="CaelusApp.WpfHost.Dialogs.MessageDialogWpf"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:controls="clr-namespace:CaelusApp.WpfHost.Controls"
+        x:ClassModifier="internal"
+        Title="Caelus" Width="400" SizeToContent="Height"
+        WindowStyle="None" ResizeMode="NoResize" ShowInTaskbar="False"
+        WindowStartupLocation="CenterOwner" AllowsTransparency="False"
+        Background="{DynamicResource Surface1Brush}"
+        FontFamily="{DynamicResource FontUi}"
+        PreviewKeyDown="OnWindowKeyDown"
+        AutomationProperties.Name="消息弹窗">
+  <!-- 无 DropShadowEffect（本机不渲染）：层次=1px 严重级描边 + owner 遮罩；圆角由 DWM 补齐（同主窗做法） -->
+  <Border x:Name="Card" CornerRadius="{DynamicResource RadiusMd}"
+          Background="{DynamicResource Surface1Brush}"
+          BorderBrush="{DynamicResource InfoEdgeBrush}" BorderThickness="1"
+          Padding="26,24,22,20" Margin="1">
+    <StackPanel>
+      <Grid Width="58" Height="58" HorizontalAlignment="Center" Margin="0,2,0,0">
+        <Ellipse x:Name="Glow" Width="58" Height="58"/>
+        <controls:IconView x:Name="SeverityIcon" Width="32" Height="32" Key="IconInfo"
+                           Foreground="{DynamicResource InfoBrush}"
+                           HorizontalAlignment="Center" VerticalAlignment="Center"/>
+      </Grid>
+      <TextBlock x:Name="LblTitle" TextWrapping="Wrap" TextAlignment="Center" MaxHeight="56"
+                 Margin="4,12,4,0" FontSize="{DynamicResource FontSizeTitle}" FontWeight="SemiBold"
+                 Foreground="{DynamicResource TextPrimaryBrush}" AutomationProperties.Name="弹窗标题"/>
+      <TextBlock x:Name="LblBody" TextWrapping="Wrap" TextAlignment="Center" Margin="4,8,4,0"
+                 FontSize="13" LineHeight="20"
+                 Foreground="{DynamicResource TextSecondaryBrush}" AutomationProperties.Name="弹窗正文"/>
+      <Button x:Name="BtnDetail" Margin="0,14,0,0" Visibility="Collapsed"
+              Style="{DynamicResource GhostButton}" FontSize="{DynamicResource FontSizeCaption}"
+              Click="OnDetailClick" AutomationProperties.Name="技术详情开关"
+              Content="技术详情 ▾"/>
+      <Border x:Name="DetailHost" Visibility="Collapsed" Margin="0,8,0,0" MaxHeight="200"
+              Background="{DynamicResource Surface0Brush}" CornerRadius="{DynamicResource RadiusSm}"
+              BorderBrush="{DynamicResource TextTertiaryBrush}" BorderThickness="1" Opacity="0.95">
+        <ScrollViewer VerticalScrollBarVisibility="Auto">
+          <TextBlock x:Name="LblDetailText" FontFamily="{DynamicResource FontMono}"
+                     FontSize="{DynamicResource FontSizeMono}" TextWrapping="Wrap"
+                     Foreground="{DynamicResource TextSecondaryBrush}"
+                     Margin="10,8" HorizontalAlignment="Left"/>
+        </ScrollViewer>
+      </Border>
+      <Grid Margin="0,20,0,0">
+        <Grid.ColumnDefinitions>
+          <ColumnDefinition Width="*"/>
+          <ColumnDefinition Width="*"/>
+        </Grid.ColumnDefinitions>
+        <Button x:Name="BtnSecondary" Grid.Column="0" Margin="0,0,5,0" Visibility="Collapsed"
+                Style="{DynamicResource GhostButton}" Click="OnSecondaryClick"
+                AutomationProperties.Name="取消按钮"/>
+        <Button x:Name="BtnPrimary" Grid.Column="1" Margin="5,0,0,0"
+                Style="{DynamicResource PrimaryButton}" Click="OnPrimaryClick"
+                AutomationProperties.Name="主按钮"/>
+      </Grid>
+    </StackPanel>
+  </Border>
+</Window>

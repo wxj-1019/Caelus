@@ -23,6 +23,7 @@
                            HorizontalAlignment="Center" VerticalAlignment="Center"/>
       </Grid>
       <TextBlock x:Name="LblTitle" TextWrapping="Wrap" TextAlignment="Center" MaxHeight="56"
+                 TextTrimming="CharacterEllipsis"
                  Margin="4,12,4,0" FontSize="{DynamicResource FontSizeTitle}" FontWeight="SemiBold"
                  Foreground="{DynamicResource TextPrimaryBrush}" AutomationProperties.Name="弹窗标题"/>
       <ScrollViewer x:Name="BodyScroll" MaxHeight="220" VerticalScrollBarVisibility="Auto" Margin="4,8,4,0">

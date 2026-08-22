@@ -26,6 +26,7 @@ namespace CaelusApp.WpfHost.Dialogs
         {
             InitializeComponent();
             buttons = MsgDialogMaps.ResolveButtons(buttonSet, okText);
+            System.Windows.Automation.AutomationProperties.SetHelpText(this, severity.ToString());
 
             Brush sevBrush = TryFindResource(MsgDialogMaps.BrushKey(severity)) as Brush;
             if (sevBrush == null) sevBrush = Brushes.White;

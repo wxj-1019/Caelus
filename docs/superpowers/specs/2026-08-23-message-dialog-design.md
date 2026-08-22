@@ -49,7 +49,7 @@ public static MessageBoxResult Show(Window owner, string message,
 - 返回值直接复用 `System.Windows.MessageBoxResult`，调用点只改调用本身，后续 `!= MessageBoxResult.Yes` 等判断原样保留
 - `detail` 传 null → 技术详情折叠区整体隐藏；`okText` 传 null → 按钮组默认文案（Ok=“知道了”/OkCancel=“取消|确定”/YesNo=“否|是”）；`defaultResult` 决定 Enter 键触发哪个按钮，同时该按钮获得初始焦点
 - **自动拆分规则**（形式二）：按首个空行（`\r\n\r\n` 或 `\n\n`）拆分——首段为标题，其余段合并为正文；无空行则整句为标题、正文区隐藏。首段超 24 字时截到段内最后一个句末标点（。！？!?)），无标点则硬截 24 字加省略号；首段以"确定/继续吗？"收尾的疑问句去掉该后缀改以"？"结尾。PolicyRuntime 的动态 `ConfirmKey` 文案因此免登记直接生效
-- WinForms 托盘 2 处（`WpfRuntime.cs`）：owner 传主窗口引用，主窗隐藏时 CenterScreen 兜底
+- WinForms 托盘 2 处（`WpfRuntime.cs`）：owner 传主窗口引用；主窗隐藏时仍作 Owner（CenterOwner 于其最后可见矩形），仅遮罩跳过；MainWindow 为 null 或未加载才 CenterScreen
 
 ### 2.2 与现有对话框的关系
 
@@ -60,14 +60,14 @@ public static MessageBoxResult Show(Window owner, string message,
 | 元素 | 规格 |
 |---|---|
 | 窗体 | `WindowStyle=None` + `ResizeMode=NoResize` + `SizeToContent=Height`，宽 400；卡片 Surface1 底、圆角 RadiusMd(18)、1px 严重级 Edge 描边；不使用 DropShadowEffect（本机实测完全不渲染），卡片层次 = 1px 严重级描边 + owner 遮罩（Adorner） |
-| 图标 | 复用 `Icons.xaml` 现有四枚状态几何（IconInfo/IconCheck/IconWarn/IconError），32px、Stroke 1.8、圆角接头、严重级颜色，不新画图标 |
+| 图标 | 复用 `Icons.xaml` 现有四枚状态几何（IconInfo/IconCheck/IconWarn/IconError），32px、共享 IconView 固定 2.0 线宽（与全应用图标体系一致）、圆角接头、严重级颜色，不新画图标 |
 | 光晕 | 58px `RadialGradientBrush`（严重级色 ~18% → 70% 处透明），入场完成后 `Motion.BreathPulse` 微呼吸 |
 | 标题 | FontSizeTitle(17) SemiBold TextPrimary，最多 2 行截断省略 |
 | 正文 | 13px TextSecondary，行高 1.55，自动换行，居中 |
 | 技术详情 | 折叠行（中性描边、圆角 10px、“技术详情 ▾/▴”）+ 展开区 Surface0 底 + FontMono 12px 左对齐，最高 200px 内部 ScrollViewer |
 | 按钮区 | 等宽并排铺满；主按钮 PrimaryButton（随模式强调色）/ Danger 级换 DangerButton；次按钮 GhostButton；高 34 |
 | 遮罩 | Show 前 owner 内容根部叠半透明黑 ~40% 遮罩（拦截鼠标），Closed 后移除；无 owner 不遮罩 |
-| 动效 | 入场 FadeIn + 0.96→1 缩放 180ms EaseOut；退场 120ms 淡出后 Close；复用 Motion 现有方法 |
+| 动效 | 入场 0.96→1 缩放 180ms EaseOut（无透明度渐入）；退场 120ms 淡出后 Close；光晕 `Motion.BreathPulse` 微呼吸（已节流） |
 | 键盘 | Esc=取消/No（无取消键则=OK）；Enter=defaultResult 对应按钮；Tab 在按钮+折叠行间循环 |
 | 无障碍 | 全元素 AutomationProperties.Name；弹窗容器设 AutomationProperties.HelpText=级别名 |
 | 主题 | Soft/Edge/语义色画刷全部已有；Light/Dark × 三模式强调色自动跟随（DynamicResource），无需新增画刷 |

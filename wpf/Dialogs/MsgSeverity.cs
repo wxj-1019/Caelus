@@ -70,7 +70,8 @@ namespace CaelusApp.WpfHost.Dialogs
             return set;
         }
 
-        // 单字符串 → {标题, 正文}：首个空行（\r\n\r\n 或 \n\n）拆分；无空行则全部为标题。
+        // 单字符串 → {标题, 正文}：首个空行（\r\n\r\n 或 \n\n）拆分；无空行则全部为标题；
+        // 尾段仅重复提问（“继续吗？”等）时移除该段与前空行。
         internal static string[] SplitTitleBody(string message)
         {
             if (message == null) message = "";
@@ -86,7 +87,26 @@ namespace CaelusApp.WpfHost.Dialogs
                 title = message.Substring(0, cut);
                 body = message.Substring(cut + cutLen).Trim();
             }
-            return new string[] { NormalizeTitle(title), body };
+            return new string[] { NormalizeTitle(title), StripTrailingQuestion(body) };
+        }
+
+        // 尾段去问句：按同一空行逻辑取最后一段，若恰为重复提问则连同前空行一并移除。
+        private static string StripTrailingQuestion(string body)
+        {
+            if (string.IsNullOrEmpty(body)) return body;
+            string[] questions = { "继续吗？", "继续吗?", "确定继续吗？", "确定吗？", "确定吗?" };
+            int i = body.LastIndexOf("\r\n\r\n", StringComparison.Ordinal);
+            int j = body.LastIndexOf("\n\n", StringComparison.Ordinal);
+            int last = -1;
+            if (i >= 0 && (j < 0 || i >= j)) last = i;
+            else if (j >= 0) last = j;
+            string tailPara = (last >= 0 ? body.Substring(last) : body).Trim();
+            for (int k = 0; k < questions.Length; k++)
+            {
+                if (tailPara == questions[k])
+                    return last >= 0 ? body.Substring(0, last).TrimEnd() : "";
+            }
+            return body;
         }
 
         // 标题规整：去“确定”前缀；“吗？”→“？”；超 24 字截断（句末标点优先，至少留 8 字）

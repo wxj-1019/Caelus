@@ -84,6 +84,11 @@ namespace CaelusApp
             string[] r6 = MsgDialogMaps.SplitTitleBody(null);
             Eq("", r6[0]);
             Eq("", r6[1]);
+
+            // 拆分后尾段仅重复提问（继续吗？）时移除
+            string[] r7 = MsgDialogMaps.SplitTitleBody("关闭后台冻结\r\n\r\n说明文字。\r\n\r\n继续吗？");
+            Eq("关闭后台冻结", r7[0]);
+            Eq("说明文字。", r7[1]);
         }
     }
 }

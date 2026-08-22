@@ -36,7 +36,7 @@ namespace CaelusApp.WpfHost.Dialogs
             Glow.Fill = BuildGlowBrush(sevBrush);
 
             LblTitle.Text = title;
-            if (string.IsNullOrEmpty(body)) LblBody.Visibility = Visibility.Collapsed;
+            if (string.IsNullOrEmpty(body)) BodyScroll.Visibility = Visibility.Collapsed;
             else LblBody.Text = body;
 
             if (string.IsNullOrEmpty(detail)) BtnDetail.Visibility = Visibility.Collapsed;
@@ -57,6 +57,10 @@ namespace CaelusApp.WpfHost.Dialogs
                 Grid.SetColumnSpan(BtnPrimary, 2);
                 BtnPrimary.Margin = new Thickness(0);
             }
+
+            // ViewModel / 策略页等无 Window 调用方：回落主窗口，恢复模态 / 遮罩 / CenterOwner
+            if (owner == null && System.Windows.Application.Current != null)
+                owner = System.Windows.Application.Current.MainWindow;
 
             if (owner != null && owner.IsLoaded) Owner = owner;
             else WindowStartupLocation = WindowStartupLocation.CenterScreen;

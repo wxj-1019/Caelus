@@ -25,9 +25,11 @@
       <TextBlock x:Name="LblTitle" TextWrapping="Wrap" TextAlignment="Center" MaxHeight="56"
                  Margin="4,12,4,0" FontSize="{DynamicResource FontSizeTitle}" FontWeight="SemiBold"
                  Foreground="{DynamicResource TextPrimaryBrush}" AutomationProperties.Name="弹窗标题"/>
-      <TextBlock x:Name="LblBody" TextWrapping="Wrap" TextAlignment="Center" Margin="4,8,4,0"
-                 FontSize="13" LineHeight="20"
-                 Foreground="{DynamicResource TextSecondaryBrush}" AutomationProperties.Name="弹窗正文"/>
+      <ScrollViewer x:Name="BodyScroll" MaxHeight="220" VerticalScrollBarVisibility="Auto" Margin="4,8,4,0">
+        <TextBlock x:Name="LblBody" TextWrapping="Wrap" TextAlignment="Center"
+                   FontSize="13" LineHeight="20"
+                   Foreground="{DynamicResource TextSecondaryBrush}" AutomationProperties.Name="弹窗正文"/>
+      </ScrollViewer>
       <Button x:Name="BtnDetail" Margin="0,14,0,0" Visibility="Collapsed"
               Style="{DynamicResource GhostButton}" FontSize="{DynamicResource FontSizeCaption}"
               Click="OnDetailClick" AutomationProperties.Name="技术详情开关"

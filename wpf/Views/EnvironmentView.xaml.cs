@@ -69,7 +69,7 @@ namespace CaelusApp.WpfHost.Views
                 string message = item.Id == "vbs" && !desired
                     ? Lang.T("vbs.restorefail")
                     : Lang.T("env.failed");
-                MessageDialogWpf.Show(Window.GetWindow(this), "VBS 设置失败", "系统设置保持原样。",
+                MessageDialogWpf.Show(Window.GetWindow(this), "环境项设置失败", "系统设置保持原样。",
                     MsgSeverity.Danger, MsgButtons.Ok, message, null, MessageBoxResult.OK);
                 RollBack(toggle, item);
                 return;

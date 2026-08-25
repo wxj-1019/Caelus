@@ -11,7 +11,7 @@ namespace CaelusApp
 {
     internal partial class PanelForm
     {
-        private Toggle swAuto, swAutoHide, swDev, swFocus, swDaily;
+        private Toggle swAuto, swAutoHide, swDev, swFocus, swIde, swDaily, swBattery;
         private SettingCard cardShader;
         private static volatile bool shaderCleaning;
         private int slowBusy;
@@ -79,6 +79,14 @@ namespace CaelusApp
                 devFocus.SetFocusMode(swFocus.Checked);
             });
             MakeAutoCard(scroll, 6, sy, ScrollContentW, 76, Lang.T("set.focus"), Lang.T("set.focus.n"), swFocus, out cardH);
+            sy += cardH + 8;
+
+            swIde = MakeSwitch(Settings.Load("DevFocusIdeOn", true), delegate
+            {
+                // 与 WPF 设置页一致走 SetIdeOn：写注册表 + 活性重算 + 关闭时清空已追踪 IDE 集合
+                devFocus.SetIdeOn(swIde.Checked);
+            });
+            MakeAutoCard(scroll, 6, sy, ScrollContentW, 76, Lang.T("set.ide"), Lang.T("set.ide.n"), swIde, out cardH);
             sy += cardH + 8;
 
             // 今日专注时长统计（构建时快照，重启后刷新）
@@ -184,6 +192,48 @@ namespace CaelusApp
             });
             MakeAutoCard(scroll, 6, sy, ScrollContentW, 76, Lang.T("set.daily"), Lang.T("set.daily.n"), swDaily, out cardH);
             sy += cardH + 8;
+
+            swBattery = MakeSwitch(Settings.Load("DailyCareBatteryOn", true), delegate
+            {
+                // 与 WPF 设置页一致走 SetBatteryOn：写注册表 + 活性重算立即生效
+                if (dailyCare != null) dailyCare.SetBatteryOn(swBattery.Checked);
+                else Settings.Save("DailyCareBatteryOn", swBattery.Checked);
+            });
+            MakeAutoCard(scroll, 6, sy, ScrollContentW, 76, Lang.T("set.battery"), Lang.T("set.battery.n"), swBattery, out cardH);
+            sy += cardH + 8;
+
+            // 健康维护频率（1-30 天）
+            CardLabel(scroll, Lang.T("set.health.freq"), 14, sy + 6, ScrollContentW - 28, 18, 8f, true, Theme.Fg);
+            var tbHealthFreq = Theme.MakeTextBox(Theme.S(14), Theme.S(sy + 26), Theme.S(ScrollContentW - 110));
+            tbHealthFreq.Text = HealthCare.IntervalDays().ToString();
+            tbHealthFreq.Height = Theme.S(26);
+            tbHealthFreq.ForeColor = Theme.Fg;
+            tbHealthFreq.BackColor = Theme.Inset;
+            scroll.Controls.Add(tbHealthFreq);
+            var btnHealthFreq = new PillButton(Lang.T("set.dev.custom.save"), BtnKind.Normal);
+            btnHealthFreq.Bg = Theme.Card;
+            btnHealthFreq.Size = new Size(Theme.S(80), Theme.S(26));
+            btnHealthFreq.Location = new Point(Theme.S(ScrollContentW - 96), Theme.S(sy + 26));
+            btnHealthFreq.Click += delegate
+            {
+                int days;
+                if (int.TryParse((tbHealthFreq.Text ?? "").Trim(), out days) && days >= 1 && days <= 30)
+                {
+                    Settings.SaveStr("HealthIntervalDays", days.ToString());
+                    btnHealthFreq.Text = Lang.T("set.dev.custom.saved");
+                    var revert4 = new System.Windows.Forms.Timer();
+                    revert4.Interval = 1500;
+                    revert4.Tick += (s5, e5) => { revert4.Stop(); revert4.Dispose(); btnHealthFreq.Text = Lang.T("set.dev.custom.save"); };
+                    revert4.Start();
+                }
+                else
+                {
+                    tbHealthFreq.Text = HealthCare.IntervalDays().ToString();
+                }
+            };
+            scroll.Controls.Add(btnHealthFreq);
+            CardLabel(scroll, Lang.T("set.health.freq.n"), 14, sy + 60, ScrollContentW - 28, 32, 7.4f, false, Theme.Dim);
+            sy += 100;
 
             // Startup audit report
             string news = Settings.LoadStr("HealthStartupNews", "");

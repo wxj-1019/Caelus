@@ -23,6 +23,8 @@ namespace CaelusApp
         {
             "Caelus.games.txt", GameProfileStore.FileName, "Caelus.whitelist.txt", "Caelus.targets.txt",
             "Caelus.log", "crash.log",
+            // 便携版→安装版迁移时保留自动入库忽略表与启动项审查基线
+            "Caelus.autoignore.txt", "Caelus.startup.baseline",
             LegacyFreezeRecovery.StateFileName, SuppressionCore.StateFileName
         };
 

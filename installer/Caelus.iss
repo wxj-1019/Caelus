@@ -43,10 +43,11 @@ Source: "..\README.md"; DestDir: "{app}"; Flags: ignoreversion
 Name: "{group}\Caelus"; Filename: "{app}\Caelus.exe"; IconFilename: "{app}\Caelus.ico"
 Name: "{group}\卸载 Caelus"; Filename: "{uninstallexe}"
 Name: "{autodesktop}\Caelus"; Filename: "{app}\Caelus.exe"; IconFilename: "{app}\Caelus.ico"; Tasks: desktopicon
-; 开机自启通过计划任务实现，而非启动文件夹
-Name: "{userstartup}\Caelus"; Filename: "{app}\Caelus.exe"; IconFilename: "{app}\Caelus.ico"; Tasks: startupicon
 
 [Run]
+; 开机自启通过计划任务实现（与应用内 TaskHelper.CreateStartupTask 一致：ONLOGON / RL HIGHEST / --autostart），
+; 而非启动文件夹快捷方式（会每次登录弹 UAC + 弹主窗口）。
+Filename: "schtasks"; Parameters: "/Create /F /SC ONLOGON /RL HIGHEST /TN Caelus /TR ""\""{app}\Caelus.exe\"" --autostart"""; Tasks: startupicon; Flags: runhidden waituntilterminated
 ; 安装完成后启动 Caelus
 Filename: "{app}\Caelus.exe"; Description: "启动 Caelus"; Flags: nowait postinstall skipifsilent runascurrentuser
 
@@ -75,9 +76,13 @@ begin
   StopCaelusGracefully;
 end;
 
-// 卸载前停止运行中的实例
+// 卸载前停止运行中的实例，并清理安装器创建的计划任务
 function InitializeUninstall(): Boolean;
+var
+  ResultCode: Integer;
 begin
   StopCaelusGracefully;
+  // 删除开机自启计划任务（若存在）；设置页创建的同名任务也会一并移除
+  Exec('schtasks', '/Delete /TN Caelus /F', '', SW_HIDE, ewWaitUntilTerminated, ResultCode);
   Result := True;
 end;

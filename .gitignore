@@ -35,3 +35,4 @@ wpf/obj/
 # Tooling state and logs (not part of the product)
 .zcode/
 logs/
+release/

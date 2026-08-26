@@ -59,8 +59,13 @@ namespace CaelusApp.WpfHost.Views
         {
             LogViewModel vm = DataContext as LogViewModel;
             if (vm == null) return;
+            // 内容刷新会整体替换 Text（绑定），先把滚动位置取走再刷新，
+            // "跟随最新"关闭时保持当前阅读位置不被重置
+            double offset = scrollToEnd ? 0 : TbLog.VerticalOffset;
             vm.Refresh();
-            if (scrollToEnd && vm.HasVisibleLog) TbLog.ScrollToEnd();
+            if (!vm.HasVisibleLog) return;
+            if (scrollToEnd) TbLog.ScrollToEnd();
+            else TbLog.ScrollToVerticalOffset(offset);
         }
 
         private void OnOpenLog(object sender, RoutedEventArgs e)

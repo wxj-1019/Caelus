@@ -301,10 +301,14 @@ namespace CaelusApp.WpfHost
         private void UpdateAutoHide()
         {
             if (gameMode == null || !IsLoaded) return;
+            bool settingOn = Settings.Load(AutoHidePolicy.SettingKey, false);
             bool gameActive = gameMode.Enabled && gameMode.IsActive;
             bool visible = IsVisible && WindowState != WindowState.Minimized;
+            // 状态机每 tick 照常推进（含边沿武装语义，与 WinForms 一致）；
+            // 设置关闭时立即取消挂起的自动收起（对齐 WinForms OnAutoHideToggle）
             AutoHideAction action = AutoHidePolicy.Next(gameActive, ref autoHideLastActive, ref autoHideArmed,
-                Settings.Load(AutoHidePolicy.SettingKey, false), visible);
+                settingOn, visible);
+            if (!settingOn) { CancelAutoHide(); return; }
             if (action == AutoHideAction.Cancel) { CancelAutoHide(); return; }
             if (action != AutoHideAction.Schedule) return;
             CancelAutoHide();

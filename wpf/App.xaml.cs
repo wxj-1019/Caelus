@@ -56,11 +56,13 @@ namespace CaelusApp.WpfHost
             // 宿主不因单个绑定/布局异常静默丢窗口：记日志后标记已处理，界面保持存活
             DispatcherUnhandledException += (s, ex) =>
             {
+                // 与 WinForms 版同一 crash.log（数据目录）；数据目录未就绪时回退临时目录
+                string logDir;
+                try { logDir = Paths.Data ?? Path.GetTempPath(); } catch { logDir = Path.GetTempPath(); }
                 try
                 {
-                    File.AppendAllText(
-                        Path.Combine(Path.GetTempPath(), "CaelusWpf.crash.log"),
-                        DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss") + " " + ex.Exception + Environment.NewLine);
+                    File.AppendAllText(Path.Combine(logDir, "crash.log"),
+                        DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss") + "  [WPF] " + ex.Exception + Environment.NewLine);
                 }
                 catch { }
                 ex.Handled = true;

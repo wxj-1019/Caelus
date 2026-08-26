@@ -225,6 +225,8 @@ namespace CaelusApp.WpfHost
             IntPtr hwnd = new WindowInteropHelper(this).Handle;
             HwndSource source = HwndSource.FromHwnd(hwnd);
             if (source != null) source.AddHook(WndProc);
+            // 提权拖放：放行 WM_DROPFILES 与 OLE 拖放消息穿越 UIPI 过滤器（与 WinForms EnableElevatedFileDrop 一致）
+            try { Native.EnableElevatedFileDrop(hwnd); } catch { }
             // Win11 22H2+：窗口圆角（DWMWCP_ROUND）+ Mica 主窗口材质（DWMSBT_MAINWINDOW）。
             // 两者都要求 AllowsTransparency=False（layered 窗口不参与 DWM 形状与材质）。
             ApplyWindowChrome(hwnd);
@@ -346,8 +348,15 @@ namespace CaelusApp.WpfHost
             public Win32Point ptMaxTrackSize;
         }
 
-        private static IntPtr WndProc(IntPtr hwnd, int msg, IntPtr wParam, IntPtr lParam, ref bool handled)
+        private IntPtr WndProc(IntPtr hwnd, int msg, IntPtr wParam, IntPtr lParam, ref bool handled)
         {
+            if (msg == Native.WM_DROPFILES) // 窗口级文件拖放（与 WinForms 一致）：OLE 路径不可用时的兜底
+            {
+                string[] files = Native.ReadDroppedFiles(wParam);
+                if (files != null && files.Length > 0) RouteDroppedFiles(files);
+                handled = true;
+                return IntPtr.Zero;
+            }
             if (msg == 0x0083) // WM_NCCALCSIZE：客户区 = 全窗口，去掉非客户区
             {
                 handled = true;
@@ -382,19 +391,70 @@ namespace CaelusApp.WpfHost
                 }
                 return IntPtr.Zero;
             }
-            if (msg == 0x0024) // WM_GETMINMAXINFO：最大化不超出工作区（AllowsTransparency 的 WPF bug）
+            if (msg == 0x0024) // WM_GETMINMAXINFO：最大化不超出工作区（AllowsTransparency 的 WPF bug）；
+                               // 取窗口当前所在显示器的工作区（多屏对齐 WinForms，失败回退主屏）
             {
                 MinMaxInfo mmi = (MinMaxInfo)Marshal.PtrToStructure(lParam, typeof(MinMaxInfo));
-                Rect wa = SystemParameters.WorkArea;
-                mmi.ptMaxSize.X = (int)wa.Width;
-                mmi.ptMaxSize.Y = (int)wa.Height;
-                mmi.ptMaxPosition.X = (int)wa.Left;
-                mmi.ptMaxPosition.Y = (int)wa.Top;
+                Win32Rect wa = GetWindowWorkArea(hwnd);
+                if (wa.Right <= wa.Left || wa.Bottom <= wa.Top)
+                {
+                    Rect s = SystemParameters.WorkArea;
+                    wa.Left = (int)s.Left; wa.Top = (int)s.Top;
+                    wa.Right = (int)(s.Left + s.Width); wa.Bottom = (int)(s.Top + s.Height);
+                }
+                mmi.ptMaxSize.X = wa.Right - wa.Left;
+                mmi.ptMaxSize.Y = wa.Bottom - wa.Top;
+                mmi.ptMaxPosition.X = wa.Left;
+                mmi.ptMaxPosition.Y = wa.Top;
                 Marshal.StructureToPtr(mmi, lParam, true);
                 handled = true;
                 return IntPtr.Zero;
             }
             return IntPtr.Zero;
+        }
+
+        // 窗口级文件拖放路由（WM_DROPFILES 兜底路径）：白名单页加白名单，其余加游戏库（WinForms 默认行为）
+        private void RouteDroppedFiles(string[] files)
+        {
+            try
+            {
+                if (whitelistView != null && ReferenceEquals(PageHost.Content, whitelistView))
+                    whitelistView.AddFiles(files);
+                else if (libraryView != null)
+                    libraryView.AddDroppedFiles(files);
+            }
+            catch { }
+        }
+
+        // 窗口当前所在显示器的工作区
+        [StructLayout(LayoutKind.Sequential)]
+        private struct MonitorInfo
+        {
+            public int cbSize;
+            public Win32Rect rcMonitor;
+            public Win32Rect rcWork;
+            public uint dwFlags;
+        }
+
+        [DllImport("user32.dll")]
+        private static extern IntPtr MonitorFromWindow(IntPtr hwnd, uint dwFlags);
+
+        [DllImport("user32.dll")]
+        private static extern bool GetMonitorInfo(IntPtr hMonitor, ref MonitorInfo info);
+
+        private static Win32Rect GetWindowWorkArea(IntPtr hwnd)
+        {
+            Win32Rect none = new Win32Rect();
+            try
+            {
+                IntPtr hMon = MonitorFromWindow(hwnd, 2); // MONITOR_DEFAULTTONEAREST
+                if (hMon == IntPtr.Zero) return none;
+                MonitorInfo mi = new MonitorInfo();
+                mi.cbSize = Marshal.SizeOf(typeof(MonitorInfo));
+                if (!GetMonitorInfo(hMon, ref mi)) return none;
+                return mi.rcWork;
+            }
+            catch { return none; }
         }
 
         private static Win32Point ScreenToClient(IntPtr hwnd, int screenX, int screenY)

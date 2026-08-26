@@ -39,6 +39,7 @@
                          VerticalAlignment="Center" Margin="0,0,7,0"/>
               <ToggleButton x:Name="SwFollow" Style="{DynamicResource PolicyToggle}" IsChecked="True"
                             VerticalAlignment="Center" Margin="0,0,10,0"
+                            ToolTip="开启后每次自动刷新都滚动到日志末尾；关闭后内容仍随页面激活自动更新"
                             AutomationProperties.Name="跟随最新日志"/>
               <TextBox x:Name="TbFilter" Width="150" Text="{Binding FilterText, UpdateSourceTrigger=PropertyChanged}"
                        Style="{DynamicResource InputBox}" Padding="8,4" Margin="0,0,8,0"

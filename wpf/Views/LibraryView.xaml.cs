@@ -225,12 +225,11 @@ namespace CaelusApp.WpfHost.Views
             if (active) Motion.Reveal(DropOverlay);
         }
 
-        private void OnDrop(object sender, DragEventArgs e)
+        // 拖入文件加入游戏库（OLE 拖放与窗口级 WM_DROPFILES 兜底路径共用）
+        public void AddDroppedFiles(string[] files)
         {
             SetDropActive(false);
-            if (vm == null || !e.Data.GetDataPresent(DataFormats.FileDrop)) return;
-            string[] files = e.Data.GetData(DataFormats.FileDrop) as string[];
-            if (files == null || files.Length == 0) return;
+            if (vm == null || files == null || files.Length == 0) return;
 
             int added = 0;
             int duplicates = 0;
@@ -248,6 +247,14 @@ namespace CaelusApp.WpfHost.Views
                 vm.SetFeedback("已添加 " + added + " 个游戏" + (duplicates > 0 ? "，跳过 " + duplicates + " 个重复项。" : "。"), "Success");
             else
                 vm.SetFeedback("没有添加新游戏，跳过 " + duplicates + " 个重复项。", "Warning");
+        }
+
+        private void OnDrop(object sender, DragEventArgs e)
+        {
+            if (vm == null || !e.Data.GetDataPresent(DataFormats.FileDrop)) return;
+            string[] files = e.Data.GetData(DataFormats.FileDrop) as string[];
+            if (files == null || files.Length == 0) return;
+            AddDroppedFiles(files);
         }
     }
 }

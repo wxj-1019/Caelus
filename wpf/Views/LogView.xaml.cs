@@ -37,7 +37,11 @@ namespace CaelusApp.WpfHost.Views
 
         private void OnUnloaded(object sender, RoutedEventArgs e) { refreshTimer.Stop(); }
         private void OnVisibleChanged(object sender, DependencyPropertyChangedEventArgs e) { UpdateRefreshState(); }
-        private void OnRefreshTimerTick(object sender, EventArgs e) { RefreshLog(true); }
+        private void OnRefreshTimerTick(object sender, EventArgs e)
+        {
+            // 页面激活时内容自动刷新（与 WinForms 一致）；"跟随最新"只控制是否滚动到末尾
+            RefreshLog(SwFollow.IsChecked == true);
+        }
         private void OnRefreshLog(object sender, RoutedEventArgs e) { RefreshLog(true); }
         private void OnFollowChanged(object sender, RoutedEventArgs e)
         {
@@ -47,7 +51,7 @@ namespace CaelusApp.WpfHost.Views
 
         private void UpdateRefreshState()
         {
-            if (IsLoaded && IsVisible && SwFollow.IsChecked == true) refreshTimer.Start();
+            if (IsLoaded && IsVisible) refreshTimer.Start();
             else refreshTimer.Stop();
         }
 

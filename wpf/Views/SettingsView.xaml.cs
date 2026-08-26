@@ -866,6 +866,11 @@ namespace CaelusApp.WpfHost.Dialogs
         {
             hints = rootHints;
             if (!TryLoadMarkup()) BuildWindow();
+            // 提权拖放：放行 OLE 拖放消息穿越 UIPI（资源管理器拖入提权窗口）
+            SourceInitialized += delegate
+            {
+                try { Native.EnableElevatedFileDrop(new System.Windows.Interop.WindowInteropHelper(this).Handle); } catch { }
+            };
             Loaded += delegate
             {
                 FrameworkElement content = Content as FrameworkElement;

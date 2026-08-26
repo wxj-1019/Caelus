@@ -170,7 +170,8 @@ namespace CaelusApp.WpfHost.Views
             AddFiles(dlg.FileNames);
         }
 
-        private void AddFiles(IEnumerable<string> files)
+        // 拖入文件加入白名单（OLE 拖放与窗口级 WM_DROPFILES 兜底路径共用）
+        public void AddFiles(IEnumerable<string> files)
         {
             if (vm == null) return;
             string error = vm.AddFiles(files);

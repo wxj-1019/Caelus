@@ -7,8 +7,8 @@
   <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
     <StackPanel Margin="0,0,0,16">
       <StackPanel x:Name="ZoneHeader" Margin="0,0,0,16">
-        <TextBlock Text="设置" Style="{DynamicResource PageHeader}"/>
-        <TextBlock Text="三场景开关、应用偏好与维护工具" Style="{DynamicResource PageSubtitle}"/>
+        <TextBlock x:Name="HdrTitle" Text="设置" Style="{DynamicResource PageHeader}"/>
+        <TextBlock x:Name="HdrSub" Text="三场景开关、应用偏好与维护工具" Style="{DynamicResource PageSubtitle}"/>
       </StackPanel>
 
       <Border x:Name="ZoneSummary" Style="{DynamicResource StatusBanner}" Margin="0,0,0,16" Padding="14,11">

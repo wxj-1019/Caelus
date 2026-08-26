@@ -18,8 +18,8 @@
     </Grid.RowDefinitions>
 
     <StackPanel Grid.Row="0" Margin="0,0,0,18">
-      <TextBlock Text="选运行中的程序" Style="{DynamicResource PageHeader}"/>
-      <TextBlock Text="只列出你自己开着的、有窗口的程序。系统进程和反作弊不在其中。"
+      <TextBlock x:Name="HdrTitle" Text="选运行中的程序" Style="{DynamicResource PageHeader}"/>
+      <TextBlock x:Name="HdrSub" Text="只列出你自己开着的、有窗口的程序。系统进程和反作弊不在其中。"
                  Style="{DynamicResource PageSubtitle}" Margin="0,4,0,0"
                  TextWrapping="Wrap"/>
     </StackPanel>

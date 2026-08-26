@@ -26,6 +26,8 @@ namespace CaelusApp.WpfHost.Views
         public LibraryView()
         {
             InitializeComponent();
+            HdrTitle.Text = Lang.T("nav.library");
+            HdrSub.Text = Lang.T("wpf.library.sub");
             Loaded += OnLoaded;
             Unloaded += OnUnloaded;
             IsVisibleChanged += OnIsVisibleChanged;

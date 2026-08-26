@@ -313,8 +313,8 @@ namespace CaelusApp
             Kind = kind;
             if (isDev)
             {
-                Title = "开发专注";
-                Subtitle = "编译提速 · 专注免打扰 · 开发服务守护";
+                Title = Lang.T("nav.dev");
+                Subtitle = Lang.T("wpf.dev.sub");
                 IconKey = "IconCode";
                 PriorityText = "优先级 2 / 3";
                 TriggerText = "编译进程、IDE 家族或专注模式开关任一激活。";
@@ -322,8 +322,8 @@ namespace CaelusApp
             }
             else
             {
-                Title = "日常优化";
-                Subtitle = "浏览器 / Office / 会议 · 电池供电 · 计划维护";
+                Title = Lang.T("nav.daily");
+                Subtitle = Lang.T("wpf.daily.sub");
                 IconKey = "IconDaily";
                 PriorityText = "优先级 3 / 3";
                 TriggerText = "浏览器 / Office / 会议家族活跃，或切换到电池供电。";

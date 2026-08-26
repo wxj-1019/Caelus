@@ -62,6 +62,8 @@ namespace CaelusApp.WpfHost.Dialogs
         internal RunningPickerDialogWpf(IEnumerable<string> alreadyListed)
         {
             InitializeComponent();
+            HdrTitle.Text = Lang.T("white.pick.title");
+            HdrSub.Text = Lang.T("wpf.pick.sub");
 
             known = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
             if (alreadyListed != null)

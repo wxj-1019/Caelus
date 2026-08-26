@@ -14,6 +14,8 @@ namespace CaelusApp.WpfHost.Views
         public AboutView()
         {
             InitializeComponent();
+            HdrTitle.Text = Lang.T("nav.about");
+            HdrSub.Text = Lang.T("wpf.about.sub");
             Loaded += OnLoaded;
         }
 

@@ -26,6 +26,8 @@ namespace CaelusApp.WpfHost.Views
         public SettingsView()
         {
             InitializeComponent();
+            HdrTitle.Text = Lang.T("nav.set");
+            HdrSub.Text = Lang.T("wpf.settings.sub");
             Loaded += OnLoaded;
         }
 
@@ -494,6 +496,10 @@ namespace CaelusApp.WpfHost.Dialogs
                 refresh = FindName("BtnRefresh") as Button;
                 if (rowsHost == null || status == null || progress == null
                     || clearAll == null || refresh == null) return false;
+                TextBlock hdrTitle = FindName("HdrTitle") as TextBlock;
+                TextBlock hdrSub = FindName("HdrSub") as TextBlock;
+                if (hdrTitle != null) hdrTitle.Text = Lang.T("def.title");
+                if (hdrSub != null) hdrSub.Text = Lang.T("wpf.def.sub");
                 rowsHost.ItemsSource = rows;
                 return true;
             }
@@ -526,7 +532,7 @@ namespace CaelusApp.WpfHost.Dialogs
             StackPanel header = new StackPanel { Margin = new Thickness(0, 0, 0, 16) };
             TextBlock title = DialogUi.Text(Lang.T("def.title"), DialogUi.FontSize("FontSizeMetric"), DialogUi.Brush("TextPrimaryBrush", Brushes.Black));
             DialogUi.Style(title, "PageHeader");
-            TextBlock subtitle = DialogUi.Text("按游戏目录管理实时扫描排除；只移除由 Caelus 添加的项目", DialogUi.FontSize("FontSizeSmall"),
+            TextBlock subtitle = DialogUi.Text(Lang.T("wpf.def.sub"), DialogUi.FontSize("FontSizeSmall"),
                 DialogUi.Brush("TextSecondaryBrush", Brushes.Gray));
             DialogUi.Style(subtitle, "PageSubtitle"); subtitle.Margin = new Thickness(0, 4, 0, 0);
             header.Children.Add(title); header.Children.Add(subtitle);
@@ -896,6 +902,10 @@ namespace CaelusApp.WpfHost.Dialogs
                 deleteButton = FindName("BtnDelete") as Button;
                 if (pathBox == null || status == null || progress == null || list == null
                     || inspectButton == null || browseButton == null || deleteButton == null) return false;
+                TextBlock hdrTitle = FindName("HdrTitle") as TextBlock;
+                TextBlock hdrSub = FindName("HdrSub") as TextBlock;
+                if (hdrTitle != null) hdrTitle.Text = Lang.T("addon.title");
+                if (hdrSub != null) hdrSub.Text = Lang.T("wpf.addon.sub");
                 list.ItemsSource = candidates;
                 return true;
             }
@@ -927,7 +937,7 @@ namespace CaelusApp.WpfHost.Dialogs
             StackPanel header = new StackPanel { Margin = new Thickness(0, 0, 0, 16) };
             TextBlock title = DialogUi.Text(Lang.T("addon.title"), DialogUi.FontSize("FontSizeMetric"), DialogUi.Brush("TextPrimaryBrush", Brushes.Black));
             DialogUi.Style(title, "PageHeader");
-            TextBlock subtitle = DialogUi.Text("检查并删除客户端附加组件，不触碰游戏本体与登录链路", DialogUi.FontSize("FontSizeSmall"),
+            TextBlock subtitle = DialogUi.Text(Lang.T("wpf.addon.sub"), DialogUi.FontSize("FontSizeSmall"),
                 DialogUi.Brush("TextSecondaryBrush", Brushes.Gray));
             DialogUi.Style(subtitle, "PageSubtitle"); subtitle.Margin = new Thickness(0, 4, 0, 0);
             header.Children.Add(title); header.Children.Add(subtitle); Grid.SetRow(header, 0); root.Children.Add(header);

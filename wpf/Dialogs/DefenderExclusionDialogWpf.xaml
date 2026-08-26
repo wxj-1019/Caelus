@@ -19,8 +19,8 @@
     </Grid.RowDefinitions>
 
     <StackPanel Grid.Row="0" Margin="0,0,0,16">
-      <TextBlock Text="Defender 扫描排除" Style="{DynamicResource PageHeader}"/>
-      <TextBlock Text="按游戏目录管理实时扫描排除；只移除由 Caelus 添加的项目"
+      <TextBlock x:Name="HdrTitle" Text="Defender 扫描排除" Style="{DynamicResource PageHeader}"/>
+      <TextBlock x:Name="HdrSub" Text="按游戏目录管理实时扫描排除；只移除由 Caelus 添加的项目"
                  Style="{DynamicResource PageSubtitle}" Margin="0,4,0,0"/>
     </StackPanel>
 

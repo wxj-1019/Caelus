@@ -18,6 +18,8 @@ namespace CaelusApp.WpfHost.Views
         public LogView()
         {
             InitializeComponent();
+            HdrTitle.Text = Lang.T("nav.log");
+            HdrSub.Text = Lang.T("wpf.log.sub");
             refreshTimer = new DispatcherTimer { Interval = TimeSpan.FromSeconds(3) };
             refreshTimer.Tick += OnRefreshTimerTick;
             SwFollow.Checked += OnFollowChanged;

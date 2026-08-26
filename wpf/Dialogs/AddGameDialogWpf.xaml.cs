@@ -61,6 +61,8 @@ namespace CaelusApp.WpfHost.Dialogs
             System.Collections.Generic.IEnumerable<string> learnedPaths, bool allowGpuProbe)
         {
             InitializeComponent();
+            HdrTitle.Text = Lang.T("scan.title");
+            HdrSub.Text = Lang.T("wpf.addgame.sub");
             Rows = new ObservableCollection<ScanRow>();
             rowsView = CollectionViewSource.GetDefaultView(Rows);
             rowsView.Filter = FilterRow;

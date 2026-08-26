@@ -14,6 +14,8 @@ namespace CaelusApp.WpfHost.Views
         public PolicyView()
         {
             InitializeComponent();
+            HdrTitle.Text = Lang.T("nav.policy");
+            HdrSub.Text = Lang.T("wpf.policy.sub");
             Loaded += OnLoaded;
             Unloaded += OnUnloaded;
         }

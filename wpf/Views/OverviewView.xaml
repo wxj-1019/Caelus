@@ -63,8 +63,8 @@
                 AutomationProperties.Name="三场景调度总览内容">
     <StackPanel Margin="0,0,0,16">
       <StackPanel x:Name="ZoneHeader" Margin="0,0,0,16">
-        <TextBlock Text="场景总览" Style="{DynamicResource PageHeader}"/>
-        <TextBlock Text="游戏 · 开发专注 · 日常优化——按严格优先级自动仲裁，任一时刻只有一个场景掌权"
+        <TextBlock x:Name="HdrTitle" Text="场景总览" Style="{DynamicResource PageHeader}"/>
+        <TextBlock x:Name="HdrSub" Text="游戏 · 开发专注 · 日常优化——按严格优先级自动仲裁，任一时刻只有一个场景掌权"
                    Style="{DynamicResource PageSubtitle}"
                    Margin="0,4,0,0" TextWrapping="Wrap"/>
       </StackPanel>

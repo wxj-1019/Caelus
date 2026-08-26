@@ -5,8 +5,8 @@
   <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
     <StackPanel Margin="0,0,0,16">
       <StackPanel x:Name="ZoneHeader" Margin="0,0,0,16">
-        <TextBlock Text="关于" Style="{DynamicResource PageHeader}"/>
-        <TextBlock Text="版本、项目与更新" Style="{DynamicResource PageSubtitle}"/>
+        <TextBlock x:Name="HdrTitle" Text="关于" Style="{DynamicResource PageHeader}"/>
+        <TextBlock x:Name="HdrSub" Text="版本、项目与更新" Style="{DynamicResource PageSubtitle}"/>
       </StackPanel>
 
       <Grid x:Name="ZoneBrand" Margin="2,0,2,20">

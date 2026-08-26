@@ -50,8 +50,8 @@
   <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
     <StackPanel Margin="0,0,0,16">
       <StackPanel x:Name="ZoneHeader" Margin="0,0,0,16">
-        <TextBlock Text="优化策略" Style="{DynamicResource PageHeader}"/>
-        <TextBlock Text="调度与压制的生效策略"
+        <TextBlock x:Name="HdrTitle" Text="优化策略" Style="{DynamicResource PageHeader}"/>
+        <TextBlock x:Name="HdrSub" Text="调度与压制的生效策略"
                    Style="{DynamicResource PageSubtitle}"
                    Margin="0,4,0,0"/>
       </StackPanel>

@@ -16,6 +16,8 @@ namespace CaelusApp.WpfHost.Views
         public OverviewView()
         {
             InitializeComponent();
+            HdrTitle.Text = Lang.T("nav.overview");
+            HdrSub.Text = Lang.T("wpf.overview.sub");
             ModePicker.ItemsSource = new System.Collections.Generic.List<string>
             {
                 ModePalette.DisplayName(AppMode.Standard),

@@ -18,8 +18,8 @@
     </Grid.RowDefinitions>
 
     <StackPanel Grid.Row="0" Margin="0,0,0,18">
-      <TextBlock Text="添加游戏" Style="{DynamicResource PageHeader}"/>
-      <TextBlock Text="从安装记录中选择，或手动定位游戏主程序"
+      <TextBlock x:Name="HdrTitle" Text="添加游戏" Style="{DynamicResource PageHeader}"/>
+      <TextBlock x:Name="HdrSub" Text="从安装记录中选择，或手动定位游戏主程序"
                  Style="{DynamicResource PageSubtitle}" Margin="0,4,0,0"/>
     </StackPanel>
 

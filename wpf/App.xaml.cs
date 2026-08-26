@@ -625,6 +625,7 @@ namespace CaelusApp.WpfHost
                 ShutdownMode = ShutdownMode.OnExplicitShutdown;
                 Motion.Enabled = false;
                 Paths.Init();
+                Lang.Init();
                 ThemeManager.Apply(this, UiTone.Dark, AppMode.Standard);
                 // 游戏库/策略/体检在探针下无真实数据，注入样例以捕获实机图（仅此路径生效）；
                 // 场景页面注入“游戏掌权 / 开发活跃待命”的三场景构图。

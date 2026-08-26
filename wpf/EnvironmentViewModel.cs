@@ -14,7 +14,7 @@ namespace CaelusApp
 
         // —— 标题与分区 ——
         public string PageTitle { get { return Lang.T("nav.env"); } }
-        public string PageSub { get { return "按生效范围整理系统底层设置。改动均可在本页恢复，只有标记“需重启”的项目需要重启。"; } }
+        public string PageSub { get { return Lang.T("wpf.env.sub"); } }
         public string GraphicsSection { get { return "图形呈现"; } }
         public string SecuritySection { get { return "安全与内核"; } }
         public string InterruptSection { get { return "中断与设备"; } }

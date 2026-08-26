@@ -11,8 +11,8 @@
     </Grid.RowDefinitions>
 
     <StackPanel x:Name="ZoneHeader" Grid.Row="0" Margin="0,0,0,16">
-      <TextBlock Text="游戏库" Style="{DynamicResource PageHeader}"/>
-      <TextBlock Text="管理游戏主程序并查看当前运行状态"
+      <TextBlock x:Name="HdrTitle" Text="游戏库" Style="{DynamicResource PageHeader}"/>
+      <TextBlock x:Name="HdrSub" Text="管理游戏主程序并查看当前运行状态"
                  Style="{DynamicResource PageSubtitle}"/>
     </StackPanel>
 

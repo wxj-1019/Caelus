@@ -161,7 +161,7 @@ namespace CaelusApp
                             activeBuildPids.Remove(pc.Pid);
                     }
 
-                    // IDE 进程匹配（Task 4 接线，当前 IsIdeProcess 为 stub）
+                    // IDE 进程匹配（Task 4 接线：名称预筛 + 安装目录双重校验，见 IsIdeProcess）
                     if (pc.Kind == ProcessChangeKind.Started && IdeOn && IsIdeProcess(pc.Pid, pc.Name, pc.Path))
                     {
                         if (activeIdePids.Add(pc.Pid)) ideChanged = true;

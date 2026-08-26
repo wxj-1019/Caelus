@@ -8,7 +8,7 @@
 
 [![対応](https://img.shields.io/badge/対応-Windows%2010%2F11-%235E5CE6)](https://github.com/wxj-1019/Caelus)
 [![言語](https://img.shields.io/badge/言語-C%23%20.NET%20Framework%204.x-%237A78F0)](https://github.com/wxj-1019/Caelus)
-[![自己テスト](https://img.shields.io/badge/自己テスト-229%20件%20合格-%233DD68C)](https://github.com/wxj-1019/Caelus)
+[![自己テスト](https://img.shields.io/badge/自己テスト-232%20件%20合格-%233DD68C)](https://github.com/wxj-1019/Caelus)
 [![プライバシー](https://img.shields.io/badge/プライバシー-完全ローカル%20%C2%B7%20送信なし-%233DD68C)](https://github.com/wxj-1019/Caelus)
 [![ライセンス](https://img.shields.io/badge/ライセンス-販売禁止-%23E5A13D)](LICENSE)
 
@@ -95,13 +95,19 @@ WeGame はログインと起動だけを担当します。ロビーの準備完�
 ## 画面
 
 <div align="center">
-<img src="docs/overview-v14.png" width="49%" alt="概要">
-<img src="docs/library-v14.png" width="49%" alt="対象ライブラリ">
-<img src="docs/policy-v14.png" width="49%" alt="最適化ポリシー">
-<img src="docs/anticheat-v14.png" width="49%" alt="アンチチート">
+<img src="docs/overview-v15.png" width="49%" alt="概要">
+<img src="docs/library-v15.png" width="49%" alt="対象ライブラリ">
+<img src="docs/policy-v15.png" width="49%" alt="最適化ポリシー">
+<img src="docs/graphics-v15.png" width="49%" alt="グラフィックス">
 <br>
-<img src="docs/reports-v14.png" width="49%" alt="実行ログ">
-<img src="docs/settings-v14.png" width="49%" alt="設定と復元">
+<img src="docs/anticheat-v15.png" width="49%" alt="アンチチート">
+<img src="docs/devfocus-v15.png" width="49%" alt="開発フォーカス">
+<br>
+<img src="docs/environment-v15.png" width="49%" alt="システム環境">
+<img src="docs/whitelist-v15.png" width="49%" alt="ホワイトリスト">
+<br>
+<img src="docs/audit-v15.png" width="49%" alt="システム診断">
+<img src="docs/settings-v15.png" width="49%" alt="設定と復元">
 </div>
 
 ## ビルド
@@ -152,7 +158,7 @@ dev.cmd test   rem セルフテスト入りでビルドし、実行して結果�
 
 ## 検証範囲
 
-内蔵セルフテストは現在 `229` 件です。対象検出とセッション保護、抑制と復元（PID 再利用、クラッシュ後の復帰を含む）、CPU 構成と分割、プロファイル保存形式の互換性と未知バージョンの保護、ゲームスキャンとアクセラレーターの除外、学習機構の発動境界、システム診断の閾値、League 専用機能の境界、画面描画を扱います。環境に必要な機能がない場合は `PASS` ではなく `SKIP` と記録します。
+内蔵セルフテストは現在 `232` 件です。対象検出とセッション保護、抑制と復元（PID 再利用、クラッシュ後の復帰を含む）、CPU 構成と分割、プロファイル保存形式の互換性と未知バージョンの保護、ゲームスキャンとアクセラレーターの除外、学習機構の発動境界、システム診断の閾値、League 専用機能の境界、画面描画を扱います。環境に必要な機能がない場合は `PASS` ではなく `SKIP` と記録します。
 
 同一コア競合テストは、2 つの計算プロセスを同じコアに置いて競合側を凍結するものです。CPU 時間を解放すればスループットが回復することを示すだけで、実ゲームの FPS や 1% Low の証拠ではありません。
 

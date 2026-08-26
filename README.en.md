@@ -8,7 +8,7 @@
 
 [![Platform](https://img.shields.io/badge/platform-Windows%2010%2F11-%235E5CE6)](https://github.com/wxj-1019/Caelus)
 [![Language](https://img.shields.io/badge/language-C%23%20.NET%20Framework%204.x-%237A78F0)](https://github.com/wxj-1019/Caelus)
-[![Self-tests](https://img.shields.io/badge/self%2Dtests-229%20passing-%233DD68C)](https://github.com/wxj-1019/Caelus)
+[![Self-tests](https://img.shields.io/badge/self%2Dtests-232%20passing-%233DD68C)](https://github.com/wxj-1019/Caelus)
 [![Privacy](https://img.shields.io/badge/privacy-local%20only%20%C2%B7%20zero%20upload-%233DD68C)](https://github.com/wxj-1019/Caelus)
 [![License](https://img.shields.io/badge/license-resale%20forbidden-%23E5A13D)](LICENSE)
 
@@ -95,13 +95,19 @@ They sit on the "System environment" page along with MPO and the GPU/NIC/USB int
 ## Interface
 
 <div align="center">
-<img src="docs/overview-v14.png" width="49%" alt="Overview">
-<img src="docs/library-v14.png" width="49%" alt="Target library">
-<img src="docs/policy-v14.png" width="49%" alt="Policy">
-<img src="docs/anticheat-v14.png" width="49%" alt="Anti-cheat controls">
+<img src="docs/overview-v15.png" width="49%" alt="Overview">
+<img src="docs/library-v15.png" width="49%" alt="Target library">
+<img src="docs/policy-v15.png" width="49%" alt="Policy">
+<img src="docs/graphics-v15.png" width="49%" alt="Graphics">
 <br>
-<img src="docs/reports-v14.png" width="49%" alt="Session reports">
-<img src="docs/settings-v14.png" width="49%" alt="Settings and recovery">
+<img src="docs/anticheat-v15.png" width="49%" alt="Anti-cheat controls">
+<img src="docs/devfocus-v15.png" width="49%" alt="Dev focus">
+<br>
+<img src="docs/environment-v15.png" width="49%" alt="System environment">
+<img src="docs/whitelist-v15.png" width="49%" alt="Whitelist">
+<br>
+<img src="docs/audit-v15.png" width="49%" alt="System audit">
+<img src="docs/settings-v15.png" width="49%" alt="Settings and recovery">
 </div>
 
 ## Build
@@ -152,7 +158,7 @@ The implementation uses Windows APIs including `SetPriorityClass`, `SetProcessDe
 
 ## Validation scope
 
-The built-in suite currently contains `229` tests, covering target detection and session protection, suppression and recovery (including PID reuse and crash wake-up), CPU topology and partitioning, profile storage format compatibility and unknown-version protection, game scanning and accelerator filtering, the boundaries of the launcher-learning mechanism, system audit thresholds, League column boundaries and UI rendering. A missing platform capability is recorded as `SKIP`, never as `PASS`.
+The built-in suite currently contains `232` tests, covering target detection and session protection, suppression and recovery (including PID reuse and crash wake-up), CPU topology and partitioning, profile storage format compatibility and unknown-version protection, game scanning and accelerator filtering, the boundaries of the launcher-learning mechanism, system audit thresholds, League column boundaries and UI rendering. A missing platform capability is recorded as `SKIP`, never as `PASS`.
 
 The same-core contention test deliberately puts two compute processes on one core and suspends the contender. It only shows that throughput recovers once CPU time is released — it is not evidence of real-game FPS or 1% Low gains.
 

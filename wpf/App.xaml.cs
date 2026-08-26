@@ -78,6 +78,17 @@ namespace CaelusApp.WpfHost
                 Shutdown(code);
                 return;
             }
+            if (e.Args.Length >= 3 && e.Args[0] == "--screenshot")
+            {
+                int code = RunSingleShot(e.Args[1], e.Args[2]);
+                Shutdown(code);
+                return;
+            }
+            if (e.Args.Length >= 1 && e.Args[0] == "--ui-preview")
+            {
+                RunUiPreview();
+                return;
+            }
 
             // 工具参数（--genicon/--geniconpng/--freeze-watchdog）与自测入口（自测版编译）
             if (WpfRuntimeHost.HandleEarlyExit(e.Args))
@@ -568,38 +579,91 @@ namespace CaelusApp.WpfHost
 
         private void CapturePage(string dir, string page)
         {
-            // 游戏库/策略/体检在探针下无真实数据，注入样例以捕获实机图（仅此路径生效）；
-            // 场景页面注入“游戏掌权 / 开发活跃待命”的三场景构图。
-            Views.LibraryView.InjectSampleData = (page == "library");
-            Views.PolicyView.InjectSampleData = (page == "policy");
-            Views.AuditView.InjectSampleData = (page == "audit");
-            Views.GraphicsView.InjectSampleData = (page == "graphics");
-            Views.OverviewView.InjectSampleData = (page == "overview");
-            Views.ScenarioDetailView.InjectSampleData = (page == "dev" || page == "daily");
-            MainWindow window = new MainWindow(new GameMode(Paths.Data, new SuppressionCore()));
-            window.ApplyPersistedMode(AppMode.Standard);
-            window.WindowStartupLocation = WindowStartupLocation.Manual;
-            window.Left = -20000;
-            window.Top = -20000;
-            window.ShowInTaskbar = false;
-            window.ShowActivated = false;
-            window.Show();
-            FrameworkElement shown = window.NavigateToForShot(page);
-            // 体检结果态无真实探测数据，导航到位后显式注入样例（避免 OnLoaded 静态标志时序问题）
-            Views.AuditView auditShown = shown as Views.AuditView;
-            if (auditShown != null) auditShown.ApplySampleResult();
-            Size size = new Size(1196, 768);
-            window.Measure(size);
-            window.Arrange(new Rect(size));
-            window.UpdateLayout();
-            RenderTargetBitmap bitmap = new RenderTargetBitmap(1196, 768, 96, 96, PixelFormats.Pbgra32);
-            bitmap.Render(window);
-            PngBitmapEncoder encoder = new PngBitmapEncoder();
-            encoder.Frames.Add(BitmapFrame.Create(bitmap));
-            string file = Path.Combine(dir, "wpf-" + page + "-dark-cruise.png");
-            using (FileStream stream = File.Create(file)) encoder.Save(stream);
-            window.RealExit = true;
-            window.Close();
+            RunSingleShot(Path.Combine(dir, "wpf-" + page + "-dark-cruise.png"), page);
+        }
+
+        // --screenshot <png> <page>：离屏渲染单页存 PNG（对齐 WinForms 同名开发入口；WPF 页以名称指定）
+        private int RunSingleShot(string pngPath, string page)
+        {
+            try
+            {
+                ShutdownMode = ShutdownMode.OnExplicitShutdown;
+                Motion.Enabled = false;
+                Paths.Init();
+                ThemeManager.Apply(this, UiTone.Dark, AppMode.Standard);
+                // 游戏库/策略/体检在探针下无真实数据，注入样例以捕获实机图（仅此路径生效）；
+                // 场景页面注入“游戏掌权 / 开发活跃待命”的三场景构图。
+                Views.OverviewView.InjectSampleData = (page == "overview");
+                Views.LibraryView.InjectSampleData = (page == "library");
+                Views.PolicyView.InjectSampleData = (page == "policy");
+                Views.AuditView.InjectSampleData = (page == "audit");
+                Views.GraphicsView.InjectSampleData = (page == "graphics");
+                Views.ScenarioDetailView.InjectSampleData = (page == "dev" || page == "daily");
+                MainWindow window = new MainWindow(new GameMode(Paths.Data, new SuppressionCore()));
+                window.ApplyPersistedMode(AppMode.Standard);
+                window.WindowStartupLocation = WindowStartupLocation.Manual;
+                window.Left = -20000;
+                window.Top = -20000;
+                window.ShowInTaskbar = false;
+                window.ShowActivated = false;
+                window.Show();
+                FrameworkElement shown = window.NavigateToForShot(page);
+                // 体检结果态无真实探测数据，导航到位后显式注入样例（避免 OnLoaded 静态标志时序问题）
+                Views.AuditView auditShown = shown as Views.AuditView;
+                if (auditShown != null) auditShown.ApplySampleResult();
+                Size size = new Size(1196, 768);
+                window.Measure(size);
+                window.Arrange(new Rect(size));
+                window.UpdateLayout();
+                RenderTargetBitmap bitmap = new RenderTargetBitmap(1196, 768, 96, 96, PixelFormats.Pbgra32);
+                bitmap.Render(window);
+                PngBitmapEncoder encoder = new PngBitmapEncoder();
+                encoder.Frames.Add(BitmapFrame.Create(bitmap));
+                string dirName = Path.GetDirectoryName(Path.GetFullPath(pngPath));
+                if (!string.IsNullOrEmpty(dirName)) Directory.CreateDirectory(dirName);
+                using (FileStream stream = File.Create(pngPath)) encoder.Save(stream);
+                window.RealExit = true;
+                window.Close();
+                return 0;
+            }
+            catch (Exception ex)
+            {
+                try { File.WriteAllText(pngPath + ".error.txt", ex.ToString()); } catch { }
+                return 1;
+            }
+        }
+
+        // --ui-preview：轻量 UI 预览（对齐 WinForms 同名入口）：真实 GameMode/Core，
+        // 无单实例锁/托盘/更新检查；关闭窗口即退出
+        private void RunUiPreview()
+        {
+            try
+            {
+                ShutdownMode = ShutdownMode.OnExplicitShutdown;
+                Paths.Init();
+                Lang.Init();
+                AppMode initial = ModeController.LoadPersisted();
+                ThemeManager.Apply(this, ThemeManager.ResolveTone(), initial);
+                var previewMode = new GameMode(Paths.Data, new SuppressionCore());
+                previewMode.Enabled = Settings.Load("GameModeOn", true);
+                var window = new MainWindow(previewMode);
+                window.ApplyPersistedMode(initial);
+                window.RealExit = true;
+                window.Closed += delegate { Shutdown(0); };
+                MainWindow = window;
+                window.Show();
+                window.Activate();
+            }
+            catch (Exception ex)
+            {
+                try
+                {
+                    File.AppendAllText(Path.Combine(Paths.Data ?? Path.GetTempPath(), "crash.log"),
+                        DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss") + "  [WPF ui-preview] " + ex + Environment.NewLine);
+                }
+                catch { }
+                Shutdown(1);
+            }
         }
     }
 }

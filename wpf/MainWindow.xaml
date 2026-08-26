@@ -81,7 +81,7 @@
           <StackPanel DockPanel.Dock="Top" Margin="18,18,18,10">
             <TextBlock Text="caelus" FontSize="{DynamicResource FontSizeTitle}" FontWeight="SemiBold"
                        Foreground="{DynamicResource TextPrimaryBrush}"/>
-            <TextBlock Text="三场景调度控制台" FontSize="{DynamicResource FontSizeXs}" Margin="0,3,0,0"
+            <TextBlock x:Name="LblSubtitle" Text="三场景调度控制台" FontSize="{DynamicResource FontSizeXs}" Margin="0,3,0,0"
                        Foreground="{DynamicResource TextTertiaryBrush}"/>
           </StackPanel>
 
@@ -90,104 +90,104 @@
                          Checked="NavChecked" AutomationProperties.Name="导航：设置">
               <StackPanel Orientation="Horizontal">
                 <controls:IconView Key="IconSettings" Width="15" Height="15" VerticalAlignment="Center"/>
-                <TextBlock Text="设置" Margin="9,0,0,0" VerticalAlignment="Center"/>
+                <TextBlock x:Name="LblNavSettings" Text="设置" Margin="9,0,0,0" VerticalAlignment="Center"/>
               </StackPanel>
             </RadioButton>
             <RadioButton x:Name="NavAbout" Style="{DynamicResource NavItem}" GroupName="nav"
                          Checked="NavChecked" AutomationProperties.Name="导航：关于">
               <StackPanel Orientation="Horizontal">
                 <controls:IconView Key="IconInfo" Width="15" Height="15" VerticalAlignment="Center"/>
-                <TextBlock Text="关于" Margin="9,0,0,0" VerticalAlignment="Center"/>
+                <TextBlock x:Name="LblNavAbout" Text="关于" Margin="9,0,0,0" VerticalAlignment="Center"/>
               </StackPanel>
             </RadioButton>
           </StackPanel>
 
           <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
             <StackPanel Margin="0,0,0,8">
-              <TextBlock Text="场景" Style="{DynamicResource NavGroupLabel}"/>
+              <TextBlock x:Name="LblGrpScenario" Text="场景" Style="{DynamicResource NavGroupLabel}"/>
               <RadioButton x:Name="NavOverview" Style="{DynamicResource NavItem}" IsChecked="True"
                            GroupName="nav" Checked="NavChecked" AutomationProperties.Name="导航：场景总览">
                 <StackPanel Orientation="Horizontal">
                   <controls:IconView Key="IconOverview" Width="15" Height="15" VerticalAlignment="Center"/>
-                  <TextBlock Text="场景总览" Margin="9,0,0,0" VerticalAlignment="Center"/>
+                  <TextBlock x:Name="LblNavOverview" Text="场景总览" Margin="9,0,0,0" VerticalAlignment="Center"/>
                 </StackPanel>
               </RadioButton>
 
-              <TextBlock Text="游戏场景" Style="{DynamicResource NavGroupLabel}"/>
+              <TextBlock x:Name="LblGrpGame" Text="游戏场景" Style="{DynamicResource NavGroupLabel}"/>
               <RadioButton x:Name="NavLibrary" Style="{DynamicResource NavItem}" GroupName="nav"
                            Checked="NavChecked" AutomationProperties.Name="导航：游戏库">
                 <StackPanel Orientation="Horizontal">
                   <controls:IconView Key="IconLibrary" Width="15" Height="15" VerticalAlignment="Center"/>
-                  <TextBlock Text="游戏库" Margin="9,0,0,0" VerticalAlignment="Center"/>
+                  <TextBlock x:Name="LblNavLibrary" Text="游戏库" Margin="9,0,0,0" VerticalAlignment="Center"/>
                 </StackPanel>
               </RadioButton>
               <RadioButton x:Name="NavPolicy" Style="{DynamicResource NavItem}" GroupName="nav"
                            Checked="NavChecked" AutomationProperties.Name="导航：优化策略">
                 <StackPanel Orientation="Horizontal">
                   <controls:IconView Key="IconPolicy" Width="15" Height="15" VerticalAlignment="Center"/>
-                  <TextBlock Text="优化策略" Margin="9,0,0,0" VerticalAlignment="Center"/>
+                  <TextBlock x:Name="LblNavPolicy" Text="优化策略" Margin="9,0,0,0" VerticalAlignment="Center"/>
                 </StackPanel>
               </RadioButton>
               <RadioButton x:Name="NavGraphics" Style="{DynamicResource NavItem}" GroupName="nav"
                            Checked="NavChecked" AutomationProperties.Name="导航：显卡">
                 <StackPanel Orientation="Horizontal">
                   <controls:IconView Key="IconGpu" Width="15" Height="15" VerticalAlignment="Center"/>
-                  <TextBlock Text="显卡" Margin="9,0,0,0" VerticalAlignment="Center"/>
+                  <TextBlock x:Name="LblNavGraphics" Text="显卡" Margin="9,0,0,0" VerticalAlignment="Center"/>
                 </StackPanel>
               </RadioButton>
               <RadioButton x:Name="NavAntiCheat" Style="{DynamicResource NavItem}" GroupName="nav"
                            Checked="NavChecked" AutomationProperties.Name="导航：反作弊专项">
                 <StackPanel Orientation="Horizontal">
                   <controls:IconView Key="IconShield" Width="15" Height="15" VerticalAlignment="Center"/>
-                  <TextBlock Text="反作弊专项" Margin="9,0,0,0" VerticalAlignment="Center"/>
+                  <TextBlock x:Name="LblNavAntiCheat" Text="反作弊专项" Margin="9,0,0,0" VerticalAlignment="Center"/>
                 </StackPanel>
               </RadioButton>
 
-              <TextBlock Text="开发与日常" Style="{DynamicResource NavGroupLabel}"/>
+              <TextBlock x:Name="LblGrpDevDaily" Text="开发与日常" Style="{DynamicResource NavGroupLabel}"/>
               <RadioButton x:Name="NavDevFocus" Style="{DynamicResource NavItem}" GroupName="nav"
                            Checked="NavChecked" AutomationProperties.Name="导航：开发专注">
                 <StackPanel Orientation="Horizontal">
                   <controls:IconView Key="IconCode" Width="15" Height="15" VerticalAlignment="Center"/>
-                  <TextBlock Text="开发专注" Margin="9,0,0,0" VerticalAlignment="Center"/>
+                  <TextBlock x:Name="LblNavDevFocus" Text="开发专注" Margin="9,0,0,0" VerticalAlignment="Center"/>
                 </StackPanel>
               </RadioButton>
               <RadioButton x:Name="NavDailyCare" Style="{DynamicResource NavItem}" GroupName="nav"
                            Checked="NavChecked" AutomationProperties.Name="导航：日常优化">
                 <StackPanel Orientation="Horizontal">
                   <controls:IconView Key="IconDaily" Width="15" Height="15" VerticalAlignment="Center"/>
-                  <TextBlock Text="日常优化" Margin="9,0,0,0" VerticalAlignment="Center"/>
+                  <TextBlock x:Name="LblNavDailyCare" Text="日常优化" Margin="9,0,0,0" VerticalAlignment="Center"/>
                 </StackPanel>
               </RadioButton>
 
-              <TextBlock Text="系统" Style="{DynamicResource NavGroupLabel}"/>
+              <TextBlock x:Name="LblGrpSystem" Text="系统" Style="{DynamicResource NavGroupLabel}"/>
               <RadioButton x:Name="NavEnvironment" Style="{DynamicResource NavItem}" GroupName="nav"
                            Checked="NavChecked" AutomationProperties.Name="导航：系统环境">
                 <StackPanel Orientation="Horizontal">
                   <controls:IconView Key="IconEnvironment" Width="15" Height="15" VerticalAlignment="Center"/>
-                  <TextBlock Text="系统环境" Margin="9,0,0,0" VerticalAlignment="Center"/>
+                  <TextBlock x:Name="LblNavEnvironment" Text="系统环境" Margin="9,0,0,0" VerticalAlignment="Center"/>
                 </StackPanel>
               </RadioButton>
               <RadioButton x:Name="NavWhitelist" Style="{DynamicResource NavItem}" GroupName="nav"
                            Checked="NavChecked" AutomationProperties.Name="导航：白名单">
                 <StackPanel Orientation="Horizontal">
                   <controls:IconView Key="IconWhitelist" Width="15" Height="15" VerticalAlignment="Center"/>
-                  <TextBlock Text="白名单" Margin="9,0,0,0" VerticalAlignment="Center"/>
+                  <TextBlock x:Name="LblNavWhitelist" Text="白名单" Margin="9,0,0,0" VerticalAlignment="Center"/>
                 </StackPanel>
               </RadioButton>
 
-              <TextBlock Text="诊断" Style="{DynamicResource NavGroupLabel}"/>
+              <TextBlock x:Name="LblGrpDiag" Text="诊断" Style="{DynamicResource NavGroupLabel}"/>
               <RadioButton x:Name="NavAudit" Style="{DynamicResource NavItem}" GroupName="nav"
                            Checked="NavChecked" AutomationProperties.Name="导航：系统体检">
                 <StackPanel Orientation="Horizontal">
                   <controls:IconView Key="IconAudit" Width="15" Height="15" VerticalAlignment="Center"/>
-                  <TextBlock Text="系统体检" Margin="9,0,0,0" VerticalAlignment="Center"/>
+                  <TextBlock x:Name="LblNavAudit" Text="系统体检" Margin="9,0,0,0" VerticalAlignment="Center"/>
                 </StackPanel>
               </RadioButton>
               <RadioButton x:Name="NavLog" Style="{DynamicResource NavItem}" GroupName="nav"
                            Checked="NavChecked" AutomationProperties.Name="导航：日志">
                 <StackPanel Orientation="Horizontal">
                   <controls:IconView Key="IconLog" Width="15" Height="15" VerticalAlignment="Center"/>
-                  <TextBlock Text="日志" Margin="9,0,0,0" VerticalAlignment="Center"/>
+                  <TextBlock x:Name="LblNavLog" Text="日志" Margin="9,0,0,0" VerticalAlignment="Center"/>
                 </StackPanel>
               </RadioButton>
             </StackPanel>

@@ -54,6 +54,30 @@ namespace CaelusApp.WpfHost
         // 托盘"退出"时置 true，允许真正关闭；平时点 X 只隐藏到托盘
         public bool RealExit;
 
+        // 外壳文案走统一语言表（与 WinForms 版同源键）；品牌字样（C A E L U S / caelus / WPF PREVIEW）不可翻译，保留原样
+        private void ApplyShellLabels()
+        {
+            LblSubtitle.Text = Lang.T("shell.subtitle");
+            LblGrpScenario.Text = Lang.T("nav.group.scenario");
+            LblGrpGame.Text = Lang.T("nav.group.game");
+            LblGrpDevDaily.Text = Lang.T("nav.group.devdaily");
+            LblGrpSystem.Text = Lang.T("nav.group.system");
+            LblGrpDiag.Text = Lang.T("nav.group.diag");
+            LblNavOverview.Text = Lang.T("nav.overview");
+            LblNavLibrary.Text = Lang.T("nav.library");
+            LblNavPolicy.Text = Lang.T("nav.policy");
+            LblNavAntiCheat.Text = Lang.T("v14.anticheat");
+            LblNavGraphics.Text = Lang.T("nav.graphics");
+            LblNavDevFocus.Text = Lang.T("nav.dev");
+            LblNavDailyCare.Text = Lang.T("nav.daily");
+            LblNavEnvironment.Text = Lang.T("nav.env");
+            LblNavWhitelist.Text = Lang.T("nav.white");
+            LblNavAudit.Text = Lang.T("nav.audit");
+            LblNavLog.Text = Lang.T("nav.log");
+            LblNavSettings.Text = Lang.T("nav.set");
+            LblNavAbout.Text = Lang.T("nav.about");
+        }
+
         public MainWindow() : this(null, null, null, null, null) { }
 
         // 启动期间由 App 注入的分块泵送钩子：构建主窗口时让启动屏动画保持滚动
@@ -78,6 +102,7 @@ namespace CaelusApp.WpfHost
             DevFocus runtimeDevFocus, DailyCare runtimeDailyCare)
         {
             InitializeComponent();
+            ApplyShellLabels();
             Pump();
             // 正式运行时注入真实数据源与 Tamer/DevFocus；截图/压力探针无注入时回退只读场景探测
             gameMode = gm ?? new GameMode(Paths.Data, new SuppressionCore());

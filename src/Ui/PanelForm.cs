@@ -15,8 +15,6 @@ using Microsoft.Win32;
 
 namespace CaelusApp
 {
-    internal enum AutoHideAction { None, Schedule, Cancel }
-
     internal enum PageId
     {
         Overview = 0,
@@ -484,8 +482,8 @@ namespace CaelusApp
 
         internal static void SyncAutoHideBaseline(bool gameActive, ref bool lastActive, ref bool armed)
         {
-            lastActive = gameActive;
-            armed = gameActive;
+            // 纯逻辑已抽到 UiShared\AutoHidePolicy（WPF 宿主共用），此处仅保留测试引用入口
+            AutoHidePolicy.SyncBaseline(gameActive, ref lastActive, ref armed);
         }
 
         private void SyncUiActivity()
@@ -671,13 +669,8 @@ namespace CaelusApp
         internal static AutoHideAction NextAutoHide(bool gameActive, ref bool lastActive, ref bool armed,
             bool settingOn, bool visible)
         {
-            if (gameActive == lastActive) return AutoHideAction.None;
-            lastActive = gameActive;
-            if (!gameActive) { armed = false; return AutoHideAction.Cancel; }
-            if (armed) return AutoHideAction.None;
-            armed = true;
-            if (!settingOn || !visible) return AutoHideAction.None;
-            return AutoHideAction.Schedule;
+            // 纯逻辑已抽到 UiShared\AutoHidePolicy（WPF 宿主共用），此处仅保留测试引用入口
+            return AutoHidePolicy.Next(gameActive, ref lastActive, ref armed, settingOn, visible);
         }
 
         private void UpdateAutoHide(bool gameActive)

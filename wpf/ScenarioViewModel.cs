@@ -145,18 +145,24 @@ namespace CaelusApp
         private string gpuText = "—";
         private string memoryText = "—";
         private string hagsText = "—";
+        private string boostText = "";
+        private string boostStateKey = "Default";
 
-        public ScenarioOverviewViewModel(ScenarioStatusSource source)
+        public ScenarioOverviewViewModel(ScenarioStatusSource source, GameMode gameMode)
         {
             if (source == null) throw new ArgumentNullException("source");
             this.source = source;
+            this.gameMode = gameMode;
             mode = source.Mode;
             Cards = new ObservableCollection<ScenarioCardViewModel>();
             Cards.Add(new ScenarioCardViewModel(this, ScenarioKind.Game));
             Cards.Add(new ScenarioCardViewModel(this, ScenarioKind.DevFocus));
             Cards.Add(new ScenarioCardViewModel(this, ScenarioKind.DailyCare));
+            CpuTopologyText = CpuTopologySummary();
             source.Changed += OnSourceChanged;
         }
+
+        private readonly GameMode gameMode;
 
         public ObservableCollection<ScenarioCardViewModel> Cards { get; private set; }
 
@@ -172,6 +178,23 @@ namespace CaelusApp
         public string GpuText { get { return gpuText; } private set { SetProperty(ref gpuText, value, "GpuText"); } }
         public string MemoryText { get { return memoryText; } private set { SetProperty(ref memoryText, value, "MemoryText"); } }
         public string HagsText { get { return hagsText; } private set { SetProperty(ref hagsText, value, "HagsText"); } }
+
+        // CPU 拓扑摘要（多重群组 / 大小核 / X3D / 通用核数）——与 WinForms 概览页 CpuTopologySummary 一致
+        public string CpuTopologyText { get; private set; }
+
+        // 游戏提优加速状态（与 WinForms 概览页 lblOverviewBoost 一致）
+        public string BoostText { get { return boostText; } private set { SetProperty(ref boostText, value, "BoostText"); } }
+        public bool HasBoostText { get { return !string.IsNullOrEmpty(boostText); } }
+        // Verified → 成功色；Protected → 弱化色；Default → 主文字色
+        public string BoostStateKey { get { return boostStateKey; } private set { SetProperty(ref boostStateKey, value, "BoostStateKey"); } }
+
+        private static string CpuTopologySummary()
+        {
+            if (CpuTopology.MultiGroup) return Lang.T("v14.cpu.multigroup");
+            if (CpuTopology.Hybrid) return Lang.T("v14.cpu.hybrid");
+            if (CpuTopology.AsymCache) return Lang.T("v14.cpu.x3d");
+            return Lang.F("v14.cpu.generic", Environment.ProcessorCount);
+        }
 
         public void SetMode(AppMode value)
         {
@@ -234,6 +257,18 @@ namespace CaelusApp
             ModeText = ModePalette.DisplayName(mode);
             RefreshedText = source.LastProbeText;
             LoadDeviceSpecs();
+
+            if (gameMode != null)
+            {
+                try
+                {
+                    BoostText = gameMode.BoostStatusText;
+                    BoostStateKey = gameMode.BoostStateVerified ? "Verified"
+                        : (gameMode.BoostHandleProtected ? "Protected" : "Default");
+                    Raise("HasBoostText");
+                }
+                catch { }
+            }
         }
 
         private static string IconKey(ScenarioKind kind)

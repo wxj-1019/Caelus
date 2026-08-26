@@ -171,22 +171,49 @@
         </Grid>
       </controls:GlassCard>
 
-      <!-- 游戏性能档位：概览内的全局档位切换（原侧栏入口） -->
+      <!-- 游戏性能档位 + 提优加速状态：概览内的全局档位切换（原侧栏入口）；
+           提优状态与 WinForms 概览页 lblOverviewBoost 对齐（验证成功=绿 / 受保护=弱化 / 其余=主色） -->
       <Border x:Name="ZoneMode" Style="{DynamicResource SettingsGroup}" Padding="14,12" Margin="0,0,0,16"
-              AutomationProperties.Name="游戏性能档位">
-        <DockPanel>
-          <StackPanel DockPanel.Dock="Left" VerticalAlignment="Center" Margin="0,0,16,0">
-            <TextBlock Text="游戏性能档位" FontSize="{DynamicResource FontSizeSmall}" FontWeight="SemiBold"
-                       Foreground="{DynamicResource TextPrimaryBrush}"/>
-            <TextBlock Text="仅游戏场景掌权时生效"
-                       Margin="0,2,0,0" FontSize="{DynamicResource FontSizeXs}"
-                       Foreground="{DynamicResource TextTertiaryBrush}"/>
-          </StackPanel>
-          <controls:SegmentedControl x:Name="ModePicker" HorizontalAlignment="Right"
-                                     VerticalAlignment="Center" SelectedIndex="0"
-                                     SelectionChanged="OnModePicked"
-                                     AutomationProperties.Name="游戏性能档位"/>
-        </DockPanel>
+              AutomationProperties.Name="游戏性能档位与提优加速">
+        <StackPanel>
+          <DockPanel>
+            <StackPanel DockPanel.Dock="Left" VerticalAlignment="Center" Margin="0,0,16,0">
+              <TextBlock Text="游戏性能档位" FontSize="{DynamicResource FontSizeSmall}" FontWeight="SemiBold"
+                         Foreground="{DynamicResource TextPrimaryBrush}"/>
+              <TextBlock Text="仅游戏场景掌权时生效"
+                         Margin="0,2,0,0" FontSize="{DynamicResource FontSizeXs}"
+                         Foreground="{DynamicResource TextTertiaryBrush}"/>
+            </StackPanel>
+            <controls:SegmentedControl x:Name="ModePicker" HorizontalAlignment="Right"
+                                       VerticalAlignment="Center" SelectedIndex="0"
+                                       SelectionChanged="OnModePicked"
+                                       AutomationProperties.Name="游戏性能档位"/>
+          </DockPanel>
+          <Grid Margin="0,10,0,0">
+            <Grid.ColumnDefinitions>
+              <ColumnDefinition Width="Auto"/><ColumnDefinition Width="*"/>
+            </Grid.ColumnDefinitions>
+            <TextBlock Text="游戏提优加速" FontSize="{DynamicResource FontSizeSmall}"
+                       Foreground="{DynamicResource TextTertiaryBrush}" VerticalAlignment="Center"/>
+            <TextBlock Grid.Column="1" Text="{Binding BoostText}" Margin="16,0,0,0"
+                       FontSize="{DynamicResource FontSizeSmall}" TextTrimming="CharacterEllipsis"
+                       Foreground="{DynamicResource TextPrimaryBrush}" VerticalAlignment="Center"
+                       AutomationProperties.Name="游戏提优加速状态">
+              <TextBlock.Style>
+                <Style TargetType="TextBlock">
+                  <Style.Triggers>
+                    <DataTrigger Binding="{Binding BoostStateKey}" Value="Verified">
+                      <Setter Property="Foreground" Value="{DynamicResource SuccessBrush}"/>
+                    </DataTrigger>
+                    <DataTrigger Binding="{Binding BoostStateKey}" Value="Protected">
+                      <Setter Property="Foreground" Value="{DynamicResource TextTertiaryBrush}"/>
+                    </DataTrigger>
+                  </Style.Triggers>
+                </Style>
+              </TextBlock.Style>
+            </TextBlock>
+          </Grid>
+        </StackPanel>
       </Border>
 
       <StackPanel x:Name="ZoneCardsLabel" Margin="0,0,0,8">
@@ -319,6 +346,16 @@
             <TextBlock Text="三场景共用同一套硬件与调度底子。" Margin="0,3,0,10"
                        FontSize="{DynamicResource FontSizeSmall}"
                        Foreground="{DynamicResource TextSecondaryBrush}"/>
+            <Grid Margin="0,0,0,6">
+              <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="Auto"/><ColumnDefinition Width="*"/>
+              </Grid.ColumnDefinitions>
+              <TextBlock Text="CPU 拓扑" FontSize="{DynamicResource FontSizeSmall}"
+                         Foreground="{DynamicResource TextTertiaryBrush}"/>
+              <TextBlock Grid.Column="1" Text="{Binding CpuTopologyText}" Margin="16,0,0,0"
+                         FontSize="{DynamicResource FontSizeSmall}" TextTrimming="CharacterEllipsis"
+                         Foreground="{DynamicResource TextPrimaryBrush}"/>
+            </Grid>
             <Grid Margin="0,0,0,6">
               <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="Auto"/><ColumnDefinition Width="*"/>

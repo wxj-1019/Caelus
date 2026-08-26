@@ -32,6 +32,11 @@ namespace CaelusApp.WpfHost
         private readonly Tamer tamer;
         private readonly System.Windows.Threading.DispatcherTimer refreshTimer;
 
+        // 自动收起（与 WinForms 同一套 AutoHidePolicy 边沿语义：游戏激活 10 秒后缩回托盘，每局只收一次）
+        private bool autoHideLastActive;
+        private bool autoHideArmed;
+        private System.Windows.Threading.DispatcherTimer autoHideTimer;
+
         private readonly OverviewView overviewView;
         private readonly PolicyView policyView;
         private readonly LibraryView libraryView;
@@ -77,7 +82,7 @@ namespace CaelusApp.WpfHost
             // 正式运行时注入真实数据源与 Tamer/DevFocus；截图/压力探针无注入时回退只读场景探测
             gameMode = gm ?? new GameMode(Paths.Data, new SuppressionCore());
             source = runtimeSource ?? new ScenarioStatusSource(gameMode);
-            vm = new ScenarioOverviewViewModel(source);
+            vm = new ScenarioOverviewViewModel(source, gameMode);
             devDetailVm = new ScenarioDetailViewModel(source, ScenarioKind.DevFocus);
             dailyDetailVm = new ScenarioDetailViewModel(source, ScenarioKind.DailyCare);
             vm.Refresh();
@@ -142,8 +147,10 @@ namespace CaelusApp.WpfHost
             {
                 try { vm.Refresh(); } catch { }
                 try { policyVm.RefreshLocks(); } catch { }
+                try { UpdateAutoHide(); } catch { }
             };
             refreshTimer.Start();
+            IsVisibleChanged += OnWindowVisibleChanged;
         }
 
         // 托盘开关改动后回刷界面各页
@@ -249,8 +256,78 @@ namespace CaelusApp.WpfHost
             Motion.PolicyChanged -= OnMotionPolicyChanged;
             ThemeManager.ModeChanged -= OnThemeChanged;
             ThemeManager.StopSystemThemeMonitor();
+            CancelAutoHide();
             if (source != null) source.Dispose();
             base.OnClosed(e);
+        }
+
+        // ---- 自动收起：检测到游戏 N 秒后窗口缩回托盘（语义与 WinForms UpdateAutoHide 一致）----
+
+        private void OnWindowVisibleChanged(object sender, DependencyPropertyChangedEventArgs e)
+        {
+            if (!(bool)e.NewValue) return;
+            // 重新打开窗口时同步基线：游戏已活跃则视为本局已收过，不再自动收起
+            bool gameActive = gameMode != null && gameMode.Enabled && gameMode.IsActive;
+            AutoHidePolicy.SyncBaseline(gameActive, ref autoHideLastActive, ref autoHideArmed);
+        }
+
+        private void UpdateAutoHide()
+        {
+            if (gameMode == null || !IsLoaded) return;
+            bool gameActive = gameMode.Enabled && gameMode.IsActive;
+            bool visible = IsVisible && WindowState != WindowState.Minimized;
+            AutoHideAction action = AutoHidePolicy.Next(gameActive, ref autoHideLastActive, ref autoHideArmed,
+                Settings.Load(AutoHidePolicy.SettingKey, false), visible);
+            if (action == AutoHideAction.Cancel) { CancelAutoHide(); return; }
+            if (action != AutoHideAction.Schedule) return;
+            CancelAutoHide();
+            autoHideTimer = new System.Windows.Threading.DispatcherTimer(
+                System.Windows.Threading.DispatcherPriority.Background)
+            {
+                Interval = TimeSpan.FromMilliseconds(AutoHidePolicy.DelayMs)
+            };
+            autoHideTimer.Tick += OnAutoHideTick;
+            autoHideTimer.Start();
+        }
+
+        private void OnAutoHideTick(object sender, EventArgs e)
+        {
+            CancelAutoHide();
+            if (!IsVisible || WindowState == WindowState.Minimized) return;
+            if (!Settings.Load(AutoHidePolicy.SettingKey, false)) return;
+            if (AnyDialogOpen()) return;
+            Hide();
+        }
+
+        private void CancelAutoHide()
+        {
+            if (autoHideTimer == null) return;
+            autoHideTimer.Stop();
+            autoHideTimer.Tick -= OnAutoHideTick;
+            autoHideTimer = null;
+        }
+
+        private bool AnyDialogOpen()
+        {
+            try
+            {
+                foreach (Window w in Application.Current.Windows)
+                    if (!ReferenceEquals(w, this) && w.IsVisible) return true;
+            }
+            catch { }
+            return false;
+        }
+
+        // Esc 缩回托盘（与 WinForms OnEscHide 一致；模态对话框打开时焦点在对话框上，不会误触）
+        protected override void OnKeyDown(KeyEventArgs e)
+        {
+            if (e.Key == Key.Escape)
+            {
+                e.Handled = true;
+                Hide();
+                return;
+            }
+            base.OnKeyDown(e);
         }
 
         [DllImport("dwmapi.dll", PreserveSig = true)]

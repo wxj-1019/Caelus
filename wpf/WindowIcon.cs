@@ -14,9 +14,14 @@ namespace CaelusApp.WpfHost
         // 失败时返回 null（窗口保持系统默认图标，不影响运行）
         public static ImageSource Create()
         {
+            return Create(PerformancePreset.Standard, true);
+        }
+
+        public static ImageSource Create(PerformancePreset mode, bool enabled)
+        {
             try
             {
-                using (System.Drawing.Icon icon = IconArt.MakeMultiIcon())
+                using (System.Drawing.Icon icon = IconArt.MakeMultiIcon(mode, enabled))
                 {
                     return Imaging.CreateBitmapSourceFromHIcon(
                         icon.Handle, Int32Rect.Empty, BitmapSizeOptions.FromWidthAndHeight(32, 32));

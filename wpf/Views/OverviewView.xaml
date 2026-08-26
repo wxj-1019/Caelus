@@ -197,8 +197,7 @@
                        Foreground="{DynamicResource TextTertiaryBrush}" VerticalAlignment="Center"/>
             <TextBlock Grid.Column="1" Text="{Binding BoostText}" Margin="16,0,0,0"
                        FontSize="{DynamicResource FontSizeSmall}" TextTrimming="CharacterEllipsis"
-                       Foreground="{DynamicResource TextPrimaryBrush}" VerticalAlignment="Center"
-                       AutomationProperties.Name="游戏提优加速状态">
+                       Foreground="{DynamicResource TextPrimaryBrush}" VerticalAlignment="Center">
               <TextBlock.Style>
                 <Style TargetType="TextBlock">
                   <Style.Triggers>

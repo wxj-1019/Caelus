@@ -53,6 +53,19 @@ namespace CaelusApp.WpfHost
             base.OnStartup(e);
             ShutdownMode = ShutdownMode.OnExplicitShutdown;
             Motion.PolicyChanged += OnMotionPolicyChanged;
+            // 非 UI 线程未捕获异常（procNotify 回调等）：与 WinForms 版同记 crash.log（进程仍按系统默认终止）
+            AppDomain.CurrentDomain.UnhandledException += (s, ex) =>
+            {
+                string cdir;
+                try { cdir = Paths.Data; } catch { cdir = null; }
+                if (string.IsNullOrEmpty(cdir)) cdir = Path.GetTempPath();
+                try
+                {
+                    File.AppendAllText(Path.Combine(cdir, "crash.log"),
+                        DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss") + "  [WPF] " + ex.ExceptionObject + Environment.NewLine);
+                }
+                catch { }
+            };
             // 宿主不因单个绑定/布局异常静默丢窗口：记日志后标记已处理，界面保持存活
             DispatcherUnhandledException += (s, ex) =>
             {
@@ -260,7 +273,8 @@ namespace CaelusApp.WpfHost
             {
                 ShowPanel();
             }
-            // 新版本首次启动弹发布说明（与 WinForms 版一致：显示即标记已读）
+            // 新版本首次启动弹发布说明（显示即标记已读）；刻意差异：WPF 在窗口显示后带 owner 弹出
+            // （居中于主窗口、不抢占前台），WinForms 在 ShowPanel 前无 owner，功能等价
             if (showingPanel && ReleaseNotes.HasUnseen && window != null && window.IsVisible)
             {
                 try
@@ -301,17 +315,8 @@ namespace CaelusApp.WpfHost
         private void RefreshTrayIcon(bool force)
         {
             if (tray == null || host == null) return;
-            PerformancePreset mode = host.GameMode.ActivePreset;
-            bool enabled = host.GameMode.Enabled;
-            if (!force && mode == runtimeIconMode && enabled == runtimeIconEnabled) return;
-            runtimeIconMode = mode;
-            runtimeIconEnabled = enabled;
-            using (System.Drawing.Icon next = IconArt.MakeMultiIcon(mode, enabled))
-            {
-                System.Drawing.Icon old = tray.Icon;
-                tray.Icon = (System.Drawing.Icon)next.Clone();
-                if (old != null) old.Dispose();
-            }
+            // 托盘文本依赖 ActiveGame/ArmedGame（不依赖 preset），每 tick 必重算（对齐 WinForms）；
+            // 图标仅在 preset/开关变化时重建
             string text;
             if (!elevated) text = Lang.T("tray.noelev");
             else
@@ -323,6 +328,28 @@ namespace CaelusApp.WpfHost
             }
             if (text.Length > 63) text = text.Substring(0, 62) + "…";
             if (tray.Text != text) tray.Text = text;
+
+            PerformancePreset mode = host.GameMode.ActivePreset;
+            bool enabled = host.GameMode.Enabled;
+            if (!force && mode == runtimeIconMode && enabled == runtimeIconEnabled) return;
+            runtimeIconMode = mode;
+            runtimeIconEnabled = enabled;
+            using (System.Drawing.Icon next = IconArt.MakeMultiIcon(mode, enabled))
+            {
+                System.Drawing.Icon old = tray.Icon;
+                tray.Icon = (System.Drawing.Icon)next.Clone();
+                if (old != null) old.Dispose();
+                // 任务栏/Alt-Tab 图标随 preset/开关同步（对齐 WinForms panel.SetRuntimeIcon）
+                try
+                {
+                    if (window != null)
+                    {
+                        ImageSource src = WindowIcon.Create(mode, enabled);
+                        if (src != null) window.Icon = src;
+                    }
+                }
+                catch { }
+            }
         }
 
         private PerformancePreset runtimeIconMode;
@@ -355,14 +382,20 @@ namespace CaelusApp.WpfHost
             }));
             host.DevServiceGuard.ServiceStopped += name => Dispatcher.BeginInvoke(new Action(delegate
             {
-                try { ShowBalloon(Lang.F("bal.devsvc", name), 6000); } catch { }
+                // 服务停止属告警，与 WinForms 一致用警告图标
+                try { ShowBalloon(Lang.F("bal.devsvc", name), 6000, System.Windows.Forms.ToolTipIcon.Warning); } catch { }
             }));
         }
 
         private void ShowBalloon(string text, int ms)
         {
+            ShowBalloon(text, ms, System.Windows.Forms.ToolTipIcon.Info);
+        }
+
+        private void ShowBalloon(string text, int ms, System.Windows.Forms.ToolTipIcon icon)
+        {
             if (tray != null)
-                tray.ShowBalloonTip(ms, CaelusApp.App.DisplayName, text, System.Windows.Forms.ToolTipIcon.Info);
+                tray.ShowBalloonTip(ms, CaelusApp.App.DisplayName, text, icon);
         }
 
         private void ShowPanel()

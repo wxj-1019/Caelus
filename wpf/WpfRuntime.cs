@@ -493,6 +493,7 @@ namespace CaelusApp.WpfHost
         private readonly ProcNotify procNotify;
         private readonly System.Threading.Timer powerPollTimer;
         private Thread bootThread;
+        private readonly object startGate = new object();
         private volatile bool exiting;
         private bool booted;
 
@@ -662,10 +663,14 @@ namespace CaelusApp.WpfHost
                 {
                     try { HealChain(); }
                     catch (Exception ex) { try { Logger.Log("自愈链异常：" + ex); } catch { } }
-                    if (exiting) return;
-                    tamer.Start();
-                    gameMode.Start();
-                    booted = true;
+                    // 与 WinForms 的 lock(startGate) 同一模式：串行化"退出 vs 启动"，避免 Shutdown 与 tamer.Start 交错
+                    lock (startGate)
+                    {
+                        if (exiting) return;
+                        tamer.Start();
+                        gameMode.Start();
+                        booted = true;
+                    }
                 }
                 catch (Exception ex)
                 {
@@ -780,8 +785,11 @@ namespace CaelusApp.WpfHost
 
         public void Shutdown()
         {
-            if (exiting) return;
-            exiting = true;
+            lock (startGate)
+            {
+                if (exiting) return;
+                exiting = true;
+            }
             Run("电源轮询定时器释放", delegate { powerPollTimer.Dispose(); });
             Run("ProcNotify 停止", procNotify.Stop);
             Run("Tamer 停止", tamer.Stop);

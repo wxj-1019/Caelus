@@ -366,11 +366,14 @@ namespace CaelusApp.WpfHost
 
         private static void LogUserTheme(string message)
         {
+            // 与宿主统一 crash.log（数据目录）；数据目录未就绪时回退临时目录
+            string dir;
+            try { dir = Paths.Data; } catch { dir = null; }
+            if (string.IsNullOrEmpty(dir)) dir = Path.GetTempPath();
             try
             {
-                File.AppendAllText(
-                    Path.Combine(Path.GetTempPath(), "CaelusWpf.crash.log"),
-                    DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss") + " " + message + Environment.NewLine);
+                File.AppendAllText(Path.Combine(dir, "crash.log"),
+                    DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss") + "  [WPF theme] " + message + Environment.NewLine);
             }
             catch { }
         }

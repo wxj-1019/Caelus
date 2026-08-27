@@ -198,19 +198,28 @@ namespace CaelusApp
             }
         }
 
+        /// <summary>返回 true 表示"无需还原/已还原"（可清账），false 表示暂不可还原（保留记账重试）。
+        /// 身份校验用与记账一致的 FILETIME（QueryProcessSample）——此前与 DateTime.Ticks 比较
+        /// 永不相等，还原沦为空操作却报告成功并清账。线程句柄打不开时区分"已不存在"
+        /// （视为完成）与"被拒绝"（保留待重试），不再一律谎报成功。</summary>
         private static bool RestoreThread(int pid, long creation, int tid, int original)
         {
-            try
+            if (creation > 0)
             {
-                using (Process target = Process.GetProcessById(pid))
-                {
-                    if (creation > 0 && target.StartTime.ToUniversalTime().Ticks != creation) return true;
-                }
+                IntPtr hq = Native.OpenProcess(Native.PROCESS_QUERY_LIMITED_INFORMATION, false, pid);
+                if (hq == IntPtr.Zero)
+                    return Native.LastOpenProcessFailureWasNoSuchProcess();
+                long c, cpu;
+                ulong io;
+                bool sampled;
+                try { sampled = Native.QueryProcessSample(hq, out c, out cpu, out io); }
+                finally { Native.CloseHandle(hq); }
+                if (sampled && c != creation) return true;   // PID 已被复用：原线程随旧进程消失
             }
-            catch { return true; }
             IntPtr h = Native.OpenThread(
                 Native.THREAD_SET_LIMITED_INFORMATION | Native.THREAD_QUERY_LIMITED_INFORMATION, false, tid);
-            if (h == IntPtr.Zero) return true;
+            if (h == IntPtr.Zero)
+                return Native.LastOpenThreadFailureWasNoSuchProcess();
             try
             {
                 if (!Native.SetThreadPriority(h, original)) return false;

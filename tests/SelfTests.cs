@@ -895,6 +895,21 @@ namespace CaelusApp
             test("开发专注：分心应用气球每名一次、专注重开可再报", TestDevFocusDistractOnce);
             test("开发专注：IDE 目录双校验防同名误伤", TestIdeCatalogMatch);
             test("开发专注：IDE 提优 AboveNormal 与还原往返", TestDevFocusIdeBoostRestore);
+            test("开发专注：编译提优随场景挂起按快照还原", TestDevFocusBuildBoostSnapshotRestore);
+            test("开发专注：掌权期间新编译进程同步提优", TestDevFocusIncrementalBuildBoost);
+            test("崩溃自愈：场景提优凭据用 FILETIME 身份可匹配还原", TestCrashGuardBoostIdentityRoundtrip);
+            test("渲染主权域：帧线程优先级随快照还原", TestRenderLaneThreadPriorityRoundtrip);
+            test("MPO 排查：还原停在用户原值不再二次删除", TestMpoRestoreKeepsUserOriginalValue);
+            test("HAGS：关闭停在用户原值不再强制写 1", TestHagsDisableKeepsUserOriginalValue);
+            test("清单类 tweak：重复启用做并集合并不覆盖既有条目", TestTweakDeviceListMerge);
+            test("ReBAR 探测：偏移 16 是末地址，长度按末−基+1", TestRebarRangeDecode);
+            test("游戏模式守护：开关写入读回与还原往返", TestGameModeGuardRoundtrip);
+            test("窗口化优化：字段合并与还原往返", TestWindowedOptRoundtrip);
+            test("传递优化：策略键与服务状态往返", TestDoTweakRoundtrip);
+            test("反作弊引擎：全量扫描间隔按事件可用性区分", TestTamerSweepInterval);
+            test("开发专注：游戏接管共享效果时所有权直通", TestDevFocusSharedEffectHandoff);
+            test("共享效果：多占用方引用计数与释放语义", TestSharedClaimOwnerSemantics);
+            test("共享效果：占用移交保持效果与全量释放", TestSharedClaimHandoffAndForceRelease);
             test("开发专注：编译工具链扩展名录与运行时排除", TestBuildCatalogExpandedTools);
             test("开发专注：数据库客户端与移动 IDE 目录双校验", TestIdeCatalogDbTools);
             test("开发服务：名录解析与重载", TestDevServiceCatalogMatch);
@@ -2098,6 +2113,7 @@ namespace CaelusApp
             test("后台冻结：静默计时需连续无动静才放行", TestFreezeDwellGate);
             test("后台冻结：带反作弊理由的进程永不进入冻结档", TestAntiCheatNeverFreezes);
             test("压制计数：批量清扫占着锁时状态栏仍报真实数量", TestThrottledCountSurvivesBatchLock);
+            test("压制账面：按 pid 查询记录的进程名", TestSuppressionCoreNameOf);
             test("后台冻结：崩溃日志可唤醒遗留的挂起进程", TestFrozenJournalThaw);
             test("后台冻结：崩溃恢复绝不唤醒被复用的 PID", TestFrozenJournalRejectsPidReuse);
             test("后台冻结：单次挂起的进程一次唤醒即可恢复", TestSuspendIsNotReentrant);
@@ -2124,6 +2140,7 @@ namespace CaelusApp
             test("竞技电源：方案改名写得进也读得出", TestPowerPlanNameRoundtrip);
             test("竞技电源：删除临时方案不动当前激活的方案", TestPowerPlanDeleteLeavesActiveIntact);
             test("竞技电源：重复的同名方案会被清理到只剩一个", TestPowerPlanPurgesDuplicateClones);
+            test("竞技电源：用户手工的同名方案不被认领也不被误删", TestPowerPlanPurgeSparesUserSameNameScheme);
             test("竞技电源：清理绝不碰用户自己的方案", TestPowerPlanPurgeSparesForeignSchemes);
             test("竞技电源：旧版遗留的方案副本会被迁移删除", TestPowerPlanMigratesLegacyClone);
             test("竞技电源：反复解析目标计划只会有一个方案", TestPowerPlanResolveIsIdempotent);

@@ -15,6 +15,10 @@ namespace CaelusApp
         private readonly Func<bool> enabled;
         private readonly Func<string, string, bool> isWhitelisted;
         private readonly Func<string, bool> isDistract;
+        // 游戏接管感知（交接直通用）：挂起时若游戏正要同一共享效果，则把占用权直接
+        // 移交给游戏侧，避免「还原再重做」的服务停启/通知开关抖动。未接线时恒走普通还原。
+        private readonly Func<bool> gameKeepsSvcPause;
+        private readonly Func<bool> gameKeepsNotifQuiet;
         private readonly HashSet<int> activeBuildPids = new HashSet<int>();
         private readonly HashSet<int> activeIdePids = new HashSet<int>();
         private readonly HashSet<string> distractNotified = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
@@ -25,7 +29,12 @@ namespace CaelusApp
         private long grantStartTicks;
         private readonly Dictionary<int, uint> ideBoosted = new Dictionary<int, uint>();
         private readonly Dictionary<int, long> ideBoostedCreation = new Dictionary<int, long>();
+        private readonly Dictionary<int, string> ideBoostedName = new Dictionary<int, string>();
         private readonly Dictionary<int, int> ideBoostedIo = new Dictionary<int, int>();
+        private readonly Dictionary<int, uint> buildBoosted = new Dictionary<int, uint>();
+        private readonly Dictionary<int, long> buildBoostedCreation = new Dictionary<int, long>();
+        private readonly Dictionary<int, string> buildBoostedName = new Dictionary<int, string>();
+        private readonly Dictionary<int, int> buildBoostedIo = new Dictionary<int, int>();
 
         /// <summary>编译会话状态变化时触发，参数是文案 key（bal.buildstart / bal.buildend）</summary>
         public event Action<string> SessionChanged;
@@ -65,12 +74,21 @@ namespace CaelusApp
 
         public DevFocus(ScenarioArbiter arbiter, SuppressionCore core, Func<bool> enabled,
             Func<string, string, bool> isWhitelisted, Func<string, bool> isDistract)
+            : this(arbiter, core, enabled, isWhitelisted, isDistract, null, null)
+        {
+        }
+
+        public DevFocus(ScenarioArbiter arbiter, SuppressionCore core, Func<bool> enabled,
+            Func<string, string, bool> isWhitelisted, Func<string, bool> isDistract,
+            Func<bool> gameKeepsSvcPause, Func<bool> gameKeepsNotifQuiet)
             : base(arbiter)
         {
             this.core = core;
             this.enabled = enabled != null ? enabled : (() => true);
             this.isWhitelisted = isWhitelisted;
             this.isDistract = isDistract;
+            this.gameKeepsSvcPause = gameKeepsSvcPause;
+            this.gameKeepsNotifQuiet = gameKeepsNotifQuiet;
         }
 
         /// <summary>专注模式开关（托盘菜单/设置页调用）。写注册表 + 活性重算。</summary>
@@ -143,6 +161,7 @@ namespace CaelusApp
             bool becameIdle = false;
             bool wasBuildActive;
             bool ideChanged = false;
+            List<int> newlyBuilt = null;
 
             lock (sync)
             {
@@ -156,7 +175,13 @@ namespace CaelusApp
                     if (BuildCatalog.IsMatch(pc.Name))
                     {
                         if (pc.Kind == ProcessChangeKind.Started)
-                            activeBuildPids.Add(pc.Pid);
+                        {
+                            if (activeBuildPids.Add(pc.Pid))
+                            {
+                                if (newlyBuilt == null) newlyBuilt = new List<int>();
+                                newlyBuilt.Add(pc.Pid);
+                            }
+                        }
                         else if (pc.Kind == ProcessChangeKind.Stopped)
                             activeBuildPids.Remove(pc.Pid);
                     }
@@ -204,6 +229,18 @@ namespace CaelusApp
                 }
 
                 buildActivity = wasBuildActive != (activeBuildPids.Count > 0);
+            }
+
+            // 掌权期间新启动的编译进程同步提优（Grant 只提当时已存在的进程）；
+            // 未掌权时不在此提优，交给随后的 Grant 统一处理
+            if (newlyBuilt != null)
+            {
+                bool isGranted;
+                lock (sync) isGranted = granted;
+                if (isGranted)
+                    foreach (int pid in newlyBuilt)
+                        BoostOneWithSnapshot(() => granted, pid, Native.HIGH_PRIORITY_CLASS,
+                            buildBoosted, buildBoostedCreation, buildBoostedName, buildBoostedIo);
             }
 
             // IDE 集合变化时复查可见窗口（节流）：无窗口的常驻 IDE 不激活场景
@@ -295,17 +332,18 @@ namespace CaelusApp
 
                 // 注：GameMode.Deactivate 的 ActiveChanged(false) 已移到 RestoreEnv 之后触发
                 // （审查迭代 2026-08），本场景 Activate 不再被游戏还原路径覆盖。
-                // 若未来仍有 SvcPause 多占用方叠加，再考虑引用计数化。
+                // SvcPause/Notif 现为多占用方引用计数（SharedEffectClaim），游戏与本场景
+                // 叠加时最后一个占用方离开才还原；交接直通见 Suspend。
                 if (build)
                 {
-                    SvcPause.Activate();
+                    SvcPause.Activate(SvcPause.OwnerDevFocus);
                     BoostBuildProcesses();
                 }
                 // 编译深化与专注模式共用同一套常规档压制（Build 位）
                 if (build || focus) SweepBuildSuppression();
                 if (focus)
                 {
-                    try { if (Notif.Quiet()) { lock (sync) quietApplied = true; } } catch { }
+                    try { if (Notif.Quiet(Notif.OwnerDevFocus)) { lock (sync) quietApplied = true; } } catch { }
                 }
                 // 校正节拍在编译/专注任一来源下都运行：长编译期间增量追压新后台，
                 // 专注模式还需节拍感知 WPF 宿主跨进程的开关翻转（无进程事件时也能解除）。
@@ -335,9 +373,20 @@ namespace CaelusApp
             {
                 StopReconcileTimer();
                 RestoreIdeBoost();
+                RestoreBuildBoost();
                 if (core != null) core.ReleaseReason(SuppressReason.Build);
-                if (wasQuiet) Notif.Restore();
-                SvcPause.Restore();
+                // 共享效果交接直通：游戏正要同一效果时只移交占用权，不还原再重做
+                if (wasQuiet)
+                {
+                    if (gameKeepsNotifQuiet != null && gameKeepsNotifQuiet())
+                        Notif.HandoffOwner(Notif.OwnerDevFocus, Notif.OwnerGame);
+                    else
+                        Notif.Restore(Notif.OwnerDevFocus);
+                }
+                if (gameKeepsSvcPause != null && gameKeepsSvcPause())
+                    SvcPause.HandoffOwner(SvcPause.OwnerDevFocus, SvcPause.OwnerGame);
+                else
+                    SvcPause.Restore(SvcPause.OwnerDevFocus);
                 Logger.Log("开发专注：挂起，全部副作用已还原（检测继续）");
             }
             catch (Exception ex) { Logger.LogFailure("开发专注挂起失败", ex); }
@@ -352,20 +401,13 @@ namespace CaelusApp
                 activeBuildPids.CopyTo(pids);
             }
             foreach (int pid in pids)
-            {
-                try
-                {
-                    IntPtr h = Native.OpenProcess(Native.PROCESS_SET_INFORMATION, false, pid);
-                    if (h == IntPtr.Zero) continue;
-                    try
-                    {
-                        Native.SetPriorityClass(h, Native.HIGH_PRIORITY_CLASS);
-                        Native.TrySetIoPriority(h, 3);
-                    }
-                    finally { Native.CloseHandle(h); }
-                }
-                catch { }
-            }
+                BoostOneWithSnapshot(() => granted, pid, Native.HIGH_PRIORITY_CLASS,
+                    buildBoosted, buildBoostedCreation, buildBoostedName, buildBoostedIo);
+        }
+
+        internal void RestoreBuildBoost()
+        {
+            RestoreBoostSnapshot(buildBoosted, buildBoostedCreation, buildBoostedName, buildBoostedIo);
         }
 
         /// <summary>常规档压制决策（纯逻辑，可单测）：复用游戏模式的常规档豁免计算器，
@@ -538,107 +580,20 @@ namespace CaelusApp
 
         private void BoostOneIde(int pid)
         {
-            lock (sync) { if (ideBoosted.ContainsKey(pid)) return; }
-
-            long creation = 0;
-            string name = null;
-            try { using (var p = Process.GetProcessById(pid)) { creation = p.StartTime.Ticks; name = p.ProcessName; } }
-            catch { }
-
-            IntPtr h = Native.OpenProcess(
-                Native.PROCESS_SET_INFORMATION | Native.PROCESS_QUERY_LIMITED_INFORMATION, false, pid);
-            if (h == IntPtr.Zero) return;
-            try
-            {
-                uint orig = Native.GetPriorityClass(h);
-                if (orig == 0) return;
-                if (orig == Native.HIGH_PRIORITY_CLASS || orig == 0x100) return;
-                if (orig == Native.ABOVE_NORMAL_PRIORITY_CLASS) return;
-
-                int origIo = Native.QueryIoPriority(h);
-                Native.SetPriorityClass(h, Native.ABOVE_NORMAL_PRIORITY_CLASS);
-                if (Native.GetPriorityClass(h) != Native.ABOVE_NORMAL_PRIORITY_CLASS) return;
-                // IO 优先级写入需要 SeIncreaseBasePriorityPrivilege（与 GameMode 提优同要求）
-                try { Native.EnsureBoostPrivilege(); } catch { }
-                Native.TrySetIoPriority(h, 3);
-
-                // 崩溃自愈：快照持久化到 CrashGuard 日志，Caelus 崩溃后下次启动自动还原
-                try
-                {
-                    if (creation > 0 && !string.IsNullOrEmpty(name))
-                        CrashGuard.MarkBoostProcess(pid, creation, name, orig, 0, origIo, 0, 0, null);
-                }
-                catch { }
-
-                lock (sync)
-                {
-                    ideBoosted[pid] = orig;
-                    ideBoostedCreation[pid] = creation;
-                    ideBoostedIo[pid] = origIo;
-                }
-            }
-            catch { }
-            finally { Native.CloseHandle(h); }
+            BoostOneWithSnapshot(() => granted, pid, Native.ABOVE_NORMAL_PRIORITY_CLASS,
+                ideBoosted, ideBoostedCreation, ideBoostedName, ideBoostedIo);
         }
 
         internal void RestoreIdeBoost()
         {
-            KeyValuePair<int, uint>[] snap;
-            KeyValuePair<int, long>[] snapCreation;
-            KeyValuePair<int, int>[] snapIo;
-            lock (sync)
-            {
-                if (ideBoosted.Count == 0) return;
-                snap = new KeyValuePair<int, uint>[ideBoosted.Count];
-                ((ICollection<KeyValuePair<int, uint>>)ideBoosted).CopyTo(snap, 0);
-                ideBoosted.Clear();
-                snapCreation = new KeyValuePair<int, long>[ideBoostedCreation.Count];
-                ((ICollection<KeyValuePair<int, long>>)ideBoostedCreation).CopyTo(snapCreation, 0);
-                ideBoostedCreation.Clear();
-                snapIo = new KeyValuePair<int, int>[ideBoostedIo.Count];
-                ((ICollection<KeyValuePair<int, int>>)ideBoostedIo).CopyTo(snapIo, 0);
-                ideBoostedIo.Clear();
-            }
-            var creationMap = new Dictionary<int, long>();
-            foreach (var kv in snapCreation) creationMap[kv.Key] = kv.Value;
-            var ioMap = new Dictionary<int, int>();
-            foreach (var kv in snapIo) ioMap[kv.Key] = kv.Value;
-
-            foreach (var kv in snap)
-            {
-                try
-                {
-                    long expectCreation;
-                    if (creationMap.TryGetValue(kv.Key, out expectCreation))
-                    {
-                        long nowCreation;
-                        try { nowCreation = Process.GetProcessById(kv.Key).StartTime.Ticks; }
-                        catch { continue; }
-                        if (nowCreation != expectCreation) continue;
-                    }
-                    IntPtr h = Native.OpenProcess(Native.PROCESS_SET_INFORMATION, false, kv.Key);
-                    if (h == IntPtr.Zero) continue;
-                    try
-                    {
-                        Native.SetPriorityClass(h, kv.Value);
-                        int origIo;
-                        Native.TrySetIoPriority(h,
-                            ioMap.TryGetValue(kv.Key, out origIo) && origIo >= 0 ? origIo : 2);
-                    }
-                    finally { Native.CloseHandle(h); }
-                    // 清除崩溃自愈快照（已正常还原）
-                    long creation;
-                    if (creationMap.TryGetValue(kv.Key, out creation) && creation > 0)
-                        CrashGuard.ReleaseBoostProcess(kv.Key, creation);
-                }
-                catch { }
-            }
+            RestoreBoostSnapshot(ideBoosted, ideBoostedCreation, ideBoostedName, ideBoostedIo);
         }
 
-        /// <summary>测试钩子：绕过窗口条件直接提优单个进程（返回是否入快照）</summary>
+        /// <summary>测试钩子：绕过窗口条件与掌权检查直接提优单个进程（返回是否入快照）</summary>
         internal bool BoostIdeForTest(int pid)
         {
-            BoostOneIde(pid);
+            BoostOneWithSnapshot(() => true, pid, Native.ABOVE_NORMAL_PRIORITY_CLASS,
+                ideBoosted, ideBoostedCreation, ideBoostedName, ideBoostedIo);
             lock (sync) return ideBoosted.ContainsKey(pid);
         }
 

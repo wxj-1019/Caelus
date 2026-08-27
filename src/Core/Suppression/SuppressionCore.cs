@@ -380,7 +380,9 @@ namespace CaelusApp
                     }
                     if (!PersistJournalLocked()) return AcquireResult.ApplyFailed;
                     bool queued = QueueApplyLocked(pid, name);
-                    bool applied = queued || ApplyThrottleWithFreeze(h, active, pid, level, orig, oaff, ocpuSets, DesiredGpu(active));
+                    // 涂写用叠加后的生效级别（active.Level）：本次原因档位低于既有原因时，
+                    // 按 level 涂会与账面不一致，冻结判定也读的是生效级别
+                    bool applied = queued || ApplyThrottleWithFreeze(h, active, pid, active.Level, orig, oaff, ocpuSets, DesiredGpu(active));
                     Entry appliedEntry;
                     if (map.TryGetValue(pid, out appliedEntry) && !queued)
                     {
@@ -438,6 +440,7 @@ namespace CaelusApp
             Entry e;
             bool adjust = false;
             bool remaining = false;
+            Entry snap = null;
             lock (sync)
             {
                 had = map.TryGetValue(pid, out e) && (e.Reasons & reason) != 0;
@@ -457,6 +460,9 @@ namespace CaelusApp
                     remaining = true;
                     adjust = e.OrigPri != uint.MaxValue && e.Journaled
                         && (previousLevel != e.Level || !e.Applied);
+                    // 快照必须与清算/级别重算在同一把锁内完成：并发 Acquire 可在
+                    // 锁释放后改活字段，锁外再拍会拿到撕裂组合
+                    if (adjust) snap = SnapshotOf(e);
                     PersistJournalLocked();
                 }
                 else if (e.OrigPri == uint.MaxValue) { map.Remove(pid); PersistJournalLocked(); return 0; }
@@ -474,7 +480,8 @@ namespace CaelusApp
                 IntPtr h = Native.OpenProcess(Native.PROCESS_SET_INFORMATION | Native.PROCESS_SET_LIMITED_INFORMATION
                     | Native.PROCESS_QUERY_LIMITED_INFORMATION, false, pid);
                 bool applied = false;
-                if (h != IntPtr.Zero) { try { if (SameProcess(h, e)) applied = ApplyThrottleWithFreeze(h, e, pid, e.Level, e.OrigPri, e.OrigAff, e.OrigCpuSets, DesiredGpu(e)); } finally { Native.CloseHandle(h); } }
+                if (h != IntPtr.Zero) { try { if (SameProcess(h, snap)) applied = ApplyThrottleWithFreeze(h, snap, pid, snap.Level, snap.OrigPri, snap.OrigAff, snap.OrigCpuSets, DesiredGpu(snap)); } finally { Native.CloseHandle(h); } }
+                bool entryGone = false;
                 lock (sync)
                 {
                     Entry cur;
@@ -483,6 +490,14 @@ namespace CaelusApp
                         cur.Applied = applied;
                         ScheduleAfterApply(cur, applied, pid);
                     }
+                    else entryGone = true;
+                }
+                if (entryGone)
+                {
+                    // 应用期间条目已被并发的最后原因释放整个还原并移出账本：刚才写入的
+                    // 压制成了"无记录残留"（账面与日志都看不到，任何自愈都救不了）——
+                    // 立即补一次完整还原兜底（对已还原状态是幂等的）
+                    TryRestore(pid, e);
                 }
                 return 0;
             }
@@ -1197,6 +1212,36 @@ namespace CaelusApp
         private static bool SameName(string a, string b)
         {
             return string.Equals(a, b, StringComparison.OrdinalIgnoreCase);
+        }
+
+        /// <summary>锁外应用前的条目快照：身份与原始值字段在入账后不变，级别/冻结意图
+        /// 是活字段——锁外涂写必须基于一致的一份，不能边读边被并发改。</summary>
+        private static Entry SnapshotOf(Entry e)
+        {
+            return new Entry
+            {
+                Name = e.Name,
+                Group = e.Group,
+                OrigPri = e.OrigPri,
+                OrigAff = e.OrigAff,
+                OrigIo = e.OrigIo,
+                OrigPg = e.OrigPg,
+                OrigCpuSets = e.OrigCpuSets,
+                OrigGpu = e.OrigGpu,
+                OrigQoSControl = e.OrigQoSControl,
+                OrigQoSState = e.OrigQoSState,
+                Creation = e.Creation,
+                Level = e.Level,
+                AntiCheatLevel = e.AntiCheatLevel,
+                BackgroundLevel = e.BackgroundLevel,
+                BuildLevel = e.BuildLevel,
+                DailyLevel = e.DailyLevel,
+                Applied = e.Applied,
+                Reasons = e.Reasons,
+                Journaled = e.Journaled,
+                FreezeIntent = e.FreezeIntent,
+                FreezeApplied = e.FreezeApplied
+            };
         }
 
         internal const string SelfProtectedDetail = "self-protected";

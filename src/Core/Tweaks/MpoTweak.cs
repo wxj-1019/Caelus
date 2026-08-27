@@ -57,8 +57,12 @@ namespace CaelusApp
         {
             try
             {
-                bool ok = Overlay.HasBackup ? Overlay.Restore() : RemoveValue();
-                if (ok && CurrentlyDisabled()) ok = RemoveValue();
+                // 有快照：还原到快照原值即终态——原值本身可能就是禁用值（用户手动设过 5），
+                // 不得再按"当前仍是禁用值"二次删除；无快照时只有 Caelus 标志在场才清理
+                // （值可能是用户自己设的，purge 无条件调用也不能动它）
+                bool ok = Overlay.HasBackup
+                    ? Overlay.Restore()
+                    : (DisabledByCaelus ? RemoveValue() : true);
                 if (ok)
                 {
                     Settings.Save("MpoOffByCaelus", false);

@@ -76,6 +76,12 @@ namespace CaelusApp
             return Marshal.GetLastWin32Error() == 87;
         }
 
+        // OpenThread 对不存在的 TID 同样返回 87；语义与进程版相同，须紧随调用。
+        public static bool LastOpenThreadFailureWasNoSuchProcess()
+        {
+            return Marshal.GetLastWin32Error() == 87;
+        }
+
         [DllImport("kernel32.dll", SetLastError = true)]
         public static extern bool CloseHandle(IntPtr h);
         [DllImport("kernel32.dll", SetLastError = true)]

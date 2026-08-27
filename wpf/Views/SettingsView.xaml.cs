@@ -745,7 +745,9 @@ namespace CaelusApp.WpfHost.Dialogs
             Row row = toggle == null ? null : toggle.Tag as Row;
             if (row == null) return;
             bool want = toggle.IsChecked == true;
-            toggle.IsChecked = row.Excluded;
+            // SetCurrentValue 而非 SetValue：绑定是 OneWay，裸 SetValue 会摧毁它，
+            // 之后 row.Excluded 的变化（确认成功/后台刷新）不再反映到开关视觉上
+            toggle.SetCurrentValue(ToggleButton.IsCheckedProperty, row.Excluded);
             if (busy != 0 || want == row.Excluded) return;
             if (!want && !row.Owned)
             {

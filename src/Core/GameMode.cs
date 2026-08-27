@@ -593,6 +593,13 @@ namespace CaelusApp
             set { svcPauseOn = value; Settings.Save("GmSvcPause", value); if (value) ClearEnvFuse("svc"); RequestPolicyApply(); }
         }
 
+        /// <summary>游戏模式此刻是否要服务暂停（与 ApplyEnv 的 useSvc 判定一致：仅自定义档且开关开）。
+        /// 供开发专注场景交接直通判断：挂起时服务暂停占用权是否可以直接移交给游戏。</summary>
+        public bool ServicePauseWantedNow
+        {
+            get { return ActivePreset == PerformancePreset.Custom && svcPauseOn; }
+        }
+
         public bool NotifQuiet
         {
             get { return notifQuiet; }
@@ -908,10 +915,15 @@ namespace CaelusApp
         {
             stopping = true;
             try { kick.Set(); } catch { }
-            if (worker != null) worker.Join(8000);
-            // worker 已退出，安全释放两个内核事件句柄，防止句柄泄漏
-            try { kick.Dispose(); } catch { }
-            try { panicDone.Dispose(); } catch { }
+            // 仅在 worker 确认退出后释放两个内核事件：Join 超时（如 Deactivate 卡在
+            // 服务/电源等外部调用上）时 worker 仍会在循环尾部 WaitOne/Set 这些句柄，
+            // 先 Dispose 会让后台线程抛未处理异常直接终止进程；句柄留给进程退出回收
+            bool exited = worker == null || worker.Join(8000);
+            if (exited)
+            {
+                try { kick.Dispose(); } catch { }
+                try { panicDone.Dispose(); } catch { }
+            }
         }
 
         public void Poke() { RequestPolicyApply(); }
@@ -924,11 +936,11 @@ namespace CaelusApp
                 {
                     if (panicReq)
                     {
-
-                        int serving = Volatile.Read(ref panicSeq);
                         panicReq = false;
                         panicResult = Deactivate("紧急恢复");
-                        Volatile.Write(ref panicServed, serving);
+                        // 完成时刻的 seq 兜底：若 Deactivate 期间又有新请求到达（seq 已增长），
+                        // 按"服务到最新序号"记账——读旧序号→清标志的窗口不会再吞掉请求
+                        Volatile.Write(ref panicServed, Volatile.Read(ref panicSeq));
                         panicDone.Set();
                         kick.WaitOne(4000);
                         continue;
@@ -1033,10 +1045,9 @@ namespace CaelusApp
                 exitClean = Deactivate("Caelus 退出");
             if (panicReq)
             {
-                int servingAtExit = Volatile.Read(ref panicSeq);
                 panicReq = false;
                 panicResult = exitClean;
-                Volatile.Write(ref panicServed, servingAtExit);
+                Volatile.Write(ref panicServed, Volatile.Read(ref panicSeq));
                 panicDone.Set();
             }
         }

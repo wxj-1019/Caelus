@@ -124,6 +124,7 @@ namespace CaelusApp
         public bool PanicRestore()
         {
             Interlocked.Exchange(ref panicUntilUtcTicks, DateTime.UtcNow.AddSeconds(4).Ticks);
+            Logger.Log("反作弊压制：紧急恢复已执行；4 秒冷却结束后将按当前配置自动恢复压制（要永久关闭请用分组开关或总开关）");
 
             Interlocked.Exchange(ref fullSweepRequested, 1);
             kick.Set();
@@ -322,6 +323,14 @@ namespace CaelusApp
                         releasePids.Add(change.Pid);
                         tracked.Remove(change.Pid);
                     }
+                    else if (!AliveProcessStillMatches(change.Pid))
+                    {
+                        // PID 被新进程复用：存活者映像名与账面记录不符，按已退出处理。
+                        // 旧压制记录不再挂到下一个全量扫描（最长约 60 秒）才被纠正
+                        acquireByPid.Remove(change.Pid);
+                        releasePids.Add(change.Pid);
+                        tracked.Remove(change.Pid);
+                    }
                     continue;
                 }
                 string group;
@@ -347,6 +356,24 @@ namespace CaelusApp
                 return !Native.LastOpenProcessFailureWasNoSuchProcess();
 
             try { return true; }
+            finally { Native.CloseHandle(handle); }
+        }
+
+        /// <summary>pid 存活时的身份复核：账面无记录，或存活者映像名与记录不符
+        /// （PID 被新进程复用），都视为"原进程已退出"。</summary>
+        private bool AliveProcessStillMatches(int pid)
+        {
+            string recorded = core.NameOf(pid);
+            if (string.IsNullOrEmpty(recorded)) return false;
+            IntPtr handle = Native.OpenProcess(
+                Native.PROCESS_QUERY_LIMITED_INFORMATION, false, pid);
+            if (handle == IntPtr.Zero) return false;
+            try
+            {
+                string current = Native.ImageName(handle);
+                return current != null
+                    && string.Equals(current, recorded, StringComparison.OrdinalIgnoreCase);
+            }
             finally { Native.CloseHandle(handle); }
         }
 

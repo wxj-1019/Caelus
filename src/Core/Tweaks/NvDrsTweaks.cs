@@ -203,11 +203,14 @@ namespace CaelusApp
             return false;
         }
 
-        public static void RestoreKind(string key)
+        /// <summary>按种类还原驱动 profile 快照。返回全部条目是否还原完成；
+        /// 失败的条目快照保留。LegacyPurge 依赖这个返回值决定能否安全删数据。</summary>
+        public static bool RestoreKind(string key)
         {
-            if (!NvApi.Available) return;
+            if (!NvApi.Available) return true;
             lock (sync)
             {
+                bool all = true;
                 string[] games = Settings.LoadStr(ListKey, "")
                     .Split(new[] { ';' }, StringSplitOptions.RemoveEmptyEntries);
                 foreach (string exeName in games)
@@ -215,38 +218,58 @@ namespace CaelusApp
                     var snapshot = ParseSnapshot(Settings.LoadStr(SnapPrefix + exeName, ""));
                     string orig;
                     if (!snapshot.TryGetValue(key, out orig)) continue;
+                    // 快照值损坏（非数字）时绝不能把 0 写进驱动 profile 冒充还原：
+                    // 记失败、保留快照，purge 的失败门槛才会拦住随后的整树删除
+                    uint restoreValue = 0;
+                    if (orig != "absent" && !uint.TryParse(orig, out restoreValue))
+                    {
+                        all = false;
+                        Logger.Log("NVIDIA 驱动调优：" + exeName + " 的 " + key
+                            + " 快照值损坏（\"" + orig + "\"），保留快照待人工处理");
+                        continue;
+                    }
                     IntPtr session;
-                    if (!NvApi.TryOpenSession(out session)) return;
+                    if (!NvApi.TryOpenSession(out session)) return false;
                     try
                     {
                         IntPtr profile;
-                        if (NvApi.FindOrCreateAppProfile(session, exeName, out profile))
+                        if (!NvApi.FindOrCreateAppProfile(session, exeName, out profile))
                         {
-                            bool ok = orig == "absent"
-                                ? NvApi.DeleteSetting(session, profile, SettingIdOf(key))
-                                : NvApi.SetDword(session, profile, SettingIdOf(key), ParseUInt(orig));
-                            if (ok && NvApi.SaveSession(session))
+                            all = false;
+                            Logger.Log("NVIDIA 驱动调优：找不到/建不了 " + exeName + " 的 profile，快照保留");
+                            continue;
+                        }
+                        bool ok = orig == "absent"
+                            ? NvApi.DeleteSetting(session, profile, SettingIdOf(key))
+                            : NvApi.SetDword(session, profile, SettingIdOf(key), restoreValue);
+                        if (ok && NvApi.SaveSession(session))
+                        {
+                            snapshot.Remove(key);
+                            if (snapshot.Count == 0)
                             {
-                                snapshot.Remove(key);
-                                if (snapshot.Count == 0)
-                                {
-                                    Settings.SaveStr(SnapPrefix + exeName, "");
-                                    RemoveFromList(exeName);
-                                }
-                                else Settings.SaveStr(SnapPrefix + exeName, SerializeSnapshot(snapshot));
-                                Logger.Log("NVIDIA 驱动调优：已恢复 " + exeName + " 的 " + key);
+                                Settings.SaveStr(SnapPrefix + exeName, "");
+                                RemoveFromList(exeName);
                             }
-                            else Logger.Log("NVIDIA 驱动调优：恢复 " + exeName + " 的 " + key + " 失败，快照保留");
+                            else Settings.SaveStr(SnapPrefix + exeName, SerializeSnapshot(snapshot));
+                            Logger.Log("NVIDIA 驱动调优：已恢复 " + exeName + " 的 " + key);
+                        }
+                        else
+                        {
+                            all = false;
+                            Logger.Log("NVIDIA 驱动调优：恢复 " + exeName + " 的 " + key + " 失败，快照保留");
                         }
                     }
                     finally { NvApi.CloseSession(session); }
                 }
+                return all;
             }
         }
 
-        public static void RestoreKinds(string[] keys)
+        public static bool RestoreKinds(string[] keys)
         {
-            foreach (string key in keys) RestoreKind(key);
+            bool all = true;
+            foreach (string key in keys) all &= RestoreKind(key);
+            return all;
         }
 
         public const string ProbeProfileExe = "CaelusNvProbe.exe";
@@ -296,12 +319,6 @@ namespace CaelusApp
                 finally { NvApi.CloseSession(session); }
             }
             return results;
-        }
-
-        private static uint ParseUInt(string value)
-        {
-            uint parsed;
-            return uint.TryParse(value, out parsed) ? parsed : 0;
         }
 
         internal static Dictionary<string, string> ParseSnapshot(string raw)

@@ -86,21 +86,30 @@ namespace CaelusApp
                     Logger.Log("MSI 模式：显卡与网卡均已启用消息信号中断，无需改动");
                     return true;
                 }
-                var done = new List<string>();
+                // 并集合并：此前已在清单里的设备（含还原失败留下的）不得被本轮覆盖掉；
+                // 回滚只针对本轮真正写入的设备（appliedNow），不能波及历史条目
+                List<string> done = TweakDeviceList.Merge(
+                    ParseList(Settings.LoadStr(ListKey, "")), new string[0]);
+                var appliedNow = new List<string>();
                 foreach (Candidate c in targets)
                 {
-                    if (Reg(c.InstanceId).Apply(1)) done.Add(c.InstanceId);
+                    if (Reg(c.InstanceId).Apply(1))
+                    {
+                        appliedNow.Add(c.InstanceId);
+                        if (!done.Contains(c.InstanceId)) done.Add(c.InstanceId);
+                    }
                     else Logger.Log("MSI 模式：写入失败 " + c.Description);
                 }
-                if (done.Count == 0) return false;
+                if (appliedNow.Count == 0) return false;
                 if (!Settings.SaveStr(ListKey, string.Join(";", done.ToArray())))
                 {
-                    foreach (string id in done) Reg(id).Restore();
-                    Logger.Log("MSI 模式：清单无法持久化，已全部还原");
+                    foreach (string id in appliedNow) Reg(id).Restore();
+                    Logger.Log("MSI 模式：清单无法持久化，本轮改动已还原（既有清单保留）");
                     return false;
                 }
                 Settings.Save("MsiOnByCaelus", true);
-                Logger.Log("MSI 模式：已为 " + done.Count + " 个设备启用，重启后生效");
+                Logger.Log("MSI 模式：本轮启用 " + appliedNow.Count + " 个设备（清单共 "
+                    + done.Count + " 个），重启后生效");
                 return true;
             }
         }

@@ -263,7 +263,11 @@ namespace CaelusApp
             var devFocus = new DevFocus(arbiter, core,
                 () => Settings.Load("DevModeOn", true),
                 devWhitelist,
-                DistractCatalog.IsMatch);
+                DistractCatalog.IsMatch,
+                // 与 WPF 宿主一致的共享效果交接直通：游戏活跃且同样要该效果时，
+                // 开发场景挂起只移交占用权，避免服务停启/通知开关的还原再重做
+                () => gameMode.ActiveGame != null && gameMode.ServicePauseWantedNow,
+                () => gameMode.ActiveGame != null && gameMode.NotifQuiet);
             var dailyCare = new DailyCare(arbiter, core,
                 () => Settings.Load("DailyCareOn", true),
                 devWhitelist);
@@ -367,11 +371,12 @@ namespace CaelusApp
                 icon.Dispose();
                 lock (startGate) exiting = true;
                 try { procNotify.Stop(); } catch { }
-                tamer.Stop();
-                gameMode.Stop();
+                // 场景先于 GameMode 停止：避免游戏退出事件在退出途中重新授权场景又被拆掉
                 devFocus.Stop();
                 dailyCare.Stop();
                 devServiceGuard.Stop();
+                tamer.Stop();
+                gameMode.Stop();
                 panel.RealExit = true;
                 Application.Exit();
             };
@@ -392,6 +397,10 @@ namespace CaelusApp
             icon.Visible = true;
             SystemEvents.SessionEnded += (s, e) =>
             {
+                // 场景先退出仲裁器，游戏关闭（异步 Deactivate）时不再有候选掌权者
+                try { devFocus.Stop(); } catch { }
+                try { dailyCare.Stop(); } catch { }
+                try { devServiceGuard.Stop(); } catch { }
                 try { gameMode.Enabled = false; } catch { }
                 try { PowerPlan.Restore(); } catch { }
                 try { GameDvr.Restore(); } catch { }
@@ -406,9 +415,8 @@ namespace CaelusApp
                 try { AdlxTweaks.RestoreRis(); } catch { }
                 try { PresenceQos.Restore(); } catch { }
                 try { PowerOverlay.Restore(); } catch { }
-                try { devFocus.Stop(); } catch { }
-                try { dailyCare.Stop(); } catch { }
-                try { devServiceGuard.Stop(); } catch { }
+                // 游戏侧服务暂停的还原在异步 Deactivate 里，这里按标志同步兜底（幂等）
+                try { SvcPause.Restore(); } catch { }
             };
             gameMode.SessionEnded += msg =>
             {

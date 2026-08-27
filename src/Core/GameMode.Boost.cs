@@ -162,10 +162,14 @@ namespace CaelusApp
             bool usePauseDl = custom ? pauseDlOn : competitive;
             bool useSvc = custom ? svcPauseOn : false;
             bool useDvr = custom ? killGameDvr : competitive;
-            notifActive = EnvStep("notif", notifQuiet, notifActive, Notif.Quiet, Notif.Restore);
+            notifActive = EnvStep("notif", notifQuiet, notifActive,
+                delegate { return Notif.Quiet(Notif.OwnerGame); },
+                delegate { return Notif.Restore(Notif.OwnerGame); });
             doActive = EnvStep("do", usePauseDl, doActive, DoTweak.Activate, DoTweak.Restore);
             hzActive = EnvStep("hz", hzGuard, hzActive, DisplayGuard.Activate, DisplayGuard.Restore);
-            svcActive = EnvStep("svc", useSvc, svcActive, SvcPause.Activate, SvcPause.Restore);
+            svcActive = EnvStep("svc", useSvc, svcActive,
+                delegate { return SvcPause.Activate(SvcPause.OwnerGame); },
+                delegate { return SvcPause.Restore(SvcPause.OwnerGame); });
             dvrActive = EnvStep("dvr", useDvr, dvrActive, GameDvr.Activate, GameDvr.Restore);
             fxActive = EnvStep("fx", visualFxOn, fxActive, VisualFx.Activate, VisualFx.Restore);
             wuActive = EnvStep("wu", pauseUpdateOn, wuActive, UpdatePause.Activate, UpdatePause.Restore);
@@ -331,10 +335,10 @@ namespace CaelusApp
         {
             bool ok = true;
             standbyPurged = false;
-            if (Notif.Restore()) notifActive = false; else ok = false;
+            if (Notif.Restore(Notif.OwnerGame)) notifActive = false; else ok = false;
             if (DoTweak.Restore()) doActive = false; else ok = false;
             if (DisplayGuard.Restore()) hzActive = false; else ok = false;
-            if (SvcPause.Restore()) svcActive = false; else ok = false;
+            if (SvcPause.Restore(SvcPause.OwnerGame)) svcActive = false; else ok = false;
             if (GameDvr.Restore()) dvrActive = false; else ok = false;
             if (VisualFx.Restore()) fxActive = false; else ok = false;
             if (UpdatePause.Restore()) wuActive = false; else ok = false;
@@ -1013,7 +1017,9 @@ namespace CaelusApp
                 long left = (deadline - DateTime.UtcNow.Ticks) / TimeSpan.TicksPerMillisecond;
                 if (left <= 0) return false;
                 if (!panicDone.WaitOne((int)left)) return false;
-                if (Volatile.Read(ref panicServed) == mine) return panicResult;
+                // >= 而非 ==：并发多个等待者共享一次 Deactivate，后到请求被服务即代表
+                // 本请求（更早）也已被同一轮紧急恢复覆盖
+                if (Volatile.Read(ref panicServed) >= mine) return panicResult;
                 panicDone.Reset();
             }
         }

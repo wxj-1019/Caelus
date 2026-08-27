@@ -152,12 +152,22 @@ namespace CaelusApp
                 if (CM_Get_Res_Des_Data_Size(out size, resDes, 0) != CrSuccess || size < 24) return 0;
                 var buffer = new byte[size];
                 if (CM_Get_Res_Des_Data(resDes, buffer, size, 0) != CrSuccess) return 0;
-                ulong start = BitConverter.ToUInt64(buffer, 8);
-                ulong end = BitConverter.ToUInt64(buffer, 16);
-                if (end <= start) return 0;
-                return end - start + 1;
+                return DecodeRangeSize(buffer);
             }
             catch { return 0; }
+        }
+
+        /// <summary>CM_Get_Res_Des_Data 返回 MEM_RESOURCE（cfgmgr32.h）：偏移 8 是
+        /// MD_Alloc_Base、偏移 16 是 MD_Alloc_End（末地址），长度 = 末 - 基 + 1。
+        /// 注意不能拿偏移 16 当长度——那是 CM_PARTIAL_RESOURCE_DESCRIPTOR 的布局，
+        /// 不是本 API 的；高地址 BAR 会报出几十 TB 的假窗口。</summary>
+        internal static ulong DecodeRangeSize(byte[] buffer)
+        {
+            if (buffer == null || buffer.Length < 24) return 0;
+            ulong start = BitConverter.ToUInt64(buffer, 8);
+            ulong end = BitConverter.ToUInt64(buffer, 16);
+            if (end <= start) return 0;
+            return end - start + 1;
         }
     }
 }

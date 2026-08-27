@@ -99,9 +99,10 @@ namespace CaelusApp
             try
             {
                 if (!madeDup1 || !madeDup2) Skip("本机无法复制出多份电源计划");
-                PowerPlan.SelfTestWriteName(keep, PowerPlan.PlanTitle);
-                PowerPlan.SelfTestWriteName(dup1, PowerPlan.PlanTitle);
-                PowerPlan.SelfTestWriteName(dup2, PowerPlan.PlanTitle);
+                // 名字+描述都匹配才算 Caelus 创建的副本（与 OwnsScheme 判定一致）
+                PowerPlan.SelfTestWriteNameNote(keep, PowerPlan.PlanTitle, PowerPlan.SelfTestNote);
+                PowerPlan.SelfTestWriteNameNote(dup1, PowerPlan.PlanTitle, PowerPlan.SelfTestNote);
+                PowerPlan.SelfTestWriteNameNote(dup2, PowerPlan.PlanTitle, PowerPlan.SelfTestNote);
 
                 PowerPlan.SelfTestPurge(keep);
 
@@ -114,6 +115,30 @@ namespace CaelusApp
                 PowerPlan.SelfTestDelete(keep);
                 if (madeDup1) PowerPlan.SelfTestDelete(dup1);
                 if (madeDup2) PowerPlan.SelfTestDelete(dup2);
+            }
+        }
+
+        /// <summary>用户手工创建的同名方案（没有 Caelus 描述串）必须幸免：
+        /// 既不被认领写入竞技参数，也不被重复副本清理误删。</summary>
+        private static void TestPowerPlanPurgeSparesUserSameNameScheme()
+        {
+            Guid mine, userPlan;
+            if (!PowerPlan.SelfTestDuplicate(out mine)) Skip("本机无法复制电源计划");
+            bool madeUser = PowerPlan.SelfTestDuplicate(out userPlan);
+            try
+            {
+                if (!madeUser) Skip("本机无法复制出多份电源计划");
+                PowerPlan.SelfTestWriteNameNote(mine, PowerPlan.PlanTitle, PowerPlan.SelfTestNote);
+                PowerPlan.SelfTestWriteName(userPlan, PowerPlan.PlanTitle);
+
+                PowerPlan.SelfTestPurge(mine);
+
+                Eq(PowerPlan.PlanTitle, PowerPlan.SelfTestName(userPlan));
+            }
+            finally
+            {
+                PowerPlan.SelfTestDelete(mine);
+                if (madeUser) PowerPlan.SelfTestDelete(userPlan);
             }
         }
 

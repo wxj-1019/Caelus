@@ -25,7 +25,9 @@ namespace CaelusApp
             }
         }
 
-        public static void RestoreKind(string kind)
+        /// <summary>按种类还原逐游戏快照。返回是否全部还原成功（失败的条目备份保留）；
+        /// LegacyPurge 依赖这个返回值决定能否安全删数据。</summary>
+        public static bool RestoreKind(string kind)
         {
             lock (lk)
             {
@@ -33,7 +35,8 @@ namespace CaelusApp
                 {
                     using (var bak = Registry.CurrentUser.OpenSubKey(BakKey, true))
                     {
-                        if (bak == null) return;
+                        if (bak == null) return true;
+                        bool all = true;
                         int n = 0;
                         foreach (string name in bak.GetValueNames())
                         {
@@ -48,11 +51,13 @@ namespace CaelusApp
                                 n++;
                                 try { bak.DeleteValue(name, false); } catch { }
                             }
+                            else all = false;
                         }
                         if (n > 0) Logger.Log("已还原 " + n + " 项逐游戏" + (kind == "gpu" ? " GPU 偏好" : "全屏优化") + "设置");
+                        return all;
                     }
                 }
-                catch { }
+                catch { return false; }
             }
         }
 

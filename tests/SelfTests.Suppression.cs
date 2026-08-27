@@ -224,5 +224,35 @@ namespace CaelusApp
             }
         }
 
+        /// <summary>账面进程名查询：Tamer 在 Stopped 事件遇 PID 复用时用它比对存活者
+        /// 身份——无记录、有记录、释放后清空三种状态都要正确。</summary>
+        private static void TestSuppressionCoreNameOf()
+        {
+            string dir = NewTempDir("sup-nameof");
+            Process probe = null;
+            try
+            {
+                string beat = Path.Combine(dir, "nameof.beat");
+                probe = StartProbe(beat);
+                WaitAdvance(beat, -1, 4000);
+
+                var core = new SuppressionCore(Path.Combine(dir, "nameof.state"));
+                try
+                {
+                    Eq(null, core.NameOf(probe.Id));
+                    core.Acquire(probe.Id, probe.ProcessName, SuppressReason.AntiCheat, "test");
+                    Eq(probe.ProcessName, core.NameOf(probe.Id));
+                    core.ReleaseReason(SuppressReason.AntiCheat);
+                    Eq(null, core.NameOf(probe.Id));
+                }
+                finally { core.ReleaseReason(SuppressReason.AntiCheat); }
+            }
+            finally
+            {
+                if (probe != null) try { StopOwned(probe); } catch { }
+                DeleteTempDir(dir);
+            }
+        }
+
     }
 }

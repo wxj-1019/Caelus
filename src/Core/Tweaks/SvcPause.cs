@@ -9,16 +9,21 @@ namespace CaelusApp
 {
     internal static class SvcPause
     {
+        internal const string OwnerGame = "game";
+        internal const string OwnerDevFocus = "devfocus";
+
         private static readonly string[] Names = { "SysMain", "WSearch" };
         private const string Flag = "PrevSvcPaused";
         private static readonly object lk = new object();
-        private static bool active;
+        // 多占用方登记：游戏模式（自定义档）与开发专注可先后/叠加要求同一效果，
+        // 最后一个占用方离开才真正还原服务；交接直通只换记账不动系统。
+        private static readonly HashSet<string> owners = new HashSet<string>(StringComparer.Ordinal);
 
-        public static bool Activate()
+        public static bool Activate(string owner)
         {
             lock (lk)
             {
-                if (active) return true;
+                if (!SharedEffectClaim.Acquire(owners, owner)) return true;
 
                 var owned = new List<string>();
                 foreach (string s in Settings.LoadStr(Flag, "").Split(new[] { '|' }, StringSplitOptions.RemoveEmptyEntries))
@@ -57,7 +62,7 @@ namespace CaelusApp
                     {
                         foreach (string name in justStopped) SvcCtl.EnsureStarted(name);
                         Logger.Log("服务暂停状态无法持久化，已重新启动本轮停止的服务");
-                        active = false;
+                        SharedEffectClaim.Release(owners, owner);
                         return false;
                     }
                     if (confirmedStopped.Count > 0)
@@ -65,12 +70,31 @@ namespace CaelusApp
                     else if (justStopped.Count > 0)
                         Logger.Log("已请求停止索引/预取服务，尚未确认停止：" + string.Join(" + ", justStopped.ToArray()));
                 }
-                active = true;
                 return true;
             }
         }
 
+        /// <summary>全量还原：清空全部占用方并按标志重启服务。退出链与崩溃自愈使用。</summary>
         public static bool Restore()
+        {
+            lock (lk)
+            {
+                SharedEffectClaim.ReleaseAll(owners);
+                return RestoreFlagged();
+            }
+        }
+
+        /// <summary>释放指定占用方；仅当这是最后一个占用方时才真正重启服务。</summary>
+        public static bool Restore(string owner)
+        {
+            lock (lk)
+            {
+                if (!SharedEffectClaim.Release(owners, owner)) return true;
+                return RestoreFlagged();
+            }
+        }
+
+        private static bool RestoreFlagged()
         {
             lock (lk)
             {
@@ -88,9 +112,24 @@ namespace CaelusApp
                     if (remain.Count == 0) Logger.Log("索引/预取服务已恢复");
                     else Logger.Log("部分服务未能拉起（" + string.Join(",", remain.ToArray()) + "），标志保留待重试");
                 }
-                active = false;
                 return Settings.LoadStr(Flag, "").Length == 0;
             }
+        }
+
+        /// <summary>交接直通：把服务暂停的占用权从一个占用方移交给另一个，底层保持暂停不动。</summary>
+        public static bool HandoffOwner(string from, string to)
+        {
+            lock (lk) return SharedEffectClaim.Handoff(owners, from, to);
+        }
+
+        internal static bool HeldBy(string owner)
+        {
+            lock (lk) return owners.Contains(owner);
+        }
+
+        internal static bool PersistFlagPresentForTest()
+        {
+            lock (lk) return Settings.LoadStr(Flag, "").Length > 0;
         }
 
         public static void HealFromCrash() { if (Settings.LoadStr(Flag, "").Length > 0) Restore(); }

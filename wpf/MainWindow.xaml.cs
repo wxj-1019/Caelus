@@ -103,6 +103,8 @@ namespace CaelusApp.WpfHost
         {
             InitializeComponent();
             ApplyShellLabels();
+            // Aero Snap（Win+↑/拖到屏顶）也会改窗口状态：图标同步不能只挂在按钮路径上
+            StateChanged += delegate { SyncMaximizeVisual(); };
             Pump();
             // 正式运行时注入真实数据源与 Tamer/DevFocus；截图/压力探针无注入时回退只读场景探测
             gameMode = gm ?? new GameMode(Paths.Data, new SuppressionCore());
@@ -530,6 +532,11 @@ namespace CaelusApp.WpfHost
         {
             WindowState = WindowState == WindowState.Maximized
                 ? WindowState.Normal : WindowState.Maximized;
+            SyncMaximizeVisual();
+        }
+
+        private void SyncMaximizeVisual()
+        {
             bool max = WindowState == WindowState.Maximized;
             MaxIcon.Visibility = max ? Visibility.Collapsed : Visibility.Visible;
             RestoreIcon.Visibility = max ? Visibility.Visible : Visibility.Collapsed;

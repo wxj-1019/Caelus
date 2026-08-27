@@ -75,7 +75,9 @@ namespace CaelusApp
                     bool registryOk = Vbs.Apply(0) & Hvci.Apply(0);
                     if (!registryOk)
                     {
-                        Vbs.Restore(); Hvci.Restore();
+                        // 注册表全部回滚成功才清 hypervisorlaunchtype 快照；部分失败时保留
+                        // 快照与残余备份，等下次重试对齐（避免留下过期 BCD 快照）
+                        if (Vbs.Restore() & Hvci.Restore()) Settings.SaveStr("PrevHvLaunch", "");
                         Logger.Log("关闭 VBS/内存完整性写入或回读失败，已回滚");
                         return false;
                     }
@@ -115,10 +117,14 @@ namespace CaelusApp
                     if (!Vbs.HasBackup && !Hvci.HasBackup && savedHvLaunch.Length == 0 && !DisabledByCaelus)
                         return true;
                     bool ok = Vbs.Restore() & Hvci.Restore();
-                    string hv = NormHvLaunch(savedHvLaunch.Length == 0 ? "auto" : savedHvLaunch);
-                    int code;
-                    RunBcd("/set hypervisorlaunchtype " + hv, out code);
-                    if (code != 0) ok = false;
+                    int code = 0;
+                    if (savedHvLaunch.Length > 0)
+                    {
+                        RunBcd("/set hypervisorlaunchtype " + NormHvLaunch(savedHvLaunch), out code);
+                        if (code != 0) ok = false;
+                    }
+                    // 无 hypervisorlaunchtype 快照（异常残留状态）时不猜原值：
+                    // 保持当前 BCD 设置不动，只还原注册表部分
                     if (ok)
                     {
                         Settings.Save("VbsDisabledByCaelus", false);
@@ -128,7 +134,9 @@ namespace CaelusApp
                             return false;
                         }
                         Settings.SaveStr("PrevHvLaunch", "");
-                        Logger.Log("已还原：VBS/内存完整性 + hypervisorlaunchtype → " + hv + "（重启后生效）");
+                        Logger.Log(savedHvLaunch.Length > 0
+                            ? "已还原：VBS/内存完整性 + hypervisorlaunchtype → " + NormHvLaunch(savedHvLaunch) + "（重启后生效）"
+                            : "已还原：VBS/内存完整性（无 hypervisorlaunchtype 快照，BCD 保持不动）（重启后生效）");
                     }
                     else Logger.Log("还原 VBS/hypervisor 未完全成功（bcdedit rc=" + code + "），快照保留，可再试一次");
                     return ok;

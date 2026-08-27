@@ -68,12 +68,6 @@ namespace CaelusApp
             catch { failed.Add(name); }
         }
 
-        private static void StepVoid(string name, Action restore, List<string> failed)
-        {
-            try { restore(); }
-            catch { failed.Add(name); }
-        }
-
         private static List<string> RestoreEverything()
         {
             var failed = new List<string>();
@@ -120,10 +114,10 @@ namespace CaelusApp
             })
             {
                 string k = kind;
-                StepVoid("NVIDIA Profile:" + k, delegate { NvDrsTweaks.RestoreKind(k); }, failed);
+                Step("NVIDIA Profile:" + k, delegate { return NvDrsTweaks.RestoreKind(k); }, failed);
             }
-            StepVoid("逐游戏 GPU 偏好", delegate { GameExeTweaks.RestoreKind("gpu"); }, failed);
-            StepVoid("逐游戏全屏优化", delegate { GameExeTweaks.RestoreKind("fso"); }, failed);
+            Step("逐游戏 GPU 偏好", delegate { return GameExeTweaks.RestoreKind("gpu"); }, failed);
+            Step("逐游戏全屏优化", delegate { return GameExeTweaks.RestoreKind("fso"); }, failed);
 
             return failed;
         }

@@ -1,5 +1,5 @@
 // @author zenjiro 18967498922@163.com
-// 文件用途 系统体检扫描态的圆形进度弧：track 全环 + Arc 弧（Progress 0..1），仿 Sparkline OnRender
+// 文件用途 系统体检扫描态的圆形进度弧：track 全环 + Arc 弧（Progress 0..1），OnRender 自绘
 
 using System;
 using System.Windows;

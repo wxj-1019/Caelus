@@ -84,7 +84,6 @@
     <ApplicationDefinition Include="App.xaml" />
     <Page Include="MainWindow.xaml" />
     <Page Include="SplashWindow.xaml" />
-    <Page Include="Controls\CaelusCore.xaml" />
     <Page Include="Themes\Tokens.xaml" />
     <Page Include="Themes\Colors.Light.xaml" />
     <Page Include="Themes\Colors.Dark.xaml" />
@@ -119,11 +118,9 @@
     <Compile Include="PolicyRuntime.cs" />
     <Compile Include="Converters.cs" />
     <Compile Include="Motion.cs" />
-    <Compile Include="Spotlight.cs" />
     <Compile Include="WpfRuntime.cs" />
     <Compile Include="WindowIcon.cs" />
     <Compile Include="Controls\IconView.cs" />
-    <Compile Include="Controls\Sparkline.cs" />
     <Compile Include="Controls\ProgressRing.cs" />
     <Compile Include="Controls\GlassCard.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
@@ -135,9 +132,6 @@
     </Compile>
     <Compile Include="SplashWindow.xaml.cs">
       <DependentUpon>SplashWindow.xaml</DependentUpon>
-    </Compile>
-    <Compile Include="Controls\CaelusCore.xaml.cs">
-      <DependentUpon>Controls\CaelusCore.xaml</DependentUpon>
     </Compile>
     <Compile Include="Views\OverviewView.xaml.cs">
       <DependentUpon>Views\OverviewView.xaml</DependentUpon>
@@ -211,7 +205,7 @@
          both the legacy (build.cmd) and WPF builds. WinForms-only sources
          (src/Ui, src/Program.cs) are intentionally excluded from the release
          build; the selftest build (CaelusSelfTest=true) links them so the
-         232 self-tests and the WinForms UI probes keep running inside the WPF host. -->
+         249 self-tests and the WinForms UI probes keep running inside the WPF host. -->
     <!-- 递归通配：src 下新增子目录自动进入编译，无需再手工加行。
          刻意排除 src/Ui（WinForms 界面源码，仅自测构建链入）。 -->
     <Compile Include="..\src\Core\**\*.cs" />

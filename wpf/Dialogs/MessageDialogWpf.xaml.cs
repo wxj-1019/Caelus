@@ -19,6 +19,8 @@ namespace CaelusApp.WpfHost.Dialogs
         private bool choseExplicitly;
         private bool closing;
         private MaskAdorner mask;
+        // 遮罩挂载目标：owner 被判定不可见/离屏时为 null，与 CenterScreen 回落保持一致
+        private Window maskOwner;
 
         private MessageDialogWpf(Window owner, string title, string body,
             MsgSeverity severity, MsgButtons buttonSet, string detail, string okText,
@@ -63,8 +65,13 @@ namespace CaelusApp.WpfHost.Dialogs
             if (owner == null && System.Windows.Application.Current != null)
                 owner = System.Windows.Application.Current.MainWindow;
 
-            if (owner != null && owner.IsLoaded) Owner = owner;
+            // owner 隐藏在托盘、或其坐标落在已断开的显示器上时，CenterOwner 会把模态框
+            // 定位到不可见位置（表现为"假死"）——这两种情况都回落屏幕居中，
+            // 且遮罩也不挂到已判定不可用的 owner 上
+            bool useOwner = owner != null && owner.IsLoaded && VisibleOnScreen(owner);
+            if (useOwner) Owner = owner;
             else WindowStartupLocation = WindowStartupLocation.CenterScreen;
+            maskOwner = useOwner ? owner : null;
 
             Loaded += delegate
             {
@@ -76,7 +83,7 @@ namespace CaelusApp.WpfHost.Dialogs
                 st.BeginAnimation(ScaleTransform.ScaleXProperty, grow);
                 st.BeginAnimation(ScaleTransform.ScaleYProperty, grow);
                 Motion.BreathPulse(Glow); // 内部已 8fps 节流
-                mask = AttachMask(owner);
+                mask = AttachMask(maskOwner);
                 FocusDefault(defaultResult);
             };
             Closed += delegate
@@ -97,6 +104,21 @@ namespace CaelusApp.WpfHost.Dialogs
             radial.GradientStops.Add(new GradientStop(Color.FromArgb(0, 0, 0, 0), 0.7));
             if (radial.CanFreeze) radial.Freeze();
             return radial;
+        }
+
+        private static bool VisibleOnScreen(Window w)
+        {
+            if (w.Visibility != Visibility.Visible) return false;
+            try
+            {
+                double x = w.Left, y = w.Top;
+                if (double.IsNaN(x) || double.IsNaN(y)) return true;
+                var virtualScreen = new Rect(
+                    SystemParameters.VirtualScreenLeft, SystemParameters.VirtualScreenTop,
+                    SystemParameters.VirtualScreenWidth, SystemParameters.VirtualScreenHeight);
+                return virtualScreen.Contains(x, y);
+            }
+            catch { return true; }
         }
 
         private void FocusDefault(MessageBoxResult defaultResult)

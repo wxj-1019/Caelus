@@ -34,27 +34,42 @@ namespace CaelusApp
                         if (root == null) return false;
                         guids = root.GetSubKeyNames();
                     }
-                    var touched = new List<string>();
+                    // 并集合并 + 逐值记账：任一值写入成功该网卡就进清单（Restore 对无
+                    // 备份的值是幂等空操作），否则部分成功的那半会被永久留在系统里。
+                    // 清单持久化失败的回滚只针对本轮写入的网卡
+                    List<string> touched = TweakDeviceList.Merge(
+                        ParseList(Settings.LoadStr(ListKey, "")), new string[0]);
+                    var touchedNow = new List<string>();
                     foreach (string guid in guids)
                     {
-                        bool ok = RegOf(guid, "TcpAckFrequency").Apply(1);
-                        ok &= RegOf(guid, "TCPNoDelay").Apply(1);
-                        if (ok) touched.Add(guid);
-                        else Logger.Log("TCP 低延迟：网卡 " + guid + " 写入失败，已跳过");
+                        bool ack = RegOf(guid, "TcpAckFrequency").Apply(1);
+                        bool nodelay = RegOf(guid, "TCPNoDelay").Apply(1);
+                        if (ack || nodelay)
+                        {
+                            touchedNow.Add(guid);
+                            if (!touched.Contains(guid)) touched.Add(guid);
+                        }
+                        if (!ack || !nodelay)
+                            Logger.Log(ack || nodelay
+                                ? "TCP 低延迟：网卡 " + guid + " 部分值写入失败（"
+                                    + (ack ? "" : "TcpAckFrequency ")
+                                    + (nodelay ? "" : "TCPNoDelay") + "），已记入清单可还原"
+                                : "TCP 低延迟：网卡 " + guid + " 两个值均写入失败，本轮跳过（未入清单）");
                     }
-                    if (touched.Count == 0) return false;
+                    if (touchedNow.Count == 0) return false;
                     if (!Settings.SaveStr(ListKey, string.Join(";", touched.ToArray())))
                     {
-                        foreach (string guid in touched)
+                        foreach (string guid in touchedNow)
                         {
                             RegOf(guid, "TcpAckFrequency").Restore();
                             RegOf(guid, "TCPNoDelay").Restore();
                         }
-                        Logger.Log("TCP 低延迟：网卡清单无法持久化，已全部还原");
+                        Logger.Log("TCP 低延迟：网卡清单无法持久化，本轮改动已还原（既有清单保留）");
                         return false;
                     }
                     Settings.Save("NagleOffByCaelus", true);
-                    Logger.Log("TCP 低延迟已启用：" + touched.Count + " 块网卡禁用 Nagle 与延迟 ACK，新建连接生效");
+                    Logger.Log("TCP 低延迟已启用：本轮新写入 " + touchedNow.Count
+                        + " 块网卡（清单共 " + touched.Count + " 块），新建连接生效");
                     return true;
                 }
                 catch { return false; }

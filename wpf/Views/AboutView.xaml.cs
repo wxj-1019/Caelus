@@ -71,7 +71,8 @@ namespace CaelusApp.WpfHost.Views
             {
                 Dispatcher.BeginInvoke(new Action(delegate
                 {
-                    if (!IsLoaded) return;
+                    // 视图被 MainWindow 缓存：无论是否还在本页都把按钮与结果写回，
+                    // 否则中途切页后按钮卡在禁用态、状态文本停在"正在检查…"
                     BtnCheckUpdate.IsEnabled = true;
                     vm.SetUpdateResult(r);
                     if (r == null || !r.Ok)

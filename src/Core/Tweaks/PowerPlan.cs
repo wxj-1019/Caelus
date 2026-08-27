@@ -31,6 +31,8 @@ namespace CaelusApp
         private static extern uint PowerReadFriendlyName(IntPtr root, ref Guid scheme, IntPtr subgroup, IntPtr setting, IntPtr buffer, ref uint size);
         [DllImport("powrprof.dll", EntryPoint = "PowerReadFriendlyName")]
         private static extern uint PowerReadFriendlyNameBuf(IntPtr root, ref Guid scheme, IntPtr subgroup, IntPtr setting, byte[] buffer, ref uint size);
+        [DllImport("powrprof.dll", EntryPoint = "PowerReadDescription")]
+        private static extern uint PowerReadDescriptionBuf(IntPtr root, ref Guid scheme, IntPtr subgroup, IntPtr setting, byte[] buffer, ref uint size);
         [DllImport("powrprof.dll")]
         private static extern uint PowerWriteFriendlyName(IntPtr root, ref Guid scheme, IntPtr subgroup, IntPtr setting, byte[] buffer, uint size);
         [DllImport("powrprof.dll")]
@@ -266,16 +268,38 @@ namespace CaelusApp
 
         private static string ReadName(Guid g)
         {
+            return ReadString(PowerReadFriendlyNameBuf, g);
+        }
+
+        private static string ReadNote(Guid g)
+        {
+            return ReadString(PowerReadDescriptionBuf, g);
+        }
+
+        private delegate uint ReadStringProc(IntPtr root, ref Guid scheme, IntPtr subgroup, IntPtr setting, byte[] buffer, ref uint size);
+
+        private static string ReadString(ReadStringProc read, Guid g)
+        {
             try
             {
+                Guid s = g;
                 uint size = 0;
-                uint probe = PowerReadFriendlyNameBuf(IntPtr.Zero, ref g, IntPtr.Zero, IntPtr.Zero, null, ref size);
+                uint probe = read(IntPtr.Zero, ref s, IntPtr.Zero, IntPtr.Zero, null, ref size);
                 if ((probe != 0 && probe != 234) || size == 0 || size > 4096) return "";
                 byte[] buf = new byte[size];
-                if (PowerReadFriendlyNameBuf(IntPtr.Zero, ref g, IntPtr.Zero, IntPtr.Zero, buf, ref size) != 0) return "";
+                s = g;
+                if (read(IntPtr.Zero, ref s, IntPtr.Zero, IntPtr.Zero, buf, ref size) != 0) return "";
                 return Encoding.Unicode.GetString(buf).TrimEnd('\0');
             }
             catch { return ""; }
+        }
+
+        /// <summary>方案归属判定：友好名与描述双匹配才认作 Caelus 创建。
+        /// 用户手工建一个同名方案时，只看名字会把它误认领（随后被写入竞技参数）
+        /// 或在清理重复副本时误删。</summary>
+        private static bool OwnsScheme(Guid g)
+        {
+            return ReadName(g) == PlanTitle && ReadNote(g) == PlanNote;
         }
 
         private static bool WriteName(Guid g, string title, string note)
@@ -314,18 +338,24 @@ namespace CaelusApp
         private static Guid FindOwnScheme()
         {
             foreach (Guid g in EnumerateSchemes())
-                if (ReadName(g) == PlanTitle) return g;
+                if (OwnsScheme(g)) return g;
             return Guid.Empty;
         }
 
         private static void PurgeStaleClones(Guid keep)
         {
             Guid? cur = Current();
+            Guid stored;
+            string storedRaw = Settings.LoadStr("ArenaPlanGuid", "");
+            Guid.TryParse(storedRaw, out stored);
             foreach (Guid g in EnumerateSchemes())
             {
                 if (g == keep) continue;
                 if (cur.HasValue && g == cur.Value) continue;
-                if (ReadName(g) != PlanTitle) continue;
+                // 托管方案 GUID（若仍记录在案）永不清理——开发/测试机上防止
+                // 误删正在使用的正式方案
+                if (storedRaw.Length > 0 && g == stored) continue;
+                if (!OwnsScheme(g)) continue;
                 Guid tmp = g;
                 if (PowerDeleteScheme(IntPtr.Zero, ref tmp) == 0)
                     Logger.Log("清理了重复的「" + PlanTitle + "」电源计划 " + g);
@@ -370,7 +400,9 @@ namespace CaelusApp
             {
                 target = prev;
                 targetOwned = true;
-                if (ReadName(target) != PlanTitle) WriteName(target, PlanTitle, PlanNote);
+                // 名字或描述任一漂移（powercfg/其他工具改动）都补写回托管标记
+                if (ReadName(target) != PlanTitle || ReadNote(target) != PlanNote)
+                    WriteName(target, PlanTitle, PlanNote);
                 PurgeStaleClones(target);
                 resolved = true;
                 return target;
@@ -386,6 +418,18 @@ namespace CaelusApp
                 PurgeStaleClones(target);
                 resolved = true;
                 return target;
+            }
+
+            // 双匹配认领失败：若有名字相同但描述不符的方案（多半是同名孤儿或被外部
+            // 改过描述的旧托管方案），打一条可见日志——它不会被清理也不会被认领
+            foreach (Guid g in EnumerateSchemes())
+            {
+                if (ReadName(g) == PlanTitle)
+                {
+                    Logger.Log("发现名字相同的「" + PlanTitle + "」电源方案但描述不匹配（"
+                        + g + "），不认领也不清理；将新建托管方案");
+                    break;
+                }
             }
 
             Guid created;
@@ -599,6 +643,10 @@ namespace CaelusApp
         internal static string SelfTestName(Guid scheme) { return ReadName(scheme); }
 
         internal static bool SelfTestWriteName(Guid scheme, string title) { return WriteName(scheme, title, "selftest"); }
+
+        internal static bool SelfTestWriteNameNote(Guid scheme, string title, string note) { return WriteName(scheme, title, note); }
+
+        internal static string SelfTestNote { get { return PlanNote; } }
 
         internal static string[] SelfTestKnobPairs()
         {

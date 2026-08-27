@@ -16,6 +16,7 @@ namespace CaelusApp
         private readonly HashSet<int> dailyPids = new HashSet<int>();
         private readonly Dictionary<int, uint> dailyBoosted = new Dictionary<int, uint>();
         private readonly Dictionary<int, long> dailyBoostedCreation = new Dictionary<int, long>();
+        private readonly Dictionary<int, string> dailyBoostedName = new Dictionary<int, string>();
         private readonly Dictionary<int, int> dailyBoostedIo = new Dictionary<int, int>();
         private bool familyVisible;
         private bool onBattery;
@@ -364,111 +365,25 @@ namespace CaelusApp
             }
         }
 
+        /// <summary>提优单个家族进程（AboveNormal + IO 3）：走共享快照引擎——掌权检查与
+        /// 快照登记同一把锁，挂起插在提优中途时当场回滚；此前无此护栏且创建时间
+        /// 存 DateTime.Ticks，崩溃自愈永远匹配不上。</summary>
         private void BoostOne(int pid)
         {
-            lock (sync) { if (dailyBoosted.ContainsKey(pid)) return; }
-
-            // 快照创建时间与 IO 优先级：还原时按创建时间校验防 PID 复用改到新进程，
-            // IO 优先级还原本值而非写死 2（与 DevFocus.RestoreIdeBoost 同语义）。
-            long creation = 0;
-            string name = null;
-            try { using (var p = Process.GetProcessById(pid)) { creation = p.StartTime.Ticks; name = p.ProcessName; } }
-            catch { }
-
-            IntPtr h = Native.OpenProcess(
-                Native.PROCESS_SET_INFORMATION | Native.PROCESS_QUERY_LIMITED_INFORMATION, false, pid);
-            if (h == IntPtr.Zero) return;
-            try
-            {
-                uint orig = Native.GetPriorityClass(h);
-                if (orig == 0) return;
-                if (orig == Native.HIGH_PRIORITY_CLASS || orig == 0x100) return;
-                if (orig >= Native.ABOVE_NORMAL_PRIORITY_CLASS) return;
-
-                int origIo = Native.QueryIoPriority(h);
-                Native.SetPriorityClass(h, Native.ABOVE_NORMAL_PRIORITY_CLASS);
-                if (Native.GetPriorityClass(h) != Native.ABOVE_NORMAL_PRIORITY_CLASS) return;
-                // IO 优先级写入需要 SeIncreaseBasePriorityPrivilege（与 GameMode 提优同要求）
-                try { Native.EnsureBoostPrivilege(); } catch { }
-                Native.TrySetIoPriority(h, 3);
-
-                // 崩溃自愈：快照持久化到 CrashGuard 日志，Caelus 崩溃后下次启动自动还原
-                try
-                {
-                    if (creation > 0 && !string.IsNullOrEmpty(name))
-                        CrashGuard.MarkBoostProcess(pid, creation, name, orig, 0, origIo, 0, 0, null);
-                }
-                catch { }
-
-                lock (sync)
-                {
-                    dailyBoosted[pid] = orig;
-                    dailyBoostedCreation[pid] = creation;
-                    dailyBoostedIo[pid] = origIo;
-                }
-            }
-            catch { }
-            finally { Native.CloseHandle(h); }
+            BoostOneWithSnapshot(() => grantedFlag, pid, Native.ABOVE_NORMAL_PRIORITY_CLASS,
+                dailyBoosted, dailyBoostedCreation, dailyBoostedName, dailyBoostedIo);
         }
 
         internal void RestoreFamilyBoost()
         {
-            KeyValuePair<int, uint>[] snap;
-            KeyValuePair<int, long>[] snapCreation;
-            KeyValuePair<int, int>[] snapIo;
-            lock (sync)
-            {
-                if (dailyBoosted.Count == 0) return;
-                snap = new KeyValuePair<int, uint>[dailyBoosted.Count];
-                ((ICollection<KeyValuePair<int, uint>>)dailyBoosted).CopyTo(snap, 0);
-                dailyBoosted.Clear();
-                snapCreation = new KeyValuePair<int, long>[dailyBoostedCreation.Count];
-                ((ICollection<KeyValuePair<int, long>>)dailyBoostedCreation).CopyTo(snapCreation, 0);
-                dailyBoostedCreation.Clear();
-                snapIo = new KeyValuePair<int, int>[dailyBoostedIo.Count];
-                ((ICollection<KeyValuePair<int, int>>)dailyBoostedIo).CopyTo(snapIo, 0);
-                dailyBoostedIo.Clear();
-            }
-            var creationMap = new Dictionary<int, long>();
-            foreach (var kv in snapCreation) creationMap[kv.Key] = kv.Value;
-            var ioMap = new Dictionary<int, int>();
-            foreach (var kv in snapIo) ioMap[kv.Key] = kv.Value;
-
-            foreach (var kv in snap)
-            {
-                try
-                {
-                    long expectCreation;
-                    if (creationMap.TryGetValue(kv.Key, out expectCreation))
-                    {
-                        long nowCreation;
-                        try { nowCreation = Process.GetProcessById(kv.Key).StartTime.Ticks; }
-                        catch { continue; }
-                        if (nowCreation != expectCreation) continue;
-                    }
-                    IntPtr h = Native.OpenProcess(Native.PROCESS_SET_INFORMATION, false, kv.Key);
-                    if (h == IntPtr.Zero) continue;
-                    try
-                    {
-                        Native.SetPriorityClass(h, kv.Value);
-                        int origIo;
-                        Native.TrySetIoPriority(h,
-                            ioMap.TryGetValue(kv.Key, out origIo) && origIo >= 0 ? origIo : 2);
-                    }
-                    finally { Native.CloseHandle(h); }
-                    // 清除崩溃自愈快照（已正常还原）
-                    long creation;
-                    if (creationMap.TryGetValue(kv.Key, out creation) && creation > 0)
-                        CrashGuard.ReleaseBoostProcess(kv.Key, creation);
-                }
-                catch { }
-            }
+            RestoreBoostSnapshot(dailyBoosted, dailyBoostedCreation, dailyBoostedName, dailyBoostedIo);
         }
 
-        /// <summary>测试钩子：绕过窗口条件直接提优单个家族进程（返回是否入快照）</summary>
+        /// <summary>测试钩子：绕过窗口条件与掌权检查直接提优单个家族进程（返回是否入快照）</summary>
         internal bool BoostFamilyForTest(int pid)
         {
-            BoostOne(pid);
+            BoostOneWithSnapshot(() => true, pid, Native.ABOVE_NORMAL_PRIORITY_CLASS,
+                dailyBoosted, dailyBoostedCreation, dailyBoostedName, dailyBoostedIo);
             lock (sync) return dailyBoosted.ContainsKey(pid);
         }
     }

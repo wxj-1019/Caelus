@@ -8,7 +8,7 @@
 
 [![Platform](https://img.shields.io/badge/platform-Windows%2010%2F11-%235E5CE6)](https://github.com/wxj-1019/Caelus)
 [![Language](https://img.shields.io/badge/language-C%23%20.NET%20Framework%204.x-%237A78F0)](https://github.com/wxj-1019/Caelus)
-[![Self-tests](https://img.shields.io/badge/self%2Dtests-232%20passing-%233DD68C)](https://github.com/wxj-1019/Caelus)
+[![Self-tests](https://img.shields.io/badge/self%2Dtests-249%20passing-%233DD68C)](https://github.com/wxj-1019/Caelus)
 [![Privacy](https://img.shields.io/badge/privacy-local%20only%20%C2%B7%20zero%20upload-%233DD68C)](https://github.com/wxj-1019/Caelus)
 [![License](https://img.shields.io/badge/license-resale%20forbidden-%23E5A13D)](LICENSE)
 
@@ -158,7 +158,7 @@ The implementation uses Windows APIs including `SetPriorityClass`, `SetProcessDe
 
 ## Validation scope
 
-The built-in suite currently contains `232` tests, covering target detection and session protection, suppression and recovery (including PID reuse and crash wake-up), CPU topology and partitioning, profile storage format compatibility and unknown-version protection, game scanning and accelerator filtering, the boundaries of the launcher-learning mechanism, system audit thresholds, League column boundaries and UI rendering. A missing platform capability is recorded as `SKIP`, never as `PASS`.
+The built-in suite currently contains `249` tests, covering target detection and session protection, suppression and recovery (including PID reuse and crash wake-up), CPU topology and partitioning, profile storage format compatibility and unknown-version protection, game scanning and accelerator filtering, the boundaries of the launcher-learning mechanism, system audit thresholds, League column boundaries and UI rendering. A missing platform capability is recorded as `SKIP`, never as `PASS`.
 
 The same-core contention test deliberately puts two compute processes on one core and suspends the contender. It only shows that throughput recovers once CPU time is released — it is not evidence of real-game FPS or 1% Low gains.
 
@@ -230,7 +230,7 @@ The `--irq-map` diagnostic stays: it tells you whether this machine's interrupt 
 
 The three NVIDIA tuning writes (maximum-performance power, frame cap, pre-rendered frame limit) were write-read-restore tested on the development machine's RTX 3090 via `--nv-probe` and **all three genuinely take effect**. The low-latency mode setting ID that was removed is rejected by the driver (NVAPI -160), which confirms the decision to drop it in 1.6.1. The audit page offers the same one-click test so any machine can verify for itself.
 
-HAGS, VBS, power plans, MMCSS, network throttling, service pauses and compatibility with real anti-cheat products have no end-to-end automated tests. They need validating on the target machine.
+The actual effect of HAGS and VBS (reboot required), MMCSS, network throttling, Windows Update pause, Game DVR, power overlays, sleep/display-off guarding, foreground boost and compatibility with real anti-cheat products have no end-to-end automated tests yet; they need validating on the target machine. Registry-level toggle round-trips (MPO, HAGS original-value preservation) and the service-pause / notification-quiet scenario handoff (with real service stop and restore) are covered by the self-test suite. Power plans do have real-machine tests: `dev.cmd test` duplicates a power scheme, writes every competitive/standard parameter, reads each back to verify, checks that stale duplicate schemes are cleaned without touching the user's own schemes, then deletes the temporary scheme.
 
 ## Author and license
 

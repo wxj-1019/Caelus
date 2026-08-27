@@ -56,14 +56,17 @@ namespace CaelusApp
         {
             try
             {
-
-                bool ok = Sch.HasBackup ? Sch.Restore() : Sch.Apply(1);
-                if (ok && CurrentlyOn()) ok = Sch.Apply(1);
+                // 有快照：还原到快照原值即终态——原值可能本身就是开启态（用户自己开了
+                // HAGS），不得再按"当前仍是开启态"强制写 1 覆盖用户设置；无快照才写 1
+                bool hadBackup = Sch.HasBackup;
+                bool ok = hadBackup ? Sch.Restore() : Sch.Apply(1);
                 if (ok)
                 {
                     Settings.Save("HagsOnByCaelus", false);
                     if (Settings.Load("HagsOnByCaelus", true)) return false;
-                    Logger.Log("GPU 硬件调度（HAGS）已关闭，重启后生效");
+                    Logger.Log(hadBackup
+                        ? "GPU 硬件调度（HAGS）已还原到系统原值（若原值为开启态则保持开启，Caelus 不再托管）"
+                        : "GPU 硬件调度（HAGS）已关闭，重启后生效");
                 }
                 return ok;
             }

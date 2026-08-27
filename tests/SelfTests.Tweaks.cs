@@ -410,6 +410,201 @@ namespace CaelusApp
             }
         }
 
+        /// <summary>清单类 tweak 重复启用必须做并集合并：既有条目（含此前还原失败
+        /// 留下的）不得被覆盖掉，新增条目追加且去重。</summary>
+        private static void TestTweakDeviceListMerge()
+        {
+            // 既有条目保留、新增追加
+            List<string> m1 = TweakDeviceList.Merge(new[] { "a", "b" }, new[] { "c" });
+            Eq(3, m1.Count);
+            Eq("a", m1[0]); Eq("b", m1[1]); Eq("c", m1[2]);
+            // 重复启用同一批设备：不产生重复条目
+            List<string> m2 = TweakDeviceList.Merge(new[] { "a", "b" }, new[] { "b", "c" });
+            Eq(3, m2.Count);
+            // 空清单与空新增的边界
+            Eq(0, TweakDeviceList.Merge(null, null).Count);
+            Eq(1, TweakDeviceList.Merge(new string[0], new[] { "x" }).Count);
+            // 空字符串条目不进清单
+            List<string> m3 = TweakDeviceList.Merge(new[] { "", "a" }, new[] { "" });
+            Eq(1, m3.Count);
+            Eq("a", m3[0]);
+        }
+
+        /// <summary>MEM_RESOURCE（cfgmgr32.h）偏移 8=MD_Alloc_Base、16=MD_Alloc_End：
+        /// 长度必须按 末-基+1 计算；末<=基 与短缓冲都返回 0。</summary>
+        private static void TestRebarRangeDecode()
+        {
+            var buf = new byte[24];
+            // 高地址大窗口（ReBAR 常态）：base=0x3800000000, end=0x4000000000 → 0x800000001
+            Array.Copy(BitConverter.GetBytes(0x3800000000UL), 0, buf, 8, 8);
+            Array.Copy(BitConverter.GetBytes(0x4000000000UL), 0, buf, 16, 8);
+            Eq(0x800000001UL, RebarProbe.DecodeRangeSize(buf));
+            // 低地址窗口：base=0xA0000, end=0xBFFFF → 0x20000
+            Array.Copy(BitConverter.GetBytes(0xA0000UL), 0, buf, 8, 8);
+            Array.Copy(BitConverter.GetBytes(0xBFFFFUL), 0, buf, 16, 8);
+            Eq(0x20000UL, RebarProbe.DecodeRangeSize(buf));
+            // 末 <= 基：无效描述符；短缓冲与 null 返回 0
+            Array.Copy(BitConverter.GetBytes(0x100UL), 0, buf, 16, 8);
+            Eq(0UL, RebarProbe.DecodeRangeSize(buf));
+            Eq(0UL, RebarProbe.DecodeRangeSize(new byte[8]));
+            Eq(0UL, RebarProbe.DecodeRangeSize(null));
+        }
+
+        /// <summary>游戏模式守护：HKCU 开关写入、读回与还原往返（原值含"键不存在"）。</summary>
+        private static void TestGameModeGuardRoundtrip()
+        {
+            const string barKey = @"Software\Microsoft\GameBar";
+            const string valName = "AutoGameModeEnabled";
+            object orig = null;
+            bool origExisted = false;
+            try
+            {
+                using (var k = Microsoft.Win32.Registry.CurrentUser.OpenSubKey(barKey))
+                    if (k != null) { orig = k.GetValue(valName); origExisted = orig != null; }
+                if (origExisted && !(orig is int)) Skip("AutoGameModeEnabled 原值类型异常，跳过往返");
+                Settings.Save("GameModeGuardByCaelus", false);
+
+                Eq(true, GameModeGuard.Enable());
+                Eq(true, GameModeGuard.CurrentlyOn());
+                using (var k = Microsoft.Win32.Registry.CurrentUser.OpenSubKey(barKey))
+                    Eq(1, (int)k.GetValue(valName));
+                Eq(true, GameModeGuard.Restore());
+                Eq(false, GameModeGuard.EnabledByCaelus);
+
+                using (var k = Microsoft.Win32.Registry.CurrentUser.OpenSubKey(barKey))
+                {
+                    object v = k == null ? null : k.GetValue(valName);
+                    if (origExisted) Eq((int)orig, (int)v);
+                    else Eq(true, v == null);
+                }
+            }
+            finally
+            {
+                try
+                {
+                    using (var k = Microsoft.Win32.Registry.CurrentUser.OpenSubKey(barKey, true))
+                    {
+                        if (k != null)
+                        {
+                            if (origExisted) k.SetValue(valName, orig, Microsoft.Win32.RegistryValueKind.DWord);
+                            else if (k.GetValue(valName) != null) k.DeleteValue(valName, false);
+                        }
+                    }
+                }
+                catch { }
+                Settings.SaveStr("PrevAutoGameMode", "");
+                Settings.Save("GameModeGuardByCaelus", false);
+            }
+        }
+
+        /// <summary>窗口化游戏优化：DirectX 全局设置字符串的字段合并与还原往返。</summary>
+        private static void TestWindowedOptRoundtrip()
+        {
+            const string gpuKey = @"SOFTWARE\Microsoft\DirectX\UserGpuPreferences";
+            const string valName = "DirectXUserGlobalSettings";
+            string orig = null;
+            bool origExisted = false;
+            try
+            {
+                using (var k = Microsoft.Win32.Registry.CurrentUser.OpenSubKey(gpuKey))
+                {
+                    if (k != null)
+                    {
+                        object v = k.GetValue(valName);
+                        orig = v as string;
+                        origExisted = v != null && orig != null;
+                    }
+                }
+                Settings.Save("WindowedOptOnByCaelus", false);
+                Settings.SaveStr("PrevSwapEffectUpgrade", "");
+
+                Eq(true, WindowedOptTweak.Enable());
+                Eq(true, WindowedOptTweak.CurrentlyOn());
+                Eq(true, WindowedOptTweak.Restore());
+                Eq(false, WindowedOptTweak.EnabledByCaelus);
+
+                using (var k = Microsoft.Win32.Registry.CurrentUser.OpenSubKey(gpuKey))
+                {
+                    object v = k == null ? null : k.GetValue(valName);
+                    if (origExisted) Eq(orig, (string)v);
+                    else Eq(false, WindowedOptTweak.CurrentlyOn());
+                }
+            }
+            finally
+            {
+                try
+                {
+                    using (var k = Microsoft.Win32.Registry.CurrentUser.OpenSubKey(gpuKey, true))
+                    {
+                        if (k != null)
+                        {
+                            if (origExisted) k.SetValue(valName, orig, Microsoft.Win32.RegistryValueKind.String);
+                            else if (k.GetValue(valName) != null) k.DeleteValue(valName, false);
+                        }
+                    }
+                }
+                catch { }
+                Settings.SaveStr("PrevSwapEffectUpgrade", "");
+                Settings.Save("WindowedOptOnByCaelus", false);
+            }
+        }
+
+        /// <summary>传递优化限制：策略键写入/读回/还原往返（含 DoSvc 服务的停与启）。</summary>
+        private static void TestDoTweakRoundtrip()
+        {
+            const string doKey = @"SOFTWARE\Policies\Microsoft\Windows\DeliveryOptimization";
+            const string valName = "DOMaxBackgroundDownloadBandwidth";
+            object orig = null;
+            bool origExisted = false;
+            try
+            {
+                using (var k = Microsoft.Win32.Registry.LocalMachine.OpenSubKey(doKey))
+                    if (k != null) { orig = k.GetValue(valName); origExisted = orig != null; }
+                Settings.SaveStr("PrevDoSvcStopped", "");
+
+                Eq(true, DoTweak.Activate());
+                using (var k = Microsoft.Win32.Registry.LocalMachine.OpenSubKey(doKey))
+                {
+                    object v = k == null ? null : k.GetValue(valName);
+                    if (!(v is int) || (int)v != 1)
+                        Skip("策略键不可写，无法验证传递优化往返");
+                }
+                Eq(true, DoTweak.Restore());
+                using (var k = Microsoft.Win32.Registry.LocalMachine.OpenSubKey(doKey))
+                {
+                    object v = k == null ? null : k.GetValue(valName);
+                    if (origExisted) Eq((int)orig, (int)v);
+                    else Eq(true, v == null);
+                }
+            }
+            finally
+            {
+                try
+                {
+                    using (var k = Microsoft.Win32.Registry.LocalMachine.OpenSubKey(doKey, true))
+                    {
+                        if (k != null)
+                        {
+                            if (origExisted) k.SetValue(valName, orig, Microsoft.Win32.RegistryValueKind.DWord);
+                            else if (k.GetValue(valName) != null) k.DeleteValue(valName, false);
+                        }
+                    }
+                }
+                catch { }
+                Settings.SaveStr("PrevDoBgBw", "");
+                Settings.SaveStr("PrevDoSvcStopped", "");
+                try { SvcCtl.EnsureStarted("DoSvc"); } catch { }
+            }
+        }
+
+        /// <summary>Tamer 全量扫描间隔：事件可用时应显著长于纯轮询（事件减少扫描需求）。</summary>
+        private static void TestTamerSweepInterval()
+        {
+            Eq(true, Tamer.FullSweepInterval(true) > Tamer.FullSweepInterval(false));
+            Eq(8000, Tamer.FullSweepInterval(false));
+            Eq(60000, Tamer.FullSweepInterval(true));
+        }
+
         private static void TestKernelAntiCheatNamingIsHonest()
         {
             Eq("Ricochet", KernelAntiCheat.MatchByExe("cod22-cod"));
@@ -423,6 +618,106 @@ namespace CaelusApp
                 throw new Exception("empty input must not produce a name");
             if (KernelAntiCheat.ServiceExists("CaelusDefinitelyNotAService_" + Guid.NewGuid().ToString("N")))
                 throw new Exception("a nonexistent service must not be reported as installed");
+        }
+
+        /// <summary>MPO 还原必须停在快照原值：用户自己手动设过禁用值（5）时，
+        /// 还原后不得再按"当前仍是禁用值"把用户自己的值删掉。</summary>
+        private static void TestMpoRestoreKeepsUserOriginalValue()
+        {
+            const string dwmKey = @"SOFTWARE\Microsoft\Windows\Dwm";
+            const string valName = "OverlayTestMode";
+            object orig = null;
+            bool origExisted = false;
+            try
+            {
+                using (var k = Microsoft.Win32.Registry.LocalMachine.OpenSubKey(dwmKey))
+                {
+                    if (k != null) { orig = k.GetValue(valName); origExisted = orig != null; }
+                }
+                using (var k = Microsoft.Win32.Registry.LocalMachine.OpenSubKey(dwmKey, true))
+                {
+                    if (k == null) Skip("无法打开 DWM 注册表键");
+                    k.SetValue(valName, 5, Microsoft.Win32.RegistryValueKind.DWord);
+                }
+                Settings.Save("MpoOffByCaelus", false);
+
+                Eq(true, MpoTweak.Disable());
+                Eq(true, MpoTweak.Restore());
+
+                using (var k = Microsoft.Win32.Registry.LocalMachine.OpenSubKey(dwmKey))
+                {
+                    object v = k == null ? null : k.GetValue(valName);
+                    Eq(true, v is int && (int)v == 5);
+                }
+                Eq(false, MpoTweak.DisabledByCaelus);
+            }
+            finally
+            {
+                try
+                {
+                    using (var k = Microsoft.Win32.Registry.LocalMachine.OpenSubKey(dwmKey, true))
+                    {
+                        if (k != null)
+                        {
+                            if (origExisted) k.SetValue(valName, orig, Microsoft.Win32.RegistryValueKind.DWord);
+                            else if (k.GetValue(valName) != null) k.DeleteValue(valName, false);
+                        }
+                    }
+                }
+                catch { }
+                Settings.SaveStr("PrevMpoOverlay", "");
+                Settings.Save("MpoOffByCaelus", false);
+            }
+        }
+
+        /// <summary>HAGS 关闭必须停在快照原值：用户自己开了 HAGS（2）时，
+        /// 关闭动作是"还原到原值"，不得再强制写成 1 覆盖用户设置。</summary>
+        private static void TestHagsDisableKeepsUserOriginalValue()
+        {
+            const string gfxKey = @"SYSTEM\CurrentControlSet\Control\GraphicsDrivers";
+            const string valName = "HwSchMode";
+            object orig = null;
+            bool origExisted = false;
+            try
+            {
+                using (var k = Microsoft.Win32.Registry.LocalMachine.OpenSubKey(gfxKey))
+                {
+                    if (k != null) { orig = k.GetValue(valName); origExisted = orig != null; }
+                }
+                using (var k = Microsoft.Win32.Registry.LocalMachine.OpenSubKey(gfxKey, true))
+                {
+                    if (k == null) Skip("无法打开 GraphicsDrivers 注册表键");
+                    k.SetValue(valName, 2, Microsoft.Win32.RegistryValueKind.DWord);
+                }
+                Settings.Save("HagsOnByCaelus", false);
+
+                Eq(true, HagsTweak.Enable());
+                Eq(true, HagsTweak.Disable());
+
+                using (var k = Microsoft.Win32.Registry.LocalMachine.OpenSubKey(gfxKey))
+                {
+                    object v = k == null ? null : k.GetValue(valName);
+                    Eq(true, v is int && (int)v == 2);
+                }
+                Eq(false, HagsTweak.EnabledByCaelus);
+            }
+            finally
+            {
+                try
+                {
+                    using (var k = Microsoft.Win32.Registry.LocalMachine.OpenSubKey(gfxKey, true))
+                    {
+                        if (k != null)
+                        {
+                            if (origExisted) k.SetValue(valName, orig, Microsoft.Win32.RegistryValueKind.DWord);
+                            else if (k.GetValue(valName) != null) k.DeleteValue(valName, false);
+                        }
+                    }
+                }
+                catch { }
+                Settings.SaveStr("PrevHwSch", "");
+                Settings.Save("HagsOnByCaelus", false);
+            }
         }
     }
 }

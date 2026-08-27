@@ -418,6 +418,222 @@ namespace CaelusApp
             }
         }
 
+        /// <summary>编译提优必须像 IDE 提优一样随快照还原：编译进程被提为 HIGH + IO 3，
+        /// 场景被游戏抢占挂起后应回到原优先级与原 IO（此前的缺陷是只提不还）。</summary>
+        private static void TestDevFocusBuildBoostSnapshotRestore()
+        {
+            string dir = NewTempDir("devfocus-buildboost");
+            Process probe = null;
+            DevFocus dev = null;
+            try
+            {
+                string beat;
+                probe = StartNamedProbe(dir, "msbuild.exe", out beat);
+                WaitAdvance(beat, -1, 4000);
+                probe.Refresh();
+                Eq(ProcessPriorityClass.Normal, probe.PriorityClass);
+                int ioBefore = QueryIoOf(probe.Id);
+
+                var arbiter = new ScenarioArbiter();
+                var core = new SuppressionCore(Path.Combine(dir, "s.state"));
+                arbiter.Register(new StubGameScenario());
+                dev = new DevFocus(arbiter, core, () => true, (n, p) => false, name => false);
+
+                // 编译进程启动 → 掌权 → 提优 HIGH + IO 3
+                dev.NotifyProcessChanges(new ProcessChangeBatch(
+                    new[] { MakeChange(probe.Id, "msbuild", ProcessChangeKind.Started) }, false));
+                Eq(true, dev.IsGranted);
+                probe.Refresh();
+                Eq(ProcessPriorityClass.High, probe.PriorityClass);
+                Eq(3, QueryIoOf(probe.Id));
+
+                // 游戏抢占挂起 → 编译提优按快照还原（优先级与 IO 都回到原值）
+                arbiter.ReportActivity(ScenarioKind.Game, true);
+                Eq(false, dev.IsGranted);
+                probe.Refresh();
+                Eq(ProcessPriorityClass.Normal, probe.PriorityClass);
+                Eq(ioBefore, QueryIoOf(probe.Id));
+            }
+            finally
+            {
+                if (dev != null) try { dev.Stop(); } catch { }
+                if (probe != null) try { StopOwned(probe); } catch { }
+                DeleteTempDir(dir);
+            }
+        }
+
+        /// <summary>掌权期间（如专注模式已开）才启动的编译进程也必须同步拿到提优——
+        /// 提优不能只发生在 Grant 那一刻。</summary>
+        private static void TestDevFocusIncrementalBuildBoost()
+        {
+            string dir = NewTempDir("devfocus-buildinc");
+            Process probe = null;
+            DevFocus dev = null;
+            try
+            {
+                var arbiter = new ScenarioArbiter();
+                var core = new SuppressionCore(Path.Combine(dir, "s.state"));
+                dev = new DevFocus(arbiter, core, () => true, (n, p) => false, name => false);
+
+                // 先经专注开关掌权（此刻没有任何编译进程）
+                dev.SetFocusMode(true);
+                Eq(true, dev.IsGranted);
+
+                // 掌权后编译进程才启动 → Started 事件应同步提优
+                string beat;
+                probe = StartNamedProbe(dir, "msbuild.exe", out beat);
+                WaitAdvance(beat, -1, 4000);
+                dev.NotifyProcessChanges(new ProcessChangeBatch(
+                    new[] { MakeChange(probe.Id, "msbuild", ProcessChangeKind.Started) }, false));
+                Eq(true, dev.IsGranted);
+                probe.Refresh();
+                Eq(ProcessPriorityClass.High, probe.PriorityClass);
+            }
+            finally
+            {
+                if (dev != null) try { dev.Stop(); } catch { }
+                if (probe != null) try { StopOwned(probe); } catch { }
+                try { Settings.Save("DevFocusModeOn", false); } catch { }
+                DeleteTempDir(dir);
+            }
+        }
+
+        /// <summary>游戏接管共享效果（服务暂停 + 通知静默）时所有权直通：挂起不移交
+        /// 底层还原，效果保持、占用方换成 game；无游戏接管时照常还原。
+        /// 服务被禁用/不可停的机器上无法形成持久化标志，按约定记 SKIP。</summary>
+        private static void TestDevFocusSharedEffectHandoff()
+        {
+            if (SvcState.Query("SysMain") != 4 && SvcState.Query("WSearch") != 4)
+                Skip("SysMain/WSearch 均未运行，无法验证服务暂停持久化标志");
+
+            string dir = NewTempDir("devfocus-handoff");
+            Process probe = null;
+            DevFocus dev = null;
+            try
+            {
+                string beat;
+                probe = StartNamedProbe(dir, "msbuild.exe", out beat);
+                WaitAdvance(beat, -1, 4000);
+
+                var arbiter = new ScenarioArbiter();
+                var core = new SuppressionCore(Path.Combine(dir, "s.state"));
+                arbiter.Register(new StubGameScenario());
+                bool gameSvc = false;
+                bool gameQuiet = false;
+                dev = new DevFocus(arbiter, core, () => true, (n, p) => false, name => false,
+                    () => gameSvc, () => gameQuiet);
+
+                // —— A 段：服务暂停直通（build 掌权，专注关）——
+                dev.NotifyProcessChanges(new ProcessChangeBatch(
+                    new[] { MakeChange(probe.Id, "msbuild", ProcessChangeKind.Started) }, false));
+                Eq(true, dev.IsGranted);
+                Eq(true, SvcPause.HeldBy("devfocus"));
+                if (!SvcPause.PersistFlagPresentForTest())
+                    Skip("服务可查但无法形成持久化标志（权限或服务类型限制），无法验证直通");
+
+                gameSvc = true;
+                arbiter.ReportActivity(ScenarioKind.Game, true);
+                Eq(false, dev.IsGranted);
+                Eq(false, SvcPause.HeldBy("devfocus"));
+                Eq(true, SvcPause.HeldBy("game"));
+                Eq(true, SvcPause.PersistFlagPresentForTest());
+
+                // 生产时序：游戏侧先按占用方释放，再让出仲裁席位
+                SvcPause.Restore(SvcPause.OwnerGame);
+                arbiter.ReportActivity(ScenarioKind.Game, false);
+                Eq(true, dev.IsGranted);
+                Eq(true, SvcPause.HeldBy("devfocus"));
+                Eq(false, SvcPause.HeldBy("game"));
+
+                // —— B 段：通知静默直通（专注模式打开，借下一次补位 grant 施加静默）——
+                dev.SetFocusMode(true);
+                gameSvc = false;
+                arbiter.ReportActivity(ScenarioKind.Game, true);   // 游戏不要服务：svc 普通还原
+                Eq(false, SvcPause.HeldBy("devfocus"));
+                Eq(false, SvcPause.PersistFlagPresentForTest());
+                Notif.Restore(Notif.OwnerGame);
+                arbiter.ReportActivity(ScenarioKind.Game, false);  // 补位 grant：build+focus 都在 → 静默施加
+                Eq(true, dev.IsGranted);
+                Eq(true, SvcPause.HeldBy("devfocus"));
+                Eq(true, Notif.HeldBy("devfocus"));
+
+                gameQuiet = true;
+                arbiter.ReportActivity(ScenarioKind.Game, true);   // 游戏要静默 → 通知走直通；svc 普通还原
+                Eq(false, dev.IsGranted);
+                Eq(true, Notif.HeldBy("game"));
+                Eq(false, Notif.HeldBy("devfocus"));
+                Eq(false, SvcPause.HeldBy("devfocus"));
+
+                Notif.Restore(Notif.OwnerGame);
+                arbiter.ReportActivity(ScenarioKind.Game, false);  // 补位 → 静默回到 devfocus
+                Eq(true, dev.IsGranted);
+                Eq(true, Notif.HeldBy("devfocus"));
+                Eq(false, Notif.HeldBy("game"));
+
+                // —— C 段：游戏两者都不要 → 全部按普通路径还原 ——
+                gameQuiet = false;
+                arbiter.ReportActivity(ScenarioKind.Game, true);
+                Eq(false, dev.IsGranted);
+                Eq(false, SvcPause.HeldBy("devfocus"));
+                Eq(false, SvcPause.HeldBy("game"));
+                Eq(false, Notif.HeldBy("devfocus"));
+                Eq(false, Notif.HeldBy("game"));
+                Eq(false, SvcPause.PersistFlagPresentForTest());
+            }
+            finally
+            {
+                try { SvcPause.Restore(); } catch { }
+                try { Notif.Restore(); } catch { }
+                if (dev != null) try { dev.Stop(); } catch { }
+                if (probe != null) try { StopOwned(probe); } catch { }
+                try { Settings.Save("DevFocusModeOn", false); } catch { }
+                DeleteTempDir(dir);
+            }
+        }
+
+        /// <summary>场景提优的崩溃自愈凭据必须与 CrashGuard.Identify 用同一时间纪元
+        /// （QueryProcessSample 的 FILETIME）。此前存 DateTime ticks，两者相差固定常数，
+        /// 崩溃后身份校验永远 Mismatch，提优过的进程永不还原。
+        /// 自愈消费的是全局注册表账本——测试前后保存/恢复，避免吃掉真机待自愈条目。</summary>
+        private static void TestCrashGuardBoostIdentityRoundtrip()
+        {
+            string dir = NewTempDir("crashguard-units");
+            Process probe = null;
+            DevFocus dev = null;
+            string previousJournal = Settings.LoadStr("Crash_BoostEntriesV2", "");
+            try
+            {
+                Settings.SaveStr("Crash_BoostEntriesV2", "");
+                string beat = Path.Combine(dir, "cg.beat");
+                probe = StartProbe(beat);
+                WaitAdvance(beat, -1, 4000);
+                probe.Refresh();
+                Eq(ProcessPriorityClass.Normal, probe.PriorityClass);
+                int ioBefore = QueryIoOf(probe.Id);
+
+                var arbiter = new ScenarioArbiter();
+                var core = new SuppressionCore(Path.Combine(dir, "s.state"));
+                dev = new DevFocus(arbiter, core, () => true, (n, p) => false, name => false);
+
+                Eq(true, dev.BoostIdeForTest(probe.Id));
+                probe.Refresh();
+                Eq(ProcessPriorityClass.AboveNormal, probe.PriorityClass);
+
+                // 模拟崩溃后重启的自愈链：按 PID/创建时间/映像名匹配并还原
+                CrashGuard.HealFromCrash();
+                probe.Refresh();
+                Eq(ProcessPriorityClass.Normal, probe.PriorityClass);
+                Eq(ioBefore, QueryIoOf(probe.Id));
+            }
+            finally
+            {
+                if (dev != null) try { dev.Stop(); } catch { }
+                if (probe != null) try { StopOwned(probe); } catch { }
+                try { Settings.SaveStr("Crash_BoostEntriesV2", previousJournal); } catch { }
+                DeleteTempDir(dir);
+            }
+        }
+
         private static void TestBuildCatalogExpandedTools()
         {
             // 新增编译/任务编排工具链：应命中

@@ -636,7 +636,10 @@ namespace CaelusApp.WpfHost
             devFocus = new DevFocus(arbiter, core,
                 () => Settings.Load("DevModeOn", true),
                 devWhitelist,
-                DistractCatalog.IsMatch);
+                DistractCatalog.IsMatch,
+                // 共享效果交接直通：游戏活跃且同样要该效果时，开发场景挂起只移交占用权
+                delegate { return gameMode.ActiveGame != null && gameMode.ServicePauseWantedNow; },
+                delegate { return gameMode.ActiveGame != null && gameMode.NotifQuiet; });
             dailyCare = new DailyCare(arbiter, core,
                 () => Settings.Load("DailyCareOn", true),
                 devWhitelist);
@@ -764,6 +767,11 @@ namespace CaelusApp.WpfHost
         // ---- 关机/注销时的还原链（重启后仍生效的改动优先还原） ----
         public void RestorePersistentChanges()
         {
+            // 场景先退出仲裁器：随后的游戏关闭（异步 Deactivate）点 ActiveChanged(false)
+            // 时已无候选掌权者，不会在退出途中把开发/日常场景重新授权一遍再拆掉。
+            Run("DevFocus 停止", devFocus.Stop);
+            Run("DailyCare 停止", dailyCare.Stop);
+            Run("DevServiceGuard 停止", devServiceGuard.Stop);
             Run("GameMode 关闭", delegate { gameMode.Enabled = false; });
             Run("PowerPlan 还原", delegate { PowerPlan.Restore(); });
             Run("GameDvr 还原", delegate { GameDvr.Restore(); });
@@ -778,9 +786,9 @@ namespace CaelusApp.WpfHost
             Run("Adlx Ris 还原", delegate { AdlxTweaks.RestoreRis(); });
             Run("PresenceQos 还原", delegate { PresenceQos.Restore(); });
             Run("PowerOverlay 还原", delegate { PowerOverlay.Restore(); });
-            Run("DevFocus 停止", devFocus.Stop);
-            Run("DailyCare 停止", dailyCare.Stop);
-            Run("DevServiceGuard 停止", devServiceGuard.Stop);
+            // 游戏侧的 SvcPause 还原在工作线程的 Deactivate 里，进程可能在此之前被终结：
+            // 这里按注册表标志同步兜底（幂等，无标志时零开销）
+            Run("SvcPause 还原", delegate { SvcPause.Restore(); });
         }
 
         public void Shutdown()
@@ -792,11 +800,13 @@ namespace CaelusApp.WpfHost
             }
             Run("电源轮询定时器释放", delegate { powerPollTimer.Dispose(); });
             Run("ProcNotify 停止", procNotify.Stop);
-            Run("Tamer 停止", tamer.Stop);
-            Run("GameMode 停止", gameMode.Stop);
+            // 场景先于 GameMode 停止：否则游戏退出事件会在退出途中重新授权开发/日常场景，
+            // 紧接着又被 Stop 还原——白做一轮服务暂停/通知静默/压制扫描，还污染专注时长统计
             Run("DevFocus 停止", devFocus.Stop);
             Run("DailyCare 停止", dailyCare.Stop);
             Run("DevServiceGuard 停止", devServiceGuard.Stop);
+            Run("Tamer 停止", tamer.Stop);
+            Run("GameMode 停止", gameMode.Stop);
         }
 
         public ContextMenuStrip BuildTrayMenu(Action openPanel, Action exitApp, Action afterChange)

@@ -63,27 +63,42 @@ namespace CaelusApp
         {
             lock (lk)
             {
-                var done = new List<string>();
+                // 并集合并：此前已在清单里的网卡（含还原失败留下的）不得被本轮覆盖掉；
+                // 回滚只针对本轮真正写入的网卡（appliedNow）
+                List<string> done = TweakDeviceList.Merge(
+                    ParseList(Settings.LoadStr(ListKey, "")), new string[0]);
+                var appliedNow = new List<string>();
+                bool sawCandidate = false;
                 foreach (Adapter a in Scan())
                 {
                     if (!a.CanPowerDown) continue;
+                    sawCandidate = true;
                     int target = (a.PnPCapabilities.HasValue ? a.PnPCapabilities.Value : 0) | NoPowerDownBit;
-                    if (Reg(a.Index).Apply(target)) done.Add(a.Index);
+                    if (Reg(a.Index).Apply(target))
+                    {
+                        appliedNow.Add(a.Index);
+                        if (!done.Contains(a.Index)) done.Add(a.Index);
+                    }
                     else Logger.Log("网卡省电：写入失败 " + a.Description);
                 }
-                if (done.Count == 0)
+                if (appliedNow.Count == 0)
                 {
-                    Logger.Log("网卡省电：所有网卡均已禁止系统断电，无需改动");
-                    return true;
+                    if (!sawCandidate)
+                    {
+                        Logger.Log("网卡省电：所有网卡均已禁止系统断电，无需改动");
+                        return true;
+                    }
+                    return false;
                 }
                 if (!Settings.SaveStr(ListKey, string.Join(";", done.ToArray())))
                 {
-                    foreach (string idx in done) Reg(idx).Restore();
-                    Logger.Log("网卡省电：清单无法持久化，已全部还原");
+                    foreach (string idx in appliedNow) Reg(idx).Restore();
+                    Logger.Log("网卡省电：清单无法持久化，本轮改动已还原（既有清单保留）");
                     return false;
                 }
                 Settings.Save("DevPowerByCaelus", true);
-                Logger.Log("网卡省电：已禁止系统为省电关闭 " + done.Count + " 块网卡");
+                Logger.Log("网卡省电：本轮新禁止 " + appliedNow.Count + " 块（清单共 "
+                    + done.Count + " 块网卡）");
                 return true;
             }
         }

@@ -181,6 +181,15 @@ namespace CaelusApp.WpfHost
                     {
                         try { File.AppendAllText(Path.Combine(dir, "crash.log"),
                             DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss") + "  [WPF boot] " + ex + Environment.NewLine); } catch { }
+                        // 主窗口构建失败时不能带着已启动的压制引擎隐身常驻（无窗口、无托盘、
+                        // 启动屏卡死，用户没有任何入口发现或退出）——关闭启动屏并完整退出
+                        try { splash.Close(); } catch { }
+                        Dispatcher.BeginInvoke(DispatcherPriority.Background, new Action(delegate
+                        {
+                            realExit = true;
+                            try { if (host != null) host.Shutdown(); } catch { }
+                            try { Shutdown(); } catch { }
+                        }));
                     }
                 }));
             });

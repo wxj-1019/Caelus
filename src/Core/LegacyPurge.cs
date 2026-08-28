@@ -102,7 +102,9 @@ namespace CaelusApp
 
             StepIf("HAGS", delegate { return HagsTweak.EnabledByCaelus; }, HagsTweak.Disable, failed);
             StepIf("GPU 中断亲和", delegate { return InterruptAffinityTweak.EnabledByCaelus; }, InterruptAffinityTweak.Disable, failed);
-            StepIf("网卡中断亲和", delegate { return NetworkAffinityTweak.EnabledByCaelus; }, NetworkAffinityTweak.Disable, failed);
+            // 网卡项按系统痕迹判定而非只看标志：QoS 策略在系统策略库，
+            // 标志丢失时跳过 Disable 会留下 purge 够不到的永久残留
+            StepIf("网卡中断亲和", delegate { return NetworkAffinityTweak.HasAppliedTraces(); }, NetworkAffinityTweak.Disable, failed);
             StepIf("USB 中断避让", delegate { return UsbInterruptAffinityTweak.EnabledByCaelus; }, UsbInterruptAffinityTweak.Disable, failed);
 
             foreach (string kind in new[]
@@ -122,9 +124,23 @@ namespace CaelusApp
             return failed;
         }
 
+        // 完成标记存数据目录文件而非注册表：注册表标记写进 HKCU\Software\Caelus，
+        // 会把刚删掉的键重建出来，「回到全新安装状态」打折扣。文件写入失败时才退回
+        // 注册表标记兜底。旧标记（注册表）仍被认——老用户升级时按旧标记短路，
+        // 否则会把当前版本的数据文件当旧数据再清一遍。
+        private const string DoneFile = "purge.done";
+
         public static void RunOnce(string dataDir)
         {
-            if (Settings.Load(DoneKey, false)) return;
+            string donePath = Path.Combine(dataDir, DoneFile);
+            if (File.Exists(donePath)) return;
+            if (Settings.Load(DoneKey, false))
+            {
+                // 老用户迁移：按旧注册表标记短路，顺手清掉只剩旧标记的键树
+                MarkDone(donePath);
+                DeleteRegistryTree();
+                return;
+            }
 
             Logger.Log("首次运行 v1.6.6：清除旧版本数据，先还原全部系统改动");
 
@@ -147,12 +163,26 @@ namespace CaelusApp
                 catch { }
             }
 
-            bool regCleared = DeleteRegistryTree();
+            // 注册表清理失败同样不写完成标记：下次启动重试（还原链幂等，全部已还原时零副作用）
+            if (!DeleteRegistryTree())
+            {
+                Logger.Log("旧版本数据已还原并删除 " + files + " 个文件，但注册表未能完全清空，下次启动重试");
+                return;
+            }
 
-            Settings.Save(DoneKey, true);
+            MarkDone(donePath);
+            Logger.Log("旧版本数据已清除：系统改动已还原，删除 " + files + " 个文件，配置已重置");
+        }
 
-            Logger.Log("旧版本数据已清除：系统改动已还原，删除 " + files + " 个文件"
-                + (regCleared ? "，配置已重置" : "，配置未能完全清空"));
+        private static void MarkDone(string donePath)
+        {
+            try
+            {
+                File.WriteAllText(donePath, DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss"));
+                return;
+            }
+            catch { }
+            try { Settings.Save(DoneKey, true); } catch { }
         }
     }
 }

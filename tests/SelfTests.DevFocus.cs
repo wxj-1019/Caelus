@@ -655,6 +655,37 @@ namespace CaelusApp
             Eq(false, BuildCatalog.IsMatch("python"));
         }
 
+        // 用户自定义豁免名录：反作弊/加速器自定义清单写入即生效，清除即失效
+        private static void TestCustomExemptionCatalogs()
+        {
+            string savedAc = AntiCheatCatalog.CustomList;
+            try
+            {
+                AntiCheatCatalog.CustomList = "MyAc_Helper; foo.exe";
+                Eq(true, AntiCheatCatalog.IsKnownProcess("MyAc_Helper"));
+                Eq(true, AntiCheatCatalog.IsKnownProcess("MyAc_Helper.exe"));
+                Eq(true, AntiCheatCatalog.IsKnownProcess("foo"));
+                Eq(false, AntiCheatCatalog.IsKnownProcess("bar"));
+            }
+            finally { AntiCheatCatalog.CustomList = savedAc; }
+            Eq(false, AntiCheatCatalog.IsKnownProcess("MyAc_Helper"));
+
+            string savedAcc = NetAcceleratorCatalog.CustomList;
+            try
+            {
+                NetAcceleratorCatalog.CustomList = "myacc";
+                Eq(true, NetAcceleratorCatalog.IsAcceleratorLikeName("myacc"));
+                Eq(true, NetAcceleratorCatalog.IsAcceleratorLikeName("myacc.exe"));
+            }
+            finally { NetAcceleratorCatalog.CustomList = savedAcc; }
+            Eq(false, NetAcceleratorCatalog.IsAcceleratorLikeName("myacc"));
+
+            // 新增常见加速器与内置反作弊命名
+            Eq(true, NetAcceleratorCatalog.IsAcceleratorLikeName("steam++"));
+            Eq(true, NetAcceleratorCatalog.IsAcceleratorLikeName("ourplay"));
+            Eq(true, AntiCheatCatalog.IsKnownProcess("SGuard64.exe"));
+        }
+
         private static void TestIdeCatalogDbTools()
         {
             string pf = Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles);

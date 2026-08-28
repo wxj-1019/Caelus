@@ -207,7 +207,10 @@ namespace CaelusApp
         /// 失败的条目快照保留。LegacyPurge 依赖这个返回值决定能否安全删数据。</summary>
         public static bool RestoreKind(string key)
         {
-            if (!NvApi.Available) return true;
+            // NVAPI 暂不可用（驱动升级/重装中）时不能谎报成功：
+            // 只要还有任何游戏的快照带着这个键，就返回 false 拦住 purge 的整树删除，
+            // 否则已写入驱动的值会随快照一起消失、从此无人能还原
+            if (!NvApi.Available) return !AnySnapshotHas(key);
             lock (sync)
             {
                 bool all = true;
@@ -339,6 +342,18 @@ namespace CaelusApp
             foreach (var kv in map) parts.Add(kv.Key + "=" + kv.Value);
             parts.Sort(StringComparer.OrdinalIgnoreCase);
             return string.Join(";", parts.ToArray());
+        }
+
+        private static bool AnySnapshotHas(string key)
+        {
+            string[] games = Settings.LoadStr(ListKey, "")
+                .Split(new[] { ';' }, StringSplitOptions.RemoveEmptyEntries);
+            foreach (string exeName in games)
+            {
+                var snapshot = ParseSnapshot(Settings.LoadStr(SnapPrefix + exeName, ""));
+                if (snapshot.ContainsKey(key)) return true;
+            }
+            return false;
         }
 
         private static bool AddToList(string exeName)

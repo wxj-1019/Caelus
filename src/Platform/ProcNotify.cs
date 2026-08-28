@@ -166,6 +166,7 @@ namespace CaelusApp
                                 {
                                     int eventParentPid = change.ParentPid;
                                     int eventSession = change.Session;
+                                    string eventName = change.Name;
 
                                     change.ParentPid = 0;
                                     change.ParentCreation = 0;
@@ -177,6 +178,24 @@ namespace CaelusApp
                                         Native.PROCESS_QUERY_LIMITED_INFORMATION
                                             | Native.SYNCHRONIZE,
                                         false, pid);
+                                    if (handle == IntPtr.Zero && captureIdentity)
+                                    {
+                                        // 内核反作弊保护进程开不了句柄：用 Toolhelp 快照校验
+                                        // 事件名是否仍是该 PID 的当前映像名（防 PID 复用后
+                                        // 张冠李戴），对得上才放行事件身份。无创建时间/路径，
+                                        // 需要强身份的下游（白名单家族等）按 Creation<=0 自动跳过。
+                                        string liveName;
+                                        int liveParent;
+                                        if (Native.TryToolhelpProcessIdentity(
+                                                pid, out liveName, out liveParent)
+                                            && string.Equals(StripExe(liveName), eventName,
+                                                StringComparison.OrdinalIgnoreCase))
+                                        {
+                                            change.Name = eventName;
+                                            change.Session = eventSession;
+                                            change.ParentPid = eventParentPid;
+                                        }
+                                    }
                                     if (handle != IntPtr.Zero)
                                     {
                                         try

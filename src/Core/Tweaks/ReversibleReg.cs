@@ -11,26 +11,72 @@ namespace CaelusApp
         public const string Absent = "__caelus_absent__";
         private const string LegacyAbsent = "none";
 
+        /// <summary>设备作用域键的防幽灵写入模式——CreateSubKey 在设备被拔出/禁用后会
+        /// 把整条已删除的设备路径重建出来（幽灵键，设备管理器不认、Restore 也删不掉）：
+        /// OpenOnly：目标键自身必须已存在（设备的驱动键/接口键，设备在键就在）。
+        /// RequireParent：允许创建叶子键（如 Affinity Policy 默认不存在），但父键
+        /// （设备参数键）必须已存在——父键在即设备在，设备没了就不写。</summary>
+        internal enum WriteMode
+        {
+            CreateAlways = 0,
+            OpenOnly = 1,
+            RequireParent = 2,
+        }
+
         private readonly RegistryKey hive;
         private readonly string subKey;
         private readonly string valName;
         private readonly RegistryValueKind kind;
         private readonly string slot;
+        private readonly WriteMode mode;
 
         public ReversibleReg(RegistryKey hive, string subKey, string valName, RegistryValueKind kind, string slot)
+            : this(hive, subKey, valName, kind, slot, WriteMode.CreateAlways)
+        {
+        }
+
+        public ReversibleReg(RegistryKey hive, string subKey, string valName, RegistryValueKind kind, string slot, WriteMode writeMode)
         {
             this.hive = hive; this.subKey = subKey; this.valName = valName; this.kind = kind; this.slot = slot;
+            mode = writeMode;
         }
 
         public bool HasBackup { get { return Settings.LoadStr(slot, "").Length > 0; } }
+
+        /// <summary>父键路径（最后一段 '\' 之前）；无 '\' 返回 null。</summary>
+        private string ParentPath()
+        {
+            int cut = subKey.LastIndexOf('\\');
+            return cut <= 0 ? null : subKey.Substring(0, cut);
+        }
 
         public bool Apply(object newVal)
         {
             try
             {
-                using (var k = hive.CreateSubKey(subKey))
+                if (mode == WriteMode.RequireParent)
                 {
-                    if (k == null) return false;
+                    string parent = ParentPath();
+                    using (RegistryKey pk = parent == null ? null : hive.OpenSubKey(parent))
+                    {
+                        if (pk == null)
+                        {
+                            // 设备已不在（拔出/禁用/卸载）：不是失败也不写，保留无快照状态
+                            Logger.Log("父键不存在（设备可能已移除），跳过 " + valName + "：" + subKey);
+                            return false;
+                        }
+                    }
+                }
+                using (RegistryKey k = mode == WriteMode.OpenOnly
+                    ? hive.OpenSubKey(subKey, true)
+                    : hive.CreateSubKey(subKey))
+                {
+                    if (k == null)
+                    {
+                        if (mode == WriteMode.OpenOnly)
+                            Logger.Log("注册表键不存在（设备可能已移除），跳过 " + valName + "：" + subKey);
+                        return false;
+                    }
                     if (Settings.LoadStr(slot, "").Length == 0)
                     {
                         object cur = k.GetValue(valName);

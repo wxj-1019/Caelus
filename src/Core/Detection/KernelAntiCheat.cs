@@ -14,6 +14,8 @@ namespace CaelusApp
         {
             public string Name;
             public string[] Services;
+            /// <summary>服务名是通用词时（如 Javelin）加验 ImagePath 含此 token，防误报。</summary>
+            public string ImagePathToken;
         }
 
         private static readonly Sig[] Known = new[]
@@ -24,6 +26,10 @@ namespace CaelusApp
             new Sig { Name = "ACE-Guard",       Services = new[]{ "ACE-BASE", "ACE-GAME", "AntiCheatExpert" } },
             new Sig { Name = "nProtect GameGuard", Services = new[]{ "npggsvc" } },
             new Sig { Name = "Faceit AC",       Services = new[]{ "faceit" } },
+            // 米哈游内核反作弊（原神/星穹铁道/绝区零国服大盘）
+            new Sig { Name = "HoYoKProtect",    Services = new[]{ "HoYoKProtect", "mhyprot2", "mhyprot3" } },
+            new Sig { Name = "EA Javelin",      Services = new[]{ "Javelin" }, ImagePathToken = "javelin" },
+            new Sig { Name = "Xigncode3",       Services = new[]{ "xhunter1" } },
         };
 
         private static readonly string[][] ByExePrefix = new[]
@@ -47,6 +53,23 @@ namespace CaelusApp
             catch { return false; }
         }
 
+        /// <summary>服务 ImagePath 是否包含指定 token（通用词服务名的第二特征校验）。
+        /// 读不到 ImagePath 时返回 false（宁可漏报也不把无关软件认成内核反作弊）。</summary>
+        internal static bool ServiceImagePathContains(string serviceName, string token)
+        {
+            try
+            {
+                using (RegistryKey k = Registry.LocalMachine.OpenSubKey(ServiceRoot + "\\" + serviceName))
+                {
+                    if (k == null) return false;
+                    string path = k.GetValue("ImagePath") as string;
+                    return !string.IsNullOrEmpty(path)
+                        && path.IndexOf(token, StringComparison.OrdinalIgnoreCase) >= 0;
+                }
+            }
+            catch { return false; }
+        }
+
         public static string InstalledName()
         {
             lock (lk)
@@ -56,7 +79,13 @@ namespace CaelusApp
                 var hits = new List<string>();
                 foreach (Sig s in Known)
                     foreach (string svc in s.Services)
-                        if (ServiceExists(svc)) { hits.Add(s.Name); break; }
+                    {
+                        if (!ServiceExists(svc)) continue;
+                        if (s.ImagePathToken != null
+                            && !ServiceImagePathContains(svc, s.ImagePathToken)) continue;
+                        hits.Add(s.Name);
+                        break;
+                    }
                 cached = hits.Count == 0 ? null : string.Join(" / ", hits.ToArray());
                 return cached;
             }

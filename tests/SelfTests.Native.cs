@@ -22,6 +22,60 @@ namespace CaelusApp
                 throw new Exception("corrupt recovery evidence was overwritten");
         }
 
+        // 降级识别通道：Toolhelp32 免句柄读取本进程映像名与父 PID
+        private static void TestToolhelpSelfIdentity()
+        {
+            int self = Process.GetCurrentProcess().Id;
+            string exeName;
+            int parentPid;
+            Eq(true, Native.TryToolhelpProcessIdentity(self, out exeName, out parentPid));
+            Eq(true, exeName != null && exeName.Length > 0);
+            string expect = Process.GetCurrentProcess().ProcessName + ".exe";
+            Eq(expect.ToLowerInvariant(), exeName.ToLowerInvariant());
+            Eq(true, parentPid > 0);
+            // 不存在的 PID 必须返回 false（降级通道的存活判定）
+            Eq(false, Native.TryToolhelpProcessIdentity(0x3FFFFFFF, out exeName, out parentPid));
+        }
+
+        // 场景事件泵：批次异步串行派发、顺序保持、Stop 丢弃积压
+        private static void TestScenarioEventPump()
+        {
+            var pump = new ScenarioEventPump();
+            try
+            {
+                var seen = new List<int>();
+                var gate = new object();
+                var first = new ManualResetEvent(false);
+                pump.Batch += delegate(ProcessChangeBatch b)
+                {
+                    foreach (ProcessChange c in b.Changes)
+                        lock (gate) seen.Add(c.Pid);
+                    if (b.Changes.Length > 0 && b.Changes[0].Pid == 1) first.Set();
+                };
+                pump.Post(new ProcessChangeBatch(new[] {
+                    new ProcessChange { Pid = 1, Kind = ProcessChangeKind.Started } }, false));
+                Eq(true, first.WaitOne(5000));
+                pump.Post(new ProcessChangeBatch(new[] {
+                    new ProcessChange { Pid = 2, Kind = ProcessChangeKind.Started } }, false));
+                long deadline = DateTime.UtcNow.Ticks + 5L * TimeSpan.TicksPerSecond;
+                while (true)
+                {
+                    lock (gate) { if (seen.Count >= 2) break; }
+                    if (DateTime.UtcNow.Ticks > deadline) throw new Exception("pump batch not dispatched");
+                    Thread.Sleep(10);
+                }
+                lock (gate) { Eq(1, seen[0]); Eq(2, seen[1]); }
+            }
+            finally { pump.Stop(); }
+            // 停止后投递被丢弃，不再触发
+            bool fired = false;
+            pump.Batch += delegate { fired = true; };
+            pump.Post(new ProcessChangeBatch(new[] {
+                new ProcessChange { Pid = 9, Kind = ProcessChangeKind.Started } }, false));
+            Thread.Sleep(300);
+            Eq(false, fired);
+        }
+
         private static void TestPidReuseJournal(string root)
         {
             string beat = Path.Combine(root, "reuse.beat");

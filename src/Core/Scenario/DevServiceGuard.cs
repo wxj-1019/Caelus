@@ -10,6 +10,9 @@ namespace CaelusApp
     {
         private readonly object sync = new object();
         private readonly Dictionary<int, string> live = new Dictionary<int, string>();
+        // PID → 进程创建时间：同 PID 新建实例（创建时间不同）视为旧实例已死，
+        // 防 PID 复用后旧条目张冠李戴、counts 永久虚高
+        private readonly Dictionary<int, long> creations = new Dictionary<int, long>();
         private readonly Dictionary<string, int> counts = new Dictionary<string, int>(StringComparer.OrdinalIgnoreCase);
         private readonly Dictionary<string, long> firstSeen = new Dictionary<string, long>(StringComparer.OrdinalIgnoreCase);
 
@@ -41,9 +44,24 @@ namespace CaelusApp
 
                     if (pc.Kind == ProcessChangeKind.Started)
                     {
-                        if (!live.ContainsKey(pc.Pid))
+                        string existingName;
+                        bool exists = live.TryGetValue(pc.Pid, out existingName);
+                        if (exists)
+                        {
+                            long recorded;
+                            creations.TryGetValue(pc.Pid, out recorded);
+                            if (pc.Creation > 0 && recorded > 0 && pc.Creation != recorded)
+                            {
+                                // PID 已复用：旧实例的 Stopped 事件丢失，先按退出走移除逻辑
+                                RemoveLocked(pc.Pid, now, toNotify);
+                                exists = false;
+                            }
+                        }
+                        if (!exists)
                         {
                             live[pc.Pid] = bare;
+                            if (pc.Creation > 0) creations[pc.Pid] = pc.Creation;
+                            else creations.Remove(pc.Pid);
                             int c;
                             counts.TryGetValue(bare, out c);
                             counts[bare] = c + 1;
@@ -89,6 +107,7 @@ namespace CaelusApp
             string existing;
             if (!live.TryGetValue(pid, out existing)) return;
             live.Remove(pid);
+            creations.Remove(pid);
             int c;
             counts.TryGetValue(existing, out c);
             if (c <= 1)
@@ -105,7 +124,7 @@ namespace CaelusApp
 
         public void Stop()
         {
-            lock (sync) { live.Clear(); counts.Clear(); firstSeen.Clear(); }
+            lock (sync) { live.Clear(); creations.Clear(); counts.Clear(); firstSeen.Clear(); }
         }
     }
 }

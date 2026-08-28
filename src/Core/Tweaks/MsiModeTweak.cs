@@ -27,14 +27,33 @@ namespace CaelusApp
             public int? Value;
         }
 
+        private sealed class ScannedDevice
+        {
+            public string Cls;
+            public string Vendor;
+            public Candidate Candidate;
+        }
+
+        /// <summary>设备 ID 目录名（VEN_XXXX&DEV_…&SUBSYS_…）里的厂商段。</summary>
+        private static string VendorTokenOf(string deviceIdFolder)
+        {
+            if (string.IsNullOrEmpty(deviceIdFolder)) return null;
+            int idx = deviceIdFolder.IndexOf("VEN_", StringComparison.OrdinalIgnoreCase);
+            if (idx != 0 || deviceIdFolder.Length < 8) return null;
+            return deviceIdFolder.Substring(0, 8).ToUpperInvariant();
+        }
+
         public static List<Candidate> Scan()
         {
-            var found = new List<Candidate>();
+            // 显卡的 HDMI/DP 音频是同卡另一 PCI function（Media 类），在线中断下是
+            // 常见 DPC 尖峰来源；但 Media 类也含采集卡等杂设备——只纳入与已扫到的
+            // Display 设备同厂商的 Media function，避免误扩
+            var all = new List<ScannedDevice>();
             try
             {
                 using (var pci = Registry.LocalMachine.OpenSubKey(EnumRoot + @"\PCI"))
                 {
-                    if (pci == null) return found;
+                    if (pci == null) return new List<Candidate>();
                     foreach (string devClass in pci.GetSubKeyNames())
                         using (var dev = pci.OpenSubKey(devClass))
                         {
@@ -44,7 +63,7 @@ namespace CaelusApp
                                 {
                                     if (node == null) continue;
                                     string cls = node.GetValue("Class") as string;
-                                    if (cls == null || Array.IndexOf(AllowedClasses, cls) < 0) continue;
+                                    if (cls == null) continue;
                                     string id = @"PCI\" + devClass + @"\" + inst;
                                     var c = new Candidate
                                     {
@@ -59,12 +78,29 @@ namespace CaelusApp
                                         object v = msi == null ? null : msi.GetValue("MSISupported");
                                         c.Value = v is int ? (int?)(int)v : null;
                                     }
-                                    found.Add(c);
+                                    all.Add(new ScannedDevice
+                                    {
+                                        Cls = cls,
+                                        Vendor = VendorTokenOf(devClass),
+                                        Candidate = c
+                                    });
                                 }
                         }
                 }
             }
             catch { }
+            var displayVendors = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+            foreach (ScannedDevice d in all)
+                if (d.Cls == "Display" && d.Vendor != null) displayVendors.Add(d.Vendor);
+            var found = new List<Candidate>();
+            foreach (ScannedDevice d in all)
+            {
+                // 注册表 Class 值音频类是全大写 "MEDIA"（INF 类名约定），必须忽略大小写
+                if (Array.IndexOf(AllowedClasses, d.Cls) >= 0
+                    || (string.Equals(d.Cls, "Media", StringComparison.OrdinalIgnoreCase)
+                        && d.Vendor != null && displayVendors.Contains(d.Vendor)))
+                    found.Add(d.Candidate);
+            }
             return found;
         }
 
@@ -83,7 +119,7 @@ namespace CaelusApp
                 List<Candidate> targets = Disabled();
                 if (targets.Count == 0)
                 {
-                    Logger.Log("MSI 模式：显卡与网卡均已启用消息信号中断，无需改动");
+                    Logger.Log("MSI 模式：显卡/网卡/配套音频均已启用消息信号中断，无需改动");
                     return true;
                 }
                 // 并集合并：此前已在清单里的设备（含还原失败留下的）不得被本轮覆盖掉；
@@ -134,10 +170,12 @@ namespace CaelusApp
 
         private static ReversibleReg Reg(string instanceId)
         {
+            // MSI 叶子键可能默认不存在（须创建），但设备 Enum 父链在才写——
+            // 设备中途移除时不能 CreateSubKey 重建幽灵设备路径
             return new ReversibleReg(Registry.LocalMachine,
                 EnumRoot + @"\" + instanceId + @"\" + MsiLeaf,
                 "MSISupported", RegistryValueKind.DWord,
-                "Msi_" + instanceId.Replace('\\', '_'));
+                "Msi_" + instanceId.Replace('\\', '_'), ReversibleReg.WriteMode.RequireParent);
         }
 
         internal static string[] ParseList(string raw)

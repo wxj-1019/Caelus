@@ -9,8 +9,20 @@ namespace CaelusApp
     internal sealed class EnvironmentViewModel : ViewModelBase
     {
         private readonly GameMode gameMode;
+        private string pageFeedback = "";
+        private string pageFeedbackKind = "Info";
 
         public EnvironmentViewModel(GameMode gameMode) { this.gameMode = gameMode; }
+
+        // —— 页面级反馈（PageFeedbackBanner 消费；行内反馈在 EnvToggle 上） ——
+        public string PageFeedback { get { return pageFeedback; } private set { SetProperty(ref pageFeedback, value, "PageFeedback"); } }
+        public string PageFeedbackKind { get { return pageFeedbackKind; } private set { SetProperty(ref pageFeedbackKind, value, "PageFeedbackKind"); } }
+
+        public void ShowPageFeedback(string text, string kind)
+        {
+            PageFeedbackKind = string.IsNullOrEmpty(kind) ? "Info" : kind;
+            PageFeedback = text ?? "";
+        }
 
         // —— 标题与分区 ——
         public string PageTitle { get { return Lang.T("nav.env"); } }
@@ -230,6 +242,19 @@ namespace CaelusApp
         {
             get { return feedbackKind; }
             private set { SetProperty(ref feedbackKind, value, "FeedbackKind"); }
+        }
+
+        /// <summary>行内信息反馈（不改变开关状态）。</summary>
+        public void ShowInfo(string text)
+        {
+            FeedbackKind = "Info";
+            FeedbackText = text ?? "";
+        }
+
+        /// <summary>行内忙碌反馈：后台线程执行 Apply 前调用，完成后 Apply 自会覆盖反馈。</summary>
+        public void ShowBusy()
+        {
+            ShowInfo("正在应用…");
         }
 
         // 返回 false 代表执行失败；成功/失败文案写入 FeedbackText + FeedbackKind，由视图行内呈现。

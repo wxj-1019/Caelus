@@ -26,6 +26,8 @@ namespace CaelusApp.WpfHost
         private bool elevated;
         private DispatcherTimer trayIconTimer;
         private bool realExit;
+        // 刚弹出的是"发现新版本"气泡：点击直达关于页；其他气泡不劫持点击
+        private bool updateBalloonPending;
 
         protected override void OnExit(ExitEventArgs e)
         {
@@ -172,11 +174,11 @@ namespace CaelusApp.WpfHost
             Dispatcher.Invoke(DispatcherPriority.Render, new Action(delegate { }));
 
             host = new WpfRuntimeHost(dir);
-            host.Boot(delegate
+            host.Boot(delegate(bool bootOk)
             {
                 Dispatcher.BeginInvoke(DispatcherPriority.Background, new Action(delegate
                 {
-                    try { BuildMainWindow(initial, splash); }
+                    try { BuildMainWindow(initial, splash, bootOk); }
                     catch (Exception ex)
                     {
                         try { File.AppendAllText(Path.Combine(dir, "crash.log"),
@@ -239,7 +241,12 @@ namespace CaelusApp.WpfHost
                         {
                             Dispatcher.BeginInvoke(new Action(delegate
                             {
-                                try { ShowBalloon(Lang.F("bal.update", r.Latest), 8000); } catch { }
+                                try
+                                {
+                                    ShowBalloon(Lang.F("bal.update", r.Latest), 8000);
+                                    updateBalloonPending = true;   // 点击直达关于页
+                                }
+                                catch { }
                             }));
                         }
                         catch { }
@@ -251,7 +258,7 @@ namespace CaelusApp.WpfHost
             updTimer.Start();
         }
 
-        private void BuildMainWindow(AppMode initial, SplashWindow splash)
+        private void BuildMainWindow(AppMode initial, SplashWindow splash, bool bootOk)
         {
             CaelusApp.WpfHost.MainWindow.ProgressPump = delegate
             {
@@ -295,6 +302,23 @@ namespace CaelusApp.WpfHost
                 }
                 catch { }
             }
+
+            // 引擎启动失败必须明示：否则界面一切如常但压制/检测已死，用户无从区分
+            if (!bootOk)
+            {
+                Logger.Log("引擎启动失败：后台压制与游戏检测未生效，已向用户提示");
+                try
+                {
+                    if (Dialogs.MessageDialogWpf.Show(window, "引擎启动失败",
+                            "后台压制与游戏检测未能启动。界面可以正常浏览，但优化功能不会生效。\n建议重启应用；若反复出现，请打开日志目录把 Caelus.log 发给作者。",
+                            Dialogs.MsgSeverity.Danger, Dialogs.MsgButtons.OkCancel,
+                            null, "打开日志目录", MessageBoxResult.Cancel) == MessageBoxResult.OK)
+                    {
+                        try { Process.Start(Paths.Data); } catch { }
+                    }
+                }
+                catch { }
+            }
         }
 
         private bool WasAutoStarted;
@@ -309,6 +333,13 @@ namespace CaelusApp.WpfHost
             tray.ContextMenuStrip = host.BuildTrayMenu(
                 ShowPanel, DoExit, delegate { try { if (window != null) window.SyncAllToggles(); } catch { } });
             tray.DoubleClick += (s, e) => ShowPanel();
+            tray.BalloonTipClicked += (s, e) =>
+            {
+                if (!updateBalloonPending) return;
+                updateBalloonPending = false;
+                ShowPanel();
+                try { if (window != null) window.NavigateToForShot("about"); } catch { }
+            };
             tray.Visible = true;
             if (!elevated)
                 tray.ShowBalloonTip(8000, CaelusApp.App.DisplayName, Lang.T("bal.noelev"), System.Windows.Forms.ToolTipIcon.Warning);
@@ -403,6 +434,7 @@ namespace CaelusApp.WpfHost
 
         private void ShowBalloon(string text, int ms, System.Windows.Forms.ToolTipIcon icon)
         {
+            updateBalloonPending = false;
             if (tray != null)
                 tray.ShowBalloonTip(ms, CaelusApp.App.DisplayName, text, icon);
         }

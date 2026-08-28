@@ -19,6 +19,8 @@ namespace CaelusApp.WpfHost.Views
         private DispatcherTimer progressTimer;
         private Stopwatch progressClock;
         private int progressTotalMs;
+        // 切页时计时器停止但后台扫描继续：记下已流逝时长，返回本页时续跑估算
+        private long progressBaseMs;
         private int displayedState = -1;
 
         public AuditView()
@@ -39,7 +41,8 @@ namespace CaelusApp.WpfHost.Views
             }
             displayedState = -1;
             UpdateStateVisibility(vm != null && vm.HasResult);
-
+            // 不恢复的话进度环会永久冻结在离开那一刻的值，直到扫描结束
+            if (vm != null && vm.State == AuditState.Scanning) ResumeProgressTimer();
         }
 
         // 预览探针（--wpf-shot）显式调用：填充代表性结果，捕获结果态实机图。
@@ -72,6 +75,7 @@ namespace CaelusApp.WpfHost.Views
 
         private void OnUnloaded(object sender, RoutedEventArgs e)
         {
+            if (progressClock != null) progressBaseMs = progressClock.ElapsedMilliseconds;
             StopProgressTimer();
             DetachViewModel();
             vm = null;
@@ -169,6 +173,19 @@ namespace CaelusApp.WpfHost.Views
             if (vm == null || vm.State != AuditState.Scanning) return;
 
             progressTotalMs = windowMs + Math.Max(600, Math.Min(3000, windowMs / 10)) + 900;
+            progressBaseMs = 0;
+            progressClock = Stopwatch.StartNew();
+            progressTimer = new DispatcherTimer(DispatcherPriority.Background);
+            progressTimer.Interval = TimeSpan.FromMilliseconds(80);
+            progressTimer.Tick += OnProgressTick;
+            progressTimer.Start();
+        }
+
+        /// <summary>切页返回后按已流逝时长续跑进度估算（新扫描由 StartWithProgress 归零）。</summary>
+        private void ResumeProgressTimer()
+        {
+            StopProgressTimer();
+            if (progressTotalMs <= 0) return;
             progressClock = Stopwatch.StartNew();
             progressTimer = new DispatcherTimer(DispatcherPriority.Background);
             progressTimer.Interval = TimeSpan.FromMilliseconds(80);
@@ -189,7 +206,7 @@ namespace CaelusApp.WpfHost.Views
                 StopProgressTimer();
                 return;
             }
-            double ratio = (double)progressClock.ElapsedMilliseconds / progressTotalMs;
+            double ratio = (progressBaseMs + progressClock.ElapsedMilliseconds) / (double)progressTotalMs;
             if (ratio > 0.97) ratio = 0.97;
             vm.ReportProgress(ratio);
         }

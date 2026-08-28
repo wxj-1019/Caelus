@@ -298,11 +298,21 @@ namespace CaelusApp
             bootThread.Start();
 
             var procNotify = new ProcNotify();
+            // 场景活性评估（DevFocus/DailyCare）走专职泵线程：掌权交接内含 SCM 停服务、
+            // 全量进程扫描、逐进程提优等秒级操作，在进程事件线程同步执行会拖延随后的
+            // 游戏启动/退出检测；游戏模式/守护类轻量记账仍留在事件线程。
+            var scenarioPump = new ScenarioEventPump();
+            scenarioPump.Batch += delegate(ProcessChangeBatch b)
+            {
+                devFocus.NotifyProcessChanges(b);
+                dailyCare.NotifyProcessChanges(b);
+            };
             procNotify.CaptureStartIdentity = delegate(string name, int session)
             {
                 return gameMode.NeedsWhitelistParentIdentity(session)
                     || gameMode.NeedsGameProcessIdentity(name, session)
                     || BuildCatalog.IsMatch(name)
+                    || DevServiceCatalog.IsMatch(name)
                     ;
             };
             procNotify.CaptureParentIdentity =
@@ -316,8 +326,7 @@ namespace CaelusApp
             {
                 gameMode.NotifyProcessChanges(batch);
                 tamer.NotifyProcessChanges(batch);
-                devFocus.NotifyProcessChanges(batch);
-                dailyCare.NotifyProcessChanges(batch);
+                scenarioPump.Post(batch);
                 devServiceGuard.NotifyProcessChanges(batch);
             };
             procNotify.Start();
@@ -327,6 +336,11 @@ namespace CaelusApp
             // 初始全量扫描：检测启动前已运行的场景进程（如已开的 VS Code、浏览器）
             try { devFocus.InitialScan(); } catch { }
             try { dailyCare.InitialScan(); } catch { }
+
+            // 健康维护独立调度：与 DailyCare 掌权解耦，任何使用形态下到点即执行；
+            // 游戏进行中让路（着色器缓存是游戏热用文件，对局中不清理）
+            HealthCare.ShouldDefer = () => gameMode.IsActive;
+            try { HealthCare.StartAuto(); } catch { }
 
             if (elevated)
                 ThreadPool.QueueUserWorkItem(_ => TaskHelper.RefreshStartupTask());
@@ -367,10 +381,13 @@ namespace CaelusApp
 
                 try { trayTip.Stop(); trayTip.Dispose(); } catch { }
                 try { powerPollTimer.Stop(); powerPollTimer.Dispose(); } catch { }
+                try { HealthCare.StopAuto(); } catch { }
                 icon.Visible = false;
                 icon.Dispose();
                 lock (startGate) exiting = true;
                 try { procNotify.Stop(); } catch { }
+                // 泵先停收：积压批次若在场景 Stop 之后到达会把场景重新激活
+                try { scenarioPump.Stop(); } catch { }
                 // 场景先于 GameMode 停止：避免游戏退出事件在退出途中重新授权场景又被拆掉
                 devFocus.Stop();
                 dailyCare.Stop();
@@ -398,6 +415,8 @@ namespace CaelusApp
             SystemEvents.SessionEnded += (s, e) =>
             {
                 // 场景先退出仲裁器，游戏关闭（异步 Deactivate）时不再有候选掌权者
+                try { scenarioPump.Stop(); } catch { }
+                try { HealthCare.StopAuto(); } catch { }
                 try { devFocus.Stop(); } catch { }
                 try { dailyCare.Stop(); } catch { }
                 try { devServiceGuard.Stop(); } catch { }

@@ -62,6 +62,7 @@ namespace CaelusApp
                 try
                 {
                     var snapshot = NvDrsTweaks.ParseSnapshot(Settings.LoadStr(SnapKey, ""));
+                    string[] gpuKeys = GpuStableKeys(gpus);
                     int applied = 0, failed = 0;
                     for (int i = 0; i < gpus.Length; i++)
                     {
@@ -70,7 +71,7 @@ namespace CaelusApp
                         AdlxIntRange range;
                         if (!AdlxApi.ChillGet(gpus[i], out supported, out enabled, out minFps, out maxFps, out range)
                             || !supported) continue;
-                        string key = "g" + i + ".chill";
+                        string key = gpuKeys[i] + ".chill";
                         if (!snapshot.ContainsKey(key))
                         {
                             snapshot[key] = (enabled ? "1" : "0") + "|" + minFps + "|" + maxFps;
@@ -112,25 +113,28 @@ namespace CaelusApp
                 if (gpus == null) return false;
                 try
                 {
+                    string[] gpuKeys = GpuStableKeys(gpus);
                     bool allOk = true;
                     for (int i = 0; i < gpus.Length; i++)
                     {
-                        string key = "g" + i + ".chill";
+                        string key = gpuKeys[i] + ".chill";
+                        string legacyKey = "g" + i + ".chill";
                         string orig;
-                        if (!snapshot.TryGetValue(key, out orig)) continue;
+                        if (!TryGetSnapshotValue(snapshot, key, legacyKey, out orig)) continue;
                         string[] parts = orig.Split('|');
                         int minFps, maxFps;
                         if (parts.Length != 3
                             || !int.TryParse(parts[1], NumberStyles.Integer, CultureInfo.InvariantCulture, out minFps)
                             || !int.TryParse(parts[2], NumberStyles.Integer, CultureInfo.InvariantCulture, out maxFps))
-                        { snapshot.Remove(key); continue; }
+                        { RemoveSnapshotKey(snapshot, key, legacyKey); continue; }
                         bool wantOn = parts[0] == "1";
                         bool ok = wantOn
                             ? AdlxApi.ChillSet(gpus[i], true, minFps, maxFps)
                             : AdlxApi.ChillSet(gpus[i], false, 0, 0);
-                        if (ok) snapshot.Remove(key);
+                        if (ok) RemoveSnapshotKey(snapshot, key, legacyKey);
                         else allOk = false;
                     }
+                    LogOrphanKeys(snapshot, gpuKeys, ".chill", "Chill");
                     Settings.SaveStr(SnapKey, snapshot.Count == 0 ? "" : NvDrsTweaks.SerializeSnapshot(snapshot));
                     if (allOk) Logger.Log("AMD Chill 已还原");
                     else Logger.Log("AMD Chill 还原失败，快照保留，下次启动继续尝试");
@@ -150,6 +154,7 @@ namespace CaelusApp
                 try
                 {
                     var snapshot = NvDrsTweaks.ParseSnapshot(Settings.LoadStr(SnapKey, ""));
+                    string[] gpuKeys = GpuStableKeys(gpus);
                     int applied = 0, failed = 0;
                     for (int i = 0; i < gpus.Length; i++)
                     {
@@ -158,7 +163,7 @@ namespace CaelusApp
                         AdlxIntRange range;
                         if (!AdlxApi.RisGet(gpus[i], out supported, out enabled, out sharpness, out range)
                             || !supported) continue;
-                        string key = "g" + i + ".ris";
+                        string key = gpuKeys[i] + ".ris";
                         if (!snapshot.ContainsKey(key))
                         {
                             snapshot[key] = (enabled ? "1" : "0") + "|" + sharpness;
@@ -200,21 +205,24 @@ namespace CaelusApp
                 if (gpus == null) return false;
                 try
                 {
+                    string[] gpuKeys = GpuStableKeys(gpus);
                     bool allOk = true;
                     for (int i = 0; i < gpus.Length; i++)
                     {
-                        string key = "g" + i + ".ris";
+                        string key = gpuKeys[i] + ".ris";
+                        string legacyKey = "g" + i + ".ris";
                         string orig;
-                        if (!snapshot.TryGetValue(key, out orig)) continue;
+                        if (!TryGetSnapshotValue(snapshot, key, legacyKey, out orig)) continue;
                         string[] parts = orig.Split('|');
                         int sharpness;
                         if (parts.Length != 2
                             || !int.TryParse(parts[1], NumberStyles.Integer, CultureInfo.InvariantCulture, out sharpness))
-                        { snapshot.Remove(key); continue; }
+                        { RemoveSnapshotKey(snapshot, key, legacyKey); continue; }
                         bool ok = AdlxApi.RisSet(gpus[i], parts[0] == "1", sharpness);
-                        if (ok) snapshot.Remove(key);
+                        if (ok) RemoveSnapshotKey(snapshot, key, legacyKey);
                         else allOk = false;
                     }
+                    LogOrphanKeys(snapshot, gpuKeys, ".ris", "锐化");
                     Settings.SaveStr(SnapKey, snapshot.Count == 0 ? "" : NvDrsTweaks.SerializeSnapshot(snapshot));
                     if (allOk) Logger.Log("AMD 锐化已还原");
                     else Logger.Log("AMD 锐化还原失败，快照保留，下次启动继续尝试");
@@ -239,13 +247,14 @@ namespace CaelusApp
                 try
                 {
                     var snapshot = NvDrsTweaks.ParseSnapshot(Settings.LoadStr(SnapKey, ""));
+                    string[] gpuKeys = GpuStableKeys(gpus);
                     int applied = 0, failed = 0;
                     for (int i = 0; i < gpus.Length; i++)
                     {
                         bool supported, enabled;
                         if (!get(gpus[i], out supported, out enabled) || !supported) continue;
                         if (enabled == wantEnabled) { applied++; continue; }
-                        string key = "g" + i + "." + keySuffix;
+                        string key = gpuKeys[i] + "." + keySuffix;
                         if (!snapshot.ContainsKey(key))
                         {
                             snapshot[key] = enabled ? "1" : "0";
@@ -284,15 +293,18 @@ namespace CaelusApp
                 if (gpus == null) return false;
                 try
                 {
+                    string[] gpuKeys = GpuStableKeys(gpus);
                     bool allOk = true;
                     for (int i = 0; i < gpus.Length; i++)
                     {
-                        string key = "g" + i + "." + keySuffix;
+                        string key = gpuKeys[i] + "." + keySuffix;
+                        string legacyKey = "g" + i + "." + keySuffix;
                         string orig;
-                        if (!snapshot.TryGetValue(key, out orig)) continue;
-                        if (set(gpus[i], orig == "1")) snapshot.Remove(key);
+                        if (!TryGetSnapshotValue(snapshot, key, legacyKey, out orig)) continue;
+                        if (set(gpus[i], orig == "1")) RemoveSnapshotKey(snapshot, key, legacyKey);
                         else allOk = false;
                     }
+                    LogOrphanKeys(snapshot, gpuKeys, "." + keySuffix, label);
                     Settings.SaveStr(SnapKey, snapshot.Count == 0 ? "" : NvDrsTweaks.SerializeSnapshot(snapshot));
                     if (allOk) Logger.Log("AMD " + label + " 已还原");
                     else Logger.Log("AMD " + label + " 还原失败，快照保留，下次启动继续尝试");
@@ -307,6 +319,66 @@ namespace CaelusApp
             foreach (var kv in snapshot)
                 if (kv.Key.EndsWith(suffix, StringComparison.OrdinalIgnoreCase)) return true;
             return false;
+        }
+
+        // 快照键用 GPU 稳定身份（厂商:名称:类型 净化串），不用枚举序号——ADLX 枚举顺序
+        // 在重启/驱动更新/iGPU 启用后会变，按序号记账会把 A 卡的快照还原到 B 卡。
+        // 键内禁含 '=' 与 ';'（NvDrsTweaks 序列化分隔符），非字母数字一律替换为 '_'。
+        private static string[] GpuStableKeys(IntPtr[] gpus)
+        {
+            var keys = new string[gpus.Length];
+            var seen = new Dictionary<string, int>(StringComparer.OrdinalIgnoreCase);
+            for (int i = 0; i < gpus.Length; i++)
+            {
+                string vendor = AdlxApi.GpuVendor(gpus[i]);
+                string name = AdlxApi.GpuName(gpus[i]);
+                string raw = (vendor == null ? "?" : vendor.Trim()) + ":"
+                    + (name == null ? "?" : name.Trim()) + ":" + AdlxApi.GpuType(gpus[i]);
+                var sb = new System.Text.StringBuilder(raw.Length);
+                foreach (char c in raw)
+                    sb.Append(char.IsLetterOrDigit(c) ? c : '_');
+                string baseKey = sb.ToString();
+                int n;
+                seen.TryGetValue(baseKey, out n);
+                seen[baseKey] = n + 1;
+                // 同型号多卡追加组内序号：同型号共享同一份快照值，还原语义不变
+                keys[i] = n == 0 ? baseKey : baseKey + "_" + n;
+            }
+            return keys;
+        }
+
+        // 还原查找：先按稳定身份键，缺省时退回旧版「g<序号>.」键（升级前崩溃残留的
+        // 会话快照仍可还原）。命中即视为已处理，两个键都清除。
+        private static bool TryGetSnapshotValue(Dictionary<string, string> snapshot,
+            string stableKey, string legacyKey, out string value)
+        {
+            if (snapshot.TryGetValue(stableKey, out value)) return true;
+            return snapshot.TryGetValue(legacyKey, out value);
+        }
+
+        private static void RemoveSnapshotKey(Dictionary<string, string> snapshot,
+            string stableKey, string legacyKey)
+        {
+            snapshot.Remove(stableKey);
+            snapshot.Remove(legacyKey);
+        }
+
+        // 还原后仍残留的该功能键 = 对应 GPU 当前不在线（拔卡/禁用）或显示名已改。
+        // 保留快照待其回归，逐键列出便于诊断；不计失败（无还原目标时删快照也于事无补）。
+        private static void LogOrphanKeys(Dictionary<string, string> snapshot,
+            string[] currentKeys, string suffix, string label)
+        {
+            var known = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+            foreach (string k in currentKeys) known.Add(k + suffix);
+            for (int i = 0; i < 8; i++) known.Add("g" + i + suffix);   // 旧版序号键的合法形态
+            var orphans = new List<string>();
+            foreach (var kv in snapshot)
+                if (kv.Key.EndsWith(suffix, StringComparison.OrdinalIgnoreCase)
+                    && !known.Contains(kv.Key))
+                    orphans.Add(kv.Key);
+            if (orphans.Count > 0)
+                Logger.Log("AMD " + label + "：" + orphans.Count + " 条快照对应的 GPU 当前不在线或已改名（"
+                    + string.Join("、", orphans.ToArray()) + "），快照保留待其回归");
         }
 
         private static int Clamp(int value, int min, int max)

@@ -178,14 +178,19 @@ namespace CaelusApp.WpfHost
             };
             refreshTimer.Start();
             IsVisibleChanged += OnWindowVisibleChanged;
+            // 尺寸/位置在显示前恢复；截图/压测探针随后自行覆写 Left/Top 不受影响
+            RestoreWindowPlacement();
         }
 
-        // 托盘开关改动后回刷界面各页
+        // 托盘开关改动后回刷界面各页（设置页/显卡页原为构造期快照，托盘改动后会长期脱节）
         internal void SyncAllToggles()
         {
             try { vm.Refresh(); } catch { }
             try { policyVm.RefreshLocks(); } catch { }
             try { antiCheatVm.RefreshStatus(); } catch { }
+            try { settingsVm.RefreshFromSettings(); } catch { }
+            try { graphicsVm.RefreshFromRuntime(); } catch { }
+            try { environmentVm.RefreshStatus(); } catch { }
         }
 
         internal void NotifyLibraryChanged()
@@ -196,6 +201,7 @@ namespace CaelusApp.WpfHost
         protected override void OnClosing(System.ComponentModel.CancelEventArgs e)
         {
             base.OnClosing(e);
+            SaveWindowPlacement();
             if (!RealExit)
             {
                 e.Cancel = true;
@@ -203,6 +209,60 @@ namespace CaelusApp.WpfHost
                 return;
             }
             try { refreshTimer.Stop(); } catch { }
+        }
+
+        // —— 窗口尺寸/位置记忆：多屏/高分屏用户不再每次都复位到默认值 ——
+
+        private void RestoreWindowPlacement()
+        {
+            try
+            {
+                double w, h, l, t;
+                if (!double.TryParse(Settings.LoadStr("WinWidth", ""), out w)) return;
+                if (!double.TryParse(Settings.LoadStr("WinHeight", ""), out h)) return;
+                if (w < MinWidth || h < MinHeight || w > 10000 || h > 10000) return;
+                Width = w;
+                Height = h;
+                if (double.TryParse(Settings.LoadStr("WinLeft", ""), out l)
+                    && double.TryParse(Settings.LoadStr("WinTop", ""), out t))
+                {
+                    // 虚拟屏内可见性校验：断屏/换屏后坐标可能失效，不合法就交给系统居中
+                    double vx = SystemParameters.VirtualScreenLeft;
+                    double vy = SystemParameters.VirtualScreenTop;
+                    double vw = SystemParameters.VirtualScreenWidth;
+                    double vh = SystemParameters.VirtualScreenHeight;
+                    if (l >= vx - w + 80 && l <= vx + vw - 80 && t >= vy && t <= vy + vh - 40)
+                    {
+                        WindowStartupLocation = WindowStartupLocation.Manual;
+                        Left = l;
+                        Top = t;
+                    }
+                }
+                if (Settings.LoadStr("WinState", "") == "max") WindowState = WindowState.Maximized;
+            }
+            catch { }
+        }
+
+        private void SaveWindowPlacement()
+        {
+            try
+            {
+                // 最小化时坐标无意义；最大化时框架坐标非日常还原位置——两者都不覆盖上次的值
+                if (WindowState == WindowState.Minimized || !IsLoaded) return;
+                // 离屏探针窗口（--wpf-shot 等摆到 -20000 截图）不记录
+                double vx = SystemParameters.VirtualScreenLeft;
+                double vy = SystemParameters.VirtualScreenTop;
+                double vw = SystemParameters.VirtualScreenWidth;
+                double vh = SystemParameters.VirtualScreenHeight;
+                if (Left < vx - Width || Left > vx + vw || Top < vy - Height || Top > vy + vh) return;
+                Settings.SaveStr("WinState", WindowState == WindowState.Maximized ? "max" : "normal");
+                if (WindowState != WindowState.Normal) return;
+                Settings.SaveStr("WinWidth", Width.ToString("0"));
+                Settings.SaveStr("WinHeight", Height.ToString("0"));
+                Settings.SaveStr("WinLeft", Left.ToString("0"));
+                Settings.SaveStr("WinTop", Top.ToString("0"));
+            }
+            catch { }
         }
 
         private void OnThemeChanged(object sender, System.EventArgs e)

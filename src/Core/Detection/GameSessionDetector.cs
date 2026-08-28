@@ -57,7 +57,11 @@ namespace CaelusApp
             "explorer", "wegame", "wegame_env", "steam", "steamwebhelper", "epicgameslauncher",
             "battle.net", "agent", "galaxyclient", "ubisoftconnect",
             "vlc", "mpv", "wmplayer", "video.ui",
-            "potplayermini64", "potplayermini", "mpc-hc64", "mpc-hc"
+            "potplayermini64", "potplayermini", "mpc-hc64", "mpc-hc",
+            // GPU 重度桌面应用：OBS 全屏投影/Discord 全屏分享/壁纸引擎常驻渲染
+            // 恰好满足「全屏 + 高 GPU 占用」的自动入库条件，必须显式排除
+            "obs64", "obs32", "obs", "streamlabs", "streamlabs obs", "discord", "discordptb",
+            "discordcanary", "spotify", "wallpaper64", "wallpaper32", "wallpaper"
         };
 
         private static readonly HashSet<string> StorefrontShellNames = BuildStorefrontShellNames();
@@ -452,7 +456,10 @@ namespace CaelusApp
                 Native.PROCESS_QUERY_LIMITED_INFORMATION
                     | Native.SYNCHRONIZE,
                 false, pid);
-            if (h == IntPtr.Zero) return false;
+            // 句柄被内核反作弊（ACE/Vanguard 等）剥离时走降级通道，
+            // 否则受保护游戏在检测/选举/自动入库三条路上完全不可见
+            if (h == IntPtr.Zero)
+                return TryCaptureProtectedIdentity(pid, ownerSession, out identity);
             try
             {
                 long creation;
@@ -483,6 +490,129 @@ namespace CaelusApp
                 return true;
             }
             finally { Native.CloseHandle(h); }
+        }
+
+        // ---- 句柄被剥离进程的降级身份通道（内核反作弊保护进程）----
+        // Toolhelp32 校验 PID 当前映像名（免句柄，名字对不上即 PID 已复用）；
+        // WMI 补齐路径/创建时间/会话（WmiPrvSE 是签名系统进程，反作弊一般不拦）。
+        // 结果按 PID 缓存：受保护进程整个生命周期都开不了句柄，每 4 秒轮询都查 WMI 太贵。
+        // 负缓存（确认不可解析）10 分钟过期，防 WMI 服务临时不可用把游戏冻结整场。
+        private sealed class ProtectedIdentity
+        {
+            public string Name;
+            public GameProcessSnapshot Snapshot;   // null = 负缓存（确认不可解析）
+            public long StampTicks;
+        }
+
+        private static readonly object protectedSync = new object();
+        private static readonly Dictionary<int, ProtectedIdentity> protectedCache =
+            new Dictionary<int, ProtectedIdentity>();
+        private const long ProtectedNegativeTtlTicks = 600L * TimeSpan.TicksPerSecond;
+        // 正条目也过期：同名映像的 PID 复用（崩溃后快速重启）拿到陈旧创建时间会让
+        // 下游身份比对全部失配——30 分钟后重新走一次 WMI 校验
+        private const long ProtectedPositiveTtlTicks = 1800L * TimeSpan.TicksPerSecond;
+
+        private static bool TryCaptureProtectedIdentity(
+            int pid, int ownerSession, out GameProcessSnapshot identity)
+        {
+            identity = null;
+            string exeName;
+            int toolParent;
+            if (!Native.TryToolhelpProcessIdentity(pid, out exeName, out toolParent))
+            {
+                lock (protectedSync) protectedCache.Remove(pid);
+                return false;
+            }
+            string name = ImageNameFromVerifiedPath(exeName);
+            if (string.IsNullOrEmpty(name)) return false;
+
+            long now = DateTime.UtcNow.Ticks;
+            lock (protectedSync)
+            {
+                ProtectedIdentity hit;
+                if (protectedCache.TryGetValue(pid, out hit)
+                    && string.Equals(hit.Name, name, StringComparison.OrdinalIgnoreCase))
+                {
+                    if (hit.Snapshot != null)
+                    {
+                        if (now - hit.StampTicks < ProtectedPositiveTtlTicks)
+                        {
+                            identity = hit.Snapshot;
+                            return true;
+                        }
+                    }
+                    else if (now - hit.StampTicks < ProtectedNegativeTtlTicks)
+                    {
+                        return false;
+                    }
+                }
+            }
+
+            identity = QueryWmiIdentity(pid, ownerSession, name, toolParent);
+            lock (protectedSync)
+            {
+                if (protectedCache.Count >= 64) protectedCache.Clear();
+                protectedCache[pid] = new ProtectedIdentity
+                {
+                    Name = name,
+                    Snapshot = identity,
+                    StampTicks = DateTime.UtcNow.Ticks
+                };
+            }
+            if (identity != null)
+                Logger.Log("游戏检测：" + name + " 句柄被系统策略拦截，已用降级通道识别（WMI 身份）");
+            return identity != null;
+        }
+
+        private static GameProcessSnapshot QueryWmiIdentity(
+            int pid, int ownerSession, string name, int toolParent)
+        {
+            try
+            {
+                using (var searcher = new System.Management.ManagementObjectSearcher(
+                    "SELECT Name, ExecutablePath, CreationDate, ParentProcessId, SessionId"
+                    + " FROM Win32_Process WHERE ProcessId = " + pid))
+                using (var rows = searcher.Get())
+                {
+                    foreach (System.Management.ManagementObject row in rows)
+                    {
+                        using (row)
+                        {
+                            int session;
+                            try { session = Convert.ToInt32(row["SessionId"]); }
+                            catch { return null; }
+                            if (session != ownerSession) return null;
+                            string path = Convert.ToString(row["ExecutablePath"]);
+                            if (string.IsNullOrEmpty(path)) return null;
+                            // 与 Toolhelp 名交叉校验：任一不符即 PID 在两次查询间被复用
+                            if (!string.Equals(ImageNameFromVerifiedPath(Convert.ToString(row["Name"])),
+                                    name, StringComparison.OrdinalIgnoreCase)
+                                || !string.Equals(ImageNameFromVerifiedPath(path),
+                                    name, StringComparison.OrdinalIgnoreCase))
+                                return null;
+                            string creationText = Convert.ToString(row["CreationDate"]);
+                            if (string.IsNullOrEmpty(creationText)) return null;
+                            // FILETIME 纪元与 GetProcessTimes 一致，下游身份比对直接可用
+                            long creation = System.Management.ManagementDateTimeConverter
+                                .ToDateTime(creationText).ToFileTimeUtc();
+                            if (creation <= 0) return null;
+                            int parent;
+                            try { parent = Convert.ToInt32(row["ParentProcessId"]); }
+                            catch { parent = toolParent; }
+                            return new GameProcessSnapshot
+                            {
+                                Pid = pid,
+                                ParentPid = parent,
+                                Creation = creation,
+                                Name = name,
+                                Path = path
+                            };
+                        }
+                    }
+                }
+            }
+            catch { }
+            return null;
         }
 
         internal static string ImageNameFromVerifiedPath(

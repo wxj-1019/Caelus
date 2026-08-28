@@ -174,11 +174,25 @@ namespace CaelusApp.WpfHost.Views
         public void AddFiles(IEnumerable<string> files)
         {
             if (vm == null) return;
-            string error = vm.AddFiles(files);
-            if (!string.IsNullOrEmpty(error))
-                MessageDialogWpf.Show(Window.GetWindow(this), "白名单操作失败",
-                    "详细信息见技术详情。", MsgSeverity.Danger, MsgButtons.Ok,
-                    error, null, MessageBoxResult.OK);
+            WhitelistViewModel.AddFilesResult r = vm.AddFiles(files);
+            if (r == null || (r.Added == 0 && r.Skipped == 0 && r.Failed == 0)) return;
+            if (r.Failed > 0)
+            {
+                // 失败必须可见：其余成功/跳过项一并计数说明
+                string summary = "已添加 " + r.Added + " 项 · 跳过 " + r.Skipped + " 项（类型不支持）· 失败 "
+                    + r.Failed + " 项";
+                MessageDialogWpf.Show(Window.GetWindow(this), "白名单部分操作失败",
+                    summary, MsgSeverity.Danger, MsgButtons.Ok,
+                    r.FirstError, null, MessageBoxResult.OK);
+                return;
+            }
+            if (r.Added == 0)
+            {
+                // 全部跳过（拖了文件夹/txt 等）：拖放像坏了的静默体验必须消除
+                MessageDialogWpf.Show(Window.GetWindow(this), "没有可添加的文件",
+                    "跳过 " + r.Skipped + " 项：白名单只支持 EXE 程序或它的快捷方式。",
+                    MsgSeverity.Info, MsgButtons.Ok);
+            }
         }
 
         // 移除当前选中

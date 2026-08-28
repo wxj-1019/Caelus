@@ -48,5 +48,11 @@ namespace CaelusApp
         {
             return irqEngine.Disable(EnumerateUsbControllerIds());
         }
+
+        /// <summary>热重启 USB 控制器使中断亲和立即生效（会瞬断已插外设，调用方先确认）。</summary>
+        public static bool RestartDevice(string pnpDeviceId, out string error)
+        {
+            return InterruptAffinityTweak.RestartDevice(pnpDeviceId, out error);
+        }
     }
 }

@@ -1034,13 +1034,25 @@ namespace CaelusApp
             }
             gameGoneSinceTicks = 0;
 
-            bool clean = UnboostGames();
-            List<int> background = core.PidsWith(SuppressReason.Background);
-            int ok = core.ReleaseReason(SuppressReason.Background);
+            // 还原链逐步故障隔离：任一步持续抛错时 ActiveChanged(false) 仍必须触发——
+            // 否则仲裁器里游戏场景永远占着最高优先级席位，开发/日常场景无法补位，
+            // 且 Loop 的残留恢复重试会反复死在同一处。
+            bool clean = false;
+            try { clean = UnboostGames(); }
+            catch (Exception ex) { Logger.LogFailure("游戏模式解除：还原游戏提优失败", ex); }
+            int ok = 0;
             bool backgroundClean = true;
-            foreach (int pid in background) if (core.IsThrottled(pid)) { backgroundClean = false; break; }
-            bool envClean = RestoreEnv();
-            ClearEnvRetryState();
+            try
+            {
+                List<int> background = core.PidsWith(SuppressReason.Background);
+                ok = core.ReleaseReason(SuppressReason.Background);
+                foreach (int pid in background) if (core.IsThrottled(pid)) { backgroundClean = false; break; }
+            }
+            catch (Exception ex) { backgroundClean = false; Logger.LogFailure("游戏模式解除：解除后台压制失败", ex); }
+            bool envClean = false;
+            try { envClean = RestoreEnv(); }
+            catch (Exception ex) { Logger.LogFailure("游戏模式解除：还原系统环境失败", ex); }
+            try { ClearEnvRetryState(); } catch { }
             // 场景仲裁接线点：必须在 RestoreEnv 之后触发——本模式先完整还原系统副作用
             // （SvcPause.Restore 等），仲裁器再授权给下一场景（如 DevFocus 编译期）时，
             // 其 SvcPause.Activate 才不会被本模式的还原路径覆盖（否则刚暂停的索引服务被立刻拉起）。
@@ -1048,12 +1060,13 @@ namespace CaelusApp
             if (activeChangedHandler != null) { try { activeChangedHandler(false); } catch { } }
             pressure.Clear();
             freezeDwell.Clear();
-            if (clean) CrashGuard.ClearBoost();
+            if (clean) try { CrashGuard.ClearBoost(); } catch { }
             int restoredTotal = ok + gracePreReleased;
             gracePreReleased = 0;
             Logger.Log("游戏模式解除（" + reason + "）：恢复 " + restoredTotal
                 + " 个后台进程（本局累计，含中途新增与宽限期先行还原）");
-            ReportFinish();
+            try { ReportFinish(); }
+            catch (Exception ex) { Logger.LogFailure("游戏模式解除：生成对局报告失败", ex); }
             lock (sync)
             {
                 activeDetection = null;

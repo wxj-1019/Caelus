@@ -3,6 +3,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Management;
 using Microsoft.Win32;
 
 namespace CaelusApp
@@ -57,6 +58,61 @@ namespace CaelusApp
             }
             catch { }
             return list;
+        }
+
+        /// <summary>物理网卡的 NetCfgInstanceId（= TCP/IP 接口 GUID）集合：WMI
+        /// PhysicalAdapter 判定 + NetClass 的 MatchingDeviceId 关联。供 Nagle 这类
+        /// 按接口 GUID 写注册表的 tweak 共用——Interfaces 下还有 WSL/Hyper-V 虚拟
+        /// 交换、VPN 隧道与已卸载适配器残留，无差别写入徒增还原面。WMI 失败时
+        /// 返回空集（调用方退回全量行为）。</summary>
+        internal static HashSet<string> PhysicalAdapterNetCfgIds()
+        {
+            var ids = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+            var physical = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+            try
+            {
+                using (var searcher = new ManagementObjectSearcher(
+                    "SELECT PNPDeviceID FROM Win32_NetworkAdapter WHERE PhysicalAdapter = TRUE"))
+                using (ManagementObjectCollection results = searcher.Get())
+                {
+                    foreach (ManagementObject mo in results)
+                    {
+                        using (mo)
+                        {
+                            string id = mo["PNPDeviceID"] as string;
+                            if (string.IsNullOrEmpty(id)) continue;
+                            // WMI 的 PNPDeviceID 带实例段（…\REV_A1\4&38A631B7&0&00E7），
+                            // NetClass 的 MatchingDeviceId 是不带实例段的硬件 ID——截掉再比对
+                            int cut = id.LastIndexOf('\\');
+                            if (cut > 3) id = id.Substring(0, cut);
+                            physical.Add(id);
+                        }
+                    }
+                }
+            }
+            catch { return ids; }
+            if (physical.Count == 0) return ids;
+            try
+            {
+                using (var cls = Registry.LocalMachine.OpenSubKey(NetClass))
+                {
+                    if (cls == null) return ids;
+                    foreach (string idx in cls.GetSubKeyNames())
+                    {
+                        if (idx.Length != 4) continue;
+                        using (var node = cls.OpenSubKey(idx))
+                        {
+                            if (node == null) continue;
+                            string matching = node.GetValue("MatchingDeviceId") as string;
+                            if (string.IsNullOrEmpty(matching) || !physical.Contains(matching)) continue;
+                            string cfg = node.GetValue("NetCfgInstanceId") as string;
+                            if (!string.IsNullOrEmpty(cfg)) ids.Add(cfg);
+                        }
+                    }
+                }
+            }
+            catch { }
+            return ids;
         }
 
         public static bool Enable()
@@ -123,8 +179,10 @@ namespace CaelusApp
 
         private static ReversibleReg Reg(string index)
         {
+            // 设备驱动键只写不改：设备中途移除时不能 CreateSubKey 重建幽灵键
             return new ReversibleReg(Registry.LocalMachine, NetClass + @"\" + index,
-                "PnPCapabilities", RegistryValueKind.DWord, "DevPower_" + index);
+                "PnPCapabilities", RegistryValueKind.DWord, "DevPower_" + index,
+                ReversibleReg.WriteMode.OpenOnly);
         }
 
         internal static string[] ParseList(string raw)

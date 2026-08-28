@@ -491,6 +491,7 @@ namespace CaelusApp.WpfHost
         private readonly DailyCare dailyCare;
         private readonly DevServiceGuard devServiceGuard;
         private readonly ProcNotify procNotify;
+        private readonly ScenarioEventPump scenarioPump;
         private readonly System.Threading.Timer powerPollTimer;
         private Thread bootThread;
         private readonly object startGate = new object();
@@ -645,6 +646,14 @@ namespace CaelusApp.WpfHost
                 devWhitelist);
             devServiceGuard = new DevServiceGuard();
             procNotify = new ProcNotify();
+            // 场景活性评估走专职泵线程：掌权交接内含 SCM 停服务/全量扫描等秒级操作，
+            // 不能阻塞进程事件线程上的游戏检测（与 WinForms 宿主同一接线模式）
+            scenarioPump = new ScenarioEventPump();
+            scenarioPump.Batch += delegate(ProcessChangeBatch b)
+            {
+                devFocus.NotifyProcessChanges(b);
+                dailyCare.NotifyProcessChanges(b);
+            };
 
             gameMode.ActiveChanged += on => arbiter.ReportActivity(ScenarioKind.Game, on);
 
@@ -657,8 +666,10 @@ namespace CaelusApp.WpfHost
         public bool IsBooted { get { return booted; } }
 
         // ---- 启动运行时：后台线程串行执行自愈链 + tamer/gameMode 启动（不阻塞启动屏动画）；
-        //     完成后在后台线程回调 onBooted（调用方自行切回 UI 线程） ----
-        public void Boot(Action onBooted)
+        //     完成后在后台线程回调 onBooted（参数=引擎是否成功启动；调用方自行切回 UI 线程）。
+        //     启动失败（booted=false）时主窗口照常打开但压制/检测已死——调用方必须向用户明示，
+        //     不能静默降级成"界面一切如常但功能全无"的隐身故障。 ----
+        public void Boot(Action<bool> onBooted)
         {
             bootThread = new Thread(new ThreadStart(delegate
             {
@@ -681,7 +692,7 @@ namespace CaelusApp.WpfHost
                 }
                 if (onBooted != null)
                 {
-                    try { onBooted(); } catch { }
+                    try { onBooted(booted); } catch { }
                 }
             }));
             bootThread.IsBackground = true;
@@ -691,7 +702,8 @@ namespace CaelusApp.WpfHost
             {
                 return gameMode.NeedsWhitelistParentIdentity(session)
                     || gameMode.NeedsGameProcessIdentity(name, session)
-                    || BuildCatalog.IsMatch(name);
+                    || BuildCatalog.IsMatch(name)
+                    || DevServiceCatalog.IsMatch(name);
             };
             procNotify.CaptureParentIdentity = delegate(int parentPid, string name, int session)
             {
@@ -702,8 +714,7 @@ namespace CaelusApp.WpfHost
             {
                 gameMode.NotifyProcessChanges(batch);
                 tamer.NotifyProcessChanges(batch);
-                devFocus.NotifyProcessChanges(batch);
-                dailyCare.NotifyProcessChanges(batch);
+                scenarioPump.Post(batch);
                 devServiceGuard.NotifyProcessChanges(batch);
             };
             procNotify.Start();
@@ -713,6 +724,11 @@ namespace CaelusApp.WpfHost
             // 初始全量扫描：检测启动前已运行的场景进程（如已开的 VS Code、浏览器）
             try { devFocus.InitialScan(); } catch { }
             try { dailyCare.InitialScan(); } catch { }
+
+            // 健康维护独立调度：与 DailyCare 掌权解耦，任何使用形态下到点即执行；
+            // 游戏进行中让路（着色器缓存是游戏热用文件，对局中不清理）
+            HealthCare.ShouldDefer = delegate { return gameMode.IsActive; };
+            try { HealthCare.StartAuto(); } catch { }
 
             powerPollTimer.Change(5000, 5000);
         }
@@ -769,6 +785,8 @@ namespace CaelusApp.WpfHost
         {
             // 场景先退出仲裁器：随后的游戏关闭（异步 Deactivate）点 ActiveChanged(false)
             // 时已无候选掌权者，不会在退出途中把开发/日常场景重新授权一遍再拆掉。
+            Run("场景事件泵停止", scenarioPump.Stop);
+            Run("健康维护调度停止", HealthCare.StopAuto);
             Run("DevFocus 停止", devFocus.Stop);
             Run("DailyCare 停止", dailyCare.Stop);
             Run("DevServiceGuard 停止", devServiceGuard.Stop);
@@ -799,7 +817,10 @@ namespace CaelusApp.WpfHost
                 exiting = true;
             }
             Run("电源轮询定时器释放", delegate { powerPollTimer.Dispose(); });
+            Run("健康维护调度停止", HealthCare.StopAuto);
             Run("ProcNotify 停止", procNotify.Stop);
+            // 泵先停收：积压批次若在场景 Stop 之后到达会把场景重新激活
+            Run("场景事件泵停止", scenarioPump.Stop);
             // 场景先于 GameMode 停止：否则游戏退出事件会在退出途中重新授权开发/日常场景，
             // 紧接着又被 Stop 还原——白做一轮服务暂停/通知静默/压制扫描，还污染专注时长统计
             Run("DevFocus 停止", devFocus.Stop);

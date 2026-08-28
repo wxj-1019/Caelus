@@ -54,7 +54,51 @@ namespace CaelusApp
 
         private static readonly HashSet<string> ProcessNames = BuildProcessNames();
 
-        public static bool IsKnownProcess(string name) { return ProcessNames.Contains(name); }
+        // 用户自定义反作弊进程名（分号/换行分隔，注册表存储）：与 BuildCatalog 的
+        // CustomBuildProcs 同一机制——内置名录过时时的低成本兜底，无需等版本更新
+        private const string CustomKey = "CustomAntiCheatProcs";
+        private static readonly object CustomLock = new object();
+        private static HashSet<string> customNames;
+
+        public static string CustomList
+        {
+            get { return Settings.LoadStr(CustomKey, ""); }
+            set { Settings.SaveStr(CustomKey, value ?? ""); lock (CustomLock) customNames = null; }
+        }
+
+        public static bool IsKnownProcess(string name)
+        {
+            string bare = StripExeSuffix(name);
+            if (bare == null) return false;
+            if (ProcessNames.Contains(bare)) return true;
+            HashSet<string> custom = LoadCustom();
+            return custom != null && custom.Contains(bare);
+        }
+
+        private static string StripExeSuffix(string name)
+        {
+            if (string.IsNullOrEmpty(name)) return null;
+            return name.EndsWith(".exe", StringComparison.OrdinalIgnoreCase)
+                ? name.Substring(0, name.Length - 4) : name;
+        }
+
+        private static HashSet<string> LoadCustom()
+        {
+            lock (CustomLock)
+            {
+                if (customNames != null) return customNames;
+                var set = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+                string raw = Settings.LoadStr(CustomKey, "");
+                if (raw != null)
+                    foreach (string part in raw.Split(new[] { ';', '\r', '\n' }, StringSplitOptions.RemoveEmptyEntries))
+                    {
+                        string bare = StripExeSuffix(part.Trim());
+                        if (!string.IsNullOrEmpty(bare)) set.Add(bare);
+                    }
+                customNames = set;
+                return set;
+            }
+        }
 
         private static HashSet<string> BuildProcessNames()
         {

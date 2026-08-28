@@ -355,7 +355,9 @@ namespace CaelusApp
             catch (Exception ex) { Logger.LogFailure("开发专注掌权失败", ex); }
         }
 
-        /// <summary>IScenario：挂起——还原全部副作用，检测状态保留</summary>
+        /// <summary>IScenario：挂起——还原全部副作用，检测状态保留。
+        /// 还原链逐步故障隔离：granted 已翻 false、仲裁器不会重试，单步抛异常
+        /// 若跳过后续步骤，残留只能等启动自愈——每步独立 try，失败计数并在日志明示。</summary>
         public override void Suspend()
         {
             bool wasQuiet;
@@ -369,27 +371,39 @@ namespace CaelusApp
                 elapsed = DateTime.UtcNow.Ticks - grantStartTicks;
             }
             if (elapsed > 0) FocusStats.RecordSession(elapsed);
-            try
+
+            int failed = 0;
+            try { StopReconcileTimer(); }
+            catch (Exception ex) { failed++; Logger.LogFailure("开发专注挂起：停止校正节拍失败", ex); }
+            try { RestoreIdeBoost(); }
+            catch (Exception ex) { failed++; Logger.LogFailure("开发专注挂起：还原 IDE 提优失败", ex); }
+            try { RestoreBuildBoost(); }
+            catch (Exception ex) { failed++; Logger.LogFailure("开发专注挂起：还原编译提优失败", ex); }
+            try { if (core != null) core.ReleaseReason(SuppressReason.Build); }
+            catch (Exception ex) { failed++; Logger.LogFailure("开发专注挂起：解除后台压制失败", ex); }
+            // 共享效果交接直通：游戏正要同一效果时只移交占用权，不还原再重做
+            if (wasQuiet)
             {
-                StopReconcileTimer();
-                RestoreIdeBoost();
-                RestoreBuildBoost();
-                if (core != null) core.ReleaseReason(SuppressReason.Build);
-                // 共享效果交接直通：游戏正要同一效果时只移交占用权，不还原再重做
-                if (wasQuiet)
+                try
                 {
                     if (gameKeepsNotifQuiet != null && gameKeepsNotifQuiet())
                         Notif.HandoffOwner(Notif.OwnerDevFocus, Notif.OwnerGame);
                     else
                         Notif.Restore(Notif.OwnerDevFocus);
                 }
+                catch (Exception ex) { failed++; Logger.LogFailure("开发专注挂起：还原通知静默失败", ex); }
+            }
+            try
+            {
                 if (gameKeepsSvcPause != null && gameKeepsSvcPause())
                     SvcPause.HandoffOwner(SvcPause.OwnerDevFocus, SvcPause.OwnerGame);
                 else
                     SvcPause.Restore(SvcPause.OwnerDevFocus);
-                Logger.Log("开发专注：挂起，全部副作用已还原（检测继续）");
             }
-            catch (Exception ex) { Logger.LogFailure("开发专注挂起失败", ex); }
+            catch (Exception ex) { failed++; Logger.LogFailure("开发专注挂起：还原服务暂停失败", ex); }
+
+            if (failed == 0) Logger.Log("开发专注：挂起，全部副作用已还原（检测继续）");
+            else Logger.Log("开发专注：挂起完成，但 " + failed + " 个还原步骤失败（残留由下次启动自愈兜底）");
         }
 
         private void BoostBuildProcesses()
@@ -423,8 +437,8 @@ namespace CaelusApp
             return true;
         }
 
-        /// <summary>全量扫描后台进程并按编译位压制。在 ProcNotify 事件线程同步执行（沿用
-        /// BuildWatch 既定模式）；扫描耗时与 SvcPause 同量级，若实测阻塞事件流再改异步+代数校验。</summary>
+        /// <summary>全量扫描后台进程并按编译位压制。在场景事件泵线程执行（ScenarioEventPump），
+        /// 不占用 ProcNotify 事件线程——游戏启动/退出检测不被本扫描拖延。</summary>
         private void SweepBuildSuppression()
         {
             if (core == null) return;
@@ -438,9 +452,12 @@ namespace CaelusApp
             catch { visible = new HashSet<int>(); }
             string windowsRoot = Environment.GetFolderPath(Environment.SpecialFolder.Windows);
 
-            int suppressed = 0;
+            // 两段式（与游戏模式 Sweep 一致）：先枚举收集候选，再在批窗口内只做
+            // Acquire——BeginBatch 持有全局锁直到 EndBatch，进程枚举/句柄查询
+            // 不能压进锁窗口，否则 Tamer 等线程整个扫描期读到冻结状态
             Process[] all;
             try { all = Process.GetProcesses(); } catch { return; }
+            var candidates = new List<KeyValuePair<int, string>>();
             foreach (Process p in all)
             {
                 try
@@ -466,12 +483,37 @@ namespace CaelusApp
                     if (!ShouldSuppressBackground(pid, selfPid, nm, ipath, session, ownerSession,
                         foregroundPid, visible, windowsRoot, isWhitelisted)) continue;
 
-                    AcquireResult r = core.Acquire(pid, nm, SuppressReason.Build, "devfocus",
-                        SuppressionLevel.Eco);
-                    if (r == AcquireResult.NewlyThrottled) suppressed++;
+                    candidates.Add(new KeyValuePair<int, string>(pid, nm));
                 }
                 catch { }
                 finally { p.Dispose(); }
+            }
+
+            int suppressed = 0;
+            List<int> newlyThrottled = null;
+            SuppressionCore.BatchResult batch;
+            core.BeginBatch();
+            try
+            {
+                foreach (KeyValuePair<int, string> c in candidates)
+                {
+                    AcquireResult r = core.Acquire(c.Key, c.Value, SuppressReason.Build, "devfocus",
+                        SuppressionLevel.Eco);
+                    if (r == AcquireResult.NewlyThrottled)
+                    {
+                        suppressed++;
+                        if (newlyThrottled == null) newlyThrottled = new List<int>();
+                        newlyThrottled.Add(c.Key);
+                    }
+                }
+            }
+            finally
+            {
+                batch = core.EndBatch();
+                // 批量涂写在 EndBatch 才落盘：记账的"新压制"数按实际生效结果校正
+                if (batch != null && newlyThrottled != null)
+                    foreach (int pid in newlyThrottled)
+                        if (!batch.WasApplied(pid)) suppressed--;
             }
             if (suppressed > 0)
                 Logger.Log("开发专注：编译期间压制 " + suppressed + " 个后台进程（编译位，退出即还原）");

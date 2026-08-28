@@ -67,8 +67,9 @@ namespace CaelusApp
                 list.Add(new Target
                 {
                     DeviceId = id,
-                    Policy = new ReversibleReg(Registry.LocalMachine, regPath, "DevicePolicy", RegistryValueKind.DWord, slotBase + "_Policy"),
-                    Mask = new ReversibleReg(Registry.LocalMachine, regPath, "AssignmentSetOverride", RegistryValueKind.Binary, slotBase + "_Mask")
+                    // Affinity Policy 叶子键默认不存在（须创建），父键 Device Parameters 在即设备在
+                    Policy = new ReversibleReg(Registry.LocalMachine, regPath, "DevicePolicy", RegistryValueKind.DWord, slotBase + "_Policy", ReversibleReg.WriteMode.RequireParent),
+                    Mask = new ReversibleReg(Registry.LocalMachine, regPath, "AssignmentSetOverride", RegistryValueKind.Binary, slotBase + "_Mask", ReversibleReg.WriteMode.RequireParent)
                 });
             }
             return list;

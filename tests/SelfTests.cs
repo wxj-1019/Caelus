@@ -873,6 +873,8 @@ namespace CaelusApp
             test("白名单家族：后代仅在 PID 身份一致时保留", TestWhitelistFamilyIdentity);
             test("白名单家族事件：事件顺序与父进程创建时间阻断 PID 继承", TestWhitelistFamilyEvents);
             test("进程事件：延迟启动不会接上过期的父进程身份", TestProcNotifyParentIdentity);
+            test("降级识别：Toolhelp 免句柄读取本进程身份", TestToolhelpSelfIdentity);
+            test("场景事件泵：批次异步串行派发与停止丢弃", TestScenarioEventPump);
             test("场景仲裁：单场景激活即掌权", TestArbiterSingleActivation);
             test("场景仲裁：高优先级抢占先挂起后授权", TestArbiterPreemptionOrder);
             test("场景仲裁：抢占解除后低优先级补位", TestArbiterResumeAfterPreemption);
@@ -1483,6 +1485,8 @@ namespace CaelusApp
             });
 
             Settings.UseTransientStoreForCurrentProcess();
+            // 自定义清单写 Settings：必须在临时存储启用之后跑，不污染真实注册表
+            test("豁免名录：反作弊/加速器自定义清单即存即效", TestCustomExemptionCatalogs);
             test("崩溃日志：加入 QoS 字段后仍能读取旧的 9 字段记录", () =>
             {
                 string name = Convert.ToBase64String(Encoding.UTF8.GetBytes("game"));
@@ -3068,9 +3072,14 @@ namespace CaelusApp
 
             acf(sa1, "367520", "Hollow Knight", "Hollow Knight");
             acf(sa1, "228980", "Steamworks Common Redistributables", "Steamworks Shared");
+            // 软件类应用（有正常 manifest 但不是游戏）必须被排除
+            acf(sa1, "431960", "Wallpaper Engine", "wallpaper_engine");
             string hk = Path.Combine(sa1, "common\\Hollow Knight");
             Directory.CreateDirectory(Path.Combine(hk, "hollow_knight_Data"));
             Directory.CreateDirectory(Path.Combine(sa1, "common\\Steamworks Shared"));
+            string we = Path.Combine(sa1, "common\\wallpaper_engine");
+            Directory.CreateDirectory(we);
+            File.WriteAllBytes(Path.Combine(we, "wallpaper64.exe"), new byte[160 * 1024]);
             File.WriteAllBytes(Path.Combine(hk, "hollow_knight.exe"), new byte[160 * 1024]);
             File.WriteAllBytes(Path.Combine(hk, "UnityCrashHandler64.exe"), new byte[300 * 1024]);
 

@@ -240,6 +240,64 @@ namespace CaelusApp
             UIntPtr pm, sm;
             return GetProcessAffinityMask(h, out pm, out sm) ? (ulong)pm : 0UL;
         }
+
+        // ---- Toolhelp32 进程快照：内核反作弊保护进程开不了句柄时的降级身份来源 ----
+        private const uint TH32CS_SNAPPROCESS = 0x2;
+
+        [DllImport("kernel32.dll", SetLastError = true)]
+        private static extern IntPtr CreateToolhelp32Snapshot(uint flags, uint processId);
+
+        [StructLayout(LayoutKind.Sequential, CharSet = CharSet.Unicode)]
+        private struct ProcessEntry32
+        {
+            public uint Size;
+            public uint Usage;
+            public uint ProcessId;
+            public UIntPtr DefaultHeapId;
+            public uint ModuleId;
+            public uint Threads;
+            public uint ParentProcessId;
+            public int PriClassBase;
+            public uint Flags;
+            [MarshalAs(UnmanagedType.ByValTStr, SizeConst = 260)]
+            public string ExeFile;
+        }
+
+        [DllImport("kernel32.dll", CharSet = CharSet.Unicode, SetLastError = true)]
+        private static extern bool Process32FirstW(IntPtr snapshot, ref ProcessEntry32 entry);
+
+        [DllImport("kernel32.dll", CharSet = CharSet.Unicode, SetLastError = true)]
+        private static extern bool Process32NextW(IntPtr snapshot, ref ProcessEntry32 entry);
+
+        /// <summary>不开进程句柄读取 PID 当前映像名与父 PID（Toolhelp32 快照）。
+        /// 用于内核反作弊保护进程的降级识别与 PID 复用校验（名字对不上即复用）。</summary>
+        public static bool TryToolhelpProcessIdentity(int pid, out string exeName, out int parentPid)
+        {
+            exeName = null;
+            parentPid = 0;
+            if (pid <= 0) return false;
+            IntPtr snap = CreateToolhelp32Snapshot(TH32CS_SNAPPROCESS, 0);
+            if (snap == IntPtr.Zero || snap == new IntPtr(-1)) return false;
+            try
+            {
+                var entry = new ProcessEntry32();
+                entry.Size = (uint)Marshal.SizeOf(typeof(ProcessEntry32));
+                bool more = Process32FirstW(snap, ref entry);
+                while (more)
+                {
+                    if ((int)entry.ProcessId == pid)
+                    {
+                        exeName = entry.ExeFile;
+                        parentPid = (int)entry.ParentProcessId;
+                        return !string.IsNullOrEmpty(exeName);
+                    }
+                    more = Process32NextW(snap, ref entry);
+                }
+                return false;
+            }
+            finally { CloseHandle(snap); }
+        }
+
         public static int QueryIoPriority(IntPtr h)
         {
             int v = 0;

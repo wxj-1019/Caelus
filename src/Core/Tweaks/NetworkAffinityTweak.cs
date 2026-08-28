@@ -22,6 +22,14 @@ namespace CaelusApp
 
         public static bool EnabledByCaelus { get { return Settings.Load(EnabledKey, false); } }
 
+        /// <summary>系统里是否还有 Caelus 施加过的痕迹（开关标志/QoS 策略名单/网卡亲和标志）。
+        /// QoS 策略存在系统策略库而非 HKCU 快照树，purge 若因标志丢失跳过 Disable，
+        /// 这些策略将成为注册表树外的永久残留——按痕迹判定而非只看标志。</summary>
+        internal static bool HasAppliedTraces()
+        {
+            return EnabledByCaelus || LoadPolicyNames().Count > 0 || irqEngine.EnabledByCaelus;
+        }
+
         internal static List<string> EnumerateNicDeviceIds()
         {
             var ids = new List<string>();
@@ -143,7 +151,27 @@ namespace CaelusApp
             }
 
             bool anyOk = irqOk || newNames.Count > 0;
-            if (anyOk) Settings.Save(EnabledKey, true);
+            if (anyOk)
+            {
+                Settings.Save(EnabledKey, true);
+                if (!Settings.Load(EnabledKey, false))
+                {
+                    // 标志写不进/读不回：purge 会因 EnabledByCaelus=false 跳过 Disable，
+                    // QoS 策略成为注册表树外的系统残留——撤回本轮创建并恢复旧名单；
+                    // 删除失败的名字必须留在名单里，否则残留策略从此无人认领
+                    var unremoved = new List<string>();
+                    foreach (string name in newNames)
+                        if (!RemoveQosPolicy(name)) unremoved.Add(name);
+                    var finalNames = new List<string>(oldNames);
+                    foreach (string name in unremoved)
+                        if (!finalNames.Contains(name)) finalNames.Add(name);
+                    SavePolicyNames(finalNames);
+                    Settings.Save(EnabledKey, false);
+                    Logger.Log("网络优先级：开关标志无法持久化，已撤回本轮创建的 QoS 策略"
+                        + (unremoved.Count > 0 ? "（" + unremoved.Count + " 项删除失败，已保留在名单待重试）" : ""));
+                    return irqOk;
+                }
+            }
             return anyOk;
         }
 

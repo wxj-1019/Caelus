@@ -31,7 +31,9 @@ namespace CaelusApp
         internal static bool ReadPerfRows(out long[] irq, out long[] idle)
         {
             irq = null; idle = null;
-            int count = Math.Min(64, Environment.ProcessorCount);
+            // SYSTEM_PROCESSOR_PERFORMANCE_INFORMATION 每个逻辑核一行（跨全部处理器组）：
+            // 此前按 64 截断，>64 核机器缓冲区不足 → NtQuery 长度不符 → 整条采样失败
+            int count = Math.Min(512, Environment.ProcessorCount);
             int stride = Marshal.SizeOf(typeof(ProcessorPerf));
             IntPtr mem = Marshal.AllocHGlobal(stride * count);
             try

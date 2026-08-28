@@ -87,13 +87,23 @@ namespace CaelusApp
             try { batt = SystemInformation.PowerStatus.PowerLineStatus == PowerLineStatus.Offline; }
             catch { batt = false; }
             bool changed;
+            bool wasGranted;
             lock (sync)
             {
                 changed = onBattery != batt;
                 onBattery = batt;
                 if (!batt) batteryBalloonShown = false;
+                wasGranted = grantedFlag;
             }
-            if (changed) RecomputeActivity();
+            if (!changed) return;
+            RecomputeActivity();
+            // 掌权期间插拔电立即重扫换档（Eco↔Restrained），不再等最长 30 秒的校正节拍；
+            // 线程池执行——WinForms 宿主的电源轮询在 UI 线程上，全量扫描不能压上去
+            if (wasGranted)
+                System.Threading.ThreadPool.QueueUserWorkItem(delegate
+                {
+                    try { ReconcileTick(); } catch { }
+                });
         }
 
         /// <summary>测试钩子：直接设置电池状态</summary>
@@ -218,6 +228,8 @@ namespace CaelusApp
             catch (Exception ex) { Logger.LogFailure("日常优化掌权失败", ex); }
         }
 
+        /// <summary>挂起：还原链逐步故障隔离——grantedFlag 已翻 false、仲裁器不会重试，
+        /// 单步抛异常若跳过后续步骤，残留只能等启动自愈。每步独立 try，失败计数并明示。</summary>
         public override void Suspend()
         {
             lock (sync)
@@ -225,14 +237,15 @@ namespace CaelusApp
                 if (!grantedFlag) return;
                 grantedFlag = false;
             }
-            try
-            {
-                StopReconcileTimer();
-                RestoreFamilyBoost();
-                if (core != null) core.ReleaseReason(SuppressReason.Daily);
-                Logger.Log("日常优化：挂起，全部副作用已还原（检测继续）");
-            }
-            catch (Exception ex) { Logger.LogFailure("日常优化挂起失败", ex); }
+            int failed = 0;
+            try { StopReconcileTimer(); }
+            catch (Exception ex) { failed++; Logger.LogFailure("日常优化挂起：停止校正节拍失败", ex); }
+            try { RestoreFamilyBoost(); }
+            catch (Exception ex) { failed++; Logger.LogFailure("日常优化挂起：还原家族提优失败", ex); }
+            try { if (core != null) core.ReleaseReason(SuppressReason.Daily); }
+            catch (Exception ex) { failed++; Logger.LogFailure("日常优化挂起：解除后台压制失败", ex); }
+            if (failed == 0) Logger.Log("日常优化：挂起，全部副作用已还原（检测继续）");
+            else Logger.Log("日常优化：挂起完成，但 " + failed + " 个还原步骤失败（残留由下次启动自愈兜底）");
         }
 
         public void Stop()
@@ -285,7 +298,7 @@ namespace CaelusApp
                 lock (sync) { if (!grantedFlag) return; }
                 SweepDailySuppression();
                 BoostVisibleFamily();
-                HealthCare.RunIfDue();   // 到点判定内部做，未到期零开销
+                // 健康维护已改独立定时调度（HealthCare.StartAuto），不再依赖本场景掌权
                 // 竞态护栏：挂起可能在扫描期间到达（grantedFlag 已翻 false），泄漏的压制立即回收；
                 // 若挂起在护栏之后到达，Suspend 自带的 ReleaseReason(Daily) 会兜底。
                 lock (sync) { if (!grantedFlag && core != null) core.ReleaseReason(SuppressReason.Daily); }
@@ -309,9 +322,11 @@ namespace CaelusApp
             lock (sync) batt = onBattery;
             SuppressionLevel level = ResolveDailyLevel(batt);
 
-            int suppressed = 0;
+            // 两段式（与游戏模式 Sweep 一致）：先枚举收集候选，批窗口只包 Acquire，
+            // 不让 BeginBatch 的锁窗口罩住整个进程枚举
             Process[] all;
             try { all = Process.GetProcesses(); } catch { return; }
+            var candidates = new List<KeyValuePair<int, string>>();
             foreach (Process p in all)
             {
                 try
@@ -335,11 +350,35 @@ namespace CaelusApp
                     if (!DevFocus.ShouldSuppressBackground(pid, selfPid, nm, ipath, session,
                         ownerSession, foregroundPid, visible, windowsRoot, isWhitelisted)) continue;
 
-                    AcquireResult r = core.Acquire(pid, nm, SuppressReason.Daily, "dailycare", level);
-                    if (r == AcquireResult.NewlyThrottled) suppressed++;
+                    candidates.Add(new KeyValuePair<int, string>(pid, nm));
                 }
                 catch { }
                 finally { p.Dispose(); }
+            }
+
+            int suppressed = 0;
+            List<int> newlyThrottled = null;
+            SuppressionCore.BatchResult batch;
+            core.BeginBatch();
+            try
+            {
+                foreach (KeyValuePair<int, string> c in candidates)
+                {
+                    AcquireResult r = core.Acquire(c.Key, c.Value, SuppressReason.Daily, "dailycare", level);
+                    if (r == AcquireResult.NewlyThrottled)
+                    {
+                        suppressed++;
+                        if (newlyThrottled == null) newlyThrottled = new List<int>();
+                        newlyThrottled.Add(c.Key);
+                    }
+                }
+            }
+            finally
+            {
+                batch = core.EndBatch();
+                if (batch != null && newlyThrottled != null)
+                    foreach (int pid in newlyThrottled)
+                        if (!batch.WasApplied(pid)) suppressed--;
             }
             if (suppressed > 0)
                 Logger.Log("日常优化：压制 " + suppressed + " 个后台进程（"

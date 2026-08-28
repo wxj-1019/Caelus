@@ -108,11 +108,20 @@
         <TextBlock Text="{Binding PageSub}" Style="{DynamicResource PageSubtitle}" TextWrapping="Wrap"/>
       </StackPanel>
 
-      <ContentControl x:Name="PageFeedbackBanner"
-                      Style="{DynamicResource FeedbackBanner}"
-                      Content="{Binding FeedbackText}"
-                      Margin="0,0,0,12"
-                      AutomationProperties.Name="系统环境页操作反馈"/>
+      <Border x:Name="PageFeedbackBanner" Margin="0,0,0,12" AutomationProperties.Name="系统环境页操作反馈">
+        <Border.Style>
+          <Style TargetType="Border" BasedOn="{StaticResource StatusBanner}">
+            <Setter Property="Visibility" Value="Visible"/><Setter Property="Background" Value="{DynamicResource InfoSoftBrush}"/><Setter Property="BorderBrush" Value="{DynamicResource InfoEdgeBrush}"/>
+            <Style.Triggers>
+              <DataTrigger Binding="{Binding PageFeedback}" Value=""><Setter Property="Visibility" Value="Collapsed"/></DataTrigger>
+              <DataTrigger Binding="{Binding PageFeedbackKind}" Value="Success"><Setter Property="Background" Value="{DynamicResource SuccessSoftBrush}"/><Setter Property="BorderBrush" Value="{DynamicResource SuccessEdgeBrush}"/></DataTrigger>
+              <DataTrigger Binding="{Binding PageFeedbackKind}" Value="Warning"><Setter Property="Background" Value="{DynamicResource WarningSoftBrush}"/><Setter Property="BorderBrush" Value="{DynamicResource WarningEdgeBrush}"/></DataTrigger>
+              <DataTrigger Binding="{Binding PageFeedbackKind}" Value="Error"><Setter Property="Background" Value="{DynamicResource DangerSoftBrush}"/><Setter Property="BorderBrush" Value="{DynamicResource DangerEdgeBrush}"/></DataTrigger>
+            </Style.Triggers>
+          </Style>
+        </Border.Style>
+        <TextBlock Text="{Binding PageFeedback}" FontSize="{DynamicResource FontSizeSmall}" Foreground="{DynamicResource TextSecondaryBrush}" TextWrapping="Wrap"/>
+      </Border>
 
       <StackPanel x:Name="ZoneGraphics" Margin="0,0,0,16">
         <StackPanel Orientation="Horizontal" Margin="0,0,0,8">

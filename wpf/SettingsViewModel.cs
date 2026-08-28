@@ -67,6 +67,31 @@ namespace CaelusApp
             });
         }
 
+        /// <summary>托盘菜单等界面外改动后回刷：构造期快照的字段全部重读注册表再通知。
+        /// 直接写字段 + Raise，绕开 setter 的写注册表/应用场景副作用。</summary>
+        public void RefreshFromSettings()
+        {
+            autoStart = TaskHelper.TaskExistsCached();
+            autoHide = Settings.Load("AutoHideOnGame", false);
+            lightMode = Settings.Load("UiLight", false);
+            devMode = Settings.Load("DevModeOn", true);
+            focusMode = Settings.Load("DevFocusModeOn", false);
+            ideOn = Settings.Load("DevFocusIdeOn", true);
+            dailyCare = Settings.Load("DailyCareOn", true);
+            batteryOn = Settings.Load("DailyCareBatteryOn", true);
+            Raise("AutoStart");
+            Raise("AutoHide");
+            Raise("LightMode");
+            Raise("ToneMode");
+            Raise("DevMode");
+            Raise("FocusMode");
+            Raise("IdeOn");
+            Raise("DailyCare");
+            Raise("BatteryOn");
+            Raise("PreferenceSummary");
+            Raise("DevSummary");
+        }
+
         // —— 分组标题 ——
         public string AppSectionTitle { get { return Lang.T("sec.app"); } }
         public string MaintSectionTitle { get { return Lang.T("sec.maint"); } }

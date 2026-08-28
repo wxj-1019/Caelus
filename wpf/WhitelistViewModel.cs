@@ -153,23 +153,38 @@ namespace CaelusApp
         }
 
         // —— 操作 ——
-        // 批量加入文件（拖放或浏览）。返回 null 表示全部成功，否则返回首个错误。
-        public string AddFiles(IEnumerable<string> files)
+        /// <summary>批量加入结果：视图按计数汇总反馈（对齐游戏库页体验），
+        /// 不再「只要有一条成功就吞掉其余失败/跳过」。</summary>
+        public sealed class AddFilesResult
         {
-            int added = 0;
-            string firstError = null;
-            foreach (string raw in files)
+            public int Added;
+            public int Skipped;      // 非 exe/lnk 或解析不出目标
+            public int Failed;
+            public string FirstError;
+        }
+
+        public AddFilesResult AddFiles(IEnumerable<string> files)
+        {
+            var result = new AddFilesResult();
+            if (files != null)
             {
-                string path = ResolveWhitelistTarget(raw);
-                if (string.IsNullOrEmpty(path)) continue;
-                bool ok;
-                try { ok = gm.AddWhitelistAuto(path); }
-                catch { ok = false; }
-                if (ok) added++;
-                else if (firstError == null) firstError = gm.WhitelistLastError;
+                foreach (string raw in files)
+                {
+                    string path = ResolveWhitelistTarget(raw);
+                    if (string.IsNullOrEmpty(path)) { result.Skipped++; continue; }
+                    bool ok;
+                    try { ok = gm.AddWhitelistAuto(path); }
+                    catch { ok = false; }
+                    if (ok) result.Added++;
+                    else
+                    {
+                        result.Failed++;
+                        if (result.FirstError == null) result.FirstError = gm.WhitelistLastError;
+                    }
+                }
             }
-            if (added > 0) Refresh(true);
-            return added == 0 ? firstError : null;
+            if (result.Added > 0) Refresh(true);
+            return result;
         }
 
         // 与 WinForms ResolveWhitelistTarget 相同：解析 .lnk，要求结尾是 .exe。

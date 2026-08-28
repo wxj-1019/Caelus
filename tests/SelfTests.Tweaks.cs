@@ -175,15 +175,21 @@ namespace CaelusApp
 
         private static void TestRenderLaneJournalCodec()
         {
-            int pid, tid, pri; long creation;
-            Eq(false, RenderLane.ParseJournal("", out pid, out creation, out tid, out pri));
-            Eq(false, RenderLane.ParseJournal("1|2|3", out pid, out creation, out tid, out pri));
-            Eq(false, RenderLane.ParseJournal("0|2|3|4", out pid, out creation, out tid, out pri));
-            Eq(true, RenderLane.ParseJournal("1234|99887766|4321|1", out pid, out creation, out tid, out pri));
+            int pid, tid, pri; long creation, threadCreation;
+            Eq(false, RenderLane.ParseJournal("", out pid, out creation, out tid, out pri, out threadCreation));
+            Eq(false, RenderLane.ParseJournal("1|2|3", out pid, out creation, out tid, out pri, out threadCreation));
+            Eq(false, RenderLane.ParseJournal("0|2|3|4", out pid, out creation, out tid, out pri, out threadCreation));
+            Eq(false, RenderLane.ParseJournal("1|2|3|4|5|6", out pid, out creation, out tid, out pri, out threadCreation));
+            // 旧 4 段格式兼容（无线程身份校验），线程创建时间为 0
+            Eq(true, RenderLane.ParseJournal("1234|99887766|4321|1", out pid, out creation, out tid, out pri, out threadCreation));
             Eq(1234, pid);
             Eq(99887766L, creation);
             Eq(4321, tid);
             Eq(1, pri);
+            Eq(0L, threadCreation);
+            // 新 5 段格式带线程创建时间
+            Eq(true, RenderLane.ParseJournal("1234|99887766|4321|1|556677", out pid, out creation, out tid, out pri, out threadCreation));
+            Eq(556677L, threadCreation);
         }
 
         private static void TestIfeoSandboxRoundtrip()
@@ -346,6 +352,7 @@ namespace CaelusApp
             {
                 string games = Path.Combine(dir, "Caelus.games.txt");
                 string white = Path.Combine(dir, "Caelus.whitelist.txt");
+                string doneFile = Path.Combine(dir, "purge.done");
                 File.WriteAllText(games, "game-a");
                 File.WriteAllText(white, "white-a");
 
@@ -355,13 +362,16 @@ namespace CaelusApp
 
                 if (!File.Exists(games) || !File.Exists(white))
                     throw new Exception("restore failed but data was deleted anyway");
+                Eq(false, File.Exists(doneFile));
                 Eq(false, Settings.Load("PurgeV180Done", false));
 
                 LegacyPurge.RestoreHook = delegate { return new List<string>(); };
                 LegacyPurge.RunOnce(dir);
                 if (File.Exists(games) || File.Exists(white))
                     throw new Exception("restore succeeded but data was not purged");
-                Eq(true, Settings.Load("PurgeV180Done", false));
+                // 完成标记写数据目录文件（注册表标记会把刚删的键重建出来），注册表不再写
+                Eq(true, File.Exists(doneFile));
+                Eq(false, Settings.Load("PurgeV180Done", false));
 
                 File.WriteAllText(games, "re-added-by-user");
                 LegacyPurge.RestoreHook = delegate { throw new Exception("must not restore twice"); };

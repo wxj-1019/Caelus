@@ -51,8 +51,10 @@ namespace CaelusApp
 
         public static bool Disable() { return engine.Disable(EnumerateGpuDeviceIds()); }
 
-#if CAELUS_SELFTEST
-        internal static bool RestartDevice(string pnpDeviceId, out string error)
+        /// <summary>热重启设备使中断亲和立即生效（WMI Disable→Enable），免整机重启。
+        /// GPU 会闪屏、网卡会瞬断——调用方必须先取得用户确认。正式版此前只留了
+        /// 自测编译入口，用户启用后只能靠重启电脑感知效果。</summary>
+        public static bool RestartDevice(string pnpDeviceId, out string error)
         {
             error = null;
             try
@@ -85,6 +87,5 @@ namespace CaelusApp
             }
             catch (Exception ex) { error = ex.Message; return false; }
         }
-#endif
     }
 }

@@ -6,6 +6,7 @@ using System;
 using System.Collections.Generic;
 using System.Runtime.InteropServices;
 using System.Text;
+using System.Windows.Forms;
 
 namespace CaelusApp
 {
@@ -142,7 +143,18 @@ namespace CaelusApp
             new Knob(SubProcessor, ShortSchedPolicy,   2,   2,   5,  5, "异类短线程调度策略"),
         };
 
-        private static bool TuneTarget(Guid g, bool aggressive, bool idleDisable)
+        /// <summary>此刻是否电池供电。竞技档的激进 DC 参数（最小状态 100%/禁空闲等）
+        /// 会显著加剧掉电与发热——电池供电时 DC 侧改按温和档写入，AC 侧照常。</summary>
+        internal static bool OnBatteryNow()
+        {
+            try
+            {
+                return SystemInformation.PowerStatus.PowerLineStatus == System.Windows.Forms.PowerLineStatus.Offline;
+            }
+            catch { return false; }
+        }
+
+        private static bool TuneTarget(Guid g, bool aggressive, bool idleDisable, bool onBattery)
         {
             try
             {
@@ -152,27 +164,29 @@ namespace CaelusApp
 
                 foreach (Knob k in CoreKnobs)
                 {
-                    if (WriteKnob(g, k, aggressive)) written++;
+                    if (WriteKnob(g, k, aggressive, onBattery)) written++;
                     else { failed++; Logger.Log("电源项「" + k.Label + "」写入失败"); }
                 }
                 foreach (Knob k in OptionalKnobs)
                 {
                     if (!SettingPresent(g, k.Sub, k.Setting)) { skipped.Add(k.Label); continue; }
-                    if (WriteKnob(g, k, aggressive)) written++; else failed++;
+                    if (WriteKnob(g, k, aggressive, onBattery)) written++; else failed++;
                 }
                 if (CpuTopology.Hybrid)
                 {
                     foreach (Knob k in HybridKnobs)
                     {
                         if (!SettingPresent(g, k.Sub, k.Setting)) { skipped.Add(k.Label); continue; }
-                        if (WriteKnob(g, k, aggressive)) written++; else failed++;
+                        if (WriteKnob(g, k, aggressive, onBattery)) written++; else failed++;
                     }
                 }
 
                 bool killIdle = aggressive && idleDisable;
                 if (SettingPresent(g, SubProcessor, IdleDisableSet))
                 {
-                    if (WritePair(g, SubProcessor, IdleDisableSet, killIdle ? 1u : 0u, killIdle ? 1u : 0u)) written++;
+                    uint idleAc = killIdle ? 1u : 0u;
+                    uint idleDc = killIdle && !onBattery ? 1u : 0u;
+                    if (WritePair(g, SubProcessor, IdleDisableSet, idleAc, idleDc)) written++;
                     else failed++;
                 }
                 else skipped.Add("处理器闲置禁用");
@@ -186,18 +200,21 @@ namespace CaelusApp
                 Logger.Log("电源策略：" + (aggressive ? "竞技档" : "常规档")
                     + "（" + PlanTitle + "）写入 " + written + " 项"
                     + (CpuTopology.Hybrid ? "，含大小核专项" : "")
-                    + (killIdle ? "，已禁用处理器空闲状态" : "")
+                    + (killIdle ? (onBattery ? "，AC 侧已禁用处理器空闲状态（电池供电 DC 侧保持启用）" : "，已禁用处理器空闲状态") : "")
+                    + (aggressive && onBattery ? "；电池供电，DC 侧按温和档写入" : "")
                     + (skipped.Count > 0 ? "；本机不支持 " + skipped.Count + " 项：" + string.Join("、", skipped.ToArray()) : ""));
                 return true;
             }
             catch { return false; }
         }
 
-        private static bool WriteKnob(Guid scheme, Knob k, bool aggressive)
+        private static bool WriteKnob(Guid scheme, Knob k, bool aggressive, bool onBattery)
         {
-            return WritePair(scheme, k.Sub, k.Setting,
-                aggressive ? k.ArenaAc : k.CalmAc,
-                aggressive ? k.ArenaDc : k.CalmDc);
+            uint ac = aggressive ? k.ArenaAc : k.CalmAc;
+            // 电池供电时 DC 侧不跟激进档：最小处理器状态 100%/禁停放/禁 USB 挂起这些
+            // 市电竞技参数直接照搬会让笔记本掉电发热，DC 恒用温和列
+            uint dc = aggressive && !onBattery ? k.ArenaDc : k.CalmDc;
+            return WritePair(scheme, k.Sub, k.Setting, ac, dc);
         }
 
         private static bool SettingPresent(Guid scheme, Guid sub, Guid setting)
@@ -471,19 +488,20 @@ namespace CaelusApp
             catch { g = Guid.Empty; return false; }
         }
 
-        private static int TuneKey(bool aggressive, bool idleDisable)
+        private static int TuneKey(bool aggressive, bool idleDisable, bool onBattery)
         {
-            return (aggressive ? 1 : 0) | (idleDisable ? 2 : 0);
+            return (aggressive ? 1 : 0) | (idleDisable ? 2 : 0) | (onBattery ? 4 : 0);
         }
 
         private static bool ActivateInner(bool aggressive, bool idleDisable)
         {
             if (active) return true;
+            bool batt = OnBatteryNow();
             Guid tgt = ResolveTarget();
-            if (tuneState != TuneKey(aggressive, idleDisable))
+            if (tuneState != TuneKey(aggressive, idleDisable, batt))
             {
-                if (targetOwned && !TuneTarget(tgt, aggressive, idleDisable)) return false;
-                tuneState = TuneKey(aggressive, idleDisable);
+                if (targetOwned && !TuneTarget(tgt, aggressive, idleDisable, batt)) return false;
+                tuneState = TuneKey(aggressive, idleDisable, batt);
             }
             Guid? cur = Current();
             if (cur == null) return false;
@@ -513,11 +531,12 @@ namespace CaelusApp
             lock (lk)
             {
                 if (!active) return ActivateInner(aggressive, idleDisable);
+                bool batt = OnBatteryNow();
                 Guid tgt = ResolveTarget();
-                if (tuneState != TuneKey(aggressive, idleDisable))
+                if (tuneState != TuneKey(aggressive, idleDisable, batt))
                 {
-                    if (targetOwned && !TuneTarget(tgt, aggressive, idleDisable)) return false;
-                    tuneState = TuneKey(aggressive, idleDisable);
+                    if (targetOwned && !TuneTarget(tgt, aggressive, idleDisable, batt)) return false;
+                    tuneState = TuneKey(aggressive, idleDisable, batt);
                     Set(tgt);
                 }
                 Guid? cur = Current();
@@ -618,7 +637,8 @@ namespace CaelusApp
 
         internal static bool SelfTestTune(Guid scheme, bool aggressive, bool idleDisable)
         {
-            return TuneTarget(scheme, aggressive, idleDisable);
+            // 自测跑在真机上，电池态取实际值（DC 侧断言只对市电组合成立）
+            return TuneTarget(scheme, aggressive, idleDisable, OnBatteryNow());
         }
 
         internal static bool SelfTestReadKnob(Guid scheme, string label, out uint ac)

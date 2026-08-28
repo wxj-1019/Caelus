@@ -280,6 +280,54 @@ namespace CaelusApp
                     Data + "|Netease"
                 },
                 new[]{ "网易游戏", "NetEase Games" }),
+
+            new Platform("Wargaming Game Center",
+                "坦克世界/战舰世界的启动与补丁通道，被压会拖住登录校验",
+                new[]{ "wgc", "wargamingerrormonitor" },
+                null,
+                null,
+                new[]
+                {
+                    Pf + "|Wargaming.net", Pf86 + "|Wargaming.net",
+                    Local + "|Wargaming.net", Data + "|Wargaming.net"
+                },
+                new[]{ "Wargaming" }),
+
+            new Platform("Paradox Launcher",
+                "P 票（Paradox）游戏的启动器，dowser 是其引导进程",
+                new[]{ "paradox launcher", "paradoxlauncher", "dowser" },
+                null,
+                null,
+                new[]
+                {
+                    Pf + "|Paradox Interactive", Pf86 + "|Paradox Interactive",
+                    Local + "|Paradox Interactive"
+                },
+                new[]{ "Paradox Launcher" }),
+
+            new Platform("Plarium Play",
+                "Plarium 页转端游戏的统一启动器",
+                new[]{ "plariumplay" },
+                null,
+                null,
+                new[]
+                {
+                    Local + "|PlariumPlay", Roaming + "|PlariumPlay",
+                    Pf + "|Plarium Play", Pf86 + "|Plarium Play"
+                },
+                new[]{ "Plarium Play" }),
+
+            new Platform("2K Launcher",
+                "2K Games 启动器（文明/无主之地合集等），被压会卡住游戏拉起",
+                new[]{ "2klauncher" },
+                null,
+                null,
+                new[]
+                {
+                    Pf + "|2K Launcher", Pf86 + "|2K Launcher",
+                    Pf + "|2K Games", Pf86 + "|2K Games"
+                },
+                new[]{ "2K Launcher" }),
         };
 
         private const int RootRefreshMs = 600000;

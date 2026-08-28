@@ -17,6 +17,31 @@ namespace CaelusApp
 
         public GraphicsViewModel(GameMode gameMode) { this.gameMode = gameMode; }
 
+        /// <summary>托盘菜单等界面外改动后回刷：开关/分段 getter 均直读 gameMode，
+        /// 只需全量 Raise 让绑定重取。</summary>
+        public void RefreshFromRuntime()
+        {
+            Raise("GpuHighPerf");
+            Raise("DisableFso");
+            Raise("NvMaxPerf");
+            Raise("NvLowLatency");
+            Raise("NvFrlIndex");
+            Raise("NvFrlLabel");
+            Raise("NvDlssIndex");
+            Raise("NvDlssLabel");
+            Raise("NvRebar");
+            Raise("NvAnselOff");
+            Raise("NvBattFull");
+            Raise("NvBgFrl");
+            Raise("WindowedOpt");
+            Raise("AmdAntiLag");
+            Raise("AmdChillIndex");
+            Raise("AmdChillLabel");
+            Raise("AmdEnhSync");
+            Raise("AmdRis");
+            NotifyEnabledCount();
+        }
+
         // —— 标题区 ——
         public string PageTitle { get { return Lang.T("nav.graphics"); } }
         public string PageSub { get { return Lang.T("v16.graphics.sub"); } }

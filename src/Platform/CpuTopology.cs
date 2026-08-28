@@ -46,6 +46,8 @@ namespace CaelusApp
         private static void DeriveMasks()
         {
             int nc = Environment.ProcessorCount;
+            // 位移必须守卫：C# 移位计数按 mod 64 回绕，(1UL<<64) 会变成 1。
+            // nc>64 必然是 MultiGroup 机器，下游走 CPU Set 路径，掩码仅作保守兜底
             AllMask = nc >= 64 ? ulong.MaxValue : (1UL << nc) - 1UL;
             if (Hybrid) { ThrottleMask = EffMask; BoostMask = AllMask; }
             else if (AsymCache) { ThrottleMask = SmallL3Mask; BoostMask = BigL3Mask; }

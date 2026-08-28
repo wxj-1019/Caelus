@@ -474,7 +474,7 @@ namespace CaelusApp
                 bool throttled = throttleNow != "无限制";
                 report.Machine.Add(new AuditRow
                 {
-                    Name = "NVIDIA 降频状态",
+                    Name = "GPU 降频状态",
                     Value = throttleNow,
                     Note = throttled
                         ? "显卡正被这些原因压着；若游戏中长期如此，瓶颈在散热或供电，不在调度"

@@ -66,6 +66,14 @@ namespace CaelusApp
             "redistributable", "steamworks common", "proton", "steam linux runtime", "steamvr"
         };
 
+        // Steam 软件类应用：有正常 appmanifest 会被扫描命中，但不是游戏——收进游戏库会
+        // 误导压制与 GPU 证据选举（Lossless Scaling 这类还常驻抢 GPU）。名称子串匹配。
+        private static readonly string[] SoftwareManifest =
+        {
+            "wallpaper engine", "lossless scaling", "vtube studio", "soundpad",
+            "ovr toolkit", "obs studio", "streamlabs", "fps monitor", "dedicated server"
+        };
+
         public static List<ScanHit> Run(string root, Func<bool> canceled, Action<int, int> progress)
         {
             var hits = new List<ScanHit>();
@@ -140,6 +148,8 @@ namespace CaelusApp
             if (name == null) return false;
             foreach (string j in JunkManifest)
                 if (name.IndexOf(j, StringComparison.OrdinalIgnoreCase) >= 0) return true;
+            foreach (string s in SoftwareManifest)
+                if (name.IndexOf(s, StringComparison.OrdinalIgnoreCase) >= 0) return true;
             return false;
         }
 
@@ -277,35 +287,45 @@ namespace CaelusApp
         {
             foreach (string drive in FixedDriveRoots())
             {
-                string[] games;
-                try { games = Directory.GetDirectories(Path.Combine(drive, "XboxGames")); } catch { continue; }
-                foreach (string g in games)
+                // XboxGames（新版 Game Pass）与 Program Files\ModifiableWindowsApps
+                // （旧式可模组安装路径）两处容器布局相同，一起枚举
+                string[] containers =
                 {
-                    try
+                    Path.Combine(drive, "XboxGames"),
+                    Path.Combine(drive, @"Program Files\ModifiableWindowsApps")
+                };
+                foreach (string container in containers)
+                {
+                    string[] games;
+                    try { games = Directory.GetDirectories(container); } catch { continue; }
+                    foreach (string g in games)
                     {
-                        string name = Path.GetFileName(g.TrimEnd('\\'));
-                        string content = Path.Combine(g, "Content");
-                        string dir = Directory.Exists(content) ? content : g;
-
-                        string exe = null;
-                        string cfg = Path.Combine(dir, "MicrosoftGame.config");
-                        if (File.Exists(cfg))
+                        try
                         {
-                            string txt = File.ReadAllText(cfg);
-                            Match mx = Regex.Match(txt, "<Executable[^>]*\\bName\\s*=\\s*\"([^\"]+)\"", RegexOptions.IgnoreCase);
-                            if (mx.Success)
+                            string name = Path.GetFileName(g.TrimEnd('\\'));
+                            string content = Path.Combine(g, "Content");
+                            string dir = Directory.Exists(content) ? content : g;
+
+                            string exe = null;
+                            string cfg = Path.Combine(dir, "MicrosoftGame.config");
+                            if (File.Exists(cfg))
                             {
-                                string candidate = Path.Combine(dir, mx.Groups[1].Value.Replace('/', '\\'));
-                                if (File.Exists(candidate)) exe = candidate;
+                                string txt = File.ReadAllText(cfg);
+                                Match mx = Regex.Match(txt, "<Executable[^>]*\\bName\\s*=\\s*\"([^\"]+)\"", RegexOptions.IgnoreCase);
+                                if (mx.Success)
+                                {
+                                    string candidate = Path.Combine(dir, mx.Groups[1].Value.Replace('/', '\\'));
+                                    if (File.Exists(candidate)) exe = candidate;
+                                }
+                                Match mn = Regex.Match(txt, "DefaultDisplayName\\s*=\\s*\"([^\"]+)\"", RegexOptions.IgnoreCase);
+                                if (mn.Success && mn.Groups[1].Value.Trim().Length > 0
+                                    && !mn.Groups[1].Value.StartsWith("ms-resource", StringComparison.OrdinalIgnoreCase))
+                                    name = mn.Groups[1].Value.Trim();
                             }
-                            Match mn = Regex.Match(txt, "DefaultDisplayName\\s*=\\s*\"([^\"]+)\"", RegexOptions.IgnoreCase);
-                            if (mn.Success && mn.Groups[1].Value.Trim().Length > 0
-                                && !mn.Groups[1].Value.StartsWith("ms-resource", StringComparison.OrdinalIgnoreCase))
-                                name = mn.Groups[1].Value.Trim();
+                            AddManifestHit(root, hits, roots, name, dir, exe);
                         }
-                        AddManifestHit(root, hits, roots, name, dir, exe);
+                        catch { }
                     }
-                    catch { }
                 }
             }
         }
@@ -332,7 +352,11 @@ namespace CaelusApp
                             string dir = g.GetValue("PackageRootFolder") as string;
                             if (string.IsNullOrEmpty(dir)) continue;
                             dir = dir.Trim().TrimEnd('\\');
-                            if (dir.IndexOf("\\WindowsApps\\", StringComparison.OrdinalIgnoreCase) < 0) continue;
+                            // 两种官方容器目录：\WindowsApps\ 与旧式 \Program Files\ModifiableWindowsApps\
+                            // （"Modifiable" 前缀使 \WindowsApps\ 子串匹配不到，必须单独判断）
+                            bool inContainer = dir.IndexOf("\\WindowsApps\\", StringComparison.OrdinalIgnoreCase) >= 0
+                                || dir.IndexOf("\\ModifiableWindowsApps\\", StringComparison.OrdinalIgnoreCase) >= 0;
+                            if (!inContainer) continue;
 
                             bool game = File.Exists(Path.Combine(dir, "MicrosoftGame.config"))
                                      || File.Exists(Path.Combine(dir, "xboxservices.config"));

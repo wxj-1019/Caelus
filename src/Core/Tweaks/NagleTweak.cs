@@ -18,8 +18,10 @@ namespace CaelusApp
 
         private static ReversibleReg RegOf(string guid, string valName)
         {
+            // 接口 GUID 键只写不改：适配器卸载后残留键不应被重建
             return new ReversibleReg(Registry.LocalMachine, IfRoot + "\\" + guid, valName,
-                RegistryValueKind.DWord, "Nagle_" + valName + "_" + guid);
+                RegistryValueKind.DWord, "Nagle_" + valName + "_" + guid,
+                ReversibleReg.WriteMode.OpenOnly);
         }
 
         public static bool Enable()
@@ -40,8 +42,12 @@ namespace CaelusApp
                     List<string> touched = TweakDeviceList.Merge(
                         ParseList(Settings.LoadStr(ListKey, "")), new string[0]);
                     var touchedNow = new List<string>();
+                    // 只写物理网卡接口：虚拟交换/VPN/残留 GUID 不再被无差别写入；
+                    // 物理集合拿不到（WMI 失败）时退回旧的全量行为
+                    HashSet<string> physical = DevicePowerTweak.PhysicalAdapterNetCfgIds();
                     foreach (string guid in guids)
                     {
+                        if (physical.Count > 0 && !physical.Contains(guid)) continue;
                         bool ack = RegOf(guid, "TcpAckFrequency").Apply(1);
                         bool nodelay = RegOf(guid, "TCPNoDelay").Apply(1);
                         if (ack || nodelay)

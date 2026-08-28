@@ -22,6 +22,7 @@ namespace CaelusApp.WpfHost.Views
     public partial class SettingsView : UserControl
     {
         private static volatile bool shaderCleaning;
+        private static int devEnvBusy;
 
         public SettingsView()
         {
@@ -33,6 +34,9 @@ namespace CaelusApp.WpfHost.Views
 
         private void OnLoaded(object sender, RoutedEventArgs e)
         {
+            // 页面每次进入都重读注册表快照：托盘菜单/恢复默认等界面外改动不回刷本页时的兜底
+            SettingsViewModel svm = DataContext as SettingsViewModel;
+            if (svm != null) { try { svm.RefreshFromSettings(); } catch { } }
             Motion.RiseIn(ZoneHeader, 40);
             Motion.RiseIn(ZoneSummary, 90);
             Motion.RiseIn(ZoneApp, 140);
@@ -250,12 +254,22 @@ namespace CaelusApp.WpfHost.Views
         {
             SettingsViewModel vm = DataContext as SettingsViewModel;
             if (vm == null) return;
-            // 工具链版本探测可能耗时数秒，放后台线程，完成后回 UI 线程
+            // 工具链探测可能耗时数秒：防重入（连点会并发探测、结果互相覆盖）+ 忙碌反馈
+            if (Interlocked.Exchange(ref devEnvBusy, 1) != 0)
+            {
+                vm.ShowFeedback("正在检测开发环境，请稍候…", "Info");
+                return;
+            }
+            System.Windows.Controls.Button btn = sender as System.Windows.Controls.Button;
+            if (btn != null) btn.IsEnabled = false;
+            vm.ShowFeedback("正在检测开发环境…", "Info");
             ThreadPool.QueueUserWorkItem(delegate
             {
                 string result = vm.RunDevEnvAudit();
                 Dispatcher.BeginInvoke(new Action(delegate
                 {
+                    Interlocked.Exchange(ref devEnvBusy, 0);
+                    if (btn != null) btn.IsEnabled = true;
                     vm.SetDevEnvResult(result);
                     vm.ShowFeedback("开发环境体检完成。", "Success");
                 }));

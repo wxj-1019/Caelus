@@ -105,11 +105,12 @@ namespace CaelusApp
                             if (node == null) continue;
                             string matching = node.GetValue("MatchingDeviceId") as string;
                             if (string.IsNullOrEmpty(matching)) continue;
-                            // USB 网卡的 MatchingDeviceId 常是含 &REV_ 的更具体硬件 ID，
-                            // 精确相等会漏掉真实物理网卡——按前缀比对
+                            // USB 网卡的 MatchingDeviceId 与 WMI PNPDeviceID 截断结果
+                            // 谁长谁短都可能（INF 兼容 ID 匹配）——双向前缀比对
                             bool hit = false;
                             foreach (string p in physical)
-                                if (matching.StartsWith(p, StringComparison.OrdinalIgnoreCase))
+                                if (matching.StartsWith(p, StringComparison.OrdinalIgnoreCase)
+                                    || p.StartsWith(matching, StringComparison.OrdinalIgnoreCase))
                                 {
                                     hit = true;
                                     break;

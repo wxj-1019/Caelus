@@ -635,6 +635,15 @@ namespace CaelusApp
             return PowerDeleteScheme(IntPtr.Zero, ref t) == 0;
         }
 
+        /// <summary>本机是否已存在生产托管方案（名字+描述双匹配）。自测用它区分
+        /// 「认回既有方案」与「新建」两条路径——认回的方案绝不能在测试收尾时删除。</summary>
+        internal static bool SelfTestHasOwnedScheme()
+        {
+            foreach (Guid g in EnumerateSchemes())
+                if (OwnsScheme(g)) return true;
+            return false;
+        }
+
         internal static bool SelfTestTune(Guid scheme, bool aggressive, bool idleDisable)
         {
             // 自测跑在真机上，电池态取实际值（DC 侧断言只对市电组合成立）

@@ -152,6 +152,14 @@ namespace CaelusApp
                 caelusCpuPercent.ToString("0.00", CultureInfo.InvariantCulture));
             string throttle = GpuThrottleProbe.Summarize();
             if (throttle != null) msg += Lang.F("rep.gputhrottle", throttle);
+            // 受保护本体（内核反作弊拒开句柄）开不了 CPU 统计句柄——报告不含本体
+            // 占用，数字天然偏低，注明免得用户以为工具没干活
+            lock (sync)
+            {
+                if (activeDetection != null && activeDetection.RendererPid > 0
+                    && boostDenied.Contains(activeDetection.RendererPid))
+                    msg += "；游戏本体受反作弊保护，未计入统计";
+            }
             Logger.Log("本局结束：" + msg);
 
             if (dur.TotalSeconds >= 60)

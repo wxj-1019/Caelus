@@ -272,13 +272,12 @@ namespace CaelusApp
                 () => Settings.Load("DailyCareOn", true),
                 devWhitelist);
             var devServiceGuard = new DevServiceGuard();
-            var powerPollTimer = new System.Windows.Forms.Timer();
-            powerPollTimer.Interval = 5000;
-            powerPollTimer.Tick += (s2, e2) =>
+            // 线程池定时器而非 UI 定时器：电源翻转触发的活性重算会在同线程同步跑
+            // 场景 Grant/Suspend（含全量扫描），不能压上 UI 线程（与 WPF 宿主一致）
+            var powerPollTimer = new System.Threading.Timer(delegate
             {
                 try { dailyCare.RefreshPowerState(); } catch { }
-            };
-            powerPollTimer.Start();
+            }, null, 5000, 5000);
             gameMode.ActiveChanged += on => arbiter.ReportActivity(ScenarioKind.Game, on);
 
             var startGate = new object();
@@ -383,7 +382,7 @@ namespace CaelusApp
             {
 
                 try { trayTip.Stop(); trayTip.Dispose(); } catch { }
-                try { powerPollTimer.Stop(); powerPollTimer.Dispose(); } catch { }
+                try { powerPollTimer.Dispose(); } catch { }
                 try { HealthCare.StopAuto(); } catch { }
                 icon.Visible = false;
                 icon.Dispose();
@@ -417,13 +416,11 @@ namespace CaelusApp
             icon.Visible = true;
             SystemEvents.SessionEnded += (s, e) =>
             {
-                // 场景先退出仲裁器，游戏关闭（异步 Deactivate）时不再有候选掌权者
-                try { scenarioPump.Stop(); } catch { }
+                // 关机预算有限：持久还原（重启后仍生效的项）必须最先做——泵停止的
+                // Join 排前面会在途场景交接（SCM 停服务秒级）把预算吃光，电源计划
+                // 还原可能被系统强杀跳过。场景/游戏侧只影响易失状态，残留由下次
+                // 启动自愈兜底；场景仍先于 GameMode 关闭退出仲裁器。
                 try { HealthCare.StopAuto(); } catch { }
-                try { devFocus.Stop(); } catch { }
-                try { dailyCare.Stop(); } catch { }
-                try { devServiceGuard.Stop(); } catch { }
-                try { gameMode.Enabled = false; } catch { }
                 try { PowerPlan.Restore(); } catch { }
                 try { GameDvr.Restore(); } catch { }
                 try { Notif.Restore(); } catch { }
@@ -439,6 +436,11 @@ namespace CaelusApp
                 try { PowerOverlay.Restore(); } catch { }
                 // 游戏侧服务暂停的还原在异步 Deactivate 里，这里按标志同步兜底（幂等）
                 try { SvcPause.Restore(); } catch { }
+                try { scenarioPump.Stop(1500); } catch { }
+                try { devFocus.Stop(); } catch { }
+                try { dailyCare.Stop(); } catch { }
+                try { devServiceGuard.Stop(); } catch { }
+                try { gameMode.Enabled = false; } catch { }
             };
             gameMode.SessionEnded += msg =>
             {
@@ -458,6 +460,17 @@ namespace CaelusApp
                     panel.BeginInvoke((MethodInvoker)(() =>
                     {
                         try { icon.ShowBalloonTip(10000, App.DisplayName, Lang.F("bal.autoadd", name), ToolTipIcon.Info); } catch { }
+                    }));
+                }
+                catch { }
+            };
+            gameMode.NvSwitchAutoDisabled += label =>
+            {
+                try
+                {
+                    panel.BeginInvoke((MethodInvoker)(() =>
+                    {
+                        try { icon.ShowBalloonTip(8000, App.DisplayName, "「" + label + "」连续写入失败，已自动关闭该开关；重新打开即恢复尝试", ToolTipIcon.Warning); } catch { }
                     }));
                 }
                 catch { }

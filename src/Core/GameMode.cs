@@ -883,7 +883,8 @@ namespace CaelusApp
             {
                 lock (sync) return active && activeDetection != null
                     && (boostHandleStripped.Contains(activeDetection.RendererPid)
-                        || boostStateWarned.Contains(activeDetection.RendererPid));
+                        || boostStateWarned.Contains(activeDetection.RendererPid)
+                        || boostDenied.Contains(activeDetection.RendererPid));
             }
         }
 
@@ -900,8 +901,11 @@ namespace CaelusApp
                     string name = activeDetection.RendererName ?? activeGame ?? "Game";
                     if (boostStateVerified.Contains(activeDetection.RendererPid))
                         return Lang.F("v14.boost.verified", name);
+                    // boostDenied（内核反作弊整体拒开句柄）与句柄写权限被剥离同属
+                    // "受保护"——不判定的话概览页整场显示「正在提速」，与日志矛盾
                     if (boostHandleStripped.Contains(activeDetection.RendererPid)
-                        || boostStateWarned.Contains(activeDetection.RendererPid))
+                        || boostStateWarned.Contains(activeDetection.RendererPid)
+                        || boostDenied.Contains(activeDetection.RendererPid))
                         return Lang.F("v14.boost.protected", name);
                     return Lang.F("v14.boost.applying", name);
                 }

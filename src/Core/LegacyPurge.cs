@@ -136,9 +136,10 @@ namespace CaelusApp
             if (File.Exists(donePath)) return;
             if (Settings.Load(DoneKey, false))
             {
-                // 老用户迁移：按旧注册表标记短路；先删残留键树再落盘标记——
-                // 删除失败时不写标记，下次启动重试（与新路径同一语义，树删除幂等）
-                if (DeleteRegistryTree()) MarkDone(donePath);
+                // 老用户迁移：旧标记即证明 purge 已做过，此后的 HKCU\Software\Caelus
+                // 是当前版本的活设置存储（开关/NVIDIA 逐游戏快照/电源计划凭据）——
+                // 只短路落盘标记，绝不能删树（删了=毁掉设置与还原凭据）
+                MarkDone(donePath);
                 return;
             }
 

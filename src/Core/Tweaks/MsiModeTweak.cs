@@ -167,6 +167,7 @@ namespace CaelusApp
                     return false;
                 }
                 Settings.Save("MsiOnByCaelus", true);
+                lock (scanLk) scanCache = null;   // 写入改变设备 MSI 态，5 秒扫描缓存立即失效
                 Logger.Log("MSI 模式：本轮启用 " + appliedNow.Count + " 个设备（清单共 "
                     + done.Count + " 个），重启后生效");
                 return true;
@@ -184,6 +185,7 @@ namespace CaelusApp
                 {
                     Settings.SaveStr(ListKey, "");
                     Settings.Save("MsiOnByCaelus", false);
+                    lock (scanLk) scanCache = null;
                     Logger.Log("MSI 模式：已还原各设备原值，重启后生效");
                 }
                 else Logger.Log("MSI 模式：部分设备还原失败，快照保留待下次重试");

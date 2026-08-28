@@ -134,7 +134,12 @@ namespace CaelusApp.WpfHost.Views
                     : "USB 控制器将禁用后重新启用：已插的外设会瞬断几秒。不重启则要等下次开机才生效。",
                 MsgSeverity.Warning, MsgButtons.OkCancel, null, "立即重启设备", MessageBoxResult.Cancel);
             if (r != MessageBoxResult.OK) return;
-            if (Interlocked.Exchange(ref applyBusy, 1) != 0) return;
+            if (Interlocked.Exchange(ref applyBusy, 1) != 0)
+            {
+                EnvironmentViewModel busyVm = DataContext as EnvironmentViewModel;
+                if (busyVm != null) busyVm.ShowPageFeedback("其他环境项正在应用，设备重启未执行，请稍后重试。", "Warning");
+                return;
+            }
             ThreadPool.QueueUserWorkItem(delegate
             {
                 bool anyOk = false;

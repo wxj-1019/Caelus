@@ -625,15 +625,13 @@ namespace CaelusApp.WpfHost
         // ---- 关机/注销时的还原链（重启后仍生效的改动优先还原） ----
         public void RestorePersistentChanges()
         {
-            // 场景先退出仲裁器：随后的游戏关闭（异步 Deactivate）点 ActiveChanged(false)
-            // 时已无候选掌权者，不会在退出途中把开发/日常场景重新授权一遍再拆掉。
-            Run("场景事件泵停止", scenarioPump.Stop);
+            // 关机预算有限（系统给应用约 5 秒）：持久还原（电源计划等重启后仍生效的项）
+            // 必须最先做——此前泵停止的 Join(5000) 排在前面，在途场景交接（SCM 停服务
+            // 可达秒级）会把预算吃光，电源计划还原可能被系统强杀跳过。
+            // 泵与场景的停止只影响易失状态，超时残留由下次启动自愈兜底。
             Run("健康维护调度停止", HealthCare.StopAuto);
-            Run("DevFocus 停止", devFocus.Stop);
-            Run("DailyCare 停止", dailyCare.Stop);
-            Run("DevServiceGuard 停止", devServiceGuard.Stop);
-            Run("GameMode 关闭", delegate { gameMode.Enabled = false; });
-            Run("PowerPlan 还原", delegate { PowerPlan.Restore(); });
+            Run("ProcNotify 停止", procNotify.Stop);
+            Run("电源计划还原", delegate { PowerPlan.Restore(); });
             Run("GameDvr 还原", delegate { GameDvr.Restore(); });
             Run("Notif 还原", delegate { Notif.Restore(); });
             Run("Mmcss 还原", delegate { Mmcss.Restore(); });
@@ -646,9 +644,14 @@ namespace CaelusApp.WpfHost
             Run("Adlx Ris 还原", delegate { AdlxTweaks.RestoreRis(); });
             Run("PresenceQos 还原", delegate { PresenceQos.Restore(); });
             Run("PowerOverlay 还原", delegate { PowerOverlay.Restore(); });
-            // 游戏侧的 SvcPause 还原在工作线程的 Deactivate 里，进程可能在此之前被终结：
-            // 这里按注册表标志同步兜底（幂等，无标志时零开销）
             Run("SvcPause 还原", delegate { SvcPause.Restore(); });
+            // 场景侧后停：短 join 即可，随后的 GameMode 关闭（异步 Deactivate）点
+            // ActiveChanged(false) 时场景仍在仲裁器里，不会重新授权一遍再拆掉。
+            Run("场景事件泵停止", delegate { scenarioPump.Stop(1500); });
+            Run("DevFocus 停止", devFocus.Stop);
+            Run("DailyCare 停止", dailyCare.Stop);
+            Run("DevServiceGuard 停止", devServiceGuard.Stop);
+            Run("GameMode 关闭", delegate { gameMode.Enabled = false; });
         }
 
         public void Shutdown()

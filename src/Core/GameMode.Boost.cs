@@ -741,7 +741,9 @@ namespace CaelusApp
                                 List<string> nvFailed = NvDrsTweaks.ApplyForGame(imagePath, nvPlan);
                                 HandleNvTweakOutcome(nvFailed, nvPlan);
                             }
-                            lock (sync) tweakApplied.Add(pid);
+                            // NVAPI 暂不可用（驱动更新中）时 ApplyForGame 返回 null 什么都没写：
+                            // 不标记已应用，下一轮扫描自动补做
+                            lock (sync) { if (NvApi.Available) tweakApplied.Add(pid); }
                         }
 
                     }

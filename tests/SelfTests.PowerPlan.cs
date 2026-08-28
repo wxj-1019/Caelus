@@ -6,9 +6,26 @@ using System.Collections.Generic;
 
 namespace CaelusApp
 {
-    internal static partial class SelfTests
+internal static partial class SelfTests
+{
+    /// <summary>自测进程用临时 Settings 存储（ArenaPlanGuid 读出为空），PurgeStaleClones
+    /// 的「在册托管方案豁免」护栏因此失效——SelfTestPurge 会把真实生产计划
+    /// 「Caelus 竞技」当孤儿副本清掉。从真实注册表读出在册 GUID 籽入临时存储，
+    /// 恢复护栏。必须在每个 SelfTestPurge 之前调用。</summary>
+    private static void ProtectRealArenaPlanInTest()
     {
-        private static void TestPowerKnobTableHasNoDuplicates()
+        try
+        {
+            using (var k = Microsoft.Win32.Registry.CurrentUser.OpenSubKey("Software\\Caelus"))
+            {
+                string guid = k == null ? null : k.GetValue("ArenaPlanGuid") as string;
+                if (!string.IsNullOrEmpty(guid)) Settings.SaveStr("ArenaPlanGuid", guid);
+            }
+        }
+        catch { }
+    }
+
+    private static void TestPowerKnobTableHasNoDuplicates()
         {
             string[] pairs = PowerPlan.SelfTestKnobPairs();
             string[] labels = PowerPlan.SelfTestKnobLabels();
@@ -104,6 +121,7 @@ namespace CaelusApp
                 PowerPlan.SelfTestWriteNameNote(dup1, PowerPlan.PlanTitle, PowerPlan.SelfTestNote);
                 PowerPlan.SelfTestWriteNameNote(dup2, PowerPlan.PlanTitle, PowerPlan.SelfTestNote);
 
+                ProtectRealArenaPlanInTest();
                 PowerPlan.SelfTestPurge(keep);
 
                 Eq(PowerPlan.PlanTitle, PowerPlan.SelfTestName(keep));
@@ -131,6 +149,7 @@ namespace CaelusApp
                 PowerPlan.SelfTestWriteNameNote(mine, PowerPlan.PlanTitle, PowerPlan.SelfTestNote);
                 PowerPlan.SelfTestWriteName(userPlan, PowerPlan.PlanTitle);
 
+                ProtectRealArenaPlanInTest();
                 PowerPlan.SelfTestPurge(mine);
 
                 Eq(PowerPlan.PlanTitle, PowerPlan.SelfTestName(userPlan));
@@ -153,6 +172,7 @@ namespace CaelusApp
                 PowerPlan.SelfTestWriteName(mine, PowerPlan.PlanTitle);
                 PowerPlan.SelfTestWriteName(foreign, "用户自己的计划");
 
+                ProtectRealArenaPlanInTest();
                 PowerPlan.SelfTestPurge(mine);
 
                 Eq("用户自己的计划", PowerPlan.SelfTestName(foreign));
@@ -193,6 +213,10 @@ namespace CaelusApp
         private static void TestPowerPlanResolveIsIdempotent()
         {
             PowerPlan.SelfTestResetResolve();
+            // 真实机器上可能已存在生产「Caelus 竞技」方案：resolve 走认回而非新建，
+            // 方案数量不变、结束时不删（认回的是生产方案，删了=毁掉真实配置）。
+            // 无既有方案时才走新建路径，数量 +1 且收尾自删。
+            bool hadOwned = PowerPlan.SelfTestHasOwnedScheme();
             Settings.SaveStr("ArenaPlanGuid", "");
             int before = PowerPlan.SelfTestSchemeCount();
 
@@ -202,23 +226,24 @@ namespace CaelusApp
                 if (!PowerPlan.SelfTestTargetOwned()) Skip("本机无法创建独立电源计划");
 
                 Eq(PowerPlan.PlanTitle, PowerPlan.SelfTestName(first));
-                Eq(before + 1, PowerPlan.SelfTestSchemeCount());
+                int expectedAfterCreate = hadOwned ? before : before + 1;
+                Eq(expectedAfterCreate, PowerPlan.SelfTestSchemeCount());
                 Eq(first.ToString(), Settings.LoadStr("ArenaPlanGuid", ""));
 
                 PowerPlan.SelfTestResetResolve();
                 Guid second = PowerPlan.SelfTestResolve();
                 Eq(first, second);
-                Eq(before + 1, PowerPlan.SelfTestSchemeCount());
+                Eq(expectedAfterCreate, PowerPlan.SelfTestSchemeCount());
 
                 Settings.SaveStr("ArenaPlanGuid", "");
                 PowerPlan.SelfTestResetResolve();
                 Guid third = PowerPlan.SelfTestResolve();
                 Eq(first, third);
-                Eq(before + 1, PowerPlan.SelfTestSchemeCount());
+                Eq(expectedAfterCreate, PowerPlan.SelfTestSchemeCount());
             }
             finally
             {
-                PowerPlan.SelfTestDelete(first);
+                if (!hadOwned) PowerPlan.SelfTestDelete(first);
                 PowerPlan.SelfTestResetResolve();
                 Settings.SaveStr("ArenaPlanGuid", "");
             }

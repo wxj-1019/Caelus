@@ -62,14 +62,21 @@ namespace CaelusApp
 
         /// <summary>退出路径：停收新批次并丢弃积压（退出时场景由 Stop 强制还原，
         /// 积压批次无需再消化——否则退出途中场景可能被积压事件重新激活）。
-        /// 在途批次可能正执行 Grant/Suspend（SCM 操作秒级）：短暂等待让交接落定。</summary>
+        /// 在途批次可能正执行 Grant/Suspend（SCM 操作秒级）：短暂等待让交接落定。
+        /// 关机/注销路径传更短的预算（joinMs），把系统给的时间留给紧随其后的
+        /// 持久还原（电源计划等）；超时的在途交接由启动自愈兜底。</summary>
         public void Stop()
+        {
+            Stop(5000);
+        }
+
+        public void Stop(int joinMs)
         {
             lock (sync) { stopping = true; queue.Clear(); }
             wake.Set();
             try
             {
-                if (!thread.Join(5000))
+                if (!thread.Join(joinMs))
                     Logger.Log("场景事件泵：退出等待超时（在途交接由启动自愈兜底）");
             }
             catch { }

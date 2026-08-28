@@ -679,6 +679,7 @@ namespace CaelusApp
                 ProtectedIdentity hit;
                 if (protectedCache.TryGetValue(identity.Pid, out hit)
                     && hit.Snapshot != null
+                    && DateTime.UtcNow.Ticks - hit.StampTicks < ProtectedPositiveTtlTicks
                     && string.Equals(hit.Name, identity.Name,
                         StringComparison.OrdinalIgnoreCase))
                     return true;

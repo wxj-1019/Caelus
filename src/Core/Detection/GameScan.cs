@@ -79,12 +79,22 @@ namespace CaelusApp
             var hits = new List<ScanHit>();
             var roots = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
             // 大容量机械盘/整机软件盘上深扫耗时不可控：90 秒预算超时后按取消收尾，
-            // 保留已收集的清单来源与命中
+            // 保留已收集的清单来源与命中。预算触发记一笔日志，与用户主动取消可区分
             long deadline = DateTime.UtcNow.Ticks + 90L * TimeSpan.TicksPerSecond;
+            bool budgetLogged = false;
             Func<bool> budgetCanceled = delegate
             {
                 if (canceled != null && canceled()) return true;
-                return DateTime.UtcNow.Ticks > deadline;
+                if (DateTime.UtcNow.Ticks > deadline)
+                {
+                    if (!budgetLogged)
+                    {
+                        budgetLogged = true;
+                        Logger.Log("游戏扫描：90 秒预算用尽，提前收尾（结果可能不全）");
+                    }
+                    return true;
+                }
+                return false;
             };
             CollectManifests(root, hits, roots, budgetCanceled);
             if (progress != null) progress(0, hits.Count);

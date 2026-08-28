@@ -103,6 +103,36 @@ namespace CaelusApp
             }
         }
 
+        // 自保护名单在 Acquire 入口统一短路：名单内进程不 OpenProcess、不涂写，
+        // 所有压制通道一致跳过（此前只有 GameMode 扫描跳过，场景/Tamer 通道做无效功）
+        private static void TestSelfProtectedRosterShortCircuit(string root)
+        {
+            string beat = Path.Combine(root, "roster.beat");
+            using (Process probe = StartProbe(beat))
+            {
+                try
+                {
+                    WaitAdvance(beat, -1, 4000);
+                    string probeName = probe.ProcessName;
+                    string state = Path.Combine(root, "roster.state");
+                    var core = new SuppressionCore(state);
+
+                    // 未入名单：正常按可压制处理
+                    AcquireResult before = core.Acquire(probe.Id, probeName, SuppressReason.Background, null, SuppressionLevel.Eco);
+                    Eq(true, before == AcquireResult.NewlyThrottled || before == AcquireResult.AlreadyProtected);
+
+                    SelfProtectedRoster.Mark(probeName);
+                    Eq(true, SelfProtectedRoster.Contains(probeName));
+                    Eq(AcquireResult.AlreadyProtected,
+                        core.Acquire(probe.Id, probeName, SuppressReason.Background, null, SuppressionLevel.Eco));
+
+                    SelfProtectedRoster.Clear();
+                    Eq(false, SelfProtectedRoster.Contains(probeName));
+                }
+                finally { StopOwned(probe); }
+            }
+        }
+
         private static void TestEcoQoSRestore(string root)
         {
             string beat = Path.Combine(root, "qos.beat");

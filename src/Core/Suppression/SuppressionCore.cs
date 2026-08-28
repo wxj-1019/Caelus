@@ -221,6 +221,10 @@ namespace CaelusApp
         public AcquireResult Acquire(int pid, string name, SuppressReason reason, string group, SuppressionLevel level)
         {
             if (level == SuppressionLevel.None) level = SuppressionLevel.Eco;
+            // 自保护名单（写入+回读多轮验证均被拒绝的进程，如安全软件）在核心入口
+            // 统一短路：此前只有 GameMode 扫描按名单跳过，场景/Tamer 通道仍每轮对其
+            // 做 3 次写入+EcoQoS 自旋+回读的无效功并重写 journal。名单可经一键恢复清空。
+            if (SelfProtectedRoster.Contains(name)) return AcquireResult.AlreadyProtected;
             IntPtr h = Native.OpenProcess(Native.PROCESS_SET_INFORMATION | Native.PROCESS_SET_LIMITED_INFORMATION
                 | Native.PROCESS_QUERY_LIMITED_INFORMATION, false, pid);
             if (h == IntPtr.Zero)

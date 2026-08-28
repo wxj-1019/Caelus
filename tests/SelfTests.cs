@@ -2105,6 +2105,7 @@ namespace CaelusApp
                 test("CPU Sets：进程原有策略精确还原", () => TestExistingCpuSetRestore(root));
                 test("分级压制：状态可查询且 CPU Sets 可还原", () => TestStagedSuppression(root));
             test("竞技压制：目标被重置后会重新施加", () => TestSuppressionReapply(root));
+            test("自保护名单：Acquire 入口统一短路", () => TestSelfProtectedRosterShortCircuit(root));
             test("压制日志：记账写入失败则阻止一切内核写入", () => TestSuppressionJournalGate(root));
             test("后台压制：完全拒绝写入的进程被识别为自保护", TestFullyBlockedDetailJudgement);
             test("后台压制：未被改动的进程与自身快照完全一致", () => TestSnapshotMatchJudgement(root));

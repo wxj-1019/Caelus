@@ -172,8 +172,13 @@ namespace CaelusApp.WpfHost
             };
             refreshTimer.Tick += delegate
             {
-                try { vm.Refresh(); } catch { }
-                try { policyVm.RefreshLocks(); } catch { }
+                // 缩到托盘后概览/策略轮询停摆：GPU 采样、PCI 探针不再后台空转，
+                // 恢复可见后下一拍即刷新；自动收起判断必须继续跑
+                if (IsVisible)
+                {
+                    try { vm.Refresh(); } catch { }
+                    try { policyVm.RefreshLocks(); } catch { }
+                }
                 try { UpdateAutoHide(); } catch { }
             };
             refreshTimer.Start();
@@ -196,6 +201,18 @@ namespace CaelusApp.WpfHost
         internal void NotifyLibraryChanged()
         {
             try { libraryVm.Refresh(); } catch { }
+        }
+
+        /// <summary>显卡页页级告警：NVIDIA 驱动项连续写入失败被引擎自动关闭时调用，
+        /// 同时回刷开关状态（此时 gameMode 属性已被引擎翻转）。</summary>
+        internal void ShowGraphicsFeedback(string text)
+        {
+            try
+            {
+                graphicsVm.ShowFeedback(text, "Warning");
+                graphicsVm.RefreshFromRuntime();
+            }
+            catch { }
         }
 
         protected override void OnClosing(System.ComponentModel.CancelEventArgs e)

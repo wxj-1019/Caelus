@@ -304,8 +304,11 @@ namespace CaelusApp
             var scenarioPump = new ScenarioEventPump();
             scenarioPump.Batch += delegate(ProcessChangeBatch b)
             {
-                devFocus.NotifyProcessChanges(b);
-                dailyCare.NotifyProcessChanges(b);
+                // 逐场景隔离：单场景异常不得连带丢另一场景的同一批次
+                try { devFocus.NotifyProcessChanges(b); }
+                catch (Exception ex) { Logger.LogFailure("开发专注批次处理失败", ex); }
+                try { dailyCare.NotifyProcessChanges(b); }
+                catch (Exception ex) { Logger.LogFailure("日常优化批次处理失败", ex); }
             };
             procNotify.CaptureStartIdentity = delegate(string name, int session)
             {

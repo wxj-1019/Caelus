@@ -43,7 +43,30 @@ namespace CaelusApp
             return deviceIdFolder.Substring(0, 8).ToUpperInvariant();
         }
 
+        private static readonly object scanLk = new object();
+        private static List<Candidate> scanCache;
+        private static long scanCacheUntilTicks;
+        private const long ScanCacheTtlTicks = 5L * TimeSpan.TicksPerSecond;
+
+        /// <summary>全量遍历 PCI 三层注册表树，数百毫秒级；环境页可用性探针、描述
+        /// 与托盘回刷会在同一时间窗内重复调用——5 秒 TTL 缓存挡住重复扫描。</summary>
         public static List<Candidate> Scan()
+        {
+            lock (scanLk)
+            {
+                if (scanCache != null && DateTime.UtcNow.Ticks < scanCacheUntilTicks)
+                    return new List<Candidate>(scanCache);
+            }
+            List<Candidate> found = ScanCore();
+            lock (scanLk)
+            {
+                scanCache = found;
+                scanCacheUntilTicks = DateTime.UtcNow.Ticks + ScanCacheTtlTicks;
+            }
+            return new List<Candidate>(found);
+        }
+
+        private static List<Candidate> ScanCore()
         {
             // 显卡的 HDMI/DP 音频是同卡另一 PCI function（Media 类），在线中断下是
             // 常见 DPC 尖峰来源；但 Media 类也含采集卡等杂设备——只纳入与已扫到的

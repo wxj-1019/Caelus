@@ -437,6 +437,10 @@ namespace CaelusApp
         /// <summary>游戏会话活性变化时触发（true=激活 false=解除）。供场景仲裁器接线，UI 轮询 IsActive 不受影响。</summary>
         public event Action<bool> ActiveChanged;
 
+        /// <summary>NVIDIA 驱动项连续写入失败被自动关闭时触发（参数为给用户看的开关名）。
+        /// 此前只进日志，显卡页开关还显示开启态，用户无从知晓熔断。</summary>
+        public event Action<string> NvSwitchAutoDisabled;
+
 #if CAELUS_SELFTEST
         internal void SimulateActiveForTest(bool value)
         {

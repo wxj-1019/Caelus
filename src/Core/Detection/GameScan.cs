@@ -78,11 +78,19 @@ namespace CaelusApp
         {
             var hits = new List<ScanHit>();
             var roots = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
-            CollectManifests(root, hits, roots, canceled);
+            // 大容量机械盘/整机软件盘上深扫耗时不可控：90 秒预算超时后按取消收尾，
+            // 保留已收集的清单来源与命中
+            long deadline = DateTime.UtcNow.Ticks + 90L * TimeSpan.TicksPerSecond;
+            Func<bool> budgetCanceled = delegate
+            {
+                if (canceled != null && canceled()) return true;
+                return DateTime.UtcNow.Ticks > deadline;
+            };
+            CollectManifests(root, hits, roots, budgetCanceled);
             if (progress != null) progress(0, hits.Count);
 
             int[] dirs = { 0 };
-            try { Visit(root, root, 8, hits, roots, dirs, canceled, progress); }
+            try { Visit(root, root, 8, hits, roots, dirs, budgetCanceled, progress); }
             catch { }
             return hits;
         }
@@ -275,7 +283,12 @@ namespace CaelusApp
             {
                 foreach (DriveInfo drive in DriveInfo.GetDrives())
                 {
-                    try { if (drive.IsReady) result.Add(drive.RootDirectory.FullName); }
+                    try
+                    {
+                        // 只扫固定磁盘：U 盘/移动硬盘/光驱/网络盘上的目录枚举可能卡数秒
+                        if (drive.DriveType != DriveType.Fixed) continue;
+                        if (drive.IsReady) result.Add(drive.RootDirectory.FullName);
+                    }
                     catch { }
                 }
             }

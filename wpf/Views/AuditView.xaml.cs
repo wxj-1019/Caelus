@@ -12,9 +12,6 @@ namespace CaelusApp.WpfHost.Views
 {
     public partial class AuditView : UserControl
     {
-        // 预览探针（--wpf-shot）注入代表性结果；生产永不置 true。
-        internal static bool InjectSampleData;
-
         private AuditViewModel vm;
         private DispatcherTimer progressTimer;
         private Stopwatch progressClock;

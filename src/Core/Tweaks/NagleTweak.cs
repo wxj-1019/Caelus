@@ -45,9 +45,14 @@ namespace CaelusApp
                     // 只写物理网卡接口：虚拟交换/VPN/残留 GUID 不再被无差别写入；
                     // 物理集合拿不到（WMI 失败）时退回旧的全量行为
                     HashSet<string> physical = DevicePowerTweak.PhysicalAdapterNetCfgIds();
+                    int skippedByFilter = 0;
                     foreach (string guid in guids)
                     {
-                        if (physical.Count > 0 && !physical.Contains(guid)) continue;
+                        if (physical.Count > 0 && !physical.Contains(guid))
+                        {
+                            skippedByFilter++;
+                            continue;
+                        }
                         bool ack = RegOf(guid, "TcpAckFrequency").Apply(1);
                         bool nodelay = RegOf(guid, "TCPNoDelay").Apply(1);
                         if (ack || nodelay)
@@ -62,7 +67,13 @@ namespace CaelusApp
                                     + (nodelay ? "" : "TCPNoDelay") + "），已记入清单可还原"
                                 : "TCP 低延迟：网卡 " + guid + " 两个值均写入失败，本轮跳过（未入清单）");
                     }
-                    if (touchedNow.Count == 0) return false;
+                    if (touchedNow.Count == 0)
+                    {
+                        if (skippedByFilter > 0)
+                            Logger.Log("TCP 低延迟：" + skippedByFilter
+                                + " 个接口被物理网卡过滤跳过且无可写入项，请反馈日志");
+                        return false;
+                    }
                     if (!Settings.SaveStr(ListKey, string.Join(";", touched.ToArray())))
                     {
                         foreach (string guid in touchedNow)

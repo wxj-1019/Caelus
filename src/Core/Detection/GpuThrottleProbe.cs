@@ -164,7 +164,30 @@ namespace CaelusApp
             return string.Join("、", parts.ToArray()) + "（这局共查 " + total + " 次）";
         }
 
+        private static readonly object instantLk = new object();
+        private static string instantCache;   // 空串表示"无文案"（null）
+        private static long instantCacheUntilTicks;
+
+        /// <summary>带 3 秒结果缓存：概览页按 2 秒节拍轮询，NV 路径每次读掩码尚廉价，
+        /// AMD 路径每次全量 COM 枚举+指标读——缓存把成本压平（null=无信号）。</summary>
         public static string InstantText()
+        {
+            long now = DateTime.UtcNow.Ticks;
+            lock (instantLk)
+            {
+                if (instantCache != null && now < instantCacheUntilTicks)
+                    return instantCache.Length == 0 ? null : instantCache;
+            }
+            string value = InstantTextCore();
+            lock (instantLk)
+            {
+                instantCache = value ?? "";
+                instantCacheUntilTicks = now + 3L * TimeSpan.TicksPerSecond;
+            }
+            return value;
+        }
+
+        private static string InstantTextCore()
         {
             uint mask;
             if (NvApi.Available && TryReadMask(out mask))

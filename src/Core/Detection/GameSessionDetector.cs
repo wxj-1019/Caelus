@@ -654,13 +654,42 @@ namespace CaelusApp
                     continue;
 
                 if (!IsLiveProcessCreation(
-                        identity.Pid, identity.Creation))
+                        identity.Pid, identity.Creation)
+                    && !IsLiveProtectedIdentity(identity))
                     continue;
                 identity.Foreground = foregroundClaim;
                 identity.Visible = visibleClaim;
                 identity.FullscreenLike =
                     foregroundClaim && foregroundFullscreen;
             }
+        }
+
+        /// <summary>句柄被剥离进程的免句柄存活校验（窗口证据门放行）：
+        /// 窗口证据本身（EnumWindows/GetWindowThreadProcessId）不需要进程句柄，
+        /// 但此前存活门第一步 OpenProcess 对受保护目标必失败，证据永远贴不上，
+        /// 选举在可见性门整链断掉——受保护游戏即使已入库也不激活会话。
+        /// 身份凭据：降级通道亲自确认过（缓存命中）直接放行；否则 Toolhelp32
+        /// 校验 PID 当前仍映射同名映像（防复用），创建时间取自捕获时的 WMI。</summary>
+        private static bool IsLiveProtectedIdentity(GameProcessSnapshot identity)
+        {
+            if (identity == null || string.IsNullOrEmpty(identity.Name))
+                return false;
+            lock (protectedSync)
+            {
+                ProtectedIdentity hit;
+                if (protectedCache.TryGetValue(identity.Pid, out hit)
+                    && hit.Snapshot != null
+                    && string.Equals(hit.Name, identity.Name,
+                        StringComparison.OrdinalIgnoreCase))
+                    return true;
+            }
+            string exeName;
+            int parent;
+            if (!Native.TryToolhelpProcessIdentity(
+                    identity.Pid, out exeName, out parent))
+                return false;
+            return string.Equals(ImageNameFromVerifiedPath(exeName),
+                identity.Name, StringComparison.OrdinalIgnoreCase);
         }
 
         private static bool IsLiveProcessCreation(

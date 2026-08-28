@@ -487,8 +487,11 @@ namespace CaelusApp.WpfHost
             scenarioPump = new ScenarioEventPump();
             scenarioPump.Batch += delegate(ProcessChangeBatch b)
             {
-                devFocus.NotifyProcessChanges(b);
-                dailyCare.NotifyProcessChanges(b);
+                // 逐场景隔离：单场景异常不得连带丢另一场景的同一批次
+                try { devFocus.NotifyProcessChanges(b); }
+                catch (Exception ex) { try { Logger.LogFailure("开发专注批次处理失败", ex); } catch { } }
+                try { dailyCare.NotifyProcessChanges(b); }
+                catch (Exception ex) { try { Logger.LogFailure("日常优化批次处理失败", ex); } catch { } }
             };
 
             gameMode.ActiveChanged += on => arbiter.ReportActivity(ScenarioKind.Game, on);
@@ -513,6 +516,9 @@ namespace CaelusApp.WpfHost
                 {
                     try { HealChain(); }
                     catch (Exception ex) { try { Logger.Log("自愈链异常：" + ex); } catch { } }
+                    // 后台预热 GPU 探针：nvml/adlx 的 LoadLibrary+初始化可达百余毫秒，
+                    // 不留在首次概览刷新的 UI 线程上
+                    try { GpuTempProbe.Read(); } catch { }
                     // 与 WinForms 的 lock(startGate) 同一模式：串行化"退出 vs 启动"，避免 Shutdown 与 tamer.Start 交错
                     lock (startGate)
                     {

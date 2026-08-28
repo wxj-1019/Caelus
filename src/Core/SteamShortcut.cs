@@ -79,7 +79,13 @@ namespace CaelusApp
                 string line = raw.Trim();
                 if (!line.StartsWith("URL=", StringComparison.OrdinalIgnoreCase)) continue;
                 string url = line.Substring(4).Trim();
-                if (!url.StartsWith(RunGamePrefix, StringComparison.OrdinalIgnoreCase)) return false;
+                if (!url.StartsWith(RunGamePrefix, StringComparison.OrdinalIgnoreCase))
+                {
+                    // 商店/启动器协议快捷方式（Epic/战网/shell:AppsFolder 等）常见误拖：
+                    // 记下准确原因，不再一律误指 Steam
+                    ProtocolHint(url);
+                    return false;
+                }
                 string digits = url.Substring(RunGamePrefix.Length);
                 int end = 0;
                 while (end < digits.Length && char.IsDigit(digits[end])) end++;
@@ -87,6 +93,19 @@ namespace CaelusApp
                 return long.TryParse(digits.Substring(0, end), out appId) && appId > 0;
             }
             return false;
+        }
+
+        /// <summary>识别常见非 Steam 协议并提示可改为拖游戏本体 EXE。</summary>
+        private static void ProtocolHint(string url)
+        {
+            string low = (url ?? "").ToLowerInvariant();
+            string which = low.StartsWith("com.epicgames.launcher:") ? "Epic"
+                : low.StartsWith("battlenet:") || low.StartsWith("battle.net:") ? "战网"
+                : low.StartsWith("shell:appsfolder") ? "微软商店"
+                : low.StartsWith("wegame:") ? "WeGame"
+                : null;
+            if (which != null)
+                Logger.Log("添加游戏：" + which + " 协议快捷方式暂不支持直接入库，请改为拖入游戏本体 EXE（或用扫描自动认出该平台游戏）");
         }
 
         private static string FindSteamRoot()

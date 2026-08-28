@@ -123,7 +123,8 @@ namespace CaelusApp.WpfHost.Views
         }
 
         /// <summary>中断亲和写入后可选热重启设备立即生效（否则要整机重启才应用）。
-        /// GPU 的 Disable/Enable 会闪屏、USB 控制器会瞬断外设——必须用户确认后才动。</summary>
+        /// GPU 的 Disable/Enable 会闪屏、USB 控制器会瞬断外设——必须用户确认后才动。
+        /// 重启期间复用 applyBusy 挡住其他开关，避免与其余 tweak 的设备枚举/写入交错。</summary>
         private void OfferDeviceRestart(string itemId)
         {
             bool isGpu = itemId == "irqaffinity";
@@ -133,6 +134,7 @@ namespace CaelusApp.WpfHost.Views
                     : "USB 控制器将禁用后重新启用：已插的外设会瞬断几秒。不重启则要等下次开机才生效。",
                 MsgSeverity.Warning, MsgButtons.OkCancel, null, "立即重启设备", MessageBoxResult.Cancel);
             if (r != MessageBoxResult.OK) return;
+            if (Interlocked.Exchange(ref applyBusy, 1) != 0) return;
             ThreadPool.QueueUserWorkItem(delegate
             {
                 bool anyOk = false;
@@ -151,11 +153,14 @@ namespace CaelusApp.WpfHost.Views
                 }
                 Dispatcher.BeginInvoke(new Action(delegate
                 {
+                    Interlocked.Exchange(ref applyBusy, 0);
                     EnvironmentViewModel vm = DataContext as EnvironmentViewModel;
                     if (vm == null) return;
                     if (ids.Count == 0) vm.ShowPageFeedback("未找到可重启的设备。", "Warning");
                     else if (anyOk) vm.ShowPageFeedback("设备已重启，中断亲和已生效。", "Success");
                     else vm.ShowPageFeedback("设备重启失败：" + (errors.Count > 0 ? errors[0] : "未知错误"), "Error");
+                    // 设备重启会重置驱动态：行内开关状态全部重读
+                    vm.RefreshStatus();
                     Motion.Emphasize(PageFeedbackBanner);
                 }));
             });

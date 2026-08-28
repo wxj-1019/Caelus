@@ -84,7 +84,9 @@ namespace CaelusApp
                     if (ChangeDisplaySettingsExW(dev, ref tgt, IntPtr.Zero, 0, IntPtr.Zero) == 0)
                     {
                         active = true;
-                        Logger.Log("刷新率守护：主屏 " + cur.dmDisplayFrequency + "Hz → " + best + "Hz（游戏退出还原）");
+                        // 多屏机器游戏跑在副屏时本守护无收益——先让用户知情
+                        Logger.Log("刷新率守护：主屏 " + cur.dmDisplayFrequency + "Hz → " + best
+                            + "Hz（游戏退出还原；仅作用于主屏，游戏在副屏时不生效）");
                         return true;
                     }
                     Settings.SaveStr(Slot, "");

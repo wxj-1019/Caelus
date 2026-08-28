@@ -80,6 +80,15 @@ namespace CaelusApp
             string today = DateTime.Now.ToString("yyyy-MM-dd");
             if (!IsDue(Settings.LoadStr("HealthLastRun", ""), IntervalDays(), DateTime.Now)) return;
 
+            // 到点判定后、开删前再让路一次：大缓存清理可持续数十秒，
+            // 恰在此间隙启动的游戏不能撞上着色器全量重编译
+            Func<bool> defer = ShouldDefer;
+            if (defer != null && defer())
+            {
+                Logger.Log("健康维护：游戏进行中，本轮顺延到下个周期");
+                return;   // 不写 HealthLastRun：下个 30 分钟周期继续尝试
+            }
+
             try
             {
                 long beforeBytes = ShaderCache.MeasureBytes();

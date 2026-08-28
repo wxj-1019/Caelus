@@ -136,9 +136,9 @@ namespace CaelusApp
             if (File.Exists(donePath)) return;
             if (Settings.Load(DoneKey, false))
             {
-                // 老用户迁移：按旧注册表标记短路，顺手清掉只剩旧标记的键树
-                MarkDone(donePath);
-                DeleteRegistryTree();
+                // 老用户迁移：按旧注册表标记短路；先删残留键树再落盘标记——
+                // 删除失败时不写标记，下次启动重试（与新路径同一语义，树删除幂等）
+                if (DeleteRegistryTree()) MarkDone(donePath);
                 return;
             }
 

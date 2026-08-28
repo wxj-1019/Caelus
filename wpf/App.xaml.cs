@@ -412,6 +412,15 @@ namespace CaelusApp.WpfHost
                     try { if (window != null) window.NotifyLibraryChanged(); } catch { }
                 }));
             };
+            host.GameMode.NvSwitchAutoDisabled += label => Dispatcher.BeginInvoke(new Action(delegate
+            {
+                try
+                {
+                    if (window != null)
+                        window.ShowGraphicsFeedback("「" + label + "」连续写入失败，已自动关闭该开关；重新打开即恢复尝试");
+                }
+                catch { }
+            }));
             host.DevFocus.SessionChanged += key => Dispatcher.BeginInvoke(new Action(delegate
             {
                 try { ShowBalloon(Lang.T(key), 5000); } catch { }
@@ -496,6 +505,11 @@ namespace CaelusApp.WpfHost
                     ThemeManager.Apply(this, tones[i], modes[i]);
                     MainWindow w = new MainWindow(null);
                     w.ApplyPersistedMode(modes[i]);
+                    // 探针必须摆脱用户持久化的尺寸/最大化态：否则 1196x768 渲染被裁剪、
+                    // 最大化窗口直接铺满主屏
+                    w.WindowState = WindowState.Normal;
+                    w.Width = 1196;
+                    w.Height = 768;
                     w.WindowStartupLocation = WindowStartupLocation.Manual;
                     w.Left = -20000;
                     w.Top = -20000;
@@ -542,6 +556,10 @@ namespace CaelusApp.WpfHost
                 Paths.Init();
                 ThemeManager.Apply(this, UiTone.Dark, AppMode.Standard);
                 MainWindow window = new MainWindow(new GameMode(Paths.Data, new SuppressionCore()));
+                // 探针摆脱用户持久化的尺寸/最大化态（同 --wpf-shot）
+                window.WindowState = WindowState.Normal;
+                window.Width = 1196;
+                window.Height = 768;
                 window.WindowStartupLocation = WindowStartupLocation.Manual;
                 window.Left = -20000;
                 window.Top = -20000;
@@ -673,11 +691,14 @@ namespace CaelusApp.WpfHost
                 Views.OverviewView.InjectSampleData = (page == "overview");
                 Views.LibraryView.InjectSampleData = (page == "library");
                 Views.PolicyView.InjectSampleData = (page == "policy");
-                Views.AuditView.InjectSampleData = (page == "audit");
                 Views.GraphicsView.InjectSampleData = (page == "graphics");
                 Views.ScenarioDetailView.InjectSampleData = (page == "dev" || page == "daily");
                 MainWindow window = new MainWindow(new GameMode(Paths.Data, new SuppressionCore()));
                 window.ApplyPersistedMode(AppMode.Standard);
+                // 探针摆脱用户持久化的尺寸/最大化态（同 --wpf-shot）
+                window.WindowState = WindowState.Normal;
+                window.Width = 1196;
+                window.Height = 768;
                 window.WindowStartupLocation = WindowStartupLocation.Manual;
                 window.Left = -20000;
                 window.Top = -20000;

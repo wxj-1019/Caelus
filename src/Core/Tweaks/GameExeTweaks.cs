@@ -179,11 +179,18 @@ namespace CaelusApp
                     if (curObj != null && cur == null) return;
                     if (string.Equals(ReadField(cur, "GpuPreference"), "2", StringComparison.Ordinal)) return;
                     if (!Backup("gpu", exePath, cur)) return;
-                    k.SetValue(exePath, MergeField(cur, "GpuPreference", "2"), RegistryValueKind.String);
+                    string val = MergeField(cur, "GpuPreference", "2");
+                    k.SetValue(exePath, val, RegistryValueKind.String);
+                    // 与 ReversibleReg 同一回读惯例：写后即读，读不到期望值不算成功
+                    if (!string.Equals(k.GetValue(exePath) as string, val, StringComparison.Ordinal))
+                    {
+                        Logger.Log("GPU 偏好写入后回读不符：" + exePath);
+                        return;
+                    }
                     Logger.Log("GPU 偏好 → 高性能：" + exePath + "（下次启动该游戏生效）");
                 }
             }
-            catch { }
+            catch (Exception ex) { Logger.LogFailure("GPU 偏好写入", ex); }
         }
 
         private static void SetFso(string exePath)
@@ -200,10 +207,15 @@ namespace CaelusApp
                     if (!Backup("fso", exePath, cur)) return;
                     string val = string.IsNullOrEmpty(cur) ? "~ " + FsoFlag : cur.TrimEnd() + " " + FsoFlag;
                     k.SetValue(exePath, val, RegistryValueKind.String);
+                    if (!string.Equals(k.GetValue(exePath) as string, val, StringComparison.Ordinal))
+                    {
+                        Logger.Log("全屏优化写入后回读不符：" + exePath);
+                        return;
+                    }
                     Logger.Log("关闭全屏优化：" + exePath + "（下次启动该游戏生效）");
                 }
             }
-            catch { }
+            catch (Exception ex) { Logger.LogFailure("全屏优化写入", ex); }
         }
 
         private static bool Backup(string kind, string exePath, string original)

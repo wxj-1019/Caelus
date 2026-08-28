@@ -34,6 +34,14 @@ namespace CaelusApp
         {
             try
             {
+                // HAGS 需要 Win10 1903+（build 18363，WDDM 2.7）与支持驱动的 GPU：
+                // 老系统上写 HwSchMode=2 会写入成功但永远不生效，属虚假承诺。
+                // 用 RtlGetVersion 版 OsBuild——Environment.OSVersion 无兼容清单时谎报 6.2
+                if (Native.OsBuild() < 18363)
+                {
+                    Logger.Log("GPU 硬件调度（HAGS）：当前系统版本过低（需 Win10 1903+），本机不支持");
+                    return false;
+                }
                 if (!Sch.Apply(2))
                 {
                     Logger.Log("GPU 硬件调度（HAGS）写入或回读失败，未标记为已开启");

@@ -311,6 +311,8 @@ namespace CaelusApp
             else { nvLowLatency = false; Settings.Save("NvLowLatency", false); label = "NVIDIA 低延迟"; }
             Logger.Log("「" + label + "」连续 " + EnvFuseAttempts
                 + " 次写入失败，已自动关闭该开关；重新打开即恢复尝试");
+            var handler = NvSwitchAutoDisabled;
+            if (handler != null) { try { handler(label); } catch { } }
         }
 
         internal static int ResolveFrlFps(string mode)

@@ -97,15 +97,21 @@ namespace CaelusApp
                     IntPtr[] gpus = AdlxApi.GetGpus();
                     if (gpus != null && gpus.Length > 0)
                     {
-                        double best = double.MinValue;
-                        foreach (IntPtr h in gpus)
+                        // 枚举返回的是 AddRef 过的驱动接口，必须逐个释放——本方法被
+                        // 概览页 5 秒一次长年轮询，泄漏会常驻累积
+                        try
                         {
-                            double usage, temp, power;
-                            int clock, vram;
-                            if (AdlxApi.TryReadMetrics(h, out usage, out clock, out temp, out power, out vram)
-                                && temp > best) best = temp;
+                            double best = double.MinValue;
+                            foreach (IntPtr h in gpus)
+                            {
+                                double usage, temp, power;
+                                int clock, vram;
+                                if (AdlxApi.TryReadMetrics(h, out usage, out clock, out temp, out power, out vram)
+                                    && temp > best) best = temp;
+                            }
+                            if (best > 0) return best;
                         }
-                        if (best > 0) return best;
+                        finally { AdlxApi.ReleaseAll(gpus); }
                     }
                 }
             }

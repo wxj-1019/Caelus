@@ -44,7 +44,13 @@ namespace CaelusApp
             try
             {
                 Func<bool> defer = ShouldDefer;
-                if (defer != null && defer()) return;   // 忙时本轮跳过，等下个 30 分钟周期
+                if (defer != null && defer())
+                {
+                    // 只在确实到点时记一笔：顺延本身每 30 分钟才可能发生一次，不刷屏
+                    if (IsDue(Settings.LoadStr("HealthLastRun", ""), IntervalDays(), DateTime.Now))
+                        Logger.Log("健康维护：游戏进行中，本轮顺延到下个周期");
+                    return;
+                }
                 RunIfDue();
             }
             catch (Exception ex) { Logger.LogFailure("健康维护调度异常", ex); }

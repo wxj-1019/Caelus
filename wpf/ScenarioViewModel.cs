@@ -257,6 +257,7 @@ namespace CaelusApp
             ModeText = ModePalette.DisplayName(mode);
             RefreshedText = source.LastProbeText;
             LoadDeviceSpecs();
+            UpdateGpuLive();
 
             if (gameMode != null)
             {
@@ -269,6 +270,35 @@ namespace CaelusApp
                 }
                 catch { }
             }
+        }
+
+        private string deviceGpuName;
+
+        /// <summary>概览页此前只有静态 GPU 型号，GpuTempProbe 在产品里无人轮询、
+        /// 温度采样形同虚设。这里按 2 秒状态节拍接通真实采样（读数节流在探针内）：
+        /// 有读数显示「型号 · N°C」，正在被压频时附加归因（温度墙/功耗墙等）。</summary>
+        private void UpdateGpuLive()
+        {
+            string temp = null;
+            try
+            {
+                double? c = GpuTempProbe.Read();
+                if (c.HasValue) temp = ((int)Math.Round(c.Value)).ToString();
+            }
+            catch { }
+            string throttle = null;
+            try
+            {
+                string t = GpuThrottleProbe.InstantText();
+                if (!string.IsNullOrEmpty(t) && t != "无限制") throttle = t;
+            }
+            catch { }
+
+            string next = deviceGpuName ?? "";
+            if (temp != null) next = (next.Length > 0 ? next + " · " : "") + temp + "°C";
+            if (throttle != null) next += "（" + throttle + "）";
+            if (next.Length == 0) next = "—";
+            if (next != GpuText) GpuText = next;
         }
 
         private static string IconKey(ScenarioKind kind)
@@ -285,7 +315,7 @@ namespace CaelusApp
                 if (specs != null && specs.Length >= 4)
                 {
                     CpuText = string.IsNullOrEmpty(specs[0]) ? "—" : specs[0];
-                    GpuText = string.IsNullOrEmpty(specs[1]) ? "—" : specs[1];
+                    deviceGpuName = string.IsNullOrEmpty(specs[1]) ? null : specs[1];
                     MemoryText = string.IsNullOrEmpty(specs[2]) ? "—" : specs[2];
                     HagsText = string.IsNullOrEmpty(specs[3]) ? "—" : specs[3];
                 }

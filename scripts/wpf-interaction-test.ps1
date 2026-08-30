@@ -20,13 +20,13 @@ function Record([string]$name, [bool]$ok, [string]$detail = "") {
     Write-Output $line
 }
 
-$exe = Join-Path $PSScriptRoot '..\wpf\bin\Release\CaelusWpf.exe'
+$exe = Join-Path $PSScriptRoot '..\Caelus.dev.exe'
 $proc = $null
 $root = $null
 
 # —— T1 启动 + 窗口出现 ——
 try {
-    $before = @(Get-Process CaelusWpf -ErrorAction SilentlyContinue | ForEach-Object { $_.Id })
+    $before = @(Get-Process 'Caelus.dev' -ErrorAction SilentlyContinue | ForEach-Object { $_.Id })
     $proc = Start-Process -FilePath $exe -PassThru
     $deadline = [DateTime]::UtcNow.AddMilliseconds($WaitReadyMs)
     do {
@@ -55,15 +55,15 @@ function Select-ByName([string]$name) {
     return $false
 }
 
-# —— T2 导航全部 11 页（验证每页回写后仍可加载渲染） ——
+# —— T2 导航全部 13 页（验证每页回写后仍可加载渲染；末页回到场景总览供 T3 找模式选择器） ——
 if ($null -ne $root) {
-    $navs = @("游戏库","优化策略","显卡","反作弊专项","系统环境","白名单","系统体检","日志","设置","关于","概览")
+    $navs = @("游戏库","优化策略","显卡","反作弊专项","系统环境","白名单","系统体检","日志","设置","关于","开发专注","日常优化","场景总览")
     $navOk = 0
     foreach ($n in $navs) {
         if (Select-ByName "导航：$n") { $navOk++; Start-Sleep -Milliseconds 120 }
         $root = [System.Windows.Automation.AutomationElement]::FromHandle($proc.MainWindowHandle)
     }
-    Record "T2 导航 11 页均可选中" ($navOk -eq 11) "选中 $navOk/11"
+    Record "T2 导航 13 页均可选中" ($navOk -eq 13) "选中 $navOk/13"
 }
 
 # —— T3 模式切换（巡航→竞技→自定义→巡航，验证 ModeChanged 订阅不崩） ——

@@ -289,8 +289,19 @@ namespace CaelusApp
                 lock (startGate)
                 {
                     if (exiting) return;
-                    tamer.Start();
-                    gameMode.Start();
+                    try { tamer.Start(); gameMode.Start(); }
+                    catch (Exception ex)
+                    {
+                        // 引擎启动失败必须明示（对齐 WPF 宿主）：否则界面一切如常
+                        // 而压制/检测已死，用户无从区分
+                        Logger.Log("运行时启动失败：" + ex);
+                        try
+                        {
+                            MessageBox.Show("后台压制与游戏检测未能启动，优化功能不会生效。\n详情见数据目录 Caelus.log（本次已记录崩溃日志）",
+                                App.DisplayName, MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                        }
+                        catch { }
+                    }
                 }
             });
             bootThread.IsBackground = true;

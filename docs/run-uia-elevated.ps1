@@ -1,14 +1,21 @@
-# 提权运行 WPF UIA 交互套件；输出写入指定文件，供非提权侧读取。
+﻿# 提权运行 WPF UIA 交互套件；输出写入指定文件，供非提权侧读取。
 $ErrorActionPreference = "Stop"
 $resultFile = "E:\project\Caelus\docs\uia-run-result.txt"
 $log = New-Object System.Collections.Generic.List[string]
 $log.Add("=== elevated UIA run @ " + (Get-Date -Format "yyyy-MM-dd HH:mm:ss") + " ===")
 
-# 先关闭可能存在的旧 CaelusWpf 实例，避免多实例干扰
-foreach ($proc in @(Get-Process CaelusWpf -ErrorAction SilentlyContinue))
+# 先优雅关闭可能存在的旧实例（全局退出事件走完整还原链），避免多实例干扰
+try { [System.Threading.EventWaitHandle]::OpenExisting('Global\Caelus_Exit').Set() } catch { }
+$deadline = [DateTime]::UtcNow.AddSeconds(12)
+while ([DateTime]::UtcNow -lt $deadline)
 {
-    try { $proc.CloseMainWindow() | Out-Null; Start-Sleep -Milliseconds 400; $proc.Refresh() } catch { }
-    if (-not $proc.HasExited) { try { Stop-Process -Id $proc.Id -Force -ErrorAction SilentlyContinue } catch { } }
+    $left = @(Get-Process Caelus.dev, Caelus -ErrorAction SilentlyContinue)
+    if ($left.Count -eq 0) { break }
+    Start-Sleep -Milliseconds 400
+}
+foreach ($proc in @(Get-Process Caelus.dev, Caelus -ErrorAction SilentlyContinue))
+{
+    try { Stop-Process -Id $proc.Id -Force -ErrorAction SilentlyContinue } catch { }
 }
 Start-Sleep -Milliseconds 800
 

@@ -44,7 +44,9 @@ namespace CaelusApp.WpfHost.Controls
             if (track != null)
             {
                 Pen trackPen = new Pen(track, thick);
-                trackPen.Freeze();
+                // 主题画刷带动画/绑定时 CanFreeze=false，无条件 Freeze 每帧抛
+                // InvalidOperationException 形成渲染风暴（crash.log 曾 279 连发）
+                if (trackPen.CanFreeze) trackPen.Freeze();
                 dc.DrawGeometry(null, trackPen, new EllipseGeometry(c, r, r));
             }
 
@@ -64,13 +66,13 @@ namespace CaelusApp.WpfHost.Controls
                     ctx.BeginFigure(sp, false, false);
                     ctx.ArcTo(ep, new Size(r, r), 0, largeArc, SweepDirection.Clockwise, true, false);
                 }
-                arc.Freeze();
+                if (arc.CanFreeze) arc.Freeze();
                 Pen arcPen = new Pen(Stroke, thick)
                 {
                     StartLineCap = PenLineCap.Round,
                     EndLineCap = PenLineCap.Round
                 };
-                arcPen.Freeze();
+                if (arcPen.CanFreeze) arcPen.Freeze();
                 dc.DrawGeometry(null, arcPen, arc);
             }
         }

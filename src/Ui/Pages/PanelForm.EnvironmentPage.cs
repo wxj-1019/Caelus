@@ -14,7 +14,36 @@ namespace CaelusApp
         private Toggle swNetThrottle, swMsi, swDevPower;
         private SettingCard cardVbs, cardNetThrottle, cardMsi;
         private int envBusy;
+        private int envApplyBusy;
         private static readonly object netQosSync = new object();
+
+        /// <summary>重型 tweak（MSI 全量扫描/亲和枚举/服务查询）在 UI 线程同步执行会冻结
+        /// 窗口数秒：统一后台应用，完成后回 UI 线程收尾（对齐 WPF 环境页的异步模式）。
+        /// busy 期间其他开关点击直接回弹，防并发写。</summary>
+        private void RunEnvApply(Toggle sw, Func<bool> apply, Action<bool> after)
+        {
+            if (Interlocked.Exchange(ref envApplyBusy, 1) != 0)
+            {
+                sw.SetSilently(!sw.Checked);
+                return;
+            }
+            sw.Enabled = false;
+            ThreadPool.QueueUserWorkItem(_ =>
+            {
+                bool ok = false;
+                try { ok = apply(); } catch { }
+                try
+                {
+                    BeginInvoke((MethodInvoker)(() =>
+                    {
+                        Interlocked.Exchange(ref envApplyBusy, 0);
+                        sw.Enabled = true;
+                        after(ok);
+                    }));
+                }
+                catch { Interlocked.Exchange(ref envApplyBusy, 0); }
+            });
+        }
 
         private void BuildEnvironmentPage()
         {
@@ -90,40 +119,54 @@ namespace CaelusApp
         private void OnNetThrottleToggle(object s, EventArgs e)
         {
             if (!RequireElevationFor(swNetThrottle, NetTweak.RepairedByCaelus)) return;
-            if (swNetThrottle.Checked) NetTweak.Repair(); else NetTweak.Restore();
-            swNetThrottle.SetSilently(NetTweak.RepairedByCaelus);
-            if (cardNetThrottle != null)
-                cardNetThrottle.Desc = Lang.T("set.netthrottle.n") + "\r\n" + NetTweak.Describe();
+            RunEnvApply(swNetThrottle,
+                () => swNetThrottle.Checked ? NetTweak.Repair() : NetTweak.Restore(),
+                ok =>
+                {
+                    swNetThrottle.SetSilently(NetTweak.RepairedByCaelus);
+                    if (cardNetThrottle != null)
+                        cardNetThrottle.Desc = Lang.T("set.netthrottle.n") + "\r\n" + NetTweak.Describe();
+                });
         }
 
         private void OnDevPowerToggle(object s, EventArgs e)
         {
             if (!RequireElevationFor(swDevPower, DevicePowerTweak.EnabledByCaelus)) return;
-            if (swDevPower.Checked) DevicePowerTweak.Enable(); else DevicePowerTweak.Restore();
-            swDevPower.SetSilently(DevicePowerTweak.EnabledByCaelus);
+            RunEnvApply(swDevPower,
+                () => swDevPower.Checked ? DevicePowerTweak.Enable() : DevicePowerTweak.Restore(),
+                ok => swDevPower.SetSilently(DevicePowerTweak.EnabledByCaelus));
         }
 
         private void OnMsiToggle(object s, EventArgs e)
         {
             if (!RequireElevationFor(swMsi, MsiModeTweak.EnabledByCaelus)) return;
-            bool ok = swMsi.Checked ? MsiModeTweak.Enable() : MsiModeTweak.Restore();
-            if (ok) MessageBox.Show(this, Lang.T("irqaffinity.reboot"), "Caelus", MessageBoxButtons.OK, MessageBoxIcon.Information);
-            swMsi.SetSilently(MsiModeTweak.EnabledByCaelus);
+            RunEnvApply(swMsi,
+                () => swMsi.Checked ? MsiModeTweak.Enable() : MsiModeTweak.Restore(),
+                ok =>
+                {
+                    if (ok) MessageBox.Show(this, Lang.T("irqaffinity.reboot"), "Caelus", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                    swMsi.SetSilently(MsiModeTweak.EnabledByCaelus);
+                });
         }
 
         private void OnGameModeGuardToggle(object s, EventArgs e)
         {
-            if (swGmGuard.Checked) GameModeGuard.Enable(); else GameModeGuard.Restore();
-            swGmGuard.SetSilently(GameModeGuard.EnabledByCaelus);
+            RunEnvApply(swGmGuard,
+                () => swGmGuard.Checked ? GameModeGuard.Enable() : GameModeGuard.Restore(),
+                ok => swGmGuard.SetSilently(GameModeGuard.EnabledByCaelus));
         }
 
         private void OnNagleToggle(object s, EventArgs e)
         {
             if (!RequireElevationFor(swNagle, NagleTweak.EnabledByCaelus)) return;
-            bool ok = swNagle.Checked ? NagleTweak.Enable() : NagleTweak.Restore();
-            if (ok && swNagle.Checked)
-                MessageBox.Show(this, Lang.T("nagle.applied"), "Caelus", MessageBoxButtons.OK, MessageBoxIcon.Information);
-            swNagle.SetSilently(NagleTweak.EnabledByCaelus);
+            RunEnvApply(swNagle,
+                () => swNagle.Checked ? NagleTweak.Enable() : NagleTweak.Restore(),
+                ok =>
+                {
+                    if (ok && swNagle.Checked)
+                        MessageBox.Show(this, Lang.T("nagle.applied"), "Caelus", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                    swNagle.SetSilently(NagleTweak.EnabledByCaelus);
+                });
         }
 
         private bool RequireElevationFor(Toggle sw, bool restoredState)
@@ -137,47 +180,71 @@ namespace CaelusApp
         private void OnHagsToggle(object s, EventArgs e)
         {
             if (!RequireElevationFor(swHags, HagsTweak.EnabledByCaelus || HagsTweak.CurrentlyOn())) return;
-            bool ok = swHags.Checked ? HagsTweak.Enable() : HagsTweak.Disable();
-            if (ok) MessageBox.Show(this, Lang.T("hags.reboot"), "Caelus", MessageBoxButtons.OK, MessageBoxIcon.Information);
-            swHags.SetSilently(HagsTweak.EnabledByCaelus || HagsTweak.CurrentlyOn());
+            RunEnvApply(swHags,
+                () => swHags.Checked ? HagsTweak.Enable() : HagsTweak.Disable(),
+                ok =>
+                {
+                    if (ok) MessageBox.Show(this, Lang.T("hags.reboot"), "Caelus", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                    swHags.SetSilently(HagsTweak.EnabledByCaelus || HagsTweak.CurrentlyOn());
+                });
         }
 
         private void OnMpoToggle(object s, EventArgs e)
         {
             if (!RequireElevationFor(swMpo, MpoTweak.DisabledByCaelus || MpoTweak.CurrentlyDisabled())) return;
-            bool ok = swMpo.Checked ? MpoTweak.Disable() : MpoTweak.Restore();
-            if (ok) MessageBox.Show(this, Lang.T("mpo.reboot"), "Caelus", MessageBoxButtons.OK, MessageBoxIcon.Information);
-            swMpo.SetSilently(MpoTweak.DisabledByCaelus || MpoTweak.CurrentlyDisabled());
+            RunEnvApply(swMpo,
+                () => swMpo.Checked ? MpoTweak.Disable() : MpoTweak.Restore(),
+                ok =>
+                {
+                    if (ok) MessageBox.Show(this, Lang.T("mpo.reboot"), "Caelus", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                    swMpo.SetSilently(MpoTweak.DisabledByCaelus || MpoTweak.CurrentlyDisabled());
+                });
         }
 
         private void OnIrqAffinityToggle(object s, EventArgs e)
         {
             if (!RequireElevationFor(swIrqAffinity, InterruptAffinityTweak.EnabledByCaelus)) return;
-            bool ok = swIrqAffinity.Checked ? InterruptAffinityTweak.Enable() : InterruptAffinityTweak.Disable();
-            if (ok) MessageBox.Show(this, Lang.T("irqaffinity.reboot"), "Caelus", MessageBoxButtons.OK, MessageBoxIcon.Information);
-            swIrqAffinity.SetSilently(InterruptAffinityTweak.EnabledByCaelus);
+            RunEnvApply(swIrqAffinity,
+                () => swIrqAffinity.Checked ? InterruptAffinityTweak.Enable() : InterruptAffinityTweak.Disable(),
+                ok =>
+                {
+                    if (ok) MessageBox.Show(this, Lang.T("irqaffinity.reboot"), "Caelus", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                    swIrqAffinity.SetSilently(InterruptAffinityTweak.EnabledByCaelus);
+                });
         }
 
         private void OnUsbAffinityToggle(object s, EventArgs e)
         {
             if (!RequireElevationFor(swUsbAffinity, UsbInterruptAffinityTweak.EnabledByCaelus)) return;
-            bool ok = swUsbAffinity.Checked ? UsbInterruptAffinityTweak.Enable() : UsbInterruptAffinityTweak.Disable();
-            if (ok) MessageBox.Show(this, Lang.T("irqaffinity.reboot"), "Caelus", MessageBoxButtons.OK, MessageBoxIcon.Information);
-            swUsbAffinity.SetSilently(UsbInterruptAffinityTweak.EnabledByCaelus);
+            RunEnvApply(swUsbAffinity,
+                () => swUsbAffinity.Checked ? UsbInterruptAffinityTweak.Enable() : UsbInterruptAffinityTweak.Disable(),
+                ok =>
+                {
+                    if (ok) MessageBox.Show(this, Lang.T("irqaffinity.reboot"), "Caelus", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                    swUsbAffinity.SetSilently(UsbInterruptAffinityTweak.EnabledByCaelus);
+                });
         }
 
         private void OnNetAffinityToggle(object s, EventArgs e)
         {
             if (!RequireElevationFor(swNetAffinity, NetworkAffinityTweak.EnabledByCaelus)) return;
-            bool ok;
-            lock (netQosSync)
-            {
-                ok = swNetAffinity.Checked
-                    ? NetworkAffinityTweak.Enable(gameMode.GetProfiles())
-                    : NetworkAffinityTweak.Disable();
-            }
-            if (ok) MessageBox.Show(this, Lang.T("netaffinity.reboot"), "Caelus", MessageBoxButtons.OK, MessageBoxIcon.Information);
-            swNetAffinity.SetSilently(NetworkAffinityTweak.EnabledByCaelus);
+            bool desired = swNetAffinity.Checked;
+            RunEnvApply(swNetAffinity,
+                () =>
+                {
+                    // QoS 策略创建与移除走同一把锁，防同名策略竞争
+                    lock (netQosSync)
+                    {
+                        return desired
+                            ? NetworkAffinityTweak.Enable(gameMode.GetProfiles())
+                            : NetworkAffinityTweak.Disable();
+                    }
+                },
+                ok =>
+                {
+                    if (ok) MessageBox.Show(this, Lang.T("netaffinity.reboot"), "Caelus", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                    swNetAffinity.SetSilently(NetworkAffinityTweak.EnabledByCaelus);
+                });
         }
 
         private void OnVbsToggle(object s, EventArgs e)
@@ -186,25 +253,27 @@ namespace CaelusApp
             {
                 if (!RequireElevationFor(swVbs, false)) return;
                 var r = MessageBox.Show(this, Lang.T("vbs.warn"), "Caelus", MessageBoxButtons.OKCancel, MessageBoxIcon.Warning);
-                if (r != DialogResult.OK || !VbsTweak.Disable())
+                if (r != DialogResult.OK) { swVbs.SetSilently(false); RefreshVbsState(); return; }
+                RunEnvApply(swVbs, () => VbsTweak.Disable(), ok =>
                 {
-                    swVbs.SetSilently(false); RefreshVbsState(); return;
-                }
-                RefreshVbsState();
-                MessageBox.Show(this, Lang.T("vbs.done"), "Caelus", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                    RefreshVbsState();
+                    if (ok) MessageBox.Show(this, Lang.T("vbs.done"), "Caelus", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                });
             }
             else
             {
                 if (!RequireElevationFor(swVbs, true)) return;
-                if (!VbsTweak.Restore())
+                RunEnvApply(swVbs, () => VbsTweak.Restore(), ok =>
                 {
-                    swVbs.SetSilently(VbsTweak.DisabledByCaelus);
                     RefreshVbsState();
-                    MessageBox.Show(this, Lang.T("vbs.restorefail"), "Caelus", MessageBoxButtons.OK, MessageBoxIcon.Warning);
-                    return;
-                }
-                RefreshVbsState();
-                MessageBox.Show(this, Lang.T("vbs.restored"), "Caelus", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                    if (!ok)
+                    {
+                        swVbs.SetSilently(VbsTweak.DisabledByCaelus);
+                        MessageBox.Show(this, Lang.T("vbs.restorefail"), "Caelus", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                        return;
+                    }
+                    MessageBox.Show(this, Lang.T("vbs.restored"), "Caelus", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                });
             }
         }
 

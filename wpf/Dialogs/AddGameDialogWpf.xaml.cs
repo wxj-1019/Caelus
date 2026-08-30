@@ -1,4 +1,4 @@
-// @author zenjiro 18967498922@163.com
+﻿// @author zenjiro 18967498922@163.com
 // 文件用途 WPF 添加游戏对话框：扫描+过滤+复选+浏览+深度扫描
 
 using System;
@@ -353,6 +353,9 @@ namespace CaelusApp.WpfHost.Dialogs
 
         private void OnBrowse(object sender, RoutedEventArgs e)
         {
+            // 浏览模式清空列表只放一条：递增版本号让在途扫描的完成回调失效，
+            // 否则扫描结果会把刚清空的列表重新灌满、与选中行混列
+            scanVersion++;
             var dlg = new Microsoft.Win32.OpenFileDialog();
             dlg.Title = Lang.T("ofd.game");
             dlg.Filter = Lang.T("ofd.filter");

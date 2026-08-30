@@ -225,17 +225,24 @@ namespace CaelusApp
                     lock (sync) boosted = gameBoost.ContainsKey(pid);
                     if (boosted) continue;
 
-                    bool white = whitelist.Protected.Contains(pid);
-                    if (white || gamePids.Contains(pid) || gameDescendants.Contains(pid))
-                    {
-                        if (core.Release(pid, SuppressReason.Background)) ReportUntrack(pid);
-                        continue;
-                    }
-
                     string ipath = processInfo != null ? processInfo.Path : null;
                     long creation = processInfo != null ? processInfo.Creation : 0;
                     long cpu = processInfo != null ? processInfo.Cpu : 0;
                     ulong io = processInfo != null ? processInfo.Io : 0;
+
+                    bool white = whitelist.Protected.Contains(pid);
+                    if (white || gamePids.Contains(pid) || gameDescendants.Contains(pid))
+                    {
+                        // 白名单/游戏家族豁免进程的解除压制带创建时间校验（与
+                        // Whitelist.cs 的消费点一致）：快照枚举与释放之间 PID 被复用时
+                        // 不得误清新进程的压制；降级快照无创建时间时保留按 PID 释放
+                        bool released = creation > 0
+                            ? core.ReleaseIfCreation(pid, SuppressReason.Background, creation)
+                            : core.Release(pid, SuppressReason.Background);
+                        if (released) ReportUntrack(pid);
+                        continue;
+                    }
+
                     if (processInfo == null)
                     {
                         IntPtr hq = Native.OpenProcess(Native.PROCESS_QUERY_LIMITED_INFORMATION, false, pid);

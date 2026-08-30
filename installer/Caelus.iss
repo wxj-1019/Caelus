@@ -1,4 +1,4 @@
-; Caelus v1.9.0 Inno Setup 安装脚本
+; Caelus v1.9.1 Inno Setup 安装脚本
 ; 使用方法：安装 Inno Setup 6（https://jrsoftware.org/isinfo.php），然后用 ISCC.exe 编译此脚本
 
 [Setup]

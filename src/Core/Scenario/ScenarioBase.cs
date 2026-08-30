@@ -142,13 +142,30 @@ namespace CaelusApp
                     Native.TrySetIoPriority(h, origIo >= 0 ? origIo : 2);
                     return;
                 }
-                // 崩溃自愈：快照持久化到 CrashGuard 日志，Caelus 崩溃后下次启动自动还原
-                try
+                // 崩溃自愈：快照持久化到 CrashGuard，Caelus 崩溃后下次启动自动还原。
+                // page/gpu 未知必须传 -1（自愈侧对负值跳过/回落默认）——传 0 会让自愈
+                // 把从未动过页面优先级的进程写成 very-low、GPU 调度压到 Low；亲和采真值。
+                // 持久化失败视为安全边界：当场回滚本次提优（与 GameMode 通道同一语义），
+                // 否则进程停在 HIGH+IO3 且无任何自愈凭据
+                if (creation > 0 && !string.IsNullOrEmpty(name))
                 {
-                    if (creation > 0 && !string.IsNullOrEmpty(name))
-                        CrashGuard.MarkBoostProcess(pid, creation, name, orig, 0, origIo, 0, 0, null);
+                    int opg = Native.QueryPagePriority(h);
+                    int gpuOld;
+                    if (Native.D3DKMTGetProcessSchedulingPriorityClass(h, out gpuOld) != 0) gpuOld = -1;
+                    bool marked;
+                    try
+                    {
+                        marked = CrashGuard.MarkBoostProcess(pid, creation, name, orig,
+                            Native.QueryAffinity(h), origIo, opg, gpuOld, null);
+                    }
+                    catch { marked = false; }
+                    if (!marked)
+                    {
+                        Native.SetPriorityClass(h, orig);
+                        Native.TrySetIoPriority(h, origIo >= 0 ? origIo : 2);
+                        return;
+                    }
                 }
-                catch { }
             }
             catch { }
             finally { Native.CloseHandle(h); }

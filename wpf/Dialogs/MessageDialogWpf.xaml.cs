@@ -204,7 +204,11 @@ namespace CaelusApp.WpfHost.Dialogs
                     : (buttonSet == MsgButtons.OkCancel ? MessageBoxButton.OKCancel : MessageBoxButton.YesNo);
                 MessageBoxImage img = severity == MsgSeverity.Danger ? MessageBoxImage.Error
                     : (severity == MsgSeverity.Warning ? MessageBoxImage.Warning : MessageBoxImage.Information);
-                return MessageBox.Show(owner, title + "\r\n\r\n" + body, "Caelus", native, img);
+                // 主题路径的默认焦点在「否」（危险确认回车=否）：降级路径用
+                // defaultResult=No 保持同一语义，避免回车直接确认危险操作
+                MessageBoxResult defResult = native == MessageBoxButton.YesNo
+                    ? MessageBoxResult.No : MessageBoxResult.OK;
+                return MessageBox.Show(owner, title + "\r\n\r\n" + body, "Caelus", native, img, defResult);
             }
         }
 

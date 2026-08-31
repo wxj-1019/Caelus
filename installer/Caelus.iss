@@ -1,10 +1,10 @@
-; Caelus v1.9.1 Inno Setup 安装脚本
+; Caelus v1.9.2 Inno Setup 安装脚本
 ; 使用方法：安装 Inno Setup 6（https://jrsoftware.org/isinfo.php），然后用 ISCC.exe 编译此脚本
 
 [Setup]
 AppId={{A7B8C9D0-E1F2-4A5B-8C9D-0E1F2A3B4C5D}
 AppName=Caelus
-AppVersion=1.9.1
+AppVersion=1.9.2
 AppPublisher=zenjiro
 AppPublisherURL=https://github.com/wxj-1019/Caelus
 AppCopyright=Copyright 2026 zenjiro
@@ -12,7 +12,7 @@ DefaultDirName={autopf}\Caelus
 DefaultGroupName=Caelus
 DisableProgramGroupPage=yes
 OutputDir=..\release
-OutputBaseFilename=Caelus-1.9.1-Setup
+OutputBaseFilename=Caelus-1.9.2-Setup
 Compression=lzma2/ultra64
 SolidCompression=yes
 ; 安装需要管理员权限（Caelus 需要管理员权限运行）

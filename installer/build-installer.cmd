@@ -30,20 +30,20 @@ echo.
 
 rem [3/4] create portable package
 echo [3/4] creating portable package...
-mkdir "release\Caelus-1.9.1-portable"
-copy /y Caelus.exe "release\Caelus-1.9.1-portable\" >nul
-copy /y Caelus.ico "release\Caelus-1.9.1-portable\" >nul
-copy /y LICENSE "release\Caelus-1.9.1-portable\" >nul
-copy /y README.md "release\Caelus-1.9.1-portable\" >nul
-echo portable > "release\Caelus-1.9.1-portable\Caelus.portable"
+mkdir "release\Caelus-1.9.2-portable"
+copy /y Caelus.exe "release\Caelus-1.9.2-portable\" >nul
+copy /y Caelus.ico "release\Caelus-1.9.2-portable\" >nul
+copy /y LICENSE "release\Caelus-1.9.2-portable\" >nul
+copy /y README.md "release\Caelus-1.9.2-portable\" >nul
+echo portable > "release\Caelus-1.9.2-portable\Caelus.portable"
 
 rem create portable zip using PowerShell
 echo [3/4] packaging portable ZIP...
-powershell -NoProfile -Command "Compress-Archive -Path 'release\Caelus-1.9.1-portable\*' -DestinationPath 'release\Caelus-1.9.1-portable.zip' -Force"
+powershell -NoProfile -Command "Compress-Archive -Path 'release\Caelus-1.9.2-portable\*' -DestinationPath 'release\Caelus-1.9.2-portable.zip' -Force"
 if errorlevel 1 (
     echo Warning: PowerShell Compress-Archive failed, portable folder is still available
 ) else (
-    echo Portable ZIP created: release\Caelus-1.9.1-portable.zip
+    echo Portable ZIP created: release\Caelus-1.9.2-portable.zip
 )
 echo.
 
@@ -60,7 +60,7 @@ if defined ISCC (
     if errorlevel 1 (
         echo Installer build failed!
     ) else (
-        echo Installer created: release\Caelus-1.9.1-Setup.exe
+        echo Installer created: release\Caelus-1.9.2-Setup.exe
     )
 ) else (
     echo Inno Setup not found. Skipping installer build.

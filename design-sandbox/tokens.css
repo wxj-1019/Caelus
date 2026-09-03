@@ -31,6 +31,7 @@
   --font-size-mono: 12px;
   --font-size-section: 24px;
   --font-size-hero: 40px;
+  --font-size-showcase: 36px;   /* 沙盒先行：夜空烟花 Hero 展示字号（待回写 Tokens.xaml） */
   --font-size-metric: 24px;
 
   /* ---- 间距（Tokens.xaml） ---- */
@@ -83,6 +84,14 @@
   --track: #FFFFFF1F;
 
   --mode-accent: var(--mode-accent-on-dark);
+
+  /* ---- 夜空烟花（2026-08-31 强化）---- */
+  /* Hero 渐变标题（双色 Stop；XAML 侧是 LinearGradientBrush） */
+  --hero-title-from: #F7F1EA;      /* dark: 奶油白 */
+  --hero-title-to: #C8B0FA;        /* dark: 薰衣草紫 */
+  /* 场景卡图标着色：游戏=模式主色、开发=绿、日常=蜜桃橙 */
+  --scenario-dev: var(--success);
+  --scenario-daily: #FFA07A;
 }
 
 /* ==========================================================================
@@ -120,6 +129,12 @@
   --track: #00000010;
 
   --mode-accent: var(--mode-accent-on-light);
+
+  /* ---- 夜空烟花（浅色）---- */
+  --hero-title-from: #2B1F1A;      /* light: 暖可可 */
+  --hero-title-to: #6D5CE0;        /* light: 深薰衣草 */
+  --scenario-dev: var(--success);
+  --scenario-daily: #B84518;
 }
 
 /* ==========================================================================

@@ -122,9 +122,12 @@
           <span class="text-tertiary" style="font-size: 11px; margin-left: 20px;">仅供界面预览</span>
         </div>
 
-        <!-- Hero 卡：CaelusCore + 结论（GlassCard 渐变描边 + 角部光晕） -->
+        <!-- Hero 卡：CaelusCore + 结论（GlassCard 渐变描边 + 夜空烟花双光晕） -->
         <div class="glass-card hero-card rise-in rise-in-3" style="padding: 20px; margin-bottom: 20px;">
-          <div class="hero-glow"></div>
+          <!-- 夜空烟花：右上模式主色光晕（可见半径约 150px，溢出由 .hero-card overflow:hidden 裁切） -->
+          <div aria-hidden="true" style="position: absolute; right: -150px; top: -150px; width: 300px; height: 300px; border-radius: 50%; background: radial-gradient(circle, color-mix(in srgb, var(--mode-accent) 50%, transparent) 0%, color-mix(in srgb, var(--mode-accent) 13%, transparent) 55%, transparent 72%); pointer-events: none;"></div>
+          <!-- 左下补光：次强调色，可见半径约 120px、透明度约 40% -->
+          <div aria-hidden="true" style="position: absolute; left: -120px; bottom: -120px; width: 240px; height: 240px; border-radius: 50%; background: radial-gradient(circle, color-mix(in srgb, var(--accent-secondary) 40%, transparent) 0%, transparent 68%); pointer-events: none;"></div>
           <div style="display: grid; grid-template-columns: 148px 24px 1fr; position: relative;">
             <div style="display: flex; flex-direction: column; align-items: center;">
               <span class="caelus-core">
@@ -157,7 +160,8 @@
                   <strong class="text-accent" style="font-size: 11px;" data-mode-text>巡航</strong>
                 </span>
               </div>
-              <p class="hero-title" style="font-size: 24px; font-weight: 600; margin: 0;">系统状态良好，可进入游戏</p>
+              <!-- 夜空烟花：超大渐变标题（替换原 24px/600 结论标题；内联覆盖 sandbox.css 的 accent 渐变） -->
+              <p class="hero-title" style="font-size: var(--font-size-showcase); font-weight: 800; margin: 0; background: linear-gradient(120deg, var(--hero-title-from) 30%, var(--hero-title-to)); -webkit-background-clip: text; background-clip: text; color: transparent;">系统状态良好，可进入游戏</p>
               <p class="text-secondary" style="font-size: var(--font-size-caption); margin: 6px 0 0; max-width: 620px;">
                 后台压制已就绪，显卡策略为均衡档。此结论来自样例数据源，仅用于检查排版、换行与长文本表现。
               </p>
@@ -166,6 +170,36 @@
                 <button class="btn btn-ghost">查看诊断详情</button>
               </div>
             </div>
+          </div>
+        </div>
+
+        <!-- 场景卡：游戏 / 开发专注 / 日常优化（夜空烟花：图标按场景着色） -->
+        <div style="margin-bottom: 10px;" class="rise-in rise-in-4">
+          <p class="section-title">场景入口</p>
+          <p class="section-subtitle">三类使用场景的快捷入口；图标着色：游戏跟随模式主色，开发为绿，日常为蜜桃橙。</p>
+        </div>
+
+        <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-bottom: 20px;" class="rise-in rise-in-4">
+          <div class="metric-panel card-interactive">
+            <span aria-hidden="true" style="display: inline-flex; align-items: center; justify-content: center; width: 36px; height: 36px; border-radius: var(--radius-sm); background: color-mix(in srgb, var(--accent-primary) 20%, transparent); color: var(--accent-primary);">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="7" width="20" height="11" rx="5.5"/><path d="M7 11v3 M5.5 12.5h3 M15.5 11.5h0.01 M18 13.5h0.01"/></svg>
+            </span>
+            <p class="section-title" style="margin: 10px 0 0;">游戏</p>
+            <p class="section-subtitle">进入游戏前一键压制后台。</p>
+          </div>
+          <div class="metric-panel card-interactive">
+            <span aria-hidden="true" style="display: inline-flex; align-items: center; justify-content: center; width: 36px; height: 36px; border-radius: var(--radius-sm); background: color-mix(in srgb, var(--scenario-dev) 20%, transparent); color: var(--scenario-dev);">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 7l-5 5 5 5 M16 7l5 5-5 5"/></svg>
+            </span>
+            <p class="section-title" style="margin: 10px 0 0;">开发专注</p>
+            <p class="section-subtitle">静音通知，保持编译火力。</p>
+          </div>
+          <div class="metric-panel card-interactive">
+            <span aria-hidden="true" style="display: inline-flex; align-items: center; justify-content: center; width: 36px; height: 36px; border-radius: var(--radius-sm); background: color-mix(in srgb, var(--scenario-daily) 20%, transparent); color: var(--scenario-daily);">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><path d="M12 3l1.8 5.2L19 10l-5.2 1.8L12 17l-1.8-5.2L5 10l5.2-1.8z"/></svg>
+            </span>
+            <p class="section-title" style="margin: 10px 0 0;">日常优化</p>
+            <p class="section-subtitle">轻量清理，保持日常流畅。</p>
           </div>
         </div>
 

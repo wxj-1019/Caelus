@@ -24,11 +24,11 @@
   <!-- ===================== 排版 ===================== -->
   <section class="showcase-section">
     <h2>排版</h2>
-    <p class="demo-note">Tokens.xaml 字号阶梯 · DisplayNumber / MetricNumber 使用 tabular-nums</p>
+    <p class="demo-note">字号阶梯 → wpf/Themes/Tokens.xaml · DisplayNumber / MetricNumber 使用 tabular-nums</p>
     <div class="card demo-col">
-      <p class="display-number">40 <span class="xaml-key">FontSizeHero</span></p>
+      <p class="display-number">32 <span class="xaml-key">FontSizeHero</span></p>
       <p class="metric-number">24 <span class="xaml-key">FontSizeMetric</span></p>
-      <p class="page-header" style="font-size: var(--font-size-section);">页面标题 24 <span class="xaml-key">PageHeader</span></p>
+      <p class="page-header" style="font-size: var(--font-size-section);">页面标题 22 <span class="xaml-key">PageHeader</span></p>
       <p style="font-size: var(--font-size-title); font-weight: 600; margin: 0;">视图标题 18 <span class="xaml-key">FontSizeTitle</span></p>
       <p style="font-size: var(--font-size-body); margin: 0;">正文 14 <span class="xaml-key">FontSizeBody</span></p>
       <p style="font-size: var(--font-size-caption); margin: 0;">说明 12 <span class="xaml-key">FontSizeCaption</span></p>
@@ -40,21 +40,36 @@
   <!-- ===================== 按钮 ===================== -->
   <section class="showcase-section">
     <h2>按钮</h2>
-    <p class="demo-note">悬停 / 按压 / 禁用三态 · 按压带 scale(.97) 下沉</p>
-    <div class="card demo-row">
-      <button class="btn btn-primary">主要操作 <span class="xaml-key">PrimaryButton</span></button>
-      <button class="btn btn-ghost">次要操作 <span class="xaml-key">GhostButton</span></button>
-      <button class="btn btn-danger">危险操作 <span class="xaml-key">DangerButton</span></button>
-      <button class="btn btn-primary" disabled>禁用</button>
-      <button class="btn btn-ghost" disabled>禁用</button>
+    <p class="demo-note">PrimaryButton / GhostButton / DangerButton / WindowButton → wpf/Themes/Styles.xaml ·
+      悬停 / 按压 / 禁用三态 · 按压带 scale(.97) 下沉 · 禁用 opacity .4</p>
+    <div class="card demo-col">
+      <div class="demo-row">
+        <button class="btn btn-primary">主要操作 <span class="xaml-key">PrimaryButton</span></button>
+        <button class="btn btn-ghost">次要操作 <span class="xaml-key">GhostButton</span></button>
+        <button class="btn btn-danger">危险操作 <span class="xaml-key">DangerButton</span></button>
+        <button class="btn btn-primary" disabled>禁用</button>
+        <button class="btn btn-ghost" disabled>禁用</button>
+        <button class="btn btn-danger" disabled>禁用</button>
+      </div>
+      <div class="demo-row">
+        <span class="card-label">窗口控制（36px 标题栏内）</span>
+        <span style="display: inline-flex; background: var(--surface); border-bottom: 1px solid var(--border-subtle);">
+          <button class="win-btn" title="最小化">−</button>
+          <button class="win-btn" title="最大化">□</button>
+          <button class="win-btn win-btn-close" title="关闭">×</button>
+        </span>
+        <span class="xaml-key">WindowButton / CloseWindowButton</span>
+        <span class="text-tertiary" style="font-size: 10px;">关闭键悬停 = #C42B1C（Win11 规范红）</span>
+      </div>
     </div>
   </section>
 
   <!-- ===================== 徽章与状态 ===================== -->
   <section class="showcase-section">
     <h2>徽章与状态</h2>
-    <p class="demo-note">StatusBadge = accent-soft 底 + accent-edge 描边 · StatusBanner 为页面级提示条</p>
-    <div class="demo-col">
+    <p class="demo-note">StatusBadge = surface-1 不透明小底 + accent-edge 描边（夜空烟花光晕下的可读性兜底）·
+      语义变体 Soft/Edge 色 → wpf/Themes/Colors.*.xaml · 其余键 → wpf/Themes/Styles.xaml</p>
+    <div class="demo-col" style="align-items: stretch;">
       <div class="demo-row">
         <span class="status-badge">
           <span style="width: 7px; height: 7px; border-radius: 50%; background: var(--accent-primary);"></span>
@@ -62,9 +77,40 @@
           <span class="text-secondary">样例数据</span>
         </span>
         <span class="status-badge"><span class="text-tertiary">样例模式</span><strong class="text-accent">巡航</strong></span>
+        <span class="xaml-key">StatusBadge</span>
       </div>
-      <div class="status-banner" style="width: 100%;">
-        <span class="text-secondary" style="font-size: 11px;">StatusBanner：用于设置页的提示条，Surface1 + RadiusSm。</span>
+      <div class="demo-row">
+        <span class="status-badge is-neutral"><strong class="text-secondary">待机</strong><span class="text-tertiary">Neutral</span></span>
+        <span class="status-badge is-info"><strong style="color: var(--info);">提示</strong><span class="text-tertiary">Info</span></span>
+        <span class="status-badge is-success"><strong style="color: var(--success);">已就绪</strong><span class="text-tertiary">Success</span></span>
+        <span class="status-badge is-warning"><strong style="color: var(--warning);">需注意</strong><span class="text-tertiary">Warning</span></span>
+        <span class="status-badge is-error"><strong style="color: var(--danger);">已阻断</strong><span class="text-tertiary">Error</span></span>
+        <span class="xaml-key">Neutral / Info / Success / Warning / Error StatusBadge</span>
+      </div>
+      <div class="demo-row">
+        <span class="game-avatar">LOL</span>
+        <span class="xaml-key">GameAvatar</span>
+        <span class="status-chip"><span class="dot"></span>未运行</span>
+        <span class="status-chip is-running"><span class="dot"></span>运行中</span>
+        <span class="xaml-key">StatusChip</span>
+        <span class="warn-tag">需注意</span>
+        <span class="xaml-key">WarnTag</span>
+        <span class="seg-value-chip">均衡</span>
+        <span class="xaml-key">SegValueChip</span>
+        <span class="empty-chip">未绑定</span>
+        <span class="xaml-key">EmptyChip</span>
+      </div>
+      <div class="demo-col" style="align-items: stretch; gap: 8px;">
+        <div class="status-banner"><span class="text-secondary" style="font-size: 11px;">StatusBanner：默认 Surface1 底 + 发丝线描边，用于设置页提示条。</span></div>
+        <div class="status-banner is-info"><span style="font-size: 11px; color: var(--info);">InfoStatusBanner：信息提示（InfoSoft 底 + InfoEdge 描边）。</span></div>
+        <div class="status-banner is-success"><span style="font-size: 11px; color: var(--success);">SuccessStatusBanner：操作成功反馈。</span></div>
+        <div class="status-banner is-warning"><span style="font-size: 11px; color: var(--warning);">WarningStatusBanner：需要用户注意的后果提示。</span></div>
+        <div class="status-banner is-error"><span style="font-size: 11px; color: var(--danger);">ErrorStatusBanner：操作失败或被阻断。</span></div>
+      </div>
+      <div class="status-banner" style="display: flex; align-items: center; gap: 8px;">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="var(--info)" stroke-width="2" stroke-linecap="round" style="flex: none;"><circle cx="12" cy="12" r="9"/><path d="M12 11v5 M12 8h0.01"/></svg>
+        <span class="text-secondary" style="font-size: 11px;">FeedbackBanner：页面内反馈横幅，FeedbackKind 驱动 Info/Success/Warning/Error 四态与图标，空文案自动折叠。</span>
+        <span class="xaml-key" style="margin-left: auto;">FeedbackBanner</span>
       </div>
     </div>
   </section>
@@ -72,7 +118,8 @@
   <!-- ===================== 卡片 ===================== -->
   <section class="showcase-section">
     <h2>卡片</h2>
-    <p class="demo-note">Surface0 半透明叠在 Aurora 光晕上 · 卡顶高光线 · GlassCard 渐变描边</p>
+    <p class="demo-note">CardBorder / HeroCardBorder / GlassCard / HeroGlassCard / SettingsGroup / SettingsRow →
+      wpf/Themes/Styles.xaml · Surface0 底叠在 Aurora 光晕上 · 卡顶高光线 · HeroGlassCard 与 GlassCard 同构、仅留白更大</p>
     <div class="demo-grid-3">
       <div class="card">
         <p class="section-title">标准卡片</p>
@@ -103,10 +150,30 @@
     </div>
   </section>
 
+  <!-- ===================== 空态与拖放区 ===================== -->
+  <section class="showcase-section">
+    <h2>空态与拖放区</h2>
+    <p class="demo-note">EmptyState / DropZoneEmpty → wpf/Themes/Styles.xaml · 虚线引导 + 呼吸图标邀请操作</p>
+    <div class="demo-grid-2" style="align-items: stretch;">
+      <div class="empty-state" style="display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 6px; text-align: center; padding: 26px;">
+        <svg class="empty-hero-icon" width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="var(--text-tertiary)" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7l8-4 8 4-8 4-8-4z M4 7v10l8 4 8-4V7"/></svg>
+        <p class="section-title" style="margin-top: 4px;">还没有游戏</p>
+        <p class="section-subtitle">添加游戏后，Caelus 会为它生成环境档案。</p>
+        <button class="btn btn-primary" style="margin-top: 8px;">添加游戏</button>
+      </div>
+      <div class="card drop-zone-empty" style="min-height: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 6px; text-align: center;">
+        <svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="var(--text-tertiary)" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M12 16V4 M7 9l5-5 5 5 M4 20h16"/></svg>
+        <p class="section-title" style="margin-top: 4px;">拖放游戏目录到此处</p>
+        <p class="section-subtitle">或点击「添加游戏」手动选择路径。</p>
+      </div>
+    </div>
+  </section>
+
   <!-- ===================== 分段控件 ===================== -->
   <section class="showcase-section">
     <h2>分段控件</h2>
-    <p class="demo-note">SegmentedControl：滑动指示器（accent-soft）+ 选中项 accent 文字加粗 · 点击可切换</p>
+    <p class="demo-note">SegmentItem / SegmentHost → wpf/Controls/SegmentedControl.xaml ·
+      滑动指示器（accent-soft）+ 选中项 accent 文字加粗 · 悬停微降不透明度 · 点击可切换</p>
     <div class="card demo-row">
       <div class="segment-host">
         <div class="segment-indicator"></div>
@@ -126,7 +193,8 @@
   <!-- ===================== 开关 ===================== -->
   <section class="showcase-section">
     <h2>开关</h2>
-    <p class="demo-note">PolicyToggle 38×22 · 选中轨道 = mode-accent · 滑块 16px 平移</p>
+    <p class="demo-note">PolicyToggle → wpf/Themes/Styles.xaml · 38×22 · 选中轨道 = mode-accent ·
+      滑块 16px 平移 · 禁用 opacity .4</p>
     <div class="card demo-row">
       <input type="checkbox" class="toggle" checked>
       <input type="checkbox" class="toggle">
@@ -138,17 +206,82 @@
   <!-- ===================== 输入框 ===================== -->
   <section class="showcase-section">
     <h2>输入框</h2>
-    <p class="demo-note">InputBox · Surface1 底 + border-strong 描边 · 选区 accent-soft</p>
+    <p class="demo-note">InputBox → wpf/Themes/Styles.xaml · Surface1 底 + border-strong 描边 ·
+      聚焦描边 accent-edge · 禁用 opacity .5</p>
     <div class="card demo-row">
       <input class="input" type="text" placeholder="输入游戏路径…" style="width: 260px;">
       <input class="input" type="text" value="C:\Games\League of Legends" style="width: 260px;">
+      <input class="input" type="text" value="禁用态" disabled style="width: 160px;">
+    </div>
+  </section>
+
+  <!-- ===================== 列表项 ===================== -->
+  <section class="showcase-section">
+    <h2>列表项</h2>
+    <p class="demo-note">ListItem → wpf/Themes/Styles.xaml · 悬停描边提亮 border-strong ·
+      选中 = accent-soft 底 + accent-edge 描边（悬停 / 点击实时体验）</p>
+    <div class="card demo-col" style="align-items: stretch; gap: 8px;">
+      <button class="list-item" style="padding: 10px 12px; text-align: left; cursor: pointer;">
+        <span class="card-label">默认项 · 悬停时描边提亮</span>
+      </button>
+      <button class="list-item is-selected" style="padding: 10px 12px; text-align: left; cursor: pointer; display: flex; align-items: center; gap: 8px;">
+        <span class="section-title">选中项</span>
+        <span class="card-label">accent-soft 底 + accent-edge 描边</span>
+      </button>
+      <button class="list-item" style="padding: 10px 12px; text-align: left; cursor: pointer;">
+        <span class="card-label">默认项二</span>
+      </button>
+    </div>
+  </section>
+
+  <!-- ===================== 策略行与结果行 ===================== -->
+  <section class="showcase-section">
+    <h2>策略行与结果行</h2>
+    <p class="demo-note">PolicyRow / ResultRow → wpf/Themes/Styles.xaml · 悬停浅底 Surface1 ·
+      警告行 Warning tint（悬停 / 底色实时体验）</p>
+    <div class="demo-grid-2" style="align-items: start;">
+      <div class="settings-group">
+        <div class="policy-row">
+          <div class="policy-text">
+            <div class="policy-title">关闭游戏内广告组件 <span class="warn-tag">需注意</span></div>
+            <div class="policy-desc">部分内置页签会随登录拉起 WebView 进程。</div>
+          </div>
+          <input type="checkbox" class="toggle" checked>
+        </div>
+        <div class="policy-row">
+          <div class="policy-text">
+            <div class="policy-title">后台进程压制</div>
+            <div class="policy-desc">对白名单以外的进程降低调度优先级。</div>
+          </div>
+          <input type="checkbox" class="toggle" checked disabled>
+        </div>
+      </div>
+      <div class="settings-group">
+        <div class="result-row">
+          <span class="cat-dot"></span>
+          <div class="row-body">
+            <div class="row-head"><span class="row-name">电源计划</span><span class="row-value">高性能</span></div>
+            <div class="row-evidence">powercfg /getactivescheme</div>
+            <div class="row-note">已处于推荐档位，无需调整。</div>
+          </div>
+        </div>
+        <div class="result-row is-warn">
+          <span class="cat-dot"></span>
+          <div class="row-body">
+            <div class="row-head"><span class="row-name">GameBar 录制</span><span class="row-value">已启用</span></div>
+            <div class="row-evidence">HKCU\System\GameConfigStore</div>
+            <div class="row-note">后台录制会占用编码器，游戏内建议关闭。</div>
+          </div>
+        </div>
+      </div>
     </div>
   </section>
 
   <!-- ===================== 导航项 ===================== -->
   <section class="showcase-section">
     <h2>导航项</h2>
-    <p class="demo-note">NavItem：选中 = accent-soft 底 + accent-edge 描边 + mode-accent 文字 · 点击可切换</p>
+    <p class="demo-note">NavItem / NavGroupLabel → wpf/Themes/Styles.xaml ·
+      选中 = accent-soft 底 + accent-edge 描边 + mode-accent 文字 · 悬停浅底 · 点击可切换</p>
     <div class="card" style="padding: 8px; width: 220px;">
       <div class="nav-group-label" style="margin-left: 10px;">工作台</div>
       <button class="nav-item is-checked" data-nav-demo>
@@ -163,6 +296,45 @@
         <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><path d="M12 3l7 3v5c0 4.5-3 8.5-7 10-4-1.5-7-5.5-7-10V6z"/></svg>
         反作弊专项
       </button>
+    </div>
+  </section>
+
+  <!-- ===================== 场景卡 ===================== -->
+  <section class="showcase-section">
+    <h2>场景卡</h2>
+    <p class="demo-note">ScenarioCard / ScenarioStateBadge → wpf/Views/OverviewView.xaml ·
+      掌权 = Success 柔色 + SuccessEdge 描边 · 关闭 = opacity .72 · 图标按场景着色（--scenario-dev / --scenario-daily）</p>
+    <div class="demo-grid-3">
+      <div class="scenario-card card-interactive is-granted">
+        <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+          <span aria-hidden="true" style="display: inline-flex; align-items: center; justify-content: center; width: 36px; height: 36px; border-radius: var(--radius-sm); background: color-mix(in srgb, var(--accent-primary) 20%, transparent); color: var(--accent-primary);">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M7 8h10a4 4 0 0 1 4 4a4 4 0 0 1-4 4H7a4 4 0 0 1-4-4a4 4 0 0 1 4-4z M9 10v4 M7 12h4 M16.5 11h.01 M18.5 13h.01"/></svg>
+          </span>
+          <span class="status-badge is-success" style="padding: 3px 8px; font-size: 10px;">掌权中</span>
+        </div>
+        <p class="section-title" style="margin: 10px 0 0;">游戏</p>
+        <p class="section-subtitle">进入游戏前一键压制后台。</p>
+      </div>
+      <div class="scenario-card card-interactive">
+        <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+          <span aria-hidden="true" style="display: inline-flex; align-items: center; justify-content: center; width: 36px; height: 36px; border-radius: var(--radius-sm); background: color-mix(in srgb, var(--scenario-dev) 20%, transparent); color: var(--scenario-dev);">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 7l-5 5 5 5 M16 7l5 5-5 5"/></svg>
+          </span>
+          <span class="status-badge is-warning" style="padding: 3px 8px; font-size: 10px;">排队等待</span>
+        </div>
+        <p class="section-title" style="margin: 10px 0 0;">开发专注</p>
+        <p class="section-subtitle">静音通知，保持编译火力。</p>
+      </div>
+      <div class="scenario-card card-interactive is-off">
+        <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+          <span aria-hidden="true" style="display: inline-flex; align-items: center; justify-content: center; width: 36px; height: 36px; border-radius: var(--radius-sm); background: color-mix(in srgb, var(--scenario-daily) 20%, transparent); color: var(--scenario-daily);">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20z M12 6v6l4 2"/></svg>
+          </span>
+          <span class="status-badge is-neutral" style="padding: 3px 8px; font-size: 10px;">已关闭</span>
+        </div>
+        <p class="section-title" style="margin: 10px 0 0;">日常优化</p>
+        <p class="section-subtitle">轻量清理，保持日常流畅。</p>
+      </div>
     </div>
   </section>
 
@@ -201,7 +373,7 @@
   <!-- ===================== 指标卡 ===================== -->
   <section class="showcase-section">
     <h2>指标卡</h2>
-    <p class="demo-note">MetricPanel + Sparkline + 底部占比条（TrackBrush + 语义色）</p>
+    <p class="demo-note">MetricPanel → wpf/Themes/Styles.xaml · Sparkline + 底部占比条（TrackBrush + 语义色）</p>
     <div class="demo-grid-3">
       <div class="metric-panel">
         <div style="display: flex; justify-content: space-between;">
@@ -236,6 +408,117 @@
           <div style="width: 34%; height: 100%; border-radius: 2px; background: var(--info);"></div>
         </div>
       </div>
+    </div>
+  </section>
+
+  <!-- ===================== 进度环 ===================== -->
+  <section class="showcase-section">
+    <h2>进度环</h2>
+    <p class="demo-note">ProgressRing → wpf/Controls/ProgressRing.cs · track 全环 6px + 圆角端帽进度弧自顶端顺时针 ·
+      沙盒以 CSS 入场生长模拟（reduced-motion 关闭）· 体检扫描态另见 .progress-orb（audit.html）</p>
+    <div class="card demo-row">
+      <span class="progress-ring" style="width: 96px; height: 96px;">
+        <svg width="96" height="96" viewBox="0 0 96 96">
+          <circle class="track" cx="48" cy="48" r="42" stroke-width="6"/>
+          <circle class="arc" cx="48" cy="48" r="42" stroke-width="6"
+                  style="--ring-circ: 264; stroke-dasharray: 264; stroke-dashoffset: 74; stroke: var(--mode-accent);"/>
+        </svg>
+        <span class="progress-orb-center"><span class="pct">72%</span><span class="phase">扫描中</span></span>
+      </span>
+      <span class="progress-ring" style="width: 96px; height: 96px;">
+        <svg width="96" height="96" viewBox="0 0 96 96">
+          <circle class="track" cx="48" cy="48" r="42" stroke-width="6"/>
+          <circle class="arc" cx="48" cy="48" r="42" stroke-width="6"
+                  style="--ring-circ: 264; stroke-dasharray: 264; stroke-dashoffset: 185; stroke: var(--mode-accent);"/>
+        </svg>
+        <span class="progress-orb-center"><span class="pct">30%</span><span class="phase">收集中</span></span>
+      </span>
+      <span class="progress-ring" style="width: 96px; height: 96px;">
+        <svg width="96" height="96" viewBox="0 0 96 96">
+          <circle class="track" cx="48" cy="48" r="42" stroke-width="6"/>
+          <circle class="arc" cx="48" cy="48" r="42" stroke-width="6"
+                  style="--ring-circ: 264; stroke-dasharray: 264; stroke-dashoffset: 0; stroke: var(--success);"/>
+        </svg>
+        <span class="progress-orb-center"><span class="pct" style="color: var(--success);">完成</span></span>
+      </span>
+      <div class="demo-col" style="flex: 1; min-width: 200px;">
+        <p class="card-label">Progress 0..1 · Stroke 语义色</p>
+        <p class="section-subtitle">弧长 = 周长 × 进度（stroke-dashoffset 反演）；中心文字用 MetricNumber 风格。</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===================== 对话框 ===================== -->
+  <section class="showcase-section">
+    <h2>对话框</h2>
+    <p class="demo-note">MessageDialogWpf / DefenderExclusionDialogWpf → wpf/Dialogs（卡片式呈现）·
+      Surface1 底 + 严重级 Edge 描边 + 58px 严重级光晕图标 · 危险确认主按钮走 DangerButton（MsgSeverity.PrimaryStyleKey）</p>
+    <div class="demo-grid-2" style="align-items: start;">
+      <div class="dialog-card">
+        <span class="dialog-icon" aria-hidden="true">
+          <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><path d="M12 11v5 M12 8h0.01"/></svg>
+        </span>
+        <p class="dialog-title">已完成系统体检</p>
+        <p class="dialog-body">本次体检发现 1 项可优化。扫描为只读探测，未修改任何系统设置。</p>
+        <div class="dialog-actions">
+          <button class="btn btn-ghost">查看详情</button>
+          <button class="btn btn-primary">好的</button>
+        </div>
+        <span class="xaml-key" style="margin-top: 12px;">PrimaryButton 收尾</span>
+      </div>
+      <div class="dialog-card is-danger">
+        <span class="dialog-icon" aria-hidden="true">
+          <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><path d="M15 9l-6 6 M9 9l6 6"/></svg>
+        </span>
+        <p class="dialog-title">还原全部优化项？</p>
+        <p class="dialog-body">将把 14 项系统优化还原为 Windows 默认值，正在运行的游戏可能短暂掉帧。此操作不可撤销。</p>
+        <div class="dialog-actions">
+          <button class="btn btn-ghost">取消</button>
+          <button class="btn btn-danger">确认还原</button>
+        </div>
+        <span class="xaml-key" style="margin-top: 12px;">DangerButton 收尾</span>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===================== 滚动区 ===================== -->
+  <section class="showcase-section">
+    <h2>滚动区</h2>
+    <p class="demo-note">ScrollBarStyle / ScrollThumb → wpf/Themes/Styles.xaml ·
+      WPF 为 2px 玻璃滚动条（默认 30% 淡出、悬停淡入），沙盒暂以 10px webkit 胶囊近似</p>
+    <div class="scroll-area">
+      <div class="settings-row"><span class="card-label">滚动内容一</span><span class="text-tertiary" style="font-size: 11px;">滚动查看</span></div>
+      <div class="settings-row"><span class="card-label">滚动内容二</span><span class="text-tertiary" style="font-size: 11px;">滚动查看</span></div>
+      <div class="settings-row"><span class="card-label">滚动内容三</span><span class="text-tertiary" style="font-size: 11px;">滚动查看</span></div>
+      <div class="settings-row"><span class="card-label">滚动内容四</span><span class="text-tertiary" style="font-size: 11px;">滚动查看</span></div>
+      <div class="settings-row"><span class="card-label">滚动内容五</span><span class="text-tertiary" style="font-size: 11px;">滚动查看</span></div>
+      <div class="settings-row"><span class="card-label">滚动内容六</span><span class="text-tertiary" style="font-size: 11px;">到底了</span></div>
+    </div>
+  </section>
+
+  <!-- ===================== 图标 ===================== -->
+  <section class="showcase-section">
+    <h2>图标</h2>
+    <p class="demo-note">Icons.xaml → wpf/Themes/Icons.xaml · 24 网格 · 2px 线宽 · 圆角接头（IconBolt 为实心填充）</p>
+    <div class="card icon-gallery">
+      <div class="icon-tile"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><path d="M12 2l3 7h7l-5.5 4.5L18 21l-6-4-6 4 1.5-7.5L2 9h7z"/></svg><span class="xaml-key">IconOverview</span></div>
+      <div class="icon-tile"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><path d="M4 7l8-4 8 4-8 4-8-4z M4 7v10l8 4 8-4V7"/></svg><span class="xaml-key">IconLibrary</span></div>
+      <div class="icon-tile"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 8h9 M17 8h3 M4 16h3 M11 16h9 M13 8a2 2 0 1 1 4 0 2 2 0 1 1-4 0 M7 16a2 2 0 1 1 4 0 2 2 0 1 1-4 0"/></svg><span class="xaml-key">IconPolicy</span></div>
+      <div class="icon-tile"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><path d="M12 3l7 3v5c0 4.5-3 8.5-7 10-4-1.5-7-5.5-7-10V6z"/></svg><span class="xaml-key">IconShield</span></div>
+      <div class="icon-tile"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 6h13 M8 12h13 M8 18h13 M3 6l1 1 2-2 M3 12l1 1 2-2 M3 18l1 1 2-2"/></svg><span class="xaml-key">IconWhitelist</span></div>
+      <div class="icon-tile"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 6h16 M4 12h16 M4 18h10"/></svg><span class="xaml-key">IconLog</span></div>
+      <div class="icon-tile"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M7 5h10a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V7a2 2 0 0 1 2-2z M9 1v4 M15 1v4 M9 19v4 M15 19v4 M1 9h4 M1 15h4 M19 9h4 M19 15h4"/></svg><span class="xaml-key">IconGpu</span></div>
+      <div class="icon-tile"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M9 12a3 3 0 1 1 6 0 3 3 0 1 1-6 0 M12 2v3 M12 19v3 M2 12h3 M19 12h3 M4.9 4.9l2.1 2.1 M17 17l2.1 2.1 M19.1 4.9L17 7 M7 17l-2.1 2.1"/></svg><span class="xaml-key">IconEnvironment</span></div>
+      <div class="icon-tile"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12h4l3-8 4 16 3-8h4"/></svg><span class="xaml-key">IconAudit</span></div>
+      <div class="icon-tile"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M3 12a9 9 0 1 1 18 0 9 9 0 1 1-18 0 M12 5v2 M12 17v2 M5 12h2 M17 12h2 M12 12h0.01"/></svg><span class="xaml-key">IconSettings</span></div>
+      <div class="icon-tile"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M3 12a9 9 0 1 1 18 0 9 9 0 1 1-18 0 M12 11v5 M12 8h0.01"/></svg><span class="xaml-key">IconInfo</span></div>
+      <div class="icon-tile"><svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M13 2L4 14h6l-1 8 9-12h-6z"/></svg><span class="xaml-key">IconBolt</span></div>
+      <div class="icon-tile"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M7 8h10a4 4 0 0 1 4 4a4 4 0 0 1-4 4H7a4 4 0 0 1-4-4a4 4 0 0 1 4-4z M9 10v4 M7 12h4 M16.5 11h.01 M18.5 13h.01"/></svg><span class="xaml-key">IconGame</span></div>
+      <div class="icon-tile"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 6L2 12l6 6 M16 6l6 6-6 6"/></svg><span class="xaml-key">IconCode</span></div>
+      <div class="icon-tile"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20z M12 6v6l4 2"/></svg><span class="xaml-key">IconDaily</span></div>
+      <div class="icon-tile"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg><span class="xaml-key">IconCheck</span></div>
+      <div class="icon-tile"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2L1 21h22L12 2z M12 9v5 M12 17h0.01"/></svg><span class="xaml-key">IconWarn</span></div>
+      <div class="icon-tile"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M3 12a9 9 0 1 0 18 0 9 9 0 0 0-18 0z M15 9l-6 6 M9 9l6 6"/></svg><span class="xaml-key">IconError</span></div>
     </div>
   </section>
 </main>

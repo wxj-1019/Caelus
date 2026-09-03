@@ -866,6 +866,7 @@ namespace CaelusApp
             test("主题契约：色板档字典 key 完整", TestThemeContractToneFiles);
             test("主题契约：模式档字典 key 完整", TestThemeContractModeFiles);
             test("主题契约：校验器正反样例", TestThemeContractValidator);
+            test("设计令牌：沙盒 tokens.css 与 wpf/Themes 主色板/字号/圆角一致", TestDesignTokenParity);
             test("消息弹窗：级别→图标/画刷/样式映射", TestMsgDialogSeverityMaps);
             test("消息弹窗：按钮组解析与默认文案", TestMsgDialogButtonSets);
             test("消息弹窗：单字符串标题正文拆分", TestMsgDialogSplitTitleBody);

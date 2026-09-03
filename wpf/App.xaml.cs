@@ -531,15 +531,27 @@ namespace CaelusApp.WpfHost
                     w.Close();
                 }
                 Views.OverviewView.InjectSampleData = false;
-                // 全部工作区页面的深色常规模式截图。
-                ThemeManager.Apply(this, UiTone.Dark, AppMode.Standard);
+                // 全页矩阵：其余 12 页 × 明暗 × 三模式（概览 4 组合已在上面出过）
                 string[] pages = new string[]
                 {
                     "library", "policy", "graphics", "anticheat", "environment",
                     "whitelist", "audit", "log", "settings", "dev", "daily", "about"
                 };
-                for (int i = 0; i < pages.Length; i++)
-                    CapturePage(dir, pages[i]);
+                var toneModes = new[]
+                {
+                    new { Tone = UiTone.Dark, Mode = AppMode.Standard, Tag = "dark-cruise" },
+                    new { Tone = UiTone.Dark, Mode = AppMode.Competitive, Tag = "dark-combat" },
+                    new { Tone = UiTone.Dark, Mode = AppMode.Custom, Tag = "dark-custom" },
+                    new { Tone = UiTone.Light, Mode = AppMode.Standard, Tag = "light-cruise" },
+                    new { Tone = UiTone.Light, Mode = AppMode.Competitive, Tag = "light-combat" },
+                    new { Tone = UiTone.Light, Mode = AppMode.Custom, Tag = "light-custom" },
+                };
+                foreach (var tm in toneModes)
+                {
+                    ThemeManager.Apply(this, tm.Tone, tm.Mode);
+                    foreach (string p in pages)
+                        CapturePage(dir, p, tm.Tone, tm.Mode, tm.Tag);
+                }
                 return 0;
             }
             catch (Exception ex)
@@ -671,13 +683,20 @@ namespace CaelusApp.WpfHost
             Dispatcher.PushFrame(frame);
         }
 
-        private void CapturePage(string dir, string page)
+        // 矩阵版 CapturePage：导航仍用页名（NavigateToForShot 只认合法页标识），
+        // 明暗×模式标签仅进文件名（wpf-<页>-<标签>.png）
+        private void CapturePage(string dir, string page, UiTone tone, AppMode mode, string tag)
         {
-            RunSingleShot(Path.Combine(dir, "wpf-" + page + "-dark-cruise.png"), page);
+            RunSingleShot(Path.Combine(dir, "wpf-" + page + "-" + tag + ".png"), page, tone, mode);
         }
 
         // --screenshot <png> <page>：离屏渲染单页存 PNG（对齐 WinForms 同名开发入口；WPF 页以名称指定）
         private int RunSingleShot(string pngPath, string page)
+        {
+            return RunSingleShot(pngPath, page, UiTone.Dark, AppMode.Standard);
+        }
+
+        private int RunSingleShot(string pngPath, string page, UiTone tone, AppMode mode)
         {
             try
             {
@@ -685,7 +704,7 @@ namespace CaelusApp.WpfHost
                 Motion.Enabled = false;
                 Paths.Init();
                 Lang.Init();
-                ThemeManager.Apply(this, UiTone.Dark, AppMode.Standard);
+                ThemeManager.Apply(this, tone, mode);
                 // 游戏库/策略/体检在探针下无真实数据，注入样例以捕获实机图（仅此路径生效）；
                 // 场景页面注入“游戏掌权 / 开发活跃待命”的三场景构图。
                 Views.OverviewView.InjectSampleData = (page == "overview");
@@ -694,7 +713,7 @@ namespace CaelusApp.WpfHost
                 Views.GraphicsView.InjectSampleData = (page == "graphics");
                 Views.ScenarioDetailView.InjectSampleData = (page == "dev" || page == "daily");
                 MainWindow window = new MainWindow(new GameMode(Paths.Data, new SuppressionCore()));
-                window.ApplyPersistedMode(AppMode.Standard);
+                window.ApplyPersistedMode(mode);
                 // 探针摆脱用户持久化的尺寸/最大化态（同 --wpf-shot）
                 window.WindowState = WindowState.Normal;
                 window.Width = 1196;

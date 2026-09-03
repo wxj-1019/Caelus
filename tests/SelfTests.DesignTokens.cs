@@ -58,24 +58,15 @@ namespace CaelusApp
             // 2) 字号令牌：CSS px 值 == Tokens.xaml 数值（":root" 经 \s*\{ 锚定后
             //    不会误命中 ":root," 合并选择器行，其后是逗号不是块开括号）
             string cssHero = CssVar(css, ":root", "--font-size-hero");
-            string heroNeedle = "x:Key=\"FontSizeHero\">" + cssHero.Replace("px", "") + "<";
-            if (!tokens.Contains(heroNeedle))
-            {
-                // 已知漂移（2026-09-04 检出，非本次引入）：沙盒 --font-size-hero: 40px 是
-                // 夜空烟花 Hero 的沙盒先行值，Tokens.xaml FontSizeHero 仍为 32。
-                // 按计划不擅自改两侧源文件，先记 SKIP（详情见输出），设计回写 XAML 后
-                // 删除本分支恢复无条件严格 Eq。
-                Match xamlHero = Regex.Match(tokens, "x:Key=\"FontSizeHero\">([^<]+)<",
-                    RegexOptions.CultureInvariant);
-                Skip("--font-size-hero 漂移：沙盒 " + cssHero + " vs Tokens.xaml FontSizeHero="
-                    + (xamlHero.Success ? xamlHero.Groups[1].Value : "(未找到)")
-                    + "（沙盒先行待回写，回写后恢复严格对比）");
-            }
-            Eq(true, tokens.Contains(heroNeedle));
+            Eq(true, tokens.Contains("x:Key=\"FontSizeHero\">" + cssHero.Replace("px", "") + "<"));
 
             // 3) 圆角签名：--radius-lg == RadiusLg
             string cssRad = CssVar(css, ":root", "--radius-lg");
             Eq(true, tokens.Contains("x:Key=\"RadiusLg\">" + cssRad.Replace("px", "") + "<"));
+
+            // 4) 区域标题字号：--font-size-section == FontSizeSection
+            string cssSection = CssVar(css, ":root", "--font-size-section");
+            Eq(true, tokens.Contains("x:Key=\"FontSizeSection\">" + cssSection.Replace("px", "") + "<"));
         }
     }
 }

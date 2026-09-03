@@ -29,8 +29,8 @@
   --font-size-body: 14px;
   --font-size-caption: 12px;
   --font-size-mono: 12px;
-  --font-size-section: 24px;
-  --font-size-hero: 40px;
+  --font-size-section: 22px;
+  --font-size-hero: 32px;
   --font-size-showcase: 36px;   /* 沙盒先行：夜空烟花 Hero 展示字号（待回写 Tokens.xaml） */
   --font-size-metric: 24px;
 

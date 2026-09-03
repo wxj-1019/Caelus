@@ -31,7 +31,7 @@
   --font-size-mono: 12px;
   --font-size-section: 22px;
   --font-size-hero: 32px;
-  --font-size-showcase: 36px;   /* 沙盒先行：夜空烟花 Hero 展示字号（待回写 Tokens.xaml） */
+  --font-size-showcase: 36px;   /* 夜空烟花 Hero 展示字号（Tokens.xaml FontSizeShowcase） */
   --font-size-metric: 24px;
 
   /* ---- 间距（Tokens.xaml） ---- */
@@ -85,7 +85,7 @@
 
   --mode-accent: var(--mode-accent-on-dark);
 
-  /* ---- 夜空烟花（2026-08-31 强化）—— 沙盒先行，待回写 Colors.Dark.xaml ---- */
+  /* ---- 夜空烟花（2026-08-31 强化）—— 与 Colors.Dark.xaml 同步 ---- */
   /* Hero 渐变标题（双色 Stop；XAML 侧是 LinearGradientBrush） */
   --hero-title-from: #F7F1EA;      /* dark: 奶油白 */
   --hero-title-to: #C8B0FA;        /* dark: 薰衣草紫 */
@@ -130,7 +130,7 @@
 
   --mode-accent: var(--mode-accent-on-light);
 
-  /* ---- 夜空烟花（浅色）—— 沙盒先行，待回写 Colors.Light.xaml ---- */
+  /* ---- 夜空烟花（浅色）—— 与 Colors.Light.xaml 同步 ---- */
   --hero-title-from: #2B1F1A;      /* light: 暖可可 */
   --hero-title-to: #6D5CE0;        /* light: 深薰衣草 */
   --scenario-dev: var(--success);

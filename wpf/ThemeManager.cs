@@ -130,6 +130,12 @@ namespace CaelusApp.WpfHost
             overlay["SegSelectedTextBrush"] = SystemColors.HighlightTextBrush;
             overlay["HeroTitleOnDarkBrush"] = SystemColors.WindowTextBrush;
             overlay["HeroTitleOnLightBrush"] = SystemColors.WindowTextBrush;
+            // 夜空烟花：HC 下渐变标题与场景着色都退回系统文字色，软色 chip 底退回系统面板色
+            overlay["HeroTitleBrush"] = SystemColors.WindowTextBrush;
+            overlay["ScenarioDevBrush"] = SystemColors.WindowTextBrush;
+            overlay["ScenarioDailyBrush"] = SystemColors.WindowTextBrush;
+            overlay["ScenarioDevSoftBrush"] = SystemColors.ControlBrush;
+            overlay["ScenarioDailySoftBrush"] = SystemColors.ControlBrush;
             overlay["AuroraPrimaryOpacity"] = 0.0;
             overlay["AuroraSecondaryOpacity"] = 0.0;
             overlay["AuroraTertiaryOpacity"] = 0.0;

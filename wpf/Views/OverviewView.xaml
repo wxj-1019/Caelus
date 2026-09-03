@@ -111,12 +111,15 @@
             <ColumnDefinition Width="*"/>
           </Grid.ColumnDefinitions>
 
-          <!-- 夜空烟花：双径向光晕随模式换槽（Aurora 色本就按模式轴变化）。
+          <!-- 夜空烟花：双径向光晕随模式换槽（Aurora 色与 Opacity 令牌按模式轴自适应；
+               高对比度下 Aurora*Opacity 被覆盖为 0，光晕自动隐去）。
+               尺寸/负偏移是沙盒 300px/240px 圆的几何换算——圆心落在卡片角上、半出卡外。
                Radius 取 0.5（相对包围盒半宽/半高），让 alpha 恰在 Border 边界归零——
                取 0.8 时渐隐终点落在边界外，会留下 ~37% alpha 的硬截边。 -->
           <Border Grid.ColumnSpan="3" IsHitTestVisible="False"
                   HorizontalAlignment="Right" VerticalAlignment="Top"
-                  Width="360" Height="220" Margin="0,-40,-30,0">
+                  Width="360" Height="220" Margin="0,-40,-30,0"
+                  Opacity="{DynamicResource AuroraPrimaryOpacity}">
             <Border.Background>
               <RadialGradientBrush RadiusX="0.5" RadiusY="0.5">
                 <GradientStop Color="{DynamicResource AuroraPrimaryColor}" Offset="0"/>
@@ -126,7 +129,8 @@
           </Border>
           <Border Grid.ColumnSpan="3" IsHitTestVisible="False"
                   HorizontalAlignment="Left" VerticalAlignment="Bottom"
-                  Width="280" Height="180" Margin="-30,0,0,-36">
+                  Width="280" Height="180" Margin="-30,0,0,-36"
+                  Opacity="{DynamicResource AuroraTertiaryOpacity}">
             <Border.Background>
               <RadialGradientBrush RadiusX="0.5" RadiusY="0.5">
                 <GradientStop Color="{DynamicResource AuroraTertiaryColor}" Offset="0"/>

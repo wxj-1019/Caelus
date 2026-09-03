@@ -50,13 +50,13 @@
   <SolidColorBrush x:Key="TextSecondaryBrush" Color="{StaticResource TextSecondaryColor}"/>
   <SolidColorBrush x:Key="TextTertiaryBrush" Color="{StaticResource TextTertiaryColor}"/>
 
-  <!-- 夜空烟花：Hero 渐变标题（奶油白 → 薰衣草紫） -->
+  <!-- 夜空烟花：Hero 渐变标题（奶油白 → 薰衣草紫；首 Stop 引用 TextPrimaryColor 保持同源） -->
   <LinearGradientBrush x:Key="HeroTitleBrush" StartPoint="0,0.5" EndPoint="1,0.5">
-    <GradientStop Color="#F7F1EA" Offset="0.3"/>
+    <GradientStop Color="{StaticResource TextPrimaryColor}" Offset="0.3"/>
     <GradientStop Color="#C8B0FA" Offset="1"/>
   </LinearGradientBrush>
-  <!-- 场景卡图标着色：开发=成功绿、日常=蜜桃橙 -->
-  <SolidColorBrush x:Key="ScenarioDevBrush" Color="#3DD68C"/>
+  <!-- 场景卡图标着色：开发=成功绿（引用 SuccessColor）、日常=蜜桃橙（无对应 Color 资源，保持硬编码） -->
+  <SolidColorBrush x:Key="ScenarioDevBrush" Color="{StaticResource SuccessColor}"/>
   <SolidColorBrush x:Key="ScenarioDailyBrush" Color="#FFA07A"/>
   <SolidColorBrush x:Key="ScenarioDevSoftBrush" Color="#3DD68C33"/>
   <SolidColorBrush x:Key="ScenarioDailySoftBrush" Color="#FFA07A38"/>

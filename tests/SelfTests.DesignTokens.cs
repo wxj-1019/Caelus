@@ -70,7 +70,12 @@ namespace CaelusApp
 
             // 5) 夜空烟花新令牌：沙盒与 XAML 双侧都存在
             Eq(true, CssVar(css, "[data-theme=\"dark\"]", "--hero-title-to") != null);
-            Eq(true, dark.Contains("HeroTitleBrush"));
+            Eq(true, dark.Contains("x:Key=\"HeroTitleBrush\""));
+            Eq(true, light.Contains("x:Key=\"HeroTitleBrush\""));
+            Eq(true, dark.Contains("x:Key=\"ScenarioDevBrush\"")
+                && dark.Contains("x:Key=\"ScenarioDailyBrush\"")
+                && dark.Contains("x:Key=\"ScenarioDevSoftBrush\"")
+                && dark.Contains("x:Key=\"ScenarioDailySoftBrush\""));
             Eq(true, CssVar(css, ":root", "--font-size-showcase") != null
                 && tokens.Contains("x:Key=\"FontSizeShowcase\">36<"));
         }

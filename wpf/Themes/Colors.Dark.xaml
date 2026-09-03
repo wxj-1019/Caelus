@@ -50,8 +50,9 @@
   <SolidColorBrush x:Key="TextSecondaryBrush" Color="{StaticResource TextSecondaryColor}"/>
   <SolidColorBrush x:Key="TextTertiaryBrush" Color="{StaticResource TextTertiaryColor}"/>
 
-  <!-- 夜空烟花：Hero 渐变标题（奶油白 → 薰衣草紫；首 Stop 引用 TextPrimaryColor 保持同源） -->
-  <LinearGradientBrush x:Key="HeroTitleBrush" StartPoint="0,0.5" EndPoint="1,0.5">
+  <!-- 夜空烟花：Hero 渐变标题（奶油白 → 薰衣草紫；首 Stop 引用 TextPrimaryColor 保持同源）。
+       对角渐变线（0,0 → 1,0.5 ≈26.6° 下斜）对应沙盒 .hero-title 的 120deg CSS 渐变方向 -->
+  <LinearGradientBrush x:Key="HeroTitleBrush" StartPoint="0,0" EndPoint="1,0.5">
     <GradientStop Color="{StaticResource TextPrimaryColor}" Offset="0.3"/>
     <GradientStop Color="#C8B0FA" Offset="1"/>
   </LinearGradientBrush>

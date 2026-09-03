@@ -42,6 +42,27 @@ namespace CaelusApp
             return m.Success ? m.Groups[1].Value.Trim() : null;
         }
 
+        // '#RRGGBB' → 'RRGGBB'（大写）：值级比对前归一；Eq 失败消息直接给出两侧值便于排障
+        private static string HexNorm(string value)
+        {
+            return value == null ? null : value.TrimStart('#').ToUpperInvariant();
+        }
+
+        // LinearGradientBrush 定义块内最后一个字面量 Color（#RRGGBB[B]）：
+        // 夜空烟花 Hero 渐变首 Stop 以 StaticResource 引用 TextPrimaryColor（无字面量），
+        // 末 Stop 是字面量——定位 x:Key 后取至 </LinearGradientBrush> 的片段再取末个匹配
+        private static string LastLiteralGradientStop(string xamlText, string key)
+        {
+            int start = xamlText.IndexOf("x:Key=\"" + key + "\"", StringComparison.Ordinal);
+            if (start < 0) return null;
+            int end = xamlText.IndexOf("</LinearGradientBrush>", start, StringComparison.Ordinal);
+            if (end < 0) return null;
+            MatchCollection stops = Regex.Matches(
+                xamlText.Substring(start, end - start),
+                "Color=\"(#[0-9A-Fa-f]{6,8})\"", RegexOptions.CultureInvariant);
+            return stops.Count == 0 ? null : stops[stops.Count - 1].Groups[1].Value;
+        }
+
         private static void TestDesignTokenParity()
         {
             string css = ReadSandboxTokens();
@@ -68,10 +89,21 @@ namespace CaelusApp
             string cssSection = CssVar(css, ":root", "--font-size-section");
             Eq(true, tokens.Contains("x:Key=\"FontSizeSection\">" + cssSection.Replace("px", "") + "<"));
 
-            // 5) 夜空烟花新令牌：沙盒与 XAML 双侧都存在
-            Eq(true, CssVar(css, "[data-theme=\"dark\"]", "--hero-title-to") != null);
-            Eq(true, dark.Contains("x:Key=\"HeroTitleBrush\""));
-            Eq(true, light.Contains("x:Key=\"HeroTitleBrush\""));
+            // 5) 夜空烟花令牌：沙盒 CSS ↔ XAML 值级比对（同第 1 组去 # 前缀，漂移即 FAIL，
+            //    失败消息含两侧值）；Hero 渐变末 Stop / 场景卡日常色是唯一字面量来源
+            Eq(HexNorm(CssVar(css, "[data-theme=\"dark\"]", "--hero-title-from")),
+               HexNorm(ThemeContract.ExtractColorValue(dark, "TextPrimaryColor")));
+            Eq(HexNorm(CssVar(css, "[data-theme=\"dark\"]", "--hero-title-to")),
+               HexNorm(LastLiteralGradientStop(dark, "HeroTitleBrush")));
+            Eq(HexNorm(CssVar(css, "[data-theme=\"dark\"]", "--scenario-daily")),
+               HexNorm(ThemeContract.ExtractColorValue(dark, "ScenarioDailyBrush")));
+            Eq(HexNorm(CssVar(css, "[data-theme=\"light\"]", "--hero-title-from")),
+               HexNorm(ThemeContract.ExtractColorValue(light, "TextPrimaryColor")));
+            Eq(HexNorm(CssVar(css, "[data-theme=\"light\"]", "--hero-title-to")),
+               HexNorm(LastLiteralGradientStop(light, "HeroTitleBrush")));
+            Eq(HexNorm(CssVar(css, "[data-theme=\"light\"]", "--scenario-daily")),
+               HexNorm(ThemeContract.ExtractColorValue(light, "ScenarioDailyBrush")));
+            // 其余场景卡画刷（开发=绿引用、双柔色）与展示字号仍按存在性守护
             Eq(true, dark.Contains("x:Key=\"ScenarioDevBrush\"")
                 && dark.Contains("x:Key=\"ScenarioDailyBrush\"")
                 && dark.Contains("x:Key=\"ScenarioDevSoftBrush\"")

@@ -7,7 +7,8 @@ $ErrorActionPreference = "Stop"
 $repo = (Resolve-Path "$PSScriptRoot\..").Path
 Push-Location $repo
 try {
-    cmd /c build.cmd | Out-Null
+    # 构建输出直接可见：失败时能当场看到 MSBuild 错误
+    cmd /c build.cmd
     if ($LASTEXITCODE -ne 0) { throw "构建失败" }
     $exe = Join-Path $repo "Caelus.exe"
     & $exe --wpf-shot $OutDir

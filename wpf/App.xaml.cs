@@ -489,6 +489,7 @@ namespace CaelusApp.WpfHost
         // 离屏渲染模式×主题矩阵 PNG，供视觉验收与回归基线（规格 §7.5）
         private int RunShot(string dir)
         {
+            int failed = 0;
             try
             {
                 Directory.CreateDirectory(dir);
@@ -496,40 +497,13 @@ namespace CaelusApp.WpfHost
                 // 离屏渲染捕获最终视觉态：禁用进入动效，避免捕获到淡入起始帧（Opacity=0）
                 Motion.Enabled = false;
                 Paths.Init();
-                UiTone[] tones = new UiTone[] { UiTone.Dark, UiTone.Dark, UiTone.Dark, UiTone.Light };
-                AppMode[] modes = new AppMode[] { AppMode.Standard, AppMode.Competitive, AppMode.Custom, AppMode.Standard };
-                string[] names = new string[] { "dark-cruise", "dark-combat", "dark-custom", "light-cruise" };
+                // 探针不经过 OnStartup 的日志初始化：补设路径，失败计数才能落 Caelus.log
+                Logger.LogPath = Path.Combine(Paths.Data, "Caelus.log");
                 Views.OverviewView.InjectSampleData = true;
-                for (int i = 0; i < tones.Length; i++)
-                {
-                    ThemeManager.Apply(this, tones[i], modes[i]);
-                    MainWindow w = new MainWindow(null);
-                    w.ApplyPersistedMode(modes[i]);
-                    // 探针必须摆脱用户持久化的尺寸/最大化态：否则 1196x768 渲染被裁剪、
-                    // 最大化窗口直接铺满主屏
-                    w.WindowState = WindowState.Normal;
-                    w.Width = 1196;
-                    w.Height = 768;
-                    w.WindowStartupLocation = WindowStartupLocation.Manual;
-                    w.Left = -20000;
-                    w.Top = -20000;
-                    w.ShowInTaskbar = false;
-                    w.ShowActivated = false;
-                    w.Show();
-                    w.UpdateLayout();
-                    Size size = new Size(1196, 768);
-                    w.Measure(size);
-                    w.Arrange(new Rect(size));
-                    w.UpdateLayout();
-                    RenderTargetBitmap rtb = new RenderTargetBitmap(1196, 768, 96, 96, PixelFormats.Pbgra32);
-                    rtb.Render(w);
-                    PngBitmapEncoder enc = new PngBitmapEncoder();
-                    enc.Frames.Add(BitmapFrame.Create(rtb));
-                    string file = Path.Combine(dir, "wpf-overview-" + names[i] + ".png");
-                    using (FileStream fs = File.Create(file)) enc.Save(fs);
-                    w.RealExit = true;
-                    w.Close();
-                }
+                failed += CaptureOverview(dir, UiTone.Dark, AppMode.Standard);
+                failed += CaptureOverview(dir, UiTone.Dark, AppMode.Competitive);
+                failed += CaptureOverview(dir, UiTone.Dark, AppMode.Custom);
+                failed += CaptureOverview(dir, UiTone.Light, AppMode.Standard);
                 Views.OverviewView.InjectSampleData = false;
                 // 全页矩阵：其余 12 页 × 明暗 × 三模式（概览 4 组合已在上面出过）
                 string[] pages = new string[]
@@ -539,18 +513,25 @@ namespace CaelusApp.WpfHost
                 };
                 var toneModes = new[]
                 {
-                    new { Tone = UiTone.Dark, Mode = AppMode.Standard, Tag = "dark-cruise" },
-                    new { Tone = UiTone.Dark, Mode = AppMode.Competitive, Tag = "dark-combat" },
-                    new { Tone = UiTone.Dark, Mode = AppMode.Custom, Tag = "dark-custom" },
-                    new { Tone = UiTone.Light, Mode = AppMode.Standard, Tag = "light-cruise" },
-                    new { Tone = UiTone.Light, Mode = AppMode.Competitive, Tag = "light-combat" },
-                    new { Tone = UiTone.Light, Mode = AppMode.Custom, Tag = "light-custom" },
+                    new { Tone = UiTone.Dark, Mode = AppMode.Standard },
+                    new { Tone = UiTone.Dark, Mode = AppMode.Competitive },
+                    new { Tone = UiTone.Dark, Mode = AppMode.Custom },
+                    new { Tone = UiTone.Light, Mode = AppMode.Standard },
+                    new { Tone = UiTone.Light, Mode = AppMode.Competitive },
+                    new { Tone = UiTone.Light, Mode = AppMode.Custom },
                 };
                 foreach (var tm in toneModes)
                 {
+                    // 与 RunSingleShot 内的 Apply 幂等重复：保留以对齐既定计划，
+                    // 并防未来 CapturePage 换成自身不含 Apply 的实现
                     ThemeManager.Apply(this, tm.Tone, tm.Mode);
                     foreach (string p in pages)
-                        CapturePage(dir, p, tm.Tone, tm.Mode, tm.Tag);
+                        failed += CapturePage(dir, p, tm.Tone, tm.Mode);
+                }
+                if (failed > 0)
+                {
+                    Logger.Log("矩阵截图 " + failed + " 张失败（见输出目录各 *.error.txt）");
+                    return 1;
                 }
                 return 0;
             }
@@ -558,6 +539,51 @@ namespace CaelusApp.WpfHost
             {
                 try { File.WriteAllText(Path.Combine(dir, "wpf-shot.error.txt"), ex.ToString()); } catch { }
                 return 1;
+            }
+        }
+
+        // 概览单组合：内联渲染（不走 RunSingleShot，窗口无需 GameMode）。单组合失败只写
+        // wpf-overview-<标签>.error.txt 并返回 1，不拖垮其余组合，退出码由 RunShot 统一传导
+        private int CaptureOverview(string dir, UiTone tone, AppMode mode)
+        {
+            MainWindow w = null;
+            try
+            {
+                ThemeManager.Apply(this, tone, mode);
+                w = new MainWindow(null);
+                w.ApplyPersistedMode(mode);
+                // 探针必须摆脱用户持久化的尺寸/最大化态：否则 1196x768 渲染被裁剪、
+                // 最大化窗口直接铺满主屏
+                w.WindowState = WindowState.Normal;
+                w.Width = 1196;
+                w.Height = 768;
+                w.WindowStartupLocation = WindowStartupLocation.Manual;
+                w.Left = -20000;
+                w.Top = -20000;
+                w.ShowInTaskbar = false;
+                w.ShowActivated = false;
+                w.Show();
+                w.UpdateLayout();
+                Size size = new Size(1196, 768);
+                w.Measure(size);
+                w.Arrange(new Rect(size));
+                w.UpdateLayout();
+                RenderTargetBitmap rtb = new RenderTargetBitmap(1196, 768, 96, 96, PixelFormats.Pbgra32);
+                rtb.Render(w);
+                PngBitmapEncoder enc = new PngBitmapEncoder();
+                enc.Frames.Add(BitmapFrame.Create(rtb));
+                string file = Path.Combine(dir, "wpf-overview-" + ShotTag(tone, mode) + ".png");
+                using (FileStream fs = File.Create(file)) enc.Save(fs);
+                return 0;
+            }
+            catch (Exception ex)
+            {
+                try { File.WriteAllText(Path.Combine(dir, "wpf-overview-" + ShotTag(tone, mode) + ".error.txt"), ex.ToString()); } catch { }
+                return 1;
+            }
+            finally
+            {
+                if (w != null) { w.RealExit = true; w.Close(); }
             }
         }
 
@@ -683,11 +709,20 @@ namespace CaelusApp.WpfHost
             Dispatcher.PushFrame(frame);
         }
 
-        // 矩阵版 CapturePage：导航仍用页名（NavigateToForShot 只认合法页标识），
-        // 明暗×模式标签仅进文件名（wpf-<页>-<标签>.png）
-        private void CapturePage(string dir, string page, UiTone tone, AppMode mode, string tag)
+        // 明暗×模式 → 截图文件名标签（概览与全页矩阵共用一份映射，防两处漂移）
+        private static string ShotTag(UiTone tone, AppMode mode)
         {
-            RunSingleShot(Path.Combine(dir, "wpf-" + page + "-" + tag + ".png"), page, tone, mode);
+            bool dark = tone == UiTone.Dark;
+            return mode == AppMode.Competitive ? (dark ? "dark-combat" : "light-combat")
+                : mode == AppMode.Custom ? (dark ? "dark-custom" : "light-custom")
+                : (dark ? "dark-cruise" : "light-cruise");
+        }
+
+        // 矩阵版 CapturePage：导航仍用页名（NavigateToForShot 只认合法页标识），
+        // 文件名标签由明暗×模式推导（wpf-<页>-<标签>.png）；返回 RunSingleShot 的 0/1
+        private int CapturePage(string dir, string page, UiTone tone, AppMode mode)
+        {
+            return RunSingleShot(Path.Combine(dir, "wpf-" + page + "-" + ShotTag(tone, mode) + ".png"), page, tone, mode);
         }
 
         // --screenshot <png> <page>：离屏渲染单页存 PNG（对齐 WinForms 同名开发入口；WPF 页以名称指定）

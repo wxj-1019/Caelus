@@ -1047,10 +1047,10 @@ input.toggle:disabled { opacity: .4; cursor: default; }
   to   { opacity: 1; transform: none; }
 }
 @media (prefers-reduced-motion: reduce) {
-  .rise-in, .bar-fill { animation: none !important; }
+  .rise-in, .bar-fill, .pulse-dot { animation: none !important; }
 }
 
-/* P3：预览状态点脉冲呼吸 */
+/* P3：预览状态点脉冲呼吸（reduced-motion 下关停——overview/policy/audit 三页在用的无限动画） */
 .pulse-dot {
   width: 7px;
   height: 7px;

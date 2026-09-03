@@ -92,6 +92,10 @@
   /* 场景卡图标着色：游戏=模式主色、开发=绿、日常=蜜桃橙 */
   --scenario-dev: var(--success);
   --scenario-daily: #FFA07A;
+  /* Hero 双光晕强度（沙盒=渐变中心 alpha；XAML 侧对应 AuroraPrimary/AuroraSecondaryOpacity
+     整层槽 Opacity——机制不同，调强度时两侧各自检查） */
+  --hero-glow-a-opacity: 0.32;   /* 右上主色光晕 · 渐变中心浓度 */
+  --hero-glow-b-opacity: 0.40;   /* 左下次强调补光 · 渐变中心浓度 */
 }
 
 /* ==========================================================================
@@ -135,6 +139,10 @@
   --hero-title-to: #6D5CE0;        /* light: 深薰衣草 */
   --scenario-dev: var(--success);
   --scenario-daily: #B84518;
+  /* Hero 双光晕强度：overview.html 光晕为两主题共用的内联样式，明暗同值
+     （机制注释同 dark 段：XAML 侧是 AuroraPrimary/AuroraSecondaryOpacity 整层槽） */
+  --hero-glow-a-opacity: 0.32;   /* 右上主色光晕 · 渐变中心浓度 */
+  --hero-glow-b-opacity: 0.40;   /* 左下次强调补光 · 渐变中心浓度 */
 }
 
 /* ==========================================================================

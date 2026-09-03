@@ -359,6 +359,8 @@ input.toggle:disabled { opacity: .4; cursor: default; }
 .input::placeholder { color: var(--text-tertiary); }
 .input::selection { background: var(--accent-soft); }
 .input:focus { outline: 2px solid var(--mode-accent); outline-offset: 1px; }
+/* 禁用态（Styles.xaml InputBox IsEnabled=False 触发器：Opacity 0.5） */
+.input:disabled { opacity: .5; }
 
 /* ==========================================================================
    列表项（Styles.xaml ListItem）

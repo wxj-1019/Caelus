@@ -25,6 +25,8 @@
   <sys:Double x:Key="FontSizeConclusion">20</sys:Double>
   <sys:Double x:Key="FontSizeSection">22</sys:Double>
   <sys:Double x:Key="FontSizeHero">32</sys:Double>
+  <!-- 夜空烟花：概览 Hero 超大展示标题 -->
+  <sys:Double x:Key="FontSizeShowcase">36</sys:Double>
   <sys:Double x:Key="FontSizeMetric">24</sys:Double>
   <!-- 健康评分：体检页大号得分数字 -->
   <sys:Double x:Key="FontSizeScore">40</sys:Double>

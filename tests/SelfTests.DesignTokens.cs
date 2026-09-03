@@ -67,6 +67,12 @@ namespace CaelusApp
             // 4) 区域标题字号：--font-size-section == FontSizeSection
             string cssSection = CssVar(css, ":root", "--font-size-section");
             Eq(true, tokens.Contains("x:Key=\"FontSizeSection\">" + cssSection.Replace("px", "") + "<"));
+
+            // 5) 夜空烟花新令牌：沙盒与 XAML 双侧都存在
+            Eq(true, CssVar(css, "[data-theme=\"dark\"]", "--hero-title-to") != null);
+            Eq(true, dark.Contains("HeroTitleBrush"));
+            Eq(true, CssVar(css, ":root", "--font-size-showcase") != null
+                && tokens.Contains("x:Key=\"FontSizeShowcase\">36<"));
         }
     }
 }

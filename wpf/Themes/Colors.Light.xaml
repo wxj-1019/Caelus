@@ -50,6 +50,17 @@
   <SolidColorBrush x:Key="TextSecondaryBrush" Color="{StaticResource TextSecondaryColor}"/>
   <SolidColorBrush x:Key="TextTertiaryBrush" Color="{StaticResource TextTertiaryColor}"/>
 
+  <!-- 夜空烟花：Hero 渐变标题（暖可可 → 深薰衣草） -->
+  <LinearGradientBrush x:Key="HeroTitleBrush" StartPoint="0,0.5" EndPoint="1,0.5">
+    <GradientStop Color="#2B1F1A" Offset="0.3"/>
+    <GradientStop Color="#6D5CE0" Offset="1"/>
+  </LinearGradientBrush>
+  <!-- 场景卡图标着色：开发=成功绿、日常=蜜桃橙 -->
+  <SolidColorBrush x:Key="ScenarioDevBrush" Color="#248A3D"/>
+  <SolidColorBrush x:Key="ScenarioDailyBrush" Color="#B84518"/>
+  <SolidColorBrush x:Key="ScenarioDevSoftBrush" Color="#248A3D26"/>
+  <SolidColorBrush x:Key="ScenarioDailySoftBrush" Color="#B8451824"/>
+
   <!-- 描边：发丝线（黑色低 alpha，≈#E7E7EA / #D4D4D8）；去掉卡顶高光与渐变描边的装饰 -->
   <SolidColorBrush x:Key="BorderSubtleBrush" Color="#17000000"/>
   <SolidColorBrush x:Key="BorderStrongBrush" Color="#26000000"/>

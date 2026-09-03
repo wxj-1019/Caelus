@@ -111,6 +111,30 @@
             <ColumnDefinition Width="*"/>
           </Grid.ColumnDefinitions>
 
+          <!-- 夜空烟花：双径向光晕随模式换槽（Aurora 色本就按模式轴变化）。
+               Radius 取 0.5（相对包围盒半宽/半高），让 alpha 恰在 Border 边界归零——
+               取 0.8 时渐隐终点落在边界外，会留下 ~37% alpha 的硬截边。 -->
+          <Border Grid.ColumnSpan="3" IsHitTestVisible="False"
+                  HorizontalAlignment="Right" VerticalAlignment="Top"
+                  Width="360" Height="220" Margin="0,-40,-30,0">
+            <Border.Background>
+              <RadialGradientBrush RadiusX="0.5" RadiusY="0.5">
+                <GradientStop Color="{DynamicResource AuroraPrimaryColor}" Offset="0"/>
+                <GradientStop Color="{DynamicResource AuroraPrimaryFadeColor}" Offset="1"/>
+              </RadialGradientBrush>
+            </Border.Background>
+          </Border>
+          <Border Grid.ColumnSpan="3" IsHitTestVisible="False"
+                  HorizontalAlignment="Left" VerticalAlignment="Bottom"
+                  Width="280" Height="180" Margin="-30,0,0,-36">
+            <Border.Background>
+              <RadialGradientBrush RadiusX="0.5" RadiusY="0.5">
+                <GradientStop Color="{DynamicResource AuroraTertiaryColor}" Offset="0"/>
+                <GradientStop Color="{DynamicResource AuroraTertiaryFadeColor}" Offset="1"/>
+              </RadialGradientBrush>
+            </Border.Background>
+          </Border>
+
           <StackPanel Grid.Column="0" HorizontalAlignment="Center" VerticalAlignment="Center">
             <Border Width="88" Height="88" CornerRadius="44"
                     Background="{DynamicResource AccentSoftBrush}"
@@ -141,9 +165,9 @@
             </DockPanel>
 
             <TextBlock Text="{Binding GrantedTitle}"
-                       FontSize="{DynamicResource FontSizeConclusion}"
-                       FontWeight="SemiBold"
-                       Foreground="{DynamicResource TextPrimaryBrush}"
+                       FontSize="{DynamicResource FontSizeShowcase}"
+                       FontWeight="ExtraBold"
+                       Foreground="{DynamicResource HeroTitleBrush}"
                        TextWrapping="Wrap"
                        AutomationProperties.Name="{Binding GrantedTitle}"/>
             <TextBlock Text="{Binding GrantedDetail}"
@@ -241,12 +265,38 @@
               <StackPanel>
                 <DockPanel>
                   <Border DockPanel.Dock="Left" Width="36" Height="36" CornerRadius="{DynamicResource RadiusSm}"
-                          Background="{DynamicResource AccentSoftBrush}"
-                          BorderBrush="{DynamicResource AccentEdgeBrush}" BorderThickness="1"
                           VerticalAlignment="Top" Margin="0,0,10,0">
+                    <Border.Style>
+                      <Style TargetType="Border">
+                        <Setter Property="Background" Value="{DynamicResource AccentSoftBrush}"/>
+                        <Setter Property="BorderBrush" Value="{DynamicResource AccentEdgeBrush}"/>
+                        <Setter Property="BorderThickness" Value="1"/>
+                        <Style.Triggers>
+                          <DataTrigger Binding="{Binding IconKey}" Value="IconCode">
+                            <Setter Property="Background" Value="{DynamicResource ScenarioDevSoftBrush}"/>
+                          </DataTrigger>
+                          <DataTrigger Binding="{Binding IconKey}" Value="IconDaily">
+                            <Setter Property="Background" Value="{DynamicResource ScenarioDailySoftBrush}"/>
+                          </DataTrigger>
+                        </Style.Triggers>
+                      </Style>
+                    </Border.Style>
                     <controls:IconView Key="{Binding IconKey}" Width="18" Height="18"
-                                       HorizontalAlignment="Center" VerticalAlignment="Center"
-                                       Foreground="{DynamicResource AccentPrimaryBrush}"/>
+                                       HorizontalAlignment="Center" VerticalAlignment="Center">
+                      <controls:IconView.Style>
+                        <Style TargetType="controls:IconView">
+                          <Setter Property="Foreground" Value="{DynamicResource AccentPrimaryBrush}"/>
+                          <Style.Triggers>
+                            <DataTrigger Binding="{Binding IconKey}" Value="IconCode">
+                              <Setter Property="Foreground" Value="{DynamicResource ScenarioDevBrush}"/>
+                            </DataTrigger>
+                            <DataTrigger Binding="{Binding IconKey}" Value="IconDaily">
+                              <Setter Property="Foreground" Value="{DynamicResource ScenarioDailyBrush}"/>
+                            </DataTrigger>
+                          </Style.Triggers>
+                        </Style>
+                      </controls:IconView.Style>
+                    </controls:IconView>
                   </Border>
                   <Border DockPanel.Dock="Right" Style="{StaticResource ScenarioStateBadge}"
                           VerticalAlignment="Top" AutomationProperties.Name="{Binding StateText}">

@@ -21,6 +21,9 @@ namespace CaelusApp
             "SuccessColor", "SuccessBrush", "WarningColor", "WarningBrush",
             "DangerColor", "DangerBrush", "InfoColor", "InfoBrush",
             "BrandColor", "BrandBrush",
+            "HeroTitleBrush",
+            "ScenarioDevBrush", "ScenarioDailyBrush",
+            "ScenarioDevSoftBrush", "ScenarioDailySoftBrush",
         };
 
         // 模式档（模式轴）：Mode.Standard/Competitive/Custom.xaml 与用户主题 Caelus.theme.xaml 必须全部实现

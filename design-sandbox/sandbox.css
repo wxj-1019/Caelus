@@ -138,7 +138,8 @@ button { border: 0; }
   display: inline-flex;
   align-items: center;
   gap: var(--space-sm);
-  background: var(--accent-soft);
+  /* 不透明小底：光晕/彩底压角时保证小字对比度（夜空烟花光晕可读性兜底） */
+  background: var(--surface-1);
   border: 1px solid var(--accent-edge);
   border-radius: var(--radius-sm);
   padding: 5px 10px;
@@ -984,31 +985,17 @@ input.toggle:disabled { opacity: .4; cursor: default; }
   box-shadow: 0 8px 24px #0000003D;
 }
 
-/* P1：Hero 卡升级 —— GlassCard 渐变描边 + 角部 accent 光晕，与普通卡拉开层级 */
+/* P1：Hero 卡升级 —— GlassCard 渐变描边 + 溢出裁切，与普通卡拉开层级
+   （夜空烟花双光晕为 overview.html 内联实现，此处不再提供角部光晕规则） */
 .hero-card { overflow: hidden; }
-.hero-glow {
-  position: absolute;
-  right: -90px;
-  top: -90px;
-  width: 340px;
-  height: 340px;
-  border-radius: 50%;
-  background: radial-gradient(circle, var(--accent-soft) 0%, transparent 68%);
-  pointer-events: none;
-}
 
-/* P2：结论标题 accent 渐变（深色用 Accent 梯度；浅色换 OnLight 保证对比度） */
+/* P2→夜空烟花：结论标题渐变收编回类（双色 Stop，令牌见 tokens.css：--hero-title-from/to 分主题） */
 .hero-title {
-  background: var(--accent-gradient);
+  background: linear-gradient(120deg, var(--hero-title-from) 30%, var(--hero-title-to));
   -webkit-background-clip: text;
           background-clip: text;
   -webkit-text-fill-color: transparent;
           color: transparent;
-}
-[data-theme="light"] .hero-title {
-  background: linear-gradient(90deg, var(--mode-accent-on-light), var(--accent-secondary));
-  -webkit-background-clip: text;
-          background-clip: text;
 }
 
 /* P2：占比条入场生长 */

@@ -124,8 +124,8 @@
 
         <!-- Hero 卡：CaelusCore + 结论（GlassCard 渐变描边 + 夜空烟花双光晕） -->
         <div class="glass-card hero-card rise-in rise-in-3" style="padding: 20px; margin-bottom: 20px;">
-          <!-- 夜空烟花：右上模式主色光晕（可见半径约 150px，溢出由 .hero-card overflow:hidden 裁切） -->
-          <div aria-hidden="true" style="position: absolute; right: -150px; top: -150px; width: 300px; height: 300px; border-radius: 50%; background: radial-gradient(circle, color-mix(in srgb, var(--mode-accent) 50%, transparent) 0%, color-mix(in srgb, var(--mode-accent) 13%, transparent) 55%, transparent 72%); pointer-events: none;"></div>
+          <!-- 夜空烟花：右上模式主色光晕（元素半径 150px、渐变于 58% 处淡出；溢出由 .hero-card overflow:hidden 裁切；强度已压低以保右上角徽章可读性） -->
+          <div aria-hidden="true" style="position: absolute; right: -150px; top: -150px; width: 300px; height: 300px; border-radius: 50%; background: radial-gradient(circle, color-mix(in srgb, var(--mode-accent) 32%, transparent) 0%, color-mix(in srgb, var(--mode-accent) 8%, transparent) 44%, transparent 58%); pointer-events: none;"></div>
           <!-- 左下补光：次强调色，可见半径约 120px、透明度约 40% -->
           <div aria-hidden="true" style="position: absolute; left: -120px; bottom: -120px; width: 240px; height: 240px; border-radius: 50%; background: radial-gradient(circle, color-mix(in srgb, var(--accent-secondary) 40%, transparent) 0%, transparent 68%); pointer-events: none;"></div>
           <div style="display: grid; grid-template-columns: 148px 24px 1fr; position: relative;">
@@ -160,8 +160,8 @@
                   <strong class="text-accent" style="font-size: 11px;" data-mode-text>巡航</strong>
                 </span>
               </div>
-              <!-- 夜空烟花：超大渐变标题（替换原 24px/600 结论标题；内联覆盖 sandbox.css 的 accent 渐变） -->
-              <p class="hero-title" style="font-size: var(--font-size-showcase); font-weight: 800; margin: 0; background: linear-gradient(120deg, var(--hero-title-from) 30%, var(--hero-title-to)); -webkit-background-clip: text; background-clip: text; color: transparent;">系统状态良好，可进入游戏</p>
+              <!-- 夜空烟花：超大展示字号（渐变与文字裁切收编在 sandbox.css .hero-title，令牌见 tokens.css） -->
+              <p class="hero-title" style="font-size: var(--font-size-showcase); font-weight: 800; margin: 0;">系统状态良好，可进入游戏</p>
               <p class="text-secondary" style="font-size: var(--font-size-caption); margin: 6px 0 0; max-width: 620px;">
                 后台压制已就绪，显卡策略为均衡档。此结论来自样例数据源，仅用于检查排版、换行与长文本表现。
               </p>

@@ -108,7 +108,7 @@
         <div class="status-banner is-error"><span style="font-size: 11px; color: var(--danger);">ErrorStatusBanner：操作失败或被阻断。</span></div>
       </div>
       <div class="status-banner" style="display: flex; align-items: center; gap: 8px;">
-        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="var(--info)" stroke-width="2" stroke-linecap="round" style="flex: none;"><circle cx="12" cy="12" r="9"/><path d="M12 11v5 M12 8h0.01"/></svg>
+        <svg aria-hidden="true" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="var(--info)" stroke-width="2" stroke-linecap="round" style="flex: none;"><circle cx="12" cy="12" r="9"/><path d="M12 11v5 M12 8h0.01"/></svg>
         <span class="text-secondary" style="font-size: 11px;">FeedbackBanner：页面内反馈横幅，FeedbackKind 驱动 Info/Success/Warning/Error 四态与图标，空文案自动折叠。</span>
         <span class="xaml-key" style="margin-left: auto;">FeedbackBanner</span>
       </div>
@@ -156,13 +156,13 @@
     <p class="demo-note">EmptyState / DropZoneEmpty → wpf/Themes/Styles.xaml · 虚线引导 + 呼吸图标邀请操作</p>
     <div class="demo-grid-2" style="align-items: stretch;">
       <div class="empty-state" style="display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 6px; text-align: center; padding: 26px;">
-        <svg class="empty-hero-icon" width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="var(--text-tertiary)" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7l8-4 8 4-8 4-8-4z M4 7v10l8 4 8-4V7"/></svg>
+        <svg class="empty-hero-icon" aria-hidden="true" width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="var(--text-tertiary)" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7l8-4 8 4-8 4-8-4z M4 7v10l8 4 8-4V7"/></svg>
         <p class="section-title" style="margin-top: 4px;">还没有游戏</p>
         <p class="section-subtitle">添加游戏后，Caelus 会为它生成环境档案。</p>
         <button class="btn btn-primary" style="margin-top: 8px;">添加游戏</button>
       </div>
       <div class="card drop-zone-empty" style="min-height: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 6px; text-align: center;">
-        <svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="var(--text-tertiary)" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M12 16V4 M7 9l5-5 5 5 M4 20h16"/></svg>
+        <svg aria-hidden="true" width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="var(--text-tertiary)" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M12 16V4 M7 9l5-5 5 5 M4 20h16"/></svg>
         <p class="section-title" style="margin-top: 4px;">拖放游戏目录到此处</p>
         <p class="section-subtitle">或点击「添加游戏」手动选择路径。</p>
       </div>
@@ -305,7 +305,7 @@
     <p class="demo-note">ScenarioCard / ScenarioStateBadge → wpf/Views/OverviewView.xaml ·
       掌权 = Success 柔色 + SuccessEdge 描边 · 关闭 = opacity .72 · 图标按场景着色（--scenario-dev / --scenario-daily）</p>
     <div class="demo-grid-3">
-      <div class="scenario-card card-interactive is-granted">
+      <div class="scenario-card is-granted">
         <div style="display: flex; justify-content: space-between; align-items: flex-start;">
           <span aria-hidden="true" style="display: inline-flex; align-items: center; justify-content: center; width: 36px; height: 36px; border-radius: var(--radius-sm); background: color-mix(in srgb, var(--accent-primary) 20%, transparent); color: var(--accent-primary);">
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M7 8h10a4 4 0 0 1 4 4a4 4 0 0 1-4 4H7a4 4 0 0 1-4-4a4 4 0 0 1 4-4z M9 10v4 M7 12h4 M16.5 11h.01 M18.5 13h.01"/></svg>
@@ -315,7 +315,7 @@
         <p class="section-title" style="margin: 10px 0 0;">游戏</p>
         <p class="section-subtitle">进入游戏前一键压制后台。</p>
       </div>
-      <div class="scenario-card card-interactive">
+      <div class="scenario-card">
         <div style="display: flex; justify-content: space-between; align-items: flex-start;">
           <span aria-hidden="true" style="display: inline-flex; align-items: center; justify-content: center; width: 36px; height: 36px; border-radius: var(--radius-sm); background: color-mix(in srgb, var(--scenario-dev) 20%, transparent); color: var(--scenario-dev);">
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 7l-5 5 5 5 M16 7l5 5-5 5"/></svg>
@@ -325,7 +325,7 @@
         <p class="section-title" style="margin: 10px 0 0;">开发专注</p>
         <p class="section-subtitle">静音通知，保持编译火力。</p>
       </div>
-      <div class="scenario-card card-interactive is-off">
+      <div class="scenario-card is-off">
         <div style="display: flex; justify-content: space-between; align-items: flex-start;">
           <span aria-hidden="true" style="display: inline-flex; align-items: center; justify-content: center; width: 36px; height: 36px; border-radius: var(--radius-sm); background: color-mix(in srgb, var(--scenario-daily) 20%, transparent); color: var(--scenario-daily);">
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20z M12 6v6l4 2"/></svg>
@@ -417,7 +417,7 @@
     <p class="demo-note">ProgressRing → wpf/Controls/ProgressRing.cs · track 全环 6px + 圆角端帽进度弧自顶端顺时针 ·
       沙盒以 CSS 入场生长模拟（reduced-motion 关闭）· 体检扫描态另见 .progress-orb（audit.html）</p>
     <div class="card demo-row">
-      <span class="progress-ring" style="width: 96px; height: 96px;">
+      <span class="progress-ring" role="progressbar" aria-valuenow="72" aria-valuemin="0" aria-valuemax="100" aria-label="体检扫描进度示例：72%" style="width: 96px; height: 96px;">
         <svg width="96" height="96" viewBox="0 0 96 96">
           <circle class="track" cx="48" cy="48" r="42" stroke-width="6"/>
           <circle class="arc" cx="48" cy="48" r="42" stroke-width="6"
@@ -425,7 +425,7 @@
         </svg>
         <span class="progress-orb-center"><span class="pct">72%</span><span class="phase">扫描中</span></span>
       </span>
-      <span class="progress-ring" style="width: 96px; height: 96px;">
+      <span class="progress-ring" role="progressbar" aria-valuenow="30" aria-valuemin="0" aria-valuemax="100" aria-label="数据收集进度示例：30%" style="width: 96px; height: 96px;">
         <svg width="96" height="96" viewBox="0 0 96 96">
           <circle class="track" cx="48" cy="48" r="42" stroke-width="6"/>
           <circle class="arc" cx="48" cy="48" r="42" stroke-width="6"
@@ -433,7 +433,7 @@
         </svg>
         <span class="progress-orb-center"><span class="pct">30%</span><span class="phase">收集中</span></span>
       </span>
-      <span class="progress-ring" style="width: 96px; height: 96px;">
+      <span class="progress-ring" role="progressbar" aria-valuenow="100" aria-valuemin="0" aria-valuemax="100" aria-label="体检完成示例：100%" style="width: 96px; height: 96px;">
         <svg width="96" height="96" viewBox="0 0 96 96">
           <circle class="track" cx="48" cy="48" r="42" stroke-width="6"/>
           <circle class="arc" cx="48" cy="48" r="42" stroke-width="6"
@@ -486,7 +486,7 @@
     <h2>滚动区</h2>
     <p class="demo-note">ScrollBarStyle / ScrollThumb → wpf/Themes/Styles.xaml ·
       WPF 为 2px 玻璃滚动条（默认 30% 淡出、悬停淡入），沙盒暂以 10px webkit 胶囊近似</p>
-    <div class="scroll-area">
+    <div class="scroll-area" tabindex="0" aria-label="滚动区演示">
       <div class="settings-row"><span class="card-label">滚动内容一</span><span class="text-tertiary" style="font-size: 11px;">滚动查看</span></div>
       <div class="settings-row"><span class="card-label">滚动内容二</span><span class="text-tertiary" style="font-size: 11px;">滚动查看</span></div>
       <div class="settings-row"><span class="card-label">滚动内容三</span><span class="text-tertiary" style="font-size: 11px;">滚动查看</span></div>

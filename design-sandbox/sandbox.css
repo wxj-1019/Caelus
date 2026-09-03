@@ -135,12 +135,6 @@ button { border: 0; }
   border-radius: var(--radius-sm);
   padding: var(--space-sm) var(--space-md);
 }
-/* 语义变体（InfoStatusBanner / SuccessStatusBanner / WarningStatusBanner / ErrorStatusBanner：
-   Soft 柔色底 + Edge 描边；柔色以 color-mix 调出并压在不透明表面之上，延续上方可读性兜底） */
-.status-banner.is-info    { background: color-mix(in srgb, var(--info) 10%, var(--surface-1));    border-color: color-mix(in srgb, var(--info) 31%, transparent); }
-.status-banner.is-success { background: color-mix(in srgb, var(--success) 10%, var(--surface-1)); border-color: color-mix(in srgb, var(--success) 31%, transparent); }
-.status-banner.is-warning { background: color-mix(in srgb, var(--warning) 10%, var(--surface-1)); border-color: color-mix(in srgb, var(--warning) 31%, transparent); }
-.status-banner.is-error   { background: color-mix(in srgb, var(--danger) 10%, var(--surface-1));  border-color: color-mix(in srgb, var(--danger) 31%, transparent); }
 .status-badge {
   display: inline-flex;
   align-items: center;
@@ -152,13 +146,19 @@ button { border: 0; }
   padding: 5px 10px;
   font-size: var(--font-size-caption);
 }
-/* 语义变体（NeutralStatusBadge / InfoStatusBadge / SuccessStatusBadge / WarningStatusBadge /
-   ErrorStatusBadge → Colors.*.xaml 的 *SoftBrush / *EdgeBrush；底色同样压在不透明表面之上） */
-.status-badge.is-neutral { background: var(--surface-1);                                                          border-color: var(--border-strong); }
-.status-badge.is-info    { background: color-mix(in srgb, var(--info) 10%, var(--surface-1));    border-color: color-mix(in srgb, var(--info) 31%, transparent); }
-.status-badge.is-success { background: color-mix(in srgb, var(--success) 10%, var(--surface-1)); border-color: color-mix(in srgb, var(--success) 31%, transparent); }
-.status-badge.is-warning { background: color-mix(in srgb, var(--warning) 10%, var(--surface-1)); border-color: color-mix(in srgb, var(--warning) 31%, transparent); }
-.status-badge.is-error   { background: color-mix(in srgb, var(--danger) 10%, var(--surface-1));  border-color: color-mix(in srgb, var(--danger) 31%, transparent); }
+/* NeutralStatusBadge：中性（不透明表面底 + border-strong 描边） */
+.status-badge.is-neutral { background: var(--surface-1); border-color: var(--border-strong); }
+/* Info/Success/Warning/Error 语义变体共用色（*StatusBadge / *StatusBanner →
+   Colors.*.xaml 的 *SoftBrush / *EdgeBrush；柔色以 color-mix 调出并压在不透明表面之上，
+   延续上方可读性兜底） */
+.status-badge.is-info,
+.status-banner.is-info    { background: color-mix(in srgb, var(--info) 10%, var(--surface-1));    border-color: color-mix(in srgb, var(--info) 31%, transparent); }
+.status-badge.is-success,
+.status-banner.is-success { background: color-mix(in srgb, var(--success) 10%, var(--surface-1)); border-color: color-mix(in srgb, var(--success) 31%, transparent); }
+.status-badge.is-warning,
+.status-banner.is-warning { background: color-mix(in srgb, var(--warning) 10%, var(--surface-1)); border-color: color-mix(in srgb, var(--warning) 31%, transparent); }
+.status-badge.is-error,
+.status-banner.is-error   { background: color-mix(in srgb, var(--danger) 10%, var(--surface-1));  border-color: color-mix(in srgb, var(--danger) 31%, transparent); }
 
 /* GlassCard：渐变描边（CardEdgeBrush，mask 环形技巧） */
 .glass-card {
@@ -1004,7 +1004,9 @@ input.toggle:disabled { opacity: .4; cursor: default; }
 }
 
 /* ScenarioCard 家族（wpf/Views/OverviewView.xaml：掌权 → Success 柔色 + SuccessEdge 描边；
-   关闭 → opacity .72；悬停仅提亮描边，不做浮起） */
+   关闭 → opacity .72）。悬停仅提亮描边、不做浮起（不叠 card-interactive，避免过渡被覆盖成瞬时跳动）；
+   掌权卡跳过 hover 提亮：XAML 中 IsGranted DataTrigger 声明在 IsMouseOver Trigger 之后、
+   同属性后者胜，掌权态描边保持 SuccessEdge 语义（故 :hover 规则须置于 .is-granted 之前） */
 .scenario-card { transition: border-color .2s ease, background .2s ease; }
 .scenario-card:hover { border-color: var(--border-strong); }
 .scenario-card.is-granted {

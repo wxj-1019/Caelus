@@ -1,4 +1,4 @@
-// @author zenjiro 18967498922@163.com
+﻿// @author zenjiro 18967498922@163.com
 // 文件用途 集中维护界面多语言文本
 
 using System;
@@ -531,7 +531,7 @@ namespace CaelusApp
             { "panic.done", new[]{ "能确认的改动都已还原，电源和调度交还给系统。\r\n游戏还开着的话，几秒后会重新接管；想彻底停用，请关掉游戏模式和反作弊压制。" } },
             { "panic.timeout", new[]{ "还有一部分没确认还原完，Caelus 会继续自动重试。想彻底停用，请关掉游戏模式和反作弊压制。" } },
             { "panic.failedcount", new[]{ "未确认完成：{0}/{1} 项" } },
-            { "rep.done", new[]{ "{0} 本局 {1}，压制 {2} 个后台进程，期间它们合计只用了 {3} CPU" } },
+            { "rep.done", new[]{ "{0} 本局 {1}：压制 {2} 个后台，合计只让它们用了 {3} CPU" } },
             { "rep.top", new[]{ "，占用最高 {0}（{1}）" } },
             { "rep.caelus.cpu", new[]{ "；Caelus 主进程平均 CPU {0}%" } },
             { "rep.gputhrottle", new[]{ "；显卡这局被什么拖了后腿：{0}" } },

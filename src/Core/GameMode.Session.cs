@@ -138,35 +138,67 @@ namespace CaelusApp
                 }
             }
 
-            string msg = Lang.F("rep.done", game, FmtDur(dur), used.Count, FmtCpu(total));
-            if (topName != null && top >= TimeSpan.TicksPerSecond)
-                msg += Lang.F("rep.top", topName, FmtCpu(top));
+            string core = Lang.F("rep.done", DisplayNameFor(game), FmtDur(dur), used.Count, FmtCpu(total));
             long caelusCpuEnd = CurrentProcessCpuTicks();
             long caelusCpuDelta = caelusCpuStart > 0
                 && caelusCpuEnd >= caelusCpuStart
                 ? caelusCpuEnd - caelusCpuStart : 0;
             double caelusCpuPercent = AverageCpuPercent(
                 caelusCpuDelta, dur);
-            msg += Lang.F(
+
+            // 明细（占用最高的具体进程 / Caelus 自身开销）只进日志；气泡留给
+            // 用户关心的结论——此前整段塞进气泡又长又全是内部指标
+            string detail = "";
+            if (topName != null && top >= TimeSpan.TicksPerSecond)
+                detail += Lang.F("rep.top", topName, FmtCpu(top));
+            detail += Lang.F(
                 "rep.caelus.cpu",
                 caelusCpuPercent.ToString("0.00", CultureInfo.InvariantCulture));
+
             string throttle = GpuThrottleProbe.Summarize();
-            if (throttle != null) msg += Lang.F("rep.gputhrottle", throttle);
+            string throttleText = throttle != null ? Lang.F("rep.gputhrottle", throttle) : "";
+            string protectedText = "";
             // 受保护本体（内核反作弊拒开句柄）开不了 CPU 统计句柄——报告不含本体
             // 占用，数字天然偏低，注明免得用户以为工具没干活
             lock (sync)
             {
                 if (activeDetection != null && activeDetection.RendererPid > 0
                     && boostDenied.Contains(activeDetection.RendererPid))
-                    msg += "；游戏本体受反作弊保护，未计入统计";
+                    protectedText = "；游戏本体受反作弊保护，未计入统计";
             }
-            Logger.Log("本局结束：" + msg);
 
+            Logger.Log("本局结束：" + core + detail + throttleText + protectedText);
+
+            string msg = core + throttleText + protectedText;
             if (dur.TotalSeconds >= 60)
             {
                 var h = SessionEnded;
                 if (h != null) { try { h(msg); } catch { } }
             }
+        }
+
+        /// <summary>对局报告的游戏显示名：优先用游戏库里的档案名（用户可见的
+        /// 中文名），匹配不到再退回检测到的进程名（如带 (TM) Client 后缀的
+        /// 内部名）。名字裸传进程名会让弹窗可读性很差。</summary>
+        private string DisplayNameFor(string running)
+        {
+            if (string.IsNullOrEmpty(running)) return running;
+            try
+            {
+                lock (sync)
+                {
+                    foreach (GameProfile p in profiles)
+                    {
+                        if (p == null || string.IsNullOrEmpty(p.Name)) continue;
+                        if (string.Equals(p.Name, running, StringComparison.OrdinalIgnoreCase)
+                            || string.Equals(p.ExecutablePath, running, StringComparison.OrdinalIgnoreCase)
+                            || (p.Entries != null && p.Entries.Contains(running)))
+                            return p.Name;
+                    }
+                }
+            }
+            catch { }
+            return running;
         }
 
         private static bool CpuTicks(int pid, out long ticks, out long creation)

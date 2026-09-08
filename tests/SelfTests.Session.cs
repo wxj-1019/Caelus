@@ -1,4 +1,4 @@
-// @author zenjiro 18967498922@163.com
+﻿// @author zenjiro 18967498922@163.com
 // 文件用途 校验单局压制统计在宽限期先行还原后仍然结账
 
 using System;
@@ -28,7 +28,7 @@ namespace CaelusApp
                 mode.ProbeSessionTrack(self, "selftest");
                 mode.ProbeSessionSeal(self);
                 mode.ProbeSessionFinish();
-                Eq(true, LastReportLine(logPath).Contains("压制 1 个后台进程"));
+                Eq(true, LastReportLine(logPath).Contains("压制 1 个后台"));
 
                 File.WriteAllText(logPath, "");
                 mode.ProbeSessionBegin("重复压制测试");
@@ -36,14 +36,14 @@ namespace CaelusApp
                 mode.ProbeSessionSeal(self);
                 mode.ProbeSessionTrack(self, "selftest");
                 mode.ProbeSessionFinish();
-                Eq(true, LastReportLine(logPath).Contains("压制 1 个后台进程"));
+                Eq(true, LastReportLine(logPath).Contains("压制 1 个后台"));
 
                 File.WriteAllText(logPath, "");
                 mode.ProbeSessionBegin("销账测试");
                 mode.ProbeSessionTrack(self, "selftest");
                 mode.ProbeSessionUntrack(self);
                 mode.ProbeSessionFinish();
-                Eq(true, LastReportLine(logPath).Contains("压制 0 个后台进程"));
+                Eq(true, LastReportLine(logPath).Contains("压制 0 个后台"));
             }
             finally
             {

@@ -95,5 +95,65 @@ namespace CaelusApp
             }
             finally { DeleteTempDir(dir); }
         }
+
+        private static void TestShaderCacheActionThreshold()
+        {
+            // 阈值逻辑：不足 64MB 跳过，超阈值清理（挂钩隔离真实文件系统）
+            long fakeBytes = 10L * 1024 * 1024;
+            var freed = new CacheSweep.Result();
+            ShaderCacheAction.MeasureHook = delegate { return fakeBytes; };
+            ShaderCacheAction.CleanHook = delegate { freed.FreedBytes = fakeBytes / 2; return freed; };
+            try
+            {
+                var a = new ShaderCacheAction();
+                Eq(HealthOutcome.Skipped, a.Execute(null).Outcome);
+                fakeBytes = 200L * 1024 * 1024;
+                HealthResult r = a.Execute(null);
+                Eq(HealthOutcome.Success, r.Outcome);
+                Eq(100L * 1024 * 1024, r.FreedBytes);
+                Eq(true, r.Summary.IndexOf("释放") >= 0);
+                Eq(false, a.CanUndo);
+                Eq(true, a.AllowAuto);
+            }
+            finally { ShaderCacheAction.MeasureHook = null; ShaderCacheAction.CleanHook = null; }
+        }
+
+        private static void TestHealthCareRunIfDueViaRunner()
+        {
+            // RunIfDue 改接 Runner 后：到点才执行、执行后写 HealthLastRun、动作结果进历史
+            string dir = NewTempDir("hc-runner");
+            string oldHist = HealthHistory.FilePath;
+            HealthHistory.FilePath = Path.Combine(dir, "h.tsv");
+            var probe = new FakeAction("probe-a", true);
+            var c = new HealthActionCatalog();
+            c.Register(probe);
+            HealthActionCatalog oldCat = HealthCare.CatalogOverride;
+            HealthCare.CatalogOverride = c;
+            try
+            {
+                Settings.SaveStr("HealthLastRun", "2999-01-01");   // 强制不到点
+                HealthCare.RunIfDue();
+                Eq(0, probe.AnalyzeCalls);
+
+                Settings.SaveStr("HealthLastRun", "2000-01-01");   // 强制到点
+                HealthCare.ShouldDefer = delegate { return true; };// 游戏让路
+                HealthCare.RunIfDue();
+                Eq(0, probe.AnalyzeCalls);
+                HealthCare.ShouldDefer = null;
+
+                HealthCare.RunIfDue();
+                Eq(1, probe.AnalyzeCalls);
+                Eq(1, HealthHistory.LoadAll().Count);
+                Eq(DateTime.Now.ToString("yyyy-MM-dd"), Settings.LoadStr("HealthLastRun", ""));
+            }
+            finally
+            {
+                HealthCare.CatalogOverride = oldCat;
+                HealthCare.ShouldDefer = null;
+                HealthHistory.FilePath = oldHist;
+                Settings.Remove("HealthLastRun");
+                DeleteTempDir(dir);
+            }
+        }
     }
 }

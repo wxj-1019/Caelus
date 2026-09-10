@@ -2160,6 +2160,8 @@ namespace CaelusApp
             test("维护框架：单动作异常隔离不中断", TestHealthRunnerFaultIsolation);
             test("维护框架：历史截断与特殊字符往返", TestHealthHistoryRoundtrip);
             test("维护框架：单条还原追加 Undo 记录", TestHealthRunnerUndoRecord);
+            test("维护动作：着色器缓存阈值跳过与清理", TestShaderCacheActionThreshold);
+            test("维护调度：RunIfDue 经 Runner 的到点/让路语义", TestHealthCareRunIfDueViaRunner);
             }
             finally { try { Directory.Delete(root, true); } catch { } }
 

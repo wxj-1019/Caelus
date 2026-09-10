@@ -2,7 +2,6 @@
 // 文件用途 系统健康维护：到点判定与执行编排（独立定时调度，与 DailyCare 掌权解耦）
 
 using System;
-using System.Collections.Generic;
 using System.Threading;
 
 namespace CaelusApp
@@ -12,6 +11,9 @@ namespace CaelusApp
         private static readonly object autoSync = new object();
         private static Timer autoTimer;
         private static int runningFlag;
+
+        /// <summary>测试挂钩：替换动作目录（生产为 null 用 HealthCatalog.Shared）</summary>
+        internal static HealthActionCatalog CatalogOverride;
 
         /// <summary>忙时门控（宿主接线）：游戏进行中时本轮跳过——着色器缓存是游戏
         /// 运行时热用的文件，对局中清理＝全量重编译卡顿，对游戏优化工具是反向操作。
@@ -74,13 +76,13 @@ namespace CaelusApp
             return days > 30 ? 30 : days;
         }
 
-        /// <summary>到点则执行：着色器缓存清理 + 启动项审查。由独立调度（StartAuto）调用。</summary>
+        /// <summary>到点则经维护框架执行一轮。由独立调度（StartAuto）调用。</summary>
         public static void RunIfDue()
         {
             string today = DateTime.Now.ToString("yyyy-MM-dd");
             if (!IsDue(Settings.LoadStr("HealthLastRun", ""), IntervalDays(), DateTime.Now)) return;
 
-            // 到点判定后、开删前再让路一次：大缓存清理可持续数十秒，
+            // 到点判定后、执行前再让路一次：大缓存清理可持续数十秒，
             // 恰在此间隙启动的游戏不能撞上着色器全量重编译
             Func<bool> defer = ShouldDefer;
             if (defer != null && defer())
@@ -89,35 +91,8 @@ namespace CaelusApp
                 return;   // 不写 HealthLastRun：下个 30 分钟周期继续尝试
             }
 
-            try
-            {
-                long beforeBytes = ShaderCache.MeasureBytes();
-                if (beforeBytes > 64L * 1024 * 1024)
-                {
-                    CacheSweep.Result r = ShaderCache.Clean();
-                    Logger.Log("健康维护：着色器缓存清理 " + CacheSweep.FmtBytes(beforeBytes)
-                        + "（释放 " + CacheSweep.FmtBytes(r.FreedBytes) + "）");
-                }
-            }
-            catch (Exception ex) { Logger.LogFailure("健康维护：着色器清理失败", ex); }
-
-            try
-            {
-                var current = StartupAudit.ScanCurrent();
-                var baseline = StartupAudit.LoadBaseline(StartupAudit.BaselinePath);
-                var added = StartupAudit.DiffNew(current, baseline);
-                if (baseline.Count > 0 && added.Count > 0)
-                {
-                    var names = new List<string>();
-                    foreach (var e in added) names.Add(e.Name + "（" + e.Source + "）");
-                    string news = string.Join("、", names.ToArray());
-                    if (news.Length > 300) news = news.Substring(0, 300) + "...";
-                    Settings.SaveStr("HealthStartupNews", news);
-                    Logger.Log("健康维护：发现 " + added.Count + " 个新启动项：" + news);
-                }
-                StartupAudit.SaveBaseline(StartupAudit.BaselinePath, current);
-            }
-            catch (Exception ex) { Logger.LogFailure("健康维护：启动项审查失败", ex); }
+            try { HealthRunner.Run(HealthTrigger.Auto, CatalogOverride ?? HealthCatalog.Shared, null); }
+            catch (Exception ex) { Logger.LogFailure("健康维护执行异常", ex); }
 
             Settings.SaveStr("HealthLastRun", today);
         }

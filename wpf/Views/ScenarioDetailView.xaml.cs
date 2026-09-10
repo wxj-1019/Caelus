@@ -49,8 +49,10 @@ namespace CaelusApp.WpfHost.Views
                 if (r.IsChecked) ids.Add(r.Id);
             System.Threading.ThreadPool.QueueUserWorkItem(delegate
             {
-                try { vm.DisableSelectedStartupCore(ids); } catch { }
-                Dispatcher.BeginInvoke(new Action(delegate { vm.RefreshHealthZone(true); }));
+                string msg = "";
+                try { msg = vm.DisableSelectedStartupCore(ids); } catch { }
+                string feedback = msg ?? "";
+                Dispatcher.BeginInvoke(new Action(delegate { vm.HealthActionFeedback = feedback; vm.RefreshHealthZone(true); }));
             });
         }
 
@@ -63,8 +65,10 @@ namespace CaelusApp.WpfHost.Views
             if (string.IsNullOrEmpty(payload)) return;
             System.Threading.ThreadPool.QueueUserWorkItem(delegate
             {
-                try { vm.UndoStartupCore(payload); } catch { }
-                Dispatcher.BeginInvoke(new Action(delegate { vm.RefreshHealthZone(true); }));
+                string msg = "";
+                try { msg = vm.UndoStartupCore(payload); } catch { }
+                string feedback = msg ?? "";
+                Dispatcher.BeginInvoke(new Action(delegate { vm.HealthActionFeedback = feedback; vm.RefreshHealthZone(true); }));
             });
         }
     }

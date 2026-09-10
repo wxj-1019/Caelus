@@ -359,6 +359,7 @@ namespace CaelusApp
         // —— 维护中心（仅 Daily 页）——
         private string healthSummaryText = "—";
         private string healthRunHint = "";
+        private string healthActionFeedback = "";
         private bool healthRunEnabled = true;
         private long lastHealthRunTicks;
         private bool healthZoneLoaded;
@@ -448,6 +449,8 @@ namespace CaelusApp
         public bool HealthZoneVisible { get { return !isDev; } }
         public string HealthSummaryText { get { return healthSummaryText; } private set { SetProperty(ref healthSummaryText, value, "HealthSummaryText"); } }
         public string HealthRunHint { get { return healthRunHint; } private set { SetProperty(ref healthRunHint, value, "HealthRunHint"); } }
+        /// <summary>启动项操作结果反馈（禁用所选/还原的返回串），由代码后置在 UI 线程写入；空串时 XAML 行近零高。</summary>
+        public string HealthActionFeedback { get { return healthActionFeedback; } set { SetProperty(ref healthActionFeedback, value, "HealthActionFeedback"); } }
         public bool HealthRunEnabled { get { return healthRunEnabled; } private set { SetProperty(ref healthRunEnabled, value, "HealthRunEnabled"); } }
         public ObservableCollection<HealthHistoryRow> HealthHistoryRows { get; private set; }
         public ObservableCollection<StartupFindingRow> StartupFindings { get; private set; }

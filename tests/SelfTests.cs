@@ -2168,6 +2168,9 @@ namespace CaelusApp
             test("启动项禁用：启动文件夹 lnk 移动与还原", TestStartupDisableLnkRoundtrip);
             test("启动项禁用：还原目标被占用不覆盖", TestStartupUndoTargetOccupied);
             test("启动项审查：自动周期写新闻并提交基线", TestStartupAutoCycleNewsAndBaseline);
+            test("启动项禁用：还原拒绝未知负载来源", TestStartupUndoUnknownSourceRefused);
+            test("启动项禁用：还原拒绝 lnk 名字目录逸出", TestStartupUndoLnkNameTraversalRefused);
+            test("启动项禁用：删除失败回滚备份且原值保全", TestStartupDisableDeleteFailureRollsBack);
             }
             finally { try { Directory.Delete(root, true); } catch { } }
 

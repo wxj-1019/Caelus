@@ -189,10 +189,6 @@ namespace CaelusApp
             {
                 return fakeReg.Remove(hive + "|" + name) ? null : "值不存在";
             };
-            StartupAuditAction.BackupReadHook = delegate(string hive, string name)
-            {
-                string v; return fakeReg.TryGetValue("bak|" + hive + "|" + name, out v) ? v : null;
-            };
             StartupAuditAction.BackupWriteHook = delegate(string hive, string name, string data)
             {
                 fakeReg["bak|" + hive + "|" + name] = data; return null;
@@ -223,7 +219,6 @@ namespace CaelusApp
             StartupAuditAction.ReadRunValueHook = null;
             StartupAuditAction.WriteRunValueHook = null;
             StartupAuditAction.DeleteRunValueHook = null;
-            StartupAuditAction.BackupReadHook = null;
             StartupAuditAction.BackupWriteHook = null;
             StartupAuditAction.BackupDeleteHook = null;
             StartupAuditAction.BackupEnumHook = null;
@@ -354,6 +349,63 @@ namespace CaelusApp
                 Settings.Remove("HealthStartupNews");
                 UninstallFakeStartupStore(); DeleteTempDir(dir);
             }
+        }
+
+        private static void TestStartupUndoUnknownSourceRefused()
+        {
+            string dir = NewTempDir("sa-unk");
+            InstallFakeStartupStore(dir);
+            try
+            {
+                fakeReg["HKCU\\Run|App"] = "C:\\a.exe";
+                var a = new StartupAuditAction();
+                string payload = HealthEsc.Esc("HKU\\Run") + "\t" + HealthEsc.Esc("App") + "\t" + HealthEsc.Esc("C:\\x.exe") + "\t";
+                string err;
+                Eq(false, a.Undo(payload, out err));
+                Eq(true, err != null);
+                Eq(1, fakeReg.Count);                        // 假店无变化
+                Eq("C:\\a.exe", fakeReg["HKCU\\Run|App"]);
+            }
+            finally { UninstallFakeStartupStore(); DeleteTempDir(dir); }
+        }
+
+        private static void TestStartupUndoLnkNameTraversalRefused()
+        {
+            string dir = NewTempDir("sa-trav");
+            InstallFakeStartupStore(dir);
+            try
+            {
+                // name 带 ".." 试图逸出备份目录：受害文件在备份目录之外
+                string victim = Path.Combine(dir, "victim.lnk");
+                File.WriteAllText(victim, "outside-backup");
+                string target = Path.Combine(StartupAuditAction.StartupFolderOverride, "victim.lnk");
+                var a = new StartupAuditAction();
+                string payload = HealthEsc.Esc("StartupFolder") + "\t" + HealthEsc.Esc("..\\victim.lnk") + "\t\t" + HealthEsc.Esc(target);
+                string err;
+                Eq(false, a.Undo(payload, out err));
+                Eq(true, err != null);
+                Eq(true, File.Exists(victim));               // 目录外文件未被搬走
+                Eq(false, File.Exists(target));              // 启动文件夹未产生文件
+            }
+            finally { UninstallFakeStartupStore(); DeleteTempDir(dir); }
+        }
+
+        private static void TestStartupDisableDeleteFailureRollsBack()
+        {
+            string dir = NewTempDir("sa-rb");
+            InstallFakeStartupStore(dir);
+            try
+            {
+                fakeReg["HKCU\\Run|App"] = "C:\\a.exe /x";
+                StartupAuditAction.DeleteRunValueHook = delegate(string hive, string name) { return "模拟删除失败"; };
+                var a = new StartupAuditAction();
+                HealthResult r = a.Execute(new[] { "HKCU\\Run|App" });
+                Eq(HealthOutcome.Failed, r.Outcome);
+                Eq("C:\\a.exe /x", fakeReg["HKCU\\Run|App"]);        // 原值仍在
+                Eq(false, fakeReg.ContainsKey("bak|HKCU\\Run|App")); // 备份已清除
+                Eq(0, a.ListDisabled().Count);
+            }
+            finally { UninstallFakeStartupStore(); DeleteTempDir(dir); }
         }
     }
 }

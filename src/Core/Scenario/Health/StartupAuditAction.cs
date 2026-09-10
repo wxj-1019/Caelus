@@ -21,7 +21,6 @@ namespace CaelusApp
         internal static Func<string, string, string> ReadRunValueHook;          // (hive,name)→data|null
         internal static Func<string, string, string, string> WriteRunValueHook; // (hive,name,data)→error|null（同名已存在须报错）
         internal static Func<string, string, string> DeleteRunValueHook;        // →error|null
-        internal static Func<string, string, string> BackupReadHook;
         internal static Func<string, string, string, string> BackupWriteHook;   // 备份允许覆盖
         internal static Func<string, string, string> BackupDeleteHook;
         internal static Func<string, List<KeyValuePair<string, string>>> BackupEnumHook;
@@ -139,8 +138,11 @@ namespace CaelusApp
             string name = HealthEsc.Unesc(f[1]);
             string data = HealthEsc.Unesc(f[2]);
             string extra = HealthEsc.Unesc(f[3]);
+            if (source != "HKCU\\Run" && source != "HKLM\\Run" && source != "StartupFolder")
+            { error = "未知的负载来源：" + source; return false; }
             if (source == "StartupFolder")
             {
+                if (name != Path.GetFileName(name)) { error = "负载中的文件名不合法"; return false; }   // 防 ".." 逸出备份目录
                 string bak = Path.Combine(BackupDir(), name);
                 if (!File.Exists(bak)) { error = "备份文件已不存在"; return false; }
                 if (File.Exists(extra)) { error = "启动文件夹已存在同名文件"; return false; }
@@ -182,6 +184,7 @@ namespace CaelusApp
                 try
                 {
                     Directory.CreateDirectory(BackupDir());
+                    // 同名陈旧备份允许覆盖，当前活动文件始终保全
                     if (File.Exists(dst)) File.Delete(dst);
                     File.Move(src, dst);
                 }
@@ -266,17 +269,6 @@ namespace CaelusApp
             const string runPath = @"SOFTWARE\Microsoft\Windows\CurrentVersion\Run";
             if (hive == "HKLM\\Run") return Registry.LocalMachine.OpenSubKey(runPath, writable);
             return Registry.CurrentUser.OpenSubKey(runPath, writable);
-        }
-
-        private static string BackupRead(string hive, string name)
-        {
-            if (BackupReadHook != null) return BackupReadHook(hive, name);
-            try
-            {
-                using (RegistryKey k = Registry.CurrentUser.OpenSubKey(BackupKeyPath + "\\" + HiveTag(hive)))
-                    return k == null ? null : Convert.ToString(k.GetValue(name, null));
-            }
-            catch { return null; }
         }
 
         private static string BackupWrite(string hive, string name, string data)

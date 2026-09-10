@@ -2154,6 +2154,12 @@ namespace CaelusApp
             test("健康维护：基线快照存储往返与转义", TestStartupAuditBaselineRoundtrip);
             test("健康维护：到点判定覆盖从未运行与损坏数据", TestHealthCareIsDue);
     test("健康维护：反斜杠-t 序列与真实制表符基线往返无损", TestStartupAuditEscapingRoundtrip);
+            test("维护框架：目录注册与查找", TestHealthCatalogRegister);
+            test("维护框架：自动路径跳过手动动作", TestHealthRunnerAutoSkipsManualOnly);
+            test("维护框架：手动路径透传勾选项", TestHealthRunnerManualPassSelection);
+            test("维护框架：单动作异常隔离不中断", TestHealthRunnerFaultIsolation);
+            test("维护框架：历史截断与特殊字符往返", TestHealthHistoryRoundtrip);
+            test("维护框架：单条还原追加 Undo 记录", TestHealthRunnerUndoRecord);
             }
             finally { try { Directory.Delete(root, true); } catch { } }
 

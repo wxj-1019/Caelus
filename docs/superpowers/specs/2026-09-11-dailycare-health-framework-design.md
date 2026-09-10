@@ -1,7 +1,7 @@
 # 日常养护补全：维护动作框架（HealthAction Framework）
 
 日期：2026-09-11
-状态：设计已确认（brainstorm 三节全过），待实施
+状态：已实施（2026-09-11，main 分支 8dbc9bb..dddafce + 收口提交；自测 254→276 全绿）
 
 ## 0. 现状与目标
 
@@ -179,3 +179,14 @@ internal interface IHealthAction
 - WinForms 侧新 UI（核心逻辑宿主无关已够用）
 - 开发专注模式的缺口补齐（IDE 名录自定义、专注统计历史等）——下一轮单独立项
 - 电池档的电源计划参数写入（方案 B/C 落选项，观察滑块档效果再说）
+
+## 11. 实施偏差记录
+
+- Undo 接口为单行负载 `Undo(string, out string)`；历史为不可变事件日志；「已禁用」真值来自备份存储枚举（IHealthAction.ListDisabled）
+- Analyze 纯函数；新闻+基线提交走 IHealthAutoCycle.OnAutoCycle（Runner Auto 路径调用）
+- HealthHistory.FilePath getter 在 Paths.Data 为 null 时退 Path.GetTempPath()（自测进程不调 Paths.Init）
+- HealthRunner.UndoSingle 负载行缺 TAB 护栏；ShaderCacheAction Skipped 摘要用 FmtBytes(Threshold)
+- StartupAuditAction：Undo 来源白名单 + lnk 名字防目录逸出；死代码 BackupRead 未建
+- VM 属性名 HealthHistoryRows（避开静态类撞名）；「不建议」徽标用既有 WarnTag 模式；门控 RefreshHealthRunGate + detail VM 自挂 2s DispatcherTimer（source 静默时 Changed 不触发）；历史失败行 Style Setter + DataTrigger（本地值压触发器）
+- DailyCare：RefreshPowerStateCore(bool) 抽离供测试注入电池源；SetFamilyVisibleForTest 钩子；bal.daily.batt 气球文案对齐自动化行为
+- PowerOverlay：HealFromCrash 续航档段 lock(lk) 纪律；ApplyBatterySaverIfNeeded 锁内复读 grantedFlag

@@ -44,6 +44,35 @@ namespace CaelusApp
         private static readonly object Sync = new object();
         private static Dictionary<string, Entry> byName;
 
+        private const string CustomKey = "CustomDailyProcs";
+        private static HashSet<string> customNames;
+
+        /// <summary>自定义日常进程名（分号/换行分隔），存注册表，设置页可编辑。无安装目录锚点，按名匹配。</summary>
+        public static string CustomList
+        {
+            get { return Settings.LoadStr(CustomKey, ""); }
+            set { Settings.SaveStr(CustomKey, value ?? ""); lock (Sync) customNames = null; }
+        }
+
+        private static HashSet<string> LoadCustom()
+        {
+            lock (Sync)
+            {
+                if (customNames != null) return customNames;
+                var set = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+                string raw = Settings.LoadStr(CustomKey, "");
+                if (raw != null)
+                    foreach (string part in raw.Split(new[] { ';', '\r', '\n' }, StringSplitOptions.RemoveEmptyEntries))
+                    {
+                        string t = part.Trim();
+                        if (t.EndsWith(".exe", StringComparison.OrdinalIgnoreCase)) t = t.Substring(0, t.Length - 4);
+                        if (t.Length > 0) set.Add(t);
+                    }
+                customNames = set;
+                return set;
+            }
+        }
+
         private static Dictionary<string, Entry> Map()
         {
             lock (Sync)
@@ -59,19 +88,25 @@ namespace CaelusApp
         public static bool NameMatches(string name)
         {
             if (string.IsNullOrEmpty(name)) return false;
-            return Map().ContainsKey(StripExe(name));
+            string bare = StripExe(name);
+            return Map().ContainsKey(bare) || LoadCustom().Contains(bare);
         }
 
         public static bool IsMatch(string name, string path)
         {
-            if (string.IsNullOrEmpty(name) || string.IsNullOrEmpty(path)) return false;
+            if (string.IsNullOrEmpty(name)) return false;
+            string bare = StripExe(name);
             Entry e;
-            if (!Map().TryGetValue(StripExe(name), out e)) return false;
-            string full = path;
-            try { full = Path.GetFullPath(path); } catch { }
-            foreach (string prefix in e.Roots)
-                if (full.StartsWith(prefix, StringComparison.OrdinalIgnoreCase)) return true;
-            return false;
+            if (Map().TryGetValue(bare, out e))
+            {
+                if (string.IsNullOrEmpty(path)) return false;
+                string full = path;
+                try { full = Path.GetFullPath(path); } catch { }
+                foreach (string prefix in e.Roots)
+                    if (full.StartsWith(prefix, StringComparison.OrdinalIgnoreCase)) return true;
+                return false;
+            }
+            return LoadCustom().Contains(bare);   // 自定义名录：无目录锚点，按名匹配
         }
 
         private static string StripExe(string name)

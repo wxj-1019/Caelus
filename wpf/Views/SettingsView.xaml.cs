@@ -250,6 +250,14 @@ namespace CaelusApp.WpfHost.Views
             Motion.Emphasize(PageFeedbackBanner);
         }
 
+        private void OnDailyCustomSave(object sender, RoutedEventArgs e)
+        {
+            SettingsViewModel vm = DataContext as SettingsViewModel;
+            if (vm == null) return;
+            vm.SaveDailyCustom(TbDailyCustom.Text);
+            Motion.Emphasize(PageFeedbackBanner);
+        }
+
         private void OnDevEnvRun(object sender, RoutedEventArgs e)
         {
             SettingsViewModel vm = DataContext as SettingsViewModel;

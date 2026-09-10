@@ -270,5 +270,21 @@ namespace CaelusApp
             return false;
         }
 
+        private static void TestDailyCatalogCustomList()
+        {
+            string old = DailyCatalog.CustomList;
+            try
+            {
+                DailyCatalog.CustomList = "notepad; ;\r\nmytool.exe\r\nBad Row  ";
+                Eq(true, DailyCatalog.NameMatches("notepad"));
+                Eq(true, DailyCatalog.NameMatches("mytool"));        // .exe 后缀归一
+                Eq(true, DailyCatalog.IsMatch("notepad", @"C:\ anywhere\notepad.exe")); // 自定义无目录锚点
+                Eq(false, DailyCatalog.NameMatches(""));             // 空行容错
+                Eq(true, DailyCatalog.NameMatches("Bad Row"));       // 大小写不敏感、Trim
+                Eq(true, DailyCatalog.NameMatches("chrome"));        // 内置名录不受影响
+            }
+            finally { DailyCatalog.CustomList = old; }
+        }
+
     }
 }

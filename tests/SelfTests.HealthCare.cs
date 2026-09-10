@@ -155,5 +155,205 @@ namespace CaelusApp
                 DeleteTempDir(dir);
             }
         }
+
+        // —— 启动项禁用/还原：注册表走内存假店、lnk 走临时目录 ——
+        private static System.Collections.Generic.Dictionary<string, string> fakeReg;
+
+        private static void InstallFakeStartupStore(string dir)
+        {
+            fakeReg = new System.Collections.Generic.Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
+            StartupAuditAction.ScanCurrentHook = delegate
+            {
+                var list = new System.Collections.Generic.List<StartupAudit.Entry>();
+                foreach (var kv in fakeReg)
+                {
+                    if (kv.Key.IndexOf("bak|") == 0) continue;
+                    int bar = kv.Key.IndexOf('|');
+                    list.Add(new StartupAudit.Entry(kv.Key.Substring(0, bar), kv.Key.Substring(bar + 1), kv.Value));
+                }
+                foreach (string f in Directory.GetFiles(StartupAuditAction.StartupFolderOverride))
+                    list.Add(new StartupAudit.Entry("StartupFolder", Path.GetFileName(f), ""));
+                return list;
+            };
+            StartupAuditAction.ReadRunValueHook = delegate(string hive, string name)
+            {
+                string v; return fakeReg.TryGetValue(hive + "|" + name, out v) ? v : null;
+            };
+            StartupAuditAction.WriteRunValueHook = delegate(string hive, string name, string data)
+            {
+                string key = hive + "|" + name;
+                if (fakeReg.ContainsKey(key)) return "目标位置已有同名值";
+                fakeReg[key] = data; return null;
+            };
+            StartupAuditAction.DeleteRunValueHook = delegate(string hive, string name)
+            {
+                return fakeReg.Remove(hive + "|" + name) ? null : "值不存在";
+            };
+            StartupAuditAction.BackupReadHook = delegate(string hive, string name)
+            {
+                string v; return fakeReg.TryGetValue("bak|" + hive + "|" + name, out v) ? v : null;
+            };
+            StartupAuditAction.BackupWriteHook = delegate(string hive, string name, string data)
+            {
+                fakeReg["bak|" + hive + "|" + name] = data; return null;
+            };
+            StartupAuditAction.BackupDeleteHook = delegate(string hive, string name)
+            {
+                fakeReg.Remove("bak|" + hive + "|" + name); return null;
+            };
+            StartupAuditAction.BackupEnumHook = delegate(string hive)
+            {
+                var l = new System.Collections.Generic.List<KeyValuePair<string, string>>();
+                foreach (var kv in fakeReg)
+                {
+                    string prefix = "bak|" + hive + "|";
+                    if (kv.Key.IndexOf(prefix, StringComparison.OrdinalIgnoreCase) == 0)
+                        l.Add(new KeyValuePair<string, string>(kv.Key.Substring(prefix.Length), kv.Value));
+                }
+                return l;
+            };
+            StartupAuditAction.StartupFolderOverride = Path.Combine(dir, "startup");
+            StartupAuditAction.BackupDirOverride = Path.Combine(dir, "backup");
+            Directory.CreateDirectory(StartupAuditAction.StartupFolderOverride);
+        }
+
+        private static void UninstallFakeStartupStore()
+        {
+            StartupAuditAction.ScanCurrentHook = null;
+            StartupAuditAction.ReadRunValueHook = null;
+            StartupAuditAction.WriteRunValueHook = null;
+            StartupAuditAction.DeleteRunValueHook = null;
+            StartupAuditAction.BackupReadHook = null;
+            StartupAuditAction.BackupWriteHook = null;
+            StartupAuditAction.BackupDeleteHook = null;
+            StartupAuditAction.BackupEnumHook = null;
+            StartupAuditAction.StartupFolderOverride = null;
+            StartupAuditAction.BackupDirOverride = null;
+            fakeReg = null;
+        }
+
+        private static void TestStartupDisablePlanFilter()
+        {
+            Eq(true, StartupAuditAction.IsSystemItem(new StartupAudit.Entry("HKLM\\Run", "Audio", "C:\\Windows\\svc.exe")));
+            Eq(true, StartupAuditAction.IsSystemItem(new StartupAudit.Entry("HKCU\\Run", "OneDrive", "C:\\Program Files\\Microsoft\\OneDrive\\x.exe")));
+            Eq(false, StartupAuditAction.IsSystemItem(new StartupAudit.Entry("HKCU\\Run", "MyApp", "C:\\apps\\my.exe")));
+        }
+
+        private static void TestStartupDisableRegistryRoundtrip()
+        {
+            string dir = NewTempDir("sa-reg");
+            InstallFakeStartupStore(dir);
+            try
+            {
+                fakeReg["HKCU\\Run|MyApp"] = "C:\\apps\\my.exe /q";
+                var a = new StartupAuditAction();
+                Eq(HealthOutcome.Skipped, a.Execute(null).Outcome);
+                Eq(HealthOutcome.Skipped, a.Execute(new string[0]).Outcome);
+
+                HealthResult r = a.Execute(new[] { "HKCU\\Run|MyApp" });
+                Eq(HealthOutcome.Success, r.Outcome);
+                Eq(1, r.ItemCount);
+                Eq(false, fakeReg.ContainsKey("HKCU\\Run|MyApp"));
+                Eq("C:\\apps\\my.exe /q", fakeReg["bak|HKCU\\Run|MyApp"]);
+                Eq(true, r.UndoPayload.Length > 0);
+
+                Eq(1, a.ListDisabled().Count);
+                Eq("MyApp", a.ListDisabled()[0].Label);
+
+                string err;
+                Eq(true, a.Undo(a.ListDisabled()[0].Id, out err));
+                Eq("C:\\apps\\my.exe /q", fakeReg["HKCU\\Run|MyApp"]);
+                Eq(false, fakeReg.ContainsKey("bak|HKCU\\Run|MyApp"));
+                Eq(0, a.ListDisabled().Count);
+
+                HealthResult dup = a.Execute(new[] { "HKCU\\Run|MyApp" });
+                Eq(HealthOutcome.Success, dup.Outcome);
+                Eq(true, a.Undo(a.ListDisabled()[0].Id, out err));
+            }
+            finally { UninstallFakeStartupStore(); DeleteTempDir(dir); }
+        }
+
+        private static void TestStartupDisableSystemItemRefused()
+        {
+            string dir = NewTempDir("sa-sys");
+            InstallFakeStartupStore(dir);
+            try
+            {
+                fakeReg["HKLM\\Run|Audio"] = "C:\\Windows\\audio.exe";
+                var a = new StartupAuditAction();
+                HealthResult r = a.Execute(new[] { "HKLM\\Run|Audio" });
+                Eq(HealthOutcome.Skipped, r.Outcome);
+                Eq(true, fakeReg.ContainsKey("HKLM\\Run|Audio"));
+            }
+            finally { UninstallFakeStartupStore(); DeleteTempDir(dir); }
+        }
+
+        private static void TestStartupDisableLnkRoundtrip()
+        {
+            string dir = NewTempDir("sa-lnk");
+            InstallFakeStartupStore(dir);
+            try
+            {
+                string lnk = Path.Combine(StartupAuditAction.StartupFolderOverride, "tool.lnk");
+                File.WriteAllText(lnk, "shortcut");
+                var a = new StartupAuditAction();
+                HealthResult r = a.Execute(new[] { "StartupFolder|tool.lnk" });
+                Eq(HealthOutcome.Success, r.Outcome);
+                Eq(false, File.Exists(lnk));
+                Eq(1, a.ListDisabled().Count);
+
+                string err;
+                Eq(true, a.Undo(a.ListDisabled()[0].Id, out err));
+                Eq(true, File.Exists(lnk));
+                Eq(0, a.ListDisabled().Count);
+            }
+            finally { UninstallFakeStartupStore(); DeleteTempDir(dir); }
+        }
+
+        private static void TestStartupUndoTargetOccupied()
+        {
+            string dir = NewTempDir("sa-occ");
+            InstallFakeStartupStore(dir);
+            try
+            {
+                fakeReg["HKCU\\Run|App"] = "C:\\a.exe";
+                var a = new StartupAuditAction();
+                a.Execute(new[] { "HKCU\\Run|App" });
+                fakeReg["HKCU\\Run|App"] = "C:\\new.exe";
+                string err;
+                Eq(false, a.Undo(a.ListDisabled()[0].Id, out err));
+                Eq(true, err != null);
+                Eq("C:\\new.exe", fakeReg["HKCU\\Run|App"]);
+            }
+            finally { UninstallFakeStartupStore(); DeleteTempDir(dir); }
+        }
+
+        private static void TestStartupAutoCycleNewsAndBaseline()
+        {
+            string dir = NewTempDir("sa-cycle");
+            InstallFakeStartupStore(dir);
+            string oldBaseline = StartupAuditAction.BaselinePathOverride;
+            StartupAuditAction.BaselinePathOverride = Path.Combine(dir, "base.tsv");
+            try
+            {
+                fakeReg["HKCU\\Run|NewSpy"] = "C:\\spy\\new.exe";
+                var a = new StartupAuditAction();
+                HealthReport r1 = a.Analyze();
+                Eq(true, r1.Findings.Count >= 0);
+                ((IHealthAutoCycle)a).OnAutoCycle();
+                Eq("", Settings.LoadStr("HealthStartupNews", ""));
+
+                fakeReg["HKCU\\Run|BrandNew"] = "C:\\new\\b.exe";
+                ((IHealthAutoCycle)a).OnAutoCycle();
+                string news = Settings.LoadStr("HealthStartupNews", "");
+                Eq(true, news.IndexOf("BrandNew") >= 0);
+            }
+            finally
+            {
+                StartupAuditAction.BaselinePathOverride = oldBaseline;
+                Settings.Remove("HealthStartupNews");
+                UninstallFakeStartupStore(); DeleteTempDir(dir);
+            }
+        }
     }
 }

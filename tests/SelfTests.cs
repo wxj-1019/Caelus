@@ -2162,6 +2162,12 @@ namespace CaelusApp
             test("维护框架：单条还原追加 Undo 记录", TestHealthRunnerUndoRecord);
             test("维护动作：着色器缓存阈值跳过与清理", TestShaderCacheActionThreshold);
             test("维护调度：RunIfDue 经 Runner 的到点/让路语义", TestHealthCareRunIfDueViaRunner);
+            test("启动项禁用：系统项判定", TestStartupDisablePlanFilter);
+            test("启动项禁用：注册表项禁用与还原往返", TestStartupDisableRegistryRoundtrip);
+            test("启动项禁用：系统项拒绝禁用", TestStartupDisableSystemItemRefused);
+            test("启动项禁用：启动文件夹 lnk 移动与还原", TestStartupDisableLnkRoundtrip);
+            test("启动项禁用：还原目标被占用不覆盖", TestStartupUndoTargetOccupied);
+            test("启动项审查：自动周期写新闻并提交基线", TestStartupAutoCycleNewsAndBaseline);
             }
             finally { try { Directory.Delete(root, true); } catch { } }
 

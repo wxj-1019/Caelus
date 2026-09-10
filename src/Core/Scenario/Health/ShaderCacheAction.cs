@@ -30,7 +30,7 @@ namespace CaelusApp
         {
             long before = Measure();
             if (before <= Threshold)
-                return new HealthResult { ActionId = Id, Outcome = HealthOutcome.Skipped, Summary = "着色器缓存不足 64MB，无需清理" };
+                return new HealthResult { ActionId = Id, Outcome = HealthOutcome.Skipped, Summary = "着色器缓存不足 " + CacheSweep.FmtBytes(Threshold) + "，无需清理" };
             CacheSweep.Result r = Clean();
             return new HealthResult
             {

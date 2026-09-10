@@ -1,5 +1,5 @@
 // @author zenjiro 18967498922@163.com
-// 文件用途 默认维护动作目录：当前注册着色器缓存清理；新动作在此加一行
+// 文件用途 默认维护动作目录：当前注册着色器缓存清理与启动项审查；新动作在此加一行
 
 namespace CaelusApp
 {
@@ -18,6 +18,7 @@ namespace CaelusApp
                     {
                         var c = new HealthActionCatalog();
                         c.Register(new ShaderCacheAction());
+                        c.Register(new StartupAuditAction());
                         shared = c;
                     }
                     return shared;

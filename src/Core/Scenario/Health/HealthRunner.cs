@@ -78,11 +78,12 @@ namespace CaelusApp
             catch (Exception ex) { error = ex.GetType().Name; ok = false; }
             if (ok)
             {
+                string[] parts = (payloadLine ?? "").Split('\t');
                 HealthHistory.Append(new HealthRecord
                 {
                     Time = DateTime.Now, Trigger = "Undo", ActionId = actionId,
                     Outcome = HealthOutcome.Success, ItemCount = 1,
-                    Summary = "已还原：" + HealthEsc.Unesc(payloadLine.Split('\t')[1])
+                    Summary = "已还原：" + (parts.Length > 1 ? HealthEsc.Unesc(parts[1]) : payloadLine)
                 });
             }
             return ok;

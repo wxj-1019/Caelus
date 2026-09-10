@@ -503,7 +503,22 @@ namespace CaelusApp
             }
 
             RebuildRows();
-            if (!isDev) RefreshHealthZone(false);
+            if (!isDev)
+            {
+                RefreshHealthZone(false);
+                RefreshHealthRunGate();   // 每 2 秒重算按钮门控（纯内存无 IO）：游戏退出/冷却结束自动恢复可点
+            }
+        }
+
+        /// <summary>「立即执行」门控：游戏掌权或 60 秒冷却内禁用。只读内存状态，可由 2 秒轮询反复调。</summary>
+        private void RefreshHealthRunGate()
+        {
+            bool gameHolds = source.Granted == ScenarioKind.Game;
+            long now = DateTime.UtcNow.Ticks;
+            bool cooldown = now - lastHealthRunTicks < 60L * TimeSpan.TicksPerSecond;
+            HealthRunEnabled = !gameHolds && !cooldown;
+            HealthRunHint = gameHolds ? "游戏进行中，维护自动顺延，结束后可手动执行"
+                : cooldown ? "刚刚执行过，请稍候再试（60 秒间隔）" : "";
         }
 
         /// <summary>维护区刷新。force=false 且已加载过则跳过（2 秒轮询不重复读 TSV/注册表）。
@@ -514,12 +529,7 @@ namespace CaelusApp
             if (healthZoneLoaded && !force) return;
             healthZoneLoaded = true;
 
-            bool gameHolds = source.Granted == ScenarioKind.Game;
-            long now = DateTime.UtcNow.Ticks;
-            bool cooldown = now - lastHealthRunTicks < 60L * TimeSpan.TicksPerSecond;
-            HealthRunEnabled = !gameHolds && !cooldown;
-            HealthRunHint = gameHolds ? "游戏进行中，维护自动顺延，结束后可手动执行"
-                : cooldown ? "刚刚执行过，请稍候再试（60 秒间隔）" : "";
+            RefreshHealthRunGate();
 
             var all = HealthHistory.LoadAll();
             HealthHistoryRows.Clear();

@@ -2,6 +2,7 @@
 // 文件用途 独占模式切换电源滑块到最佳性能 原值取自注册表 退出还原
 
 using System;
+using System.Collections.Generic;
 using System.Runtime.InteropServices;
 using Microsoft.Win32;
 
@@ -15,6 +16,22 @@ namespace CaelusApp
         private const string SnapKey = "PowerOverlaySnap";
 
         private static readonly Guid Max = new Guid("ded574b5-45a0-4f42-8737-46345c09c238");
+
+        private static readonly Guid Saver = new Guid("961cc777-2547-4f9d-8174-7d86181b8a7a");
+        private const string SaverSnapKey = "PowerOverlayDcSaverSnap";
+        private const string SaverSnapAbsent = "\x1f";   // 快照哨兵：原本无 DC 值
+        private static readonly HashSet<string> saverOwners = new HashSet<string>(StringComparer.Ordinal);
+
+        internal const string OwnerDailyCare = "dailycare";
+
+        /// <summary>续航档 GUID 文本（自测锚定，防误改）</summary>
+        internal static string SaverGuidText { get { return Saver.ToString(); } }
+
+        /// <summary>原始注册表串是否为续航档（纯逻辑可单测）</summary>
+        internal static bool IsSaverGuid(string raw)
+        {
+            return ParseGuidOrNull(raw) == Saver;
+        }
 
         [DllImport("powrprof.dll")]
         private static extern uint PowerSetActiveOverlayScheme(Guid overlaySchemeGuid);
@@ -189,10 +206,87 @@ namespace CaelusApp
             catch { return Guid.Empty; }
         }
 
+        /// <summary>日常养护·电池联动：DC 侧滑块切「更长的续航」。多占用方引用计数；
+        /// 游戏档快照在位时让位不动（游戏优先）。</summary>
+        public static bool ActivateDcSaver(string owner)
+        {
+            if (!Supported()) return false;
+            lock (lk)
+            {
+                if (!SharedEffectClaim.Acquire(saverOwners, owner)) return true;
+                if (Settings.LoadStr(SnapKey, "").Length > 0)
+                {
+                    SharedEffectClaim.Release(saverOwners, owner);
+                    Logger.Log("电源滑块：游戏档占用中，续航档本轮让位");
+                    return false;
+                }
+                string dcBefore = TryReadDcRaw();
+                if (IsSaverGuid(dcBefore)) return true;   // 已是续航档：无快照也视为成功
+                if (!Settings.SaveStr(SaverSnapKey, dcBefore ?? SaverSnapAbsent))
+                {
+                    SharedEffectClaim.Release(saverOwners, owner);
+                    Logger.Log("电源滑块：续航档快照无法持久化，本轮未切换");
+                    return false;
+                }
+                try
+                {
+                    using (RegistryKey key = Registry.LocalMachine.OpenSubKey(SchemeKey, true))
+                    {
+                        if (key == null) throw new System.IO.IOException("SchemeKey unavailable");
+                        key.SetValue(DcValue, Saver.ToString());
+                    }
+                }
+                catch (Exception ex)
+                {
+                    Settings.SaveStr(SaverSnapKey, "");
+                    SharedEffectClaim.Release(saverOwners, owner);
+                    Logger.Log("电源滑块：续航档写入失败（" + ex.GetType().Name + "）");
+                    return false;
+                }
+                Logger.Log("电源滑块：电池档已切到「更长的续航」，回电或场景挂起时还原");
+                return true;
+            }
+        }
+
+        /// <summary>还原 DC 续航档。最后一个占用方释放才真正还原；失败快照保留下次再试。</summary>
+        public static bool RestoreDcSaver(string owner)
+        {
+            lock (lk)
+            {
+                if (!SharedEffectClaim.Release(saverOwners, owner)) return true;
+                return RestoreDcSaverCore();
+            }
+        }
+
+        private static bool RestoreDcSaverCore()
+        {
+            string saved = Settings.LoadStr(SaverSnapKey, "");
+            if (saved.Length == 0) return true;
+            try
+            {
+                using (RegistryKey key = Registry.LocalMachine.OpenSubKey(SchemeKey, true))
+                {
+                    if (key == null) return false;
+                    if (saved == SaverSnapAbsent) key.DeleteValue(DcValue, false);
+                    else key.SetValue(DcValue, saved);
+                }
+            }
+            catch { return false; }   // 快照保留，下次启动/释放继续
+            Settings.SaveStr(SaverSnapKey, "");
+            Logger.Log("电源滑块：电池档续航已还原");
+            return true;
+        }
+
         public static void HealFromCrash()
         {
-            if (Settings.LoadStr(SnapKey, "").Length == 0) return;
-            if (Restore()) Logger.Log("检测到上次未还原的电源滑块设置，已恢复");
+            if (Settings.LoadStr(SnapKey, "").Length > 0)
+                if (Restore()) Logger.Log("检测到上次未还原的电源滑块设置，已恢复");
+            // 续航档崩溃自愈：进程已死，占用记账无从谈起，清空后直接还原
+            if (Settings.LoadStr(SaverSnapKey, "").Length > 0)
+            {
+                lock (lk) { SharedEffectClaim.ReleaseAll(saverOwners); }
+                if (RestoreDcSaverCore()) Logger.Log("检测到上次未还原的电池续航档设置，已恢复");
+            }
         }
     }
 }

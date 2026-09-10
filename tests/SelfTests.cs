@@ -934,6 +934,8 @@ namespace CaelusApp
     test("日常优化：多原因并存生效级别取最强且释放隔离", TestDailyCareReasonLevelMax);
     test("日常优化：家族提优 AboveNormal+IO 快照往返还原", TestDailyCareFamilyBoostRoundtrip);
             test("日常名录：自定义名录合并与坏行容错", TestDailyCatalogCustomList);
+            test("电池联动：脱电掌权激活续航档、回电与停止还原", TestDailyCareSaverApplyAndRestore);
+            test("电池联动：电池开关关闭不动作", TestDailyCareSaverOffNoop);
             test("白名单存储：数据损坏时安全失败，写入为事务性", TestWhitelistStorageSafety);
             test("白名单并发：编辑与进行中的策略快照串行化", TestWhitelistMutationSerialization);
             test("极端豁免：反作弊名称匹配不区分大小写", () =>
@@ -2151,6 +2153,7 @@ namespace CaelusApp
             test("竞技电源：清理绝不碰用户自己的方案", TestPowerPlanPurgeSparesForeignSchemes);
             test("竞技电源：旧版遗留的方案副本会被迁移删除", TestPowerPlanMigratesLegacyClone);
             test("竞技电源：反复解析目标计划只会有一个方案", TestPowerPlanResolveIsIdempotent);
+            test("电源滑块：续航档 GUID 常量与判定", TestPowerOverlaySaverConstants);
             test("健康维护：启动项基线对比只报新增", TestStartupAuditDiffNew);
             test("健康维护：基线快照存储往返与转义", TestStartupAuditBaselineRoundtrip);
             test("健康维护：到点判定覆盖从未运行与损坏数据", TestHealthCareIsDue);

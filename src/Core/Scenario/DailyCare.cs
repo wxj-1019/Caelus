@@ -25,6 +25,31 @@ namespace CaelusApp
         private System.Threading.Timer reconcileTimer;
         private bool grantedFlag;
 
+        /// <summary>测试挂钩：隔离真实注册表（生产为 null 走 PowerOverlay 真实实现）</summary>
+        internal static Func<bool> BatterySaverApplyHook;
+        internal static Func<bool> BatterySaverRestoreHook;
+
+        private static bool SaverApply()
+        {
+            if (BatterySaverApplyHook != null) return BatterySaverApplyHook();
+            try { return PowerOverlay.ActivateDcSaver(PowerOverlay.OwnerDailyCare); } catch { return false; }
+        }
+
+        private static bool SaverRestore()
+        {
+            if (BatterySaverRestoreHook != null) return BatterySaverRestoreHook();
+            try { return PowerOverlay.RestoreDcSaver(PowerOverlay.OwnerDailyCare); } catch { return false; }
+        }
+
+        /// <summary>掌权且电池供电且开关开 → 续航档在位</summary>
+        private void ApplyBatterySaverIfNeeded()
+        {
+            bool batt;
+            lock (sync) batt = onBattery;
+            if (!batt || !BatteryOn) return;
+            SaverApply();
+        }
+
         public override ScenarioKind Kind { get { return ScenarioKind.DailyCare; } }
         public override int Priority { get { return 10; } }
 
@@ -97,6 +122,11 @@ namespace CaelusApp
             }
             if (!changed) return;
             RecomputeActivity();
+            if (wasGranted)
+            {
+                if (batt) ApplyBatterySaverIfNeeded();
+                else SaverRestore();
+            }
             // 掌权期间插拔电立即重扫换档（Eco↔Restrained），不再等最长 30 秒的校正节拍；
             // 线程池执行——WinForms 宿主的电源轮询在 UI 线程上，全量扫描不能压上去
             if (wasGranted)
@@ -223,6 +253,7 @@ namespace CaelusApp
                 BoostVisibleFamily();
                 StartReconcileTimer();
                 MaybeShowBatteryBalloon();
+                ApplyBatterySaverIfNeeded();
                 Logger.Log("日常优化：获得掌职权（家族窗口/电池），后台转入常规档压制");
             }
             catch (Exception ex) { Logger.LogFailure("日常优化掌权失败", ex); }
@@ -242,6 +273,8 @@ namespace CaelusApp
             catch (Exception ex) { failed++; Logger.LogFailure("日常优化挂起：停止校正节拍失败", ex); }
             try { RestoreFamilyBoost(); }
             catch (Exception ex) { failed++; Logger.LogFailure("日常优化挂起：还原家族提优失败", ex); }
+            try { SaverRestore(); }
+            catch (Exception ex) { failed++; Logger.LogFailure("日常优化挂起：还原电池续航档失败", ex); }
             try { if (core != null) core.ReleaseReason(SuppressReason.Daily); }
             catch (Exception ex) { failed++; Logger.LogFailure("日常优化挂起：解除后台压制失败", ex); }
             if (failed == 0) Logger.Log("日常优化：挂起，全部副作用已还原（检测继续）");
@@ -264,7 +297,7 @@ namespace CaelusApp
             }
             if (!show) return;
             try { var h = SessionChanged; if (h != null) h("bal.daily.batt"); } catch { }
-            Logger.Log("日常优化：电池供电，后台压制已升档；建议电源模式调至更长续航");
+            Logger.Log("日常优化：电池供电，后台压制已升档；电池档电源滑块已切到更长续航");
         }
 
         private void StartReconcileTimer()

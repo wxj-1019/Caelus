@@ -286,5 +286,66 @@ namespace CaelusApp
             finally { DailyCatalog.CustomList = old; }
         }
 
+        private static void TestDailyCareSaverApplyAndRestore()
+        {
+            string dir = NewTempDir("daily-saver");
+            DailyCare daily = null;
+            var calls = new List<string>();
+            DailyCare.BatterySaverApplyHook = delegate { calls.Add("apply"); return true; };
+            DailyCare.BatterySaverRestoreHook = delegate { calls.Add("restore"); return true; };
+            try
+            {
+                var arbiter = new ScenarioArbiter();
+                var core = new SuppressionCore(Path.Combine(dir, "s.state"));
+                daily = new DailyCare(arbiter, core, () => true, (n, p) => false);
+
+                daily.SetBatteryForTest(true);          // 脱电掌权 → 激活续航档
+                Eq(true, daily.IsGranted);
+                Eq(1, calls.Count); Eq("apply", calls[0]);
+
+                daily.SetBatteryForTest(false);         // 回电 → 还原
+                Eq(true, calls.Contains("restore"));
+
+                calls.Clear();
+                daily.SetBatteryForTest(true);
+                Eq(1, calls.Count);                      // 再次脱电再激活
+                daily.Stop();                            // 挂起/停止 → 还原兜底
+                Eq(true, calls.Contains("restore"));
+            }
+            finally
+            {
+                DailyCare.BatterySaverApplyHook = null;
+                DailyCare.BatterySaverRestoreHook = null;
+                if (daily != null) try { daily.Stop(); } catch { }
+                DeleteTempDir(dir);
+            }
+        }
+
+        private static void TestDailyCareSaverOffNoop()
+        {
+            string dir = NewTempDir("daily-saveroff");
+            DailyCare daily = null;
+            int applied = 0;
+            DailyCare.BatterySaverApplyHook = delegate { applied++; return true; };
+            DailyCare.BatterySaverRestoreHook = delegate { return true; };
+            bool oldBatt = Settings.Load("DailyCareBatteryOn", true);
+            Settings.Save("DailyCareBatteryOn", false);   // 电池开关关 → 不动作
+            try
+            {
+                var arbiter = new ScenarioArbiter();
+                var core = new SuppressionCore(Path.Combine(dir, "s.state"));
+                daily = new DailyCare(arbiter, core, () => true, (n, p) => false);
+                daily.SetBatteryForTest(true);
+                Eq(0, applied);
+            }
+            finally
+            {
+                Settings.Save("DailyCareBatteryOn", oldBatt);
+                DailyCare.BatterySaverApplyHook = null;
+                DailyCare.BatterySaverRestoreHook = null;
+                if (daily != null) try { daily.Stop(); } catch { }
+                DeleteTempDir(dir);
+            }
+        }
     }
 }

@@ -258,5 +258,14 @@ internal static partial class SelfTests
             if (actual != expected)
                 throw new Exception("「" + label + "」期望 " + expected + "，实际 " + actual);
         }
+
+        private static void TestPowerOverlaySaverConstants()
+        {
+            Eq("961cc777-2547-4f9d-8174-7d86181b8a7a", PowerOverlay.SaverGuidText);
+            Eq(true, PowerOverlay.IsSaverGuid("961CC777-2547-4F9D-8174-7D86181B8A7A"));  // 大小写不敏感
+            Eq(false, PowerOverlay.IsSaverGuid("ded574b5-45a0-4f42-8737-46345c09c238")); // 最佳性能 ≠ 续航
+            Eq(false, PowerOverlay.IsSaverGuid(null));
+            Eq(false, PowerOverlay.IsSaverGuid("garbage"));
+        }
     }
 }

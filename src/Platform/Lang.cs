@@ -487,7 +487,7 @@ namespace CaelusApp
             { "bal.noelev", new[]{ "当前未以管理员运行，压制类功能不会生效。" } },
             { "bal.buildstart", new[]{ "编译优化中：后台已降级，编译器优先拿资源" } },
             { "bal.buildend", new[]{ "编译结束，已恢复后台资源" } },
-            { "bal.daily.batt", new[]{ "电池供电：后台压制已加强，建议电源模式调至更长续航" } },
+            { "bal.daily.batt", new[]{ "电池供电：后台压制已升档，电源滑块已切到更长续航" } },
             { "bal.distract", new[]{ "专注模式：检测到分心应用启动（仅提醒，不处理）" } },
             { "bal.devsvc", new[]{ "开发服务已退出：{0}" } },
             { "set.dev", new[]{ "开发模式" } },

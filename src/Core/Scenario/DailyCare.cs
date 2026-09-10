@@ -19,6 +19,7 @@ namespace CaelusApp
         private readonly Dictionary<int, string> dailyBoostedName = new Dictionary<int, string>();
         private readonly Dictionary<int, int> dailyBoostedIo = new Dictionary<int, int>();
         private bool familyVisible;
+        private bool familyVisibleTestPin;   // 测试钩子：钉住家族可见性，窗口复查不改写
         private bool onBattery;
         private bool batteryBalloonShown;
         private long lastWindowCheckTicks;
@@ -45,8 +46,9 @@ namespace CaelusApp
         private void ApplyBatterySaverIfNeeded()
         {
             bool batt;
-            lock (sync) batt = onBattery;
-            if (!batt || !BatteryOn) return;
+            bool granted;
+            lock (sync) { batt = onBattery; granted = grantedFlag; }
+            if (!granted || !batt || !BatteryOn) return;
             SaverApply();
         }
 
@@ -111,6 +113,12 @@ namespace CaelusApp
             bool batt;
             try { batt = SystemInformation.PowerStatus.PowerLineStatus == PowerLineStatus.Offline; }
             catch { batt = false; }
+            RefreshPowerStateCore(batt);
+        }
+
+        /// <summary>电源状态换档核心：电池源可注入，插拔电时序可单测</summary>
+        internal void RefreshPowerStateCore(bool batt)
+        {
             bool changed;
             bool wasGranted;
             lock (sync)
@@ -143,6 +151,18 @@ namespace CaelusApp
             {
                 onBattery = batt;
                 if (!batt) batteryBalloonShown = false;
+            }
+            RecomputeActivity();
+        }
+
+        /// <summary>测试钩子：钉住家族可见性（窗口复查不再改写），
+        /// 用于验证掌权期间 RefreshPowerStateCore 的插拔电即时切换分支</summary>
+        internal void SetFamilyVisibleForTest(bool visible)
+        {
+            lock (sync)
+            {
+                familyVisible = visible;
+                familyVisibleTestPin = visible;
             }
             RecomputeActivity();
         }
@@ -201,6 +221,7 @@ namespace CaelusApp
             long now = DateTime.UtcNow.Ticks;
             lock (sync)
             {
+                if (familyVisibleTestPin) return;   // 测试钉住：跳过窗口复查
                 if (!force && now - lastWindowCheckTicks < 5L * TimeSpan.TicksPerSecond) return;
                 lastWindowCheckTicks = now;
                 if (dailyPids.Count == 0)

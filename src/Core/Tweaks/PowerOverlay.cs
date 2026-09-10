@@ -284,8 +284,11 @@ namespace CaelusApp
             // 续航档崩溃自愈：进程已死，占用记账无从谈起，清空后直接还原
             if (Settings.LoadStr(SaverSnapKey, "").Length > 0)
             {
-                lock (lk) { SharedEffectClaim.ReleaseAll(saverOwners); }
-                if (RestoreDcSaverCore()) Logger.Log("检测到上次未还原的电池续航档设置，已恢复");
+                lock (lk)
+                {
+                    SharedEffectClaim.ReleaseAll(saverOwners);
+                    if (RestoreDcSaverCore()) Logger.Log("检测到上次未还原的电池续航档设置，已恢复");
+                }
             }
         }
     }

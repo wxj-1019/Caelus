@@ -347,5 +347,46 @@ namespace CaelusApp
                 DeleteTempDir(dir);
             }
         }
+
+        private static void TestDailyCareSaverPowerSwapWhileGranted()
+        {
+            string dir = NewTempDir("daily-swap");
+            DailyCare daily = null;
+            var calls = new List<string>();
+            DailyCare.BatterySaverApplyHook = delegate { calls.Add("apply"); return true; };
+            DailyCare.BatterySaverRestoreHook = delegate { calls.Add("restore"); return true; };
+            try
+            {
+                var arbiter = new ScenarioArbiter();
+                var core = new SuppressionCore(Path.Combine(dir, "s.state"));
+                daily = new DailyCare(arbiter, core, () => true, (n, p) => false);
+
+                // 家族可见钉住 → 市电下也掌权；市电掌权不应触发续航档
+                daily.SetFamilyVisibleForTest(true);
+                Eq(true, daily.IsGranted);
+                Eq(0, calls.Count);
+
+                // 仍掌权，AC→DC：RefreshPowerStateCore 即时激活续航档（不走 Suspend/Grant 链）
+                daily.RefreshPowerStateCore(true);
+                Eq(true, daily.IsGranted);
+                Eq(1, calls.Count); Eq("apply", calls[0]);
+
+                // 仍掌权，DC→AC：即时还原；全程未挂起（若走了 Suspend 链会追加第二个 restore）
+                daily.RefreshPowerStateCore(false);
+                Eq(true, daily.IsGranted);
+                Eq(2, calls.Count); Eq("restore", calls[1]);
+
+                // 同态无变化：分支不进
+                daily.RefreshPowerStateCore(false);
+                Eq(2, calls.Count);
+            }
+            finally
+            {
+                DailyCare.BatterySaverApplyHook = null;
+                DailyCare.BatterySaverRestoreHook = null;
+                if (daily != null) try { daily.Stop(); } catch { }
+                DeleteTempDir(dir);
+            }
+        }
     }
 }

@@ -190,3 +190,5 @@ internal interface IHealthAction
 - VM 属性名 HealthHistoryRows（避开静态类撞名）；「不建议」徽标用既有 WarnTag 模式；门控 RefreshHealthRunGate + detail VM 自挂 2s DispatcherTimer（source 静默时 Changed 不触发）；历史失败行 Style Setter + DataTrigger（本地值压触发器）
 - DailyCare：RefreshPowerStateCore(bool) 抽离供测试注入电池源；SetFamilyVisibleForTest 钩子；bal.daily.batt 气球文案对齐自动化行为
 - PowerOverlay：HealFromCrash 续航档段 lock(lk) 纪律；ApplyBatterySaverIfNeeded 锁内复读 grantedFlag
+- 续航档快照实际用独立键 `PowerOverlayDcSaverSnap` + `\x1f` 哨兵，而非 §4.2 字面的「沿用 AC\|DC 约定、缺失记空」（空串无法区分无快照/原本无值，哨兵是正确选择）
+- 启动项发现项 Id 实际用明文 `Source|Name`，而非 §3.2 说的哈希（更可读、TSV 经 Esc 安全）

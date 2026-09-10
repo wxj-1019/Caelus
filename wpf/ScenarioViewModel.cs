@@ -362,6 +362,7 @@ namespace CaelusApp
         private bool healthRunEnabled = true;
         private long lastHealthRunTicks;
         private bool healthZoneLoaded;
+        private readonly DispatcherTimer healthGateTimer;
 
         public ScenarioDetailViewModel(ScenarioStatusSource source, ScenarioKind kind)
         {
@@ -393,6 +394,18 @@ namespace CaelusApp
             StartupDisabled = new ObservableCollection<StartupFindingRow>();
             source.Changed += OnSourceChanged;
             Refresh();
+            if (!isDev)
+            {
+                // 冷却到期/游戏退出是纯 VM 内存状态：source 静默时 Changed 不触发，
+                // 若只靠 Refresh() 链路，「立即执行」会一直禁用直到某个无关状态跳变碰巧唤醒。
+                // 自挂节拍器定期重算门控（纯内存无 IO），保证按钮自动恢复。
+                healthGateTimer = new DispatcherTimer(DispatcherPriority.Background)
+                {
+                    Interval = TimeSpan.FromSeconds(2)
+                };
+                healthGateTimer.Tick += delegate { RefreshHealthRunGate(); };
+                healthGateTimer.Start();
+            }
         }
 
         public ScenarioKind Kind { get; private set; }

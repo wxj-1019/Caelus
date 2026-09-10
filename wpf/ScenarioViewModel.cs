@@ -4,6 +4,7 @@
 //           不创建真实 DevFocus/DailyCare 实例，因此不会暂停服务或压制后台。
 
 using System;
+using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Diagnostics;
 using System.Text;
@@ -21,6 +22,26 @@ namespace CaelusApp
         public string Label { get { return label; } set { SetProperty(ref label, value, "Label"); } }
         public string ValueText { get { return valueText; } set { SetProperty(ref valueText, value, "ValueText"); } }
         public bool Live { get { return live; } set { SetProperty(ref live, value, "Live"); } }
+    }
+
+    /// <summary>维护历史行（详情页维护中心卡）。</summary>
+    internal sealed class HealthHistoryRow
+    {
+        public string TimeText { get; set; }
+        public string TriggerText { get; set; }
+        public string SummaryText { get; set; }
+        public bool Failed { get; set; }
+    }
+
+    /// <summary>启动项审查行：发现项带勾选（系统项默认不勾），已禁用项带单条还原负载。</summary>
+    internal sealed class StartupFindingRow : ViewModelBase
+    {
+        private bool isChecked;
+        public string Id { get; set; }
+        public string Label { get; set; }
+        public string Detail { get; set; }
+        public bool Risky { get; set; }
+        public bool IsChecked { get { return isChecked; } set { SetProperty(ref isChecked, value, "IsChecked"); } }
     }
 
     internal sealed class ScenarioCardViewModel : ViewModelBase
@@ -335,6 +356,13 @@ namespace CaelusApp
         private string stateDetail = "";
         private string focusStatsText = "—";
 
+        // —— 维护中心（仅 Daily 页）——
+        private string healthSummaryText = "—";
+        private string healthRunHint = "";
+        private bool healthRunEnabled = true;
+        private long lastHealthRunTicks;
+        private bool healthZoneLoaded;
+
         public ScenarioDetailViewModel(ScenarioStatusSource source, ScenarioKind kind)
         {
             if (source == null) throw new ArgumentNullException("source");
@@ -360,6 +388,9 @@ namespace CaelusApp
                 ActionText = "常规档后台压制并提优前台家族；电池供电自动升档；到点执行健康维护。";
             }
             SourceRows = new ObservableCollection<ScenarioSourceRowViewModel>();
+            HealthHistoryRows = new ObservableCollection<HealthHistoryRow>();
+            StartupFindings = new ObservableCollection<StartupFindingRow>();
+            StartupDisabled = new ObservableCollection<StartupFindingRow>();
             source.Changed += OnSourceChanged;
             Refresh();
         }
@@ -400,6 +431,14 @@ namespace CaelusApp
         public string StateDetail { get { return stateDetail; } private set { SetProperty(ref stateDetail, value, "StateDetail"); } }
         public string FocusStatsText { get { return focusStatsText; } private set { SetProperty(ref focusStatsText, value, "FocusStatsText"); } }
         public ObservableCollection<ScenarioSourceRowViewModel> SourceRows { get; private set; }
+
+        public bool HealthZoneVisible { get { return !isDev; } }
+        public string HealthSummaryText { get { return healthSummaryText; } private set { SetProperty(ref healthSummaryText, value, "HealthSummaryText"); } }
+        public string HealthRunHint { get { return healthRunHint; } private set { SetProperty(ref healthRunHint, value, "HealthRunHint"); } }
+        public bool HealthRunEnabled { get { return healthRunEnabled; } private set { SetProperty(ref healthRunEnabled, value, "HealthRunEnabled"); } }
+        public ObservableCollection<HealthHistoryRow> HealthHistoryRows { get; private set; }
+        public ObservableCollection<StartupFindingRow> StartupFindings { get; private set; }
+        public ObservableCollection<StartupFindingRow> StartupDisabled { get; private set; }
 
         private void OnSourceChanged()
         {
@@ -464,6 +503,96 @@ namespace CaelusApp
             }
 
             RebuildRows();
+            if (!isDev) RefreshHealthZone(false);
+        }
+
+        /// <summary>维护区刷新。force=false 且已加载过则跳过（2 秒轮询不重复读 TSV/注册表）。
+        /// 只能 UI 线程调用（碰 ObservableCollection）；后台动作完成后经 Dispatcher 回来调 force=true。</summary>
+        public void RefreshHealthZone(bool force)
+        {
+            if (isDev) return;
+            if (healthZoneLoaded && !force) return;
+            healthZoneLoaded = true;
+
+            bool gameHolds = source.Granted == ScenarioKind.Game;
+            long now = DateTime.UtcNow.Ticks;
+            bool cooldown = now - lastHealthRunTicks < 60L * TimeSpan.TicksPerSecond;
+            HealthRunEnabled = !gameHolds && !cooldown;
+            HealthRunHint = gameHolds ? "游戏进行中，维护自动顺延，结束后可手动执行"
+                : cooldown ? "刚刚执行过，请稍候再试（60 秒间隔）" : "";
+
+            var all = HealthHistory.LoadAll();
+            HealthHistoryRows.Clear();
+            for (int i = all.Count - 1; i >= 0; i--)   // 最近在前
+            {
+                HealthRecord r = all[i];
+                HealthHistoryRows.Add(new HealthHistoryRow
+                {
+                    TimeText = r.Time.ToString("MM-dd HH:mm"),
+                    TriggerText = r.Trigger == "Auto" ? "自动" : r.Trigger == "Undo" ? "还原" : "手动",
+                    SummaryText = r.Summary ?? "",
+                    Failed = r.Outcome == HealthOutcome.Failed
+                });
+            }
+            if (all.Count == 0)
+                HealthSummaryText = "还没有维护记录，点「立即执行」跑第一轮";
+            else
+            {
+                HealthRecord last = all[all.Count - 1];
+                HealthSummaryText = "上次维护 " + last.Time.ToString("MM-dd HH:mm") + "（"
+                    + (last.Trigger == "Auto" ? "自动" : last.Trigger == "Undo" ? "还原" : "手动") + "）："
+                    + (last.Summary ?? "");
+            }
+
+            StartupFindings.Clear();
+            StartupDisabled.Clear();
+            try
+            {
+                IHealthAction action = HealthCatalog.Shared.Find("startup-audit");
+                if (action != null)
+                {
+                    HealthReport report = action.Analyze();
+                    foreach (HealthFinding f0 in report.Findings)
+                        StartupFindings.Add(new StartupFindingRow
+                        {
+                            Id = f0.Id, Label = f0.Label, Detail = f0.Detail,
+                            Risky = f0.Risky, IsChecked = !f0.Risky
+                        });
+                    foreach (HealthFinding d in action.ListDisabled())
+                        StartupDisabled.Add(new StartupFindingRow
+                        {
+                            Id = d.Id, Label = d.Label, Detail = d.Detail
+                        });
+                }
+            }
+            catch { }
+        }
+
+        /// <summary>立即执行（代码后置在后台线程调用）。返回 true 表示本轮真的跑了。</summary>
+        public bool RunHealthNowCore()
+        {
+            long now = DateTime.UtcNow.Ticks;
+            if (now - lastHealthRunTicks < 60L * TimeSpan.TicksPerSecond) return false;
+            if (source.Granted == ScenarioKind.Game) return false;
+            lastHealthRunTicks = now;
+            try { HealthRunner.Run(HealthTrigger.Manual, HealthCatalog.Shared, null); return true; }
+            catch (Exception ex) { Logger.LogFailure("手动维护执行失败", ex); return false; }
+        }
+
+        /// <summary>禁用所选启动项（后台线程调用，ids 为 UI 线程预取的勾选快照）。</summary>
+        public string DisableSelectedStartupCore(List<string> ids)
+        {
+            if (ids == null || ids.Count == 0) return "未勾选任何启动项";
+            HealthResult r = HealthRunner.RunSelected(HealthCatalog.Shared, "startup-audit", ids.ToArray());
+            return r.Outcome == HealthOutcome.Failed ? ("失败：" + r.Error) : r.Summary;
+        }
+
+        /// <summary>还原单条已禁用启动项（后台线程调用）。</summary>
+        public string UndoStartupCore(string payloadLine)
+        {
+            string err;
+            bool ok = HealthRunner.UndoSingle(HealthCatalog.Shared, "startup-audit", payloadLine, out err);
+            return ok ? "已还原" : ("还原失败：" + err);
         }
 
         private void RebuildRows()

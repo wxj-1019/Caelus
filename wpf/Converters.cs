@@ -1,15 +1,34 @@
 // @author zenjiro 18967498922@163.com
-// 文件用途 设置行整行点击转发的附加行为（RowToggle）
+// 文件用途 设置行整行点击转发的附加行为（RowToggle）+ 计数→可见性转换器
 
 using System;
+using System.Globalization;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Controls.Primitives;
+using System.Windows.Data;
 using System.Windows.Input;
 using System.Windows.Media;
 
 namespace CaelusApp.WpfHost
 {
+    /// <summary>集合计数→可见性：0 → Collapsed，&gt;0 → Visible（如「已禁用」分组头）。</summary>
+    internal sealed class CountToVisibilityConverter : IValueConverter
+    {
+        public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
+        {
+            int n = 0;
+            if (value is int) n = (int)value;
+            else if (value != null) int.TryParse(value.ToString(), out n);
+            return n > 0 ? Visibility.Visible : Visibility.Collapsed;
+        }
+
+        public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)
+        {
+            throw new NotSupportedException();
+        }
+    }
+
     // 整行点击切开关：把落在设置行空白处的点击转发为行内开关的一次翻转，
     // 复用开关自身的确认/回滚/双向绑定逻辑。点击落在开关/按钮/输入框上时跳过，避免二次触发。
     internal static class RowToggle

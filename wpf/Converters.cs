@@ -29,6 +29,23 @@ namespace CaelusApp.WpfHost
         }
     }
 
+    /// <summary>集合计数→可见性（反向）：0 → Visible，&gt;0 → Collapsed（如「暂无新发现」空态行）。</summary>
+    internal sealed class ZeroToVisibleConverter : IValueConverter
+    {
+        public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
+        {
+            int n = 0;
+            if (value is int) n = (int)value;
+            else if (value != null) int.TryParse(value.ToString(), out n);
+            return n == 0 ? Visibility.Visible : Visibility.Collapsed;
+        }
+
+        public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)
+        {
+            throw new NotSupportedException();
+        }
+    }
+
     // 整行点击切开关：把落在设置行空白处的点击转发为行内开关的一次翻转，
     // 复用开关自身的确认/回滚/双向绑定逻辑。点击落在开关/按钮/输入框上时跳过，避免二次触发。
     internal static class RowToggle

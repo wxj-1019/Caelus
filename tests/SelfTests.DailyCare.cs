@@ -388,5 +388,41 @@ namespace CaelusApp
                 DeleteTempDir(dir);
             }
         }
+
+        private static void TestDailyCareSaverOffWhileGrantedRestores()
+        {
+            string dir = NewTempDir("daily-saveroff-granted");
+            DailyCare daily = null;
+            var calls = new List<string>();
+            DailyCare.BatterySaverApplyHook = delegate { calls.Add("apply"); return true; };
+            DailyCare.BatterySaverRestoreHook = delegate { calls.Add("restore"); return true; };
+            bool oldBatt = Settings.Load("DailyCareBatteryOn", true);
+            try
+            {
+                var arbiter = new ScenarioArbiter();
+                var core = new SuppressionCore(Path.Combine(dir, "s.state"));
+                daily = new DailyCare(arbiter, core, () => true, (n, p) => false);
+
+                // 家族可见钉住：关电池开关后场景仍掌权（不走 Suspend 链）
+                daily.SetFamilyVisibleForTest(true);
+                daily.RefreshPowerStateCore(true);          // 掌权中脱电 → 激活续航档
+                Eq(true, daily.IsGranted);
+                Eq(1, calls.Count); Eq("apply", calls[0]);
+
+                // 中途关电池开关：续航档必须立即还原（总数恰 1 次 restore，
+                // 若经 Suspend 链还原则会伴随丢掌权，IsGranted 断言可区分）
+                daily.SetBatteryOn(false);
+                Eq(true, daily.IsGranted);
+                Eq(2, calls.Count); Eq("restore", calls[1]);
+            }
+            finally
+            {
+                Settings.Save("DailyCareBatteryOn", oldBatt);
+                DailyCare.BatterySaverApplyHook = null;
+                DailyCare.BatterySaverRestoreHook = null;
+                if (daily != null) try { daily.Stop(); } catch { }
+                DeleteTempDir(dir);
+            }
+        }
     }
 }

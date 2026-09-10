@@ -42,14 +42,15 @@ namespace CaelusApp
             try { return PowerOverlay.RestoreDcSaver(PowerOverlay.OwnerDailyCare); } catch { return false; }
         }
 
-        /// <summary>掌权且电池供电且开关开 → 续航档在位</summary>
-        private void ApplyBatterySaverIfNeeded()
+        /// <summary>掌权且电池供电且开关开 → 续航档在位。返回续航档是否真实落地
+        /// （不支持/游戏档让位时为 false，气球文案据此选择是否宣称滑块已切）。</summary>
+        private bool ApplyBatterySaverIfNeeded()
         {
             bool batt;
             bool granted;
             lock (sync) { batt = onBattery; granted = grantedFlag; }
-            if (!granted || !batt || !BatteryOn) return;
-            SaverApply();
+            if (!granted || !batt || !BatteryOn) return false;
+            return SaverApply();
         }
 
         public override ScenarioKind Kind { get { return ScenarioKind.DailyCare; } }
@@ -69,11 +70,14 @@ namespace CaelusApp
             get { return enabled() && (familyVisible || (BatteryOn && onBattery)); }
         }
 
-        /// <summary>电池优化开关（设置页调用）。写注册表 + 活性重算。</summary>
+        /// <summary>电池优化开关（设置页调用）。写注册表 + 活性重算。
+        /// 关闭时补一次续航档还原：脱电掌权且家族仍可见时场景不丢掌权、不走 Suspend 链，
+        /// 缺这一行续航档会残留到下次插拔电（引用计数下未占用时本调用是 no-op）。</summary>
         public void SetBatteryOn(bool on)
         {
             Settings.Save("DailyCareBatteryOn", on);
             RecomputeActivity();
+            if (!on) SaverRestore();
         }
 
         /// <summary>场景总开关（设置页/场景总览调用）。关闭时立即退出仲裁器活性集合并还原副作用，
@@ -273,8 +277,9 @@ namespace CaelusApp
                 SweepDailySuppression();
                 BoostVisibleFamily();
                 StartReconcileTimer();
-                MaybeShowBatteryBalloon();
-                ApplyBatterySaverIfNeeded();
+                // 先落地续航档再发气球：文案按 apply 结果二选一，不抢先宣称滑块已切
+                bool saverOn = ApplyBatterySaverIfNeeded();
+                MaybeShowBatteryBalloon(saverOn);
                 Logger.Log("日常优化：获得掌职权（家族窗口/电池），后台转入常规档压制");
             }
             catch (Exception ex) { Logger.LogFailure("日常优化掌权失败", ex); }
@@ -308,7 +313,8 @@ namespace CaelusApp
             ForceReportInactive();
         }
 
-        private void MaybeShowBatteryBalloon()
+        /// <summary>电池气球：saverOn=false（续航档未落地）时只宣称压制升档，不提电源滑块</summary>
+        private void MaybeShowBatteryBalloon(bool saverOn)
         {
             bool show;
             lock (sync)
@@ -317,8 +323,10 @@ namespace CaelusApp
                 if (show) batteryBalloonShown = true;
             }
             if (!show) return;
-            try { var h = SessionChanged; if (h != null) h("bal.daily.batt"); } catch { }
-            Logger.Log("日常优化：电池供电，后台压制已升档；电池档电源滑块已切到更长续航");
+            try { var h = SessionChanged; if (h != null) h(saverOn ? "bal.daily.batt" : "bal.daily.batt.keep"); } catch { }
+            Logger.Log(saverOn
+                ? "日常优化：电池供电，后台压制已升档；电池档电源滑块已切到更长续航"
+                : "日常优化：电池供电，后台压制已升档（续航档电源滑块未切换）");
         }
 
         private void StartReconcileTimer()

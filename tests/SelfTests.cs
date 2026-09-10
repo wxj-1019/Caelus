@@ -937,6 +937,7 @@ namespace CaelusApp
             test("电池联动：脱电掌权激活续航档、回电与停止还原", TestDailyCareSaverApplyAndRestore);
             test("电池联动：电池开关关闭不动作", TestDailyCareSaverOffNoop);
             test("电池联动：掌权期间插拔电即时切换续航档", TestDailyCareSaverPowerSwapWhileGranted);
+            test("电池联动：掌权中途关电池开关即还原续航档", TestDailyCareSaverOffWhileGrantedRestores);
             test("白名单存储：数据损坏时安全失败，写入为事务性", TestWhitelistStorageSafety);
             test("白名单并发：编辑与进行中的策略快照串行化", TestWhitelistMutationSerialization);
             test("极端豁免：反作弊名称匹配不区分大小写", () =>

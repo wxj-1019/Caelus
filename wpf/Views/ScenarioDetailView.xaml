@@ -7,6 +7,7 @@
   <UserControl.Resources>
     <BooleanToVisibilityConverter x:Key="BoolVis"/>
     <local:CountToVisibilityConverter x:Key="CountVis"/>
+    <local:ZeroToVisibleConverter x:Key="ZeroVis"/>
 
     <Style x:Key="DetailBanner" TargetType="Border">
       <Setter Property="Background" Value="{DynamicResource Surface1Brush}"/>
@@ -250,6 +251,9 @@
                 </DataTemplate>
               </ItemsControl.ItemTemplate>
             </ItemsControl>
+            <TextBlock Text="暂无新发现" FontSize="{DynamicResource FontSizeXs}"
+                       Foreground="{DynamicResource TextTertiaryBrush}"
+                       Visibility="{Binding StartupFindings.Count, Converter={StaticResource ZeroVis}}"/>
             <TextBlock Text="已禁用" Margin="0,10,0,4" FontSize="{DynamicResource FontSizeSmall}"
                        FontWeight="SemiBold" Foreground="{DynamicResource TextSecondaryBrush}"
                        Visibility="{Binding StartupDisabled.Count, Converter={StaticResource CountVis}}"/>

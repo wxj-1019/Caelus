@@ -921,6 +921,7 @@ namespace CaelusApp
             test("开发服务：Stopped 丢失时死 PID 兜底清理并通知", TestDevServiceGuardPrunesDeadPid);
             test("开发服务：注册服务在压制扫描中豁免", TestDevServiceExemptFromSuppression);
             test("服务拉起：连败预算熔断判定", TestDevSvcRestartBudget);
+            test("服务拉起：重新捕获命令行即重置预算", TestDevSvcCaptureResetsBudget);
             test("服务拉起：命令行拆分引号感知", TestSplitCommandLine);
             test("编译台架：提速百分比计算", TestBuildProbeSpeedupPct);
             test("专注时长：累计与跨天归零", TestFocusStatsAccumulateAndReset);
@@ -1499,6 +1500,8 @@ namespace CaelusApp
             test("专注历史：按日合并、截断与近 7 日补零", TestFocusHistoryMergeAndTrim);
             test("专注历史：会话与分心计数写入当日趋势", TestFocusStatsFeedsHistory);
             test("分心策略：掌权且专注才动作，阻断开关分级", TestDistractActionPolicy);
+            test("分心统计：按名归一合并与 Top8 截断", TestFocusStatsDistractNames);
+            test("分心阻断：气球 30 秒限频判定", TestDistractBlockBalloonRateLimit);
             test("崩溃日志：加入 QoS 字段后仍能读取旧的 9 字段记录", () =>
             {
                 string name = Convert.ToBase64String(Encoding.UTF8.GetBytes("game"));

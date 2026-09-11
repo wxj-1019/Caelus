@@ -31,6 +31,8 @@ namespace CaelusApp
         private readonly HashSet<int> activeBuildPids = new HashSet<int>();
         private readonly HashSet<int> activeIdePids = new HashSet<int>();
         private readonly HashSet<string> distractNotified = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+        // 阻断气球按名限频：被阻断的自启循环应用不该刷屏（阻断照常执行，只是不重复弹泡）
+        private readonly Dictionary<string, long> blockBalloonTicks = new Dictionary<string, long>(StringComparer.OrdinalIgnoreCase);
         private bool granted;
         private bool quietApplied;
         private Timer reconcileTimer;
@@ -107,7 +109,7 @@ namespace CaelusApp
         public void SetFocusMode(bool on)
         {
             Settings.Save("DevFocusModeOn", on);
-            if (!on) { lock (sync) { distractNotified.Clear(); } }
+            if (!on) { lock (sync) { distractNotified.Clear(); blockBalloonTicks.Clear(); } }
             RecomputeActivity();
         }
 
@@ -140,6 +142,7 @@ namespace CaelusApp
                     activeIdePids.Clear();
                     ideVisible = false;
                     distractNotified.Clear();
+                    blockBalloonTicks.Clear();
                 }
                 ForceReportInactive();
             }
@@ -219,18 +222,30 @@ namespace CaelusApp
                         {
                             bool blocked = act == DistractAction.NotifyAndBlock || act == DistractAction.BlockAgain;
                             if (act != DistractAction.BlockAgain) distractNotified.Add(pc.Name);
-                            try { FocusStats.RecordDistract(blocked); } catch { }
+                            try { FocusStats.RecordDistract(blocked, BareProcessName(pc.Name), DateTime.Now); } catch { }
                             if (blocked)
                             {
                                 if (toBlock == null) toBlock = new List<int>();
                                 toBlock.Add(pc.Pid);
                             }
-                            try
+                            // 阻断气球 30 秒/名限频：阻断照常，弹泡不刷屏
+                            bool balloon = true;
+                            if (blocked)
                             {
-                                var h = SessionChanged;
-                                if (h != null) h(blocked ? "bal.distract.block" : "bal.distract");
+                                long last;
+                                blockBalloonTicks.TryGetValue(pc.Name, out last);
+                                balloon = BlockBalloonReady(last, DateTime.UtcNow.Ticks);
+                                if (balloon) blockBalloonTicks[pc.Name] = DateTime.UtcNow.Ticks;
                             }
-                            catch { }
+                            if (balloon)
+                            {
+                                try
+                                {
+                                    var h = SessionChanged;
+                                    if (h != null) h(blocked ? "bal.distract.block" : "bal.distract");
+                                }
+                                catch { }
+                            }
                         }
                     }
                 }
@@ -329,6 +344,21 @@ namespace CaelusApp
             if (!granted || !focusOn) return DistractAction.None;
             if (blockOn) return alreadyNotified ? DistractAction.BlockAgain : DistractAction.NotifyAndBlock;
             return alreadyNotified ? DistractAction.None : DistractAction.NotifyOnly;
+        }
+
+        /// <summary>阻断气球限频判定（纯逻辑，可单测）：距上次弹泡不足 30 秒不再弹。</summary>
+        internal static bool BlockBalloonReady(long lastTicks, long nowTicks)
+        {
+            if (lastTicks <= 0) return true;
+            return nowTicks - lastTicks >= 30L * TimeSpan.TicksPerSecond;
+        }
+
+        /// <summary>进程名去 .exe 后缀（分心按名统计的归一键）。</summary>
+        private static string BareProcessName(string name)
+        {
+            if (string.IsNullOrEmpty(name)) return "";
+            if (name.EndsWith(".exe", StringComparison.OrdinalIgnoreCase)) return name.Substring(0, name.Length - 4);
+            return name;
         }
 
         /// <summary>阻断关闭分心应用：先发优雅关闭消息，1 秒未退再强杀，全程故障隔离。
@@ -706,6 +736,7 @@ namespace CaelusApp
                 activeBuildPids.Clear();
                 activeIdePids.Clear();
                 distractNotified.Clear();
+                blockBalloonTicks.Clear();
             }
             // 走仲裁器单一路径还原（若正掌权会回调 Suspend）
             if (wasReported) arbiter.ReportActivity(Kind, false);

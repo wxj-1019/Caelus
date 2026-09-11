@@ -365,6 +365,7 @@ namespace CaelusApp
         private string stateKey = "Neutral";
         private string stateDetail = "";
         private string focusStatsText = "—";
+        private string focusDistractText = "";
 
         // —— 维护中心（仅 Daily 页）——
         private string healthSummaryText = "—";
@@ -457,6 +458,8 @@ namespace CaelusApp
         public string StateKey { get { return stateKey; } private set { SetProperty(ref stateKey, value, "StateKey"); } }
         public string StateDetail { get { return stateDetail; } private set { SetProperty(ref stateDetail, value, "StateDetail"); } }
         public string FocusStatsText { get { return focusStatsText; } private set { SetProperty(ref focusStatsText, value, "FocusStatsText"); } }
+        /// <summary>今日分心按名 Top 文案（空串时 XAML 行近零高）。</summary>
+        public string FocusDistractText { get { return focusDistractText; } private set { SetProperty(ref focusDistractText, value, "FocusDistractText"); } }
         public ObservableCollection<ScenarioSourceRowViewModel> SourceRows { get; private set; }
 
         public bool HealthZoneVisible { get { return !isDev; } }
@@ -492,6 +495,8 @@ namespace CaelusApp
                 FocusStatsText = sessions <= 0 && seconds <= 0
                     ? "今天还没有专注记录"
                     : "今天专注 " + FormatSeconds(seconds) + " · " + sessions + " 次会话";
+                string top = FocusStats.TodayDistractTopText(DateTime.Now);
+                FocusDistractText = top.Length == 0 ? "" : "今日分心：" + top;
                 // 今日口径变化（会话结束/分心命中/日切）才重读历史文件，2 秒轮询不做无谓 IO
                 RefreshFocusTrend(false);
             }

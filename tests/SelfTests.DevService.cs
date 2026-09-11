@@ -187,6 +187,22 @@ namespace CaelusApp
             Eq("", args);
         }
 
+        // 拉起预算：重新捕获到启动命令（新健康实例，多为用户手动拉起）即重置连败预算
+        private static void TestDevSvcCaptureResetsBudget()
+        {
+            var guard = new DevServiceGuard();
+            try
+            {
+                guard.TestSeedRestartFails("node", DevServiceGuard.MaxConsecutiveRestarts);
+                Eq(DevServiceGuard.MaxConsecutiveRestarts, guard.TestConsecFails("node"));
+                Eq(false, DevServiceGuard.BudgetAllows(guard.TestConsecFails("node")));   // 已熔断
+                guard.StoreLaunch("node", "C:\\x\\node.exe", "server.js", "C:\\x");
+                Eq(0, guard.TestConsecFails("node"));                                     // 捕获即重置
+                Eq(true, DevServiceGuard.BudgetAllows(guard.TestConsecFails("node")));
+            }
+            finally { guard.Stop(); }
+        }
+
         private static void TestDevServiceExemptFromSuppression()
         {
             string winRoot = Environment.GetFolderPath(Environment.SpecialFolder.Windows);

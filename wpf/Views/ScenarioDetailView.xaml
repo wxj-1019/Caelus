@@ -159,6 +159,8 @@
                        Foreground="{DynamicResource TextSecondaryBrush}" TextWrapping="Wrap"/>
             <TextBlock Text="{Binding FocusStatsText}" Margin="0,7,0,0"
                        FontSize="{DynamicResource FontSizeXs}" Foreground="{DynamicResource TextTertiaryBrush}"/>
+            <TextBlock Text="{Binding FocusDistractText}" Margin="0,2,0,0"
+                       FontSize="{DynamicResource FontSizeXs}" Foreground="{DynamicResource DangerBrush}"/>
           </StackPanel>
         </DockPanel>
       </Border>
@@ -184,22 +186,39 @@
                   <TextBlock Text="{Binding MinutesText}" FontSize="{DynamicResource FontSizeXs}"
                              HorizontalAlignment="Center" Foreground="{DynamicResource TextSecondaryBrush}"/>
                   <Border Height="56" Margin="0,4,0,0">
-                    <Border Width="26" HorizontalAlignment="Center" VerticalAlignment="Bottom"
-                            CornerRadius="{DynamicResource RadiusSm}" Height="{Binding BarHeight}"
-                            Background="{DynamicResource AccentSoftBrush}">
-                      <Border.Style>
-                        <Style TargetType="Border">
-                          <Style.Triggers>
-                            <DataTrigger Binding="{Binding IsToday}" Value="True">
-                              <Setter Property="Background" Value="{DynamicResource AccentPrimaryBrush}"/>
-                            </DataTrigger>
-                          </Style.Triggers>
-                        </Style>
-                      </Border.Style>
-                    </Border>
+                    <Grid>
+                      <!-- 零值日轨道：让空列也读得出「这是一天的槽位」 -->
+                      <Border Width="26" HorizontalAlignment="Center" CornerRadius="{DynamicResource RadiusSm}"
+                              Background="{DynamicResource Surface1Brush}" Opacity="0.55"/>
+                      <Border Width="26" HorizontalAlignment="Center" VerticalAlignment="Bottom"
+                              CornerRadius="{DynamicResource RadiusSm}" Height="{Binding BarHeight}"
+                              Background="{DynamicResource AccentSoftBrush}">
+                        <Border.Style>
+                          <Style TargetType="Border">
+                            <Style.Triggers>
+                              <DataTrigger Binding="{Binding IsToday}" Value="True">
+                                <Setter Property="Background" Value="{DynamicResource AccentPrimaryBrush}"/>
+                              </DataTrigger>
+                            </Style.Triggers>
+                          </Style>
+                        </Border.Style>
+                      </Border>
+                    </Grid>
                   </Border>
                   <TextBlock Text="{Binding DayText}" Margin="0,6,0,0" FontSize="{DynamicResource FontSizeXs}"
-                             HorizontalAlignment="Center" Foreground="{DynamicResource TextTertiaryBrush}"/>
+                             HorizontalAlignment="Center">
+                    <TextBlock.Style>
+                      <Style TargetType="TextBlock">
+                        <Setter Property="Foreground" Value="{DynamicResource TextTertiaryBrush}"/>
+                        <Style.Triggers>
+                          <DataTrigger Binding="{Binding IsToday}" Value="True">
+                            <Setter Property="FontWeight" Value="SemiBold"/>
+                            <Setter Property="Foreground" Value="{DynamicResource TextPrimaryBrush}"/>
+                          </DataTrigger>
+                        </Style.Triggers>
+                      </Style>
+                    </TextBlock.Style>
+                  </TextBlock>
                   <TextBlock Text="{Binding DistractText}" Margin="0,2,0,0" FontSize="{DynamicResource FontSizeXs}"
                              HorizontalAlignment="Center" TextAlignment="Center" TextWrapping="Wrap"
                              Foreground="{DynamicResource DangerBrush}"/>

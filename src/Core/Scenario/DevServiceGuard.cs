@@ -292,15 +292,43 @@ namespace CaelusApp
                 {
                     string exe, args, dir;
                     if (!QueryCommandLine(pid, out exe, out args, out dir)) return;
-                    ServiceLaunch l = new ServiceLaunch();
-                    l.ExePath = exe;
-                    l.Args = args;
-                    l.WorkDir = dir;
-                    lock (sync) launches[bare] = l;
+                    StoreLaunch(bare, exe, args, dir);
                 }
                 catch { }
             });
         }
+
+        /// <summary>存启动命令并重置该服务的连败预算：新健康实例说明服务能被正常启动
+        /// （多为用户手动拉起），熔断理由消失。</summary>
+        internal void StoreLaunch(string bare, string exe, string args, string workDir)
+        {
+            ServiceLaunch l = new ServiceLaunch();
+            l.ExePath = exe;
+            l.Args = args;
+            l.WorkDir = workDir;
+            lock (sync)
+            {
+                launches[bare] = l;
+                consecFails.Remove(bare);
+            }
+        }
+
+#if CAELUS_SELFTEST
+        internal void TestSeedRestartFails(string name, int fails)
+        {
+            lock (sync) consecFails[name] = fails;
+        }
+
+        internal int TestConsecFails(string name)
+        {
+            lock (sync)
+            {
+                int f;
+                consecFails.TryGetValue(name, out f);
+                return f;
+            }
+        }
+#endif
 
         /// <summary>WMI 查询进程命令行。ExecutablePath 缺失时退回命令行首段拆分。失败返回 false。</summary>
         private static bool QueryCommandLine(int pid, out string exe, out string args, out string dir)

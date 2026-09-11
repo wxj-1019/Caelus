@@ -347,7 +347,7 @@ namespace CaelusApp
                 Eq(2, distractCount);
 
                 // —— 阻断开关打开：首次命中 = 提醒+阻断（假 PID 关闭失败被隔离），
-                //     再次命中 = 不重复提醒但仍阻断（阻断不去重）——
+                //     再次命中 = 仍阻断但气球被 30 秒/名限频压住 ——
                 Settings.Save("DevFocusDistractBlock", true);
                 dev.NotifyProcessChanges(new ProcessChangeBatch(
                     new[] { MakeChange(42004, "discord", ProcessChangeKind.Started) }, false));
@@ -355,7 +355,7 @@ namespace CaelusApp
                     new[] { MakeChange(42005, "discord", ProcessChangeKind.Started) }, false));
                 int blockCount = 0;
                 foreach (string k in balloons) if (k == "bal.distract.block") blockCount++;
-                Eq(2, blockCount);
+                Eq(1, blockCount);
                 int distractInBlock = 0;
                 foreach (string k in balloons) if (k == "bal.distract") distractInBlock++;
                 Eq(2, distractInBlock);   // 已提醒过的 discord 不再发普通提醒
@@ -827,6 +827,55 @@ namespace CaelusApp
             Eq(DistractAction.NotifyOnly, DevFocus.DecideDistractAction(true, true, false, false));
             Eq(DistractAction.NotifyAndBlock, DevFocus.DecideDistractAction(true, true, false, true));
             Eq(DistractAction.BlockAgain, DevFocus.DecideDistractAction(true, true, true, true));
+        }
+
+        // 阻断气球限频：30 秒/名，未记录过立即允许
+        private static void TestDistractBlockBalloonRateLimit()
+        {
+            long interval = 30L * TimeSpan.TicksPerSecond;
+            Eq(true, DevFocus.BlockBalloonReady(0, 1000));                     // 无记录：允许
+            Eq(false, DevFocus.BlockBalloonReady(1000, 1000 + interval - 1));  // 未到期
+            Eq(true, DevFocus.BlockBalloonReady(1000, 1000 + interval));       // 恰好到期
+            Eq(true, DevFocus.BlockBalloonReady(1000, 1000 + interval * 5));   // 远超
+        }
+
+        // 分心按名统计：.exe/大小写归一合并、同数按名序稳定、Top8 截断、日切清空
+        private static void TestFocusStatsDistractNames()
+        {
+            string file = NewTempDir("focus-names") + "\\focus-history.tsv";
+            string old = FocusHistory.FilePath;
+            FocusHistory.FilePath = file;
+            FocusStats.ResetForTest();
+            try
+            {
+                var day = new DateTime(2026, 9, 11, 10, 0, 0);
+                FocusStats.RecordDistract(false, "discord.exe", day);   // .exe 归一
+                FocusStats.RecordDistract(true, "Discord", day);        // 大小写合并
+                FocusStats.RecordDistract(false, "steam", day);
+                FocusStats.RecordDistract(false, "steam", day);
+                Eq(4, FocusStats.TodayDistract(day));
+                Eq("discord×2 · steam×2", FocusStats.TodayDistractTopText(day));
+
+                // Top8 截断：再加 9 个名字，只留次数最高的 8 个（discord/steam×2 优先）
+                for (int i = 1; i <= 9; i++)
+                    FocusStats.RecordDistract(false, "app" + i, day);
+                string top = FocusStats.TodayDistractTopText(day);
+                Eq(8, top.Split(new[] { " · " }, StringSplitOptions.None).Length);
+                Eq(true, top.StartsWith("discord×2 · steam×2 · app1×1")); // 同数按名序
+                Eq(true, top.Contains("app6×1"));
+                Eq(false, top.Contains("app7"));                          // app7..app9 被截掉
+
+                // 日切清空
+                var next = day.AddDays(1);
+                FocusStats.RecordDistract(false, "other", next);
+                Eq("other×1", FocusStats.TodayDistractTopText(next));
+            }
+            finally
+            {
+                FocusHistory.FilePath = old;
+                FocusStats.ResetForTest();
+                DeleteTempDir(Path.GetDirectoryName(file));
+            }
         }
 
         private static void TestIdeCatalogDbTools()

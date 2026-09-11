@@ -714,6 +714,93 @@ namespace CaelusApp
             Eq(false, IdeCatalog.NameMatches("myide"));          // 还原后失效
         }
 
+        // 专注历史：同日合并增量、Keep 截断、坏行跳过、近 N 日补零升序。
+        // 文件级测试——FilePath 覆写到临时目录，不碰真实数据。
+        private static void TestFocusHistoryMergeAndTrim()
+        {
+            string file = NewTempDir("focus-hist") + "\\focus-history.tsv";
+            string old = FocusHistory.FilePath;
+            FocusHistory.FilePath = file;
+            try
+            {
+                FocusHistory.AppendOrUpdate("2026-09-01", 60, 1, 0, 0);
+                FocusHistory.AppendOrUpdate("2026-09-01", 30, 1, 2, 1);   // 同日合并
+                var all = FocusHistory.LoadAll();
+                Eq(1, all.Count);
+                Eq("2026-09-01", all[0].Day);
+                Eq(90L, all[0].Seconds);
+                Eq(2, all[0].Sessions);
+                Eq(2, all[0].Distract);
+                Eq(1, all[0].Blocked);
+
+                // Keep 截断：共 66 行（65 天循环 + 09-01），只留最近 60 天
+                for (int i = 0; i < 65; i++)
+                    FocusHistory.AppendOrUpdate(new DateTime(2026, 6, 1).AddDays(i).ToString("yyyy-MM-dd"), 10, 1, 0, 0);
+                all = FocusHistory.LoadAll();
+                Eq(60, all.Count);
+                Eq("2026-06-07", all[0].Day);   // 最旧 6 行（06-01..06-06）被截掉
+                Eq("2026-09-01", all[59].Day);
+                Eq(90L, all[59].Seconds);       // 合并行数据保留
+
+                // 近 7 日补零：老→新、含今日、缺日补零
+                FocusHistory.AppendOrUpdate("2026-09-09", 10, 1, 0, 0);
+                var last = FocusHistory.LastDays(7, new DateTime(2026, 9, 11));
+                Eq(7, last.Count);
+                Eq("2026-09-05", last[0].Day);
+                Eq("2026-09-11", last[6].Day);
+                Eq(0L, last[0].Seconds);        // 09-05 无数据 → 补零
+                Eq(10L, last[4].Seconds);       // 09-09 有数据
+                Eq(0L, last[6].Seconds);        // 今日无数据 → 补零
+            }
+            finally { FocusHistory.FilePath = old; DeleteTempDir(Path.GetDirectoryName(file)); }
+        }
+
+        // 专注历史：会话与分心命中经 FocusStats 写当日趋势（注册表今日键 + TSV 双写、日切归零）。
+        // 写 Settings——必须注册在临时存储启用之后。
+        private static void TestFocusStatsFeedsHistory()
+        {
+            string file = NewTempDir("focus-stats") + "\\focus-history.tsv";
+            string old = FocusHistory.FilePath;
+            FocusHistory.FilePath = file;
+            FocusStats.ResetForTest();
+            try
+            {
+                var day = new DateTime(2026, 9, 11, 10, 0, 0);
+                FocusStats.RecordSession(90 * TimeSpan.TicksPerSecond, day);
+                FocusStats.RecordSession(30 * TimeSpan.TicksPerSecond, day);
+                Eq(120L, FocusStats.TodaySeconds(day));
+                Eq(2, FocusStats.TodaySessions(day));
+
+                FocusStats.RecordDistract(false, day);
+                FocusStats.RecordDistract(true, day);
+                Eq(2, FocusStats.TodayDistract(day));
+                Eq(1, FocusStats.TodayBlocked(day));
+
+                var all = FocusHistory.LoadAll();
+                Eq(1, all.Count);
+                Eq("2026-09-11", all[0].Day);
+                Eq(120L, all[0].Seconds);
+                Eq(2, all[0].Sessions);
+                Eq(2, all[0].Distract);
+                Eq(1, all[0].Blocked);
+
+                // 日切归零：次日会话从零起算，历史新增一行
+                var next = day.AddDays(1);
+                FocusStats.RecordSession(60 * TimeSpan.TicksPerSecond, next);
+                Eq(60L, FocusStats.TodaySeconds(next));
+                Eq(0, FocusStats.TodayDistract(next));
+                all = FocusHistory.LoadAll();
+                Eq(2, all.Count);
+                Eq(60L, all[1].Seconds);
+            }
+            finally
+            {
+                FocusHistory.FilePath = old;
+                FocusStats.ResetForTest();
+                DeleteTempDir(Path.GetDirectoryName(file));
+            }
+        }
+
         private static void TestIdeCatalogDbTools()
         {
             string pf = Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles);

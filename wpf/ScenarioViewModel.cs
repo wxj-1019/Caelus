@@ -33,6 +33,16 @@ namespace CaelusApp
         public bool Failed { get; set; }
     }
 
+    /// <summary>近 7 日专注趋势行（详情页 Dev 卡）：柱条高度按 7 日内最大分钟数归一。</summary>
+    internal sealed class FocusTrendRow
+    {
+        public string DayText { get; set; }
+        public string MinutesText { get; set; }
+        public double BarHeight { get; set; }
+        public string DistractText { get; set; }
+        public bool IsToday { get; set; }
+    }
+
     /// <summary>启动项审查行：发现项带勾选（系统项默认不勾），已禁用项带单条还原负载。</summary>
     internal sealed class StartupFindingRow : ViewModelBase
     {
@@ -391,6 +401,7 @@ namespace CaelusApp
             }
             SourceRows = new ObservableCollection<ScenarioSourceRowViewModel>();
             HealthHistoryRows = new ObservableCollection<HealthHistoryRow>();
+            FocusTrendRows = new ObservableCollection<FocusTrendRow>();
             StartupFindings = new ObservableCollection<StartupFindingRow>();
             StartupDisabled = new ObservableCollection<StartupFindingRow>();
             source.Changed += OnSourceChanged;
@@ -439,6 +450,8 @@ namespace CaelusApp
 
         public bool FocusModeVisible { get { return isDev; } }
         public bool FocusModeOn { get { return FocusMode; } }
+        public bool FocusTrendVisible { get { return isDev; } }
+        public ObservableCollection<FocusTrendRow> FocusTrendRows { get; private set; }
 
         public string StateText { get { return stateText; } private set { SetProperty(ref stateText, value, "StateText"); } }
         public string StateKey { get { return stateKey; } private set { SetProperty(ref stateKey, value, "StateKey"); } }
@@ -479,6 +492,8 @@ namespace CaelusApp
                 FocusStatsText = sessions <= 0 && seconds <= 0
                     ? "今天还没有专注记录"
                     : "今天专注 " + FormatSeconds(seconds) + " · " + sessions + " 次会话";
+                // 今日口径变化（会话结束/分心命中/日切）才重读历史文件，2 秒轮询不做无谓 IO
+                RefreshFocusTrend(false);
             }
             else
             {
@@ -526,9 +541,44 @@ namespace CaelusApp
             }
         }
 
-        /// <summary>「立即执行」门控：游戏掌权或 60 秒冷却内禁用。只读内存状态，可由 2 秒轮询反复调。</summary>
-        private void RefreshHealthRunGate()
+        private bool focusTrendLoaded;
+        private string lastTrendSignature;
+
+        /// <summary>近 7 日趋势刷新。force=false 时仅当日口径（秒/会话/分心/日期）变化才重读文件。
+        /// 只能 UI 线程调用（碰 ObservableCollection）。</summary>
+        private void RefreshFocusTrend(bool force)
         {
+            if (!isDev) return;
+            DateTime now = DateTime.Now;
+            string sig = FocusStats.TodaySeconds(now) + "|" + FocusStats.TodaySessions(now)
+                + "|" + FocusStats.TodayDistract(now) + "|" + now.ToString("yyyy-MM-dd");
+            if (focusTrendLoaded && !force && sig == lastTrendSignature) return;
+            focusTrendLoaded = true;
+            lastTrendSignature = sig;
+
+            var all = FocusHistory.LastDays(7, now);
+            long max = 1;
+            foreach (FocusDayRecord r in all) if (r.Seconds > max) max = r.Seconds;
+            FocusTrendRows.Clear();
+            for (int i = 0; i < all.Count; i++)
+            {
+                FocusDayRecord r = all[i];
+                bool today = i == all.Count - 1;
+                FocusTrendRows.Add(new FocusTrendRow
+                {
+                    DayText = today ? "今天" : r.Day.Substring(5),
+                    MinutesText = r.Seconds >= 60 ? (r.Seconds / 60) + "m" : (r.Seconds > 0 ? "<1m" : ""),
+                    BarHeight = r.Seconds <= 0 ? 2.0 : Math.Max(6.0, 56.0 * r.Seconds / max),
+                    DistractText = r.Distract > 0
+                        ? "分心 " + r.Distract + (r.Blocked > 0 ? " · 阻断 " + r.Blocked : "")
+                        : "",
+                    IsToday = today
+                });
+            }
+        }
+
+        /// <summary>「立即执行」门控：游戏掌权或 60 秒冷却内禁用。只读内存状态，可由 2 秒轮询反复调。</summary>
+        private void RefreshHealthRunGate()        {
             bool gameHolds = source.Granted == ScenarioKind.Game;
             long now = DateTime.UtcNow.Ticks;
             bool cooldown = now - lastHealthRunTicks < 60L * TimeSpan.TicksPerSecond;

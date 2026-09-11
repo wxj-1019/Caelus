@@ -163,6 +163,53 @@
         </DockPanel>
       </Border>
 
+      <Border x:Name="ZoneFocusTrend" Style="{DynamicResource SettingsGroup}" Padding="16,14" Margin="0,0,0,16"
+              Visibility="{Binding FocusTrendVisible, Converter={StaticResource BoolVis}}"
+              AutomationProperties.Name="近 7 日专注趋势">
+        <StackPanel>
+          <TextBlock Text="近 7 日专注趋势" FontSize="{DynamicResource FontSizeCaption}" FontWeight="SemiBold"
+                     Foreground="{DynamicResource TextPrimaryBrush}"/>
+          <TextBlock Text="每日掌权专注时长，柱高按 7 日内最大值归一；分心命中计入当日小字。"
+                     Margin="0,3,0,10" FontSize="{DynamicResource FontSizeXs}"
+                     Foreground="{DynamicResource TextTertiaryBrush}" TextWrapping="Wrap"/>
+          <ItemsControl ItemsSource="{Binding FocusTrendRows}" AutomationProperties.Name="近 7 日专注柱状图">
+            <ItemsControl.ItemsPanel>
+              <ItemsPanelTemplate>
+                <UniformGrid Columns="7"/>
+              </ItemsPanelTemplate>
+            </ItemsControl.ItemsPanel>
+            <ItemsControl.ItemTemplate>
+              <DataTemplate>
+                <StackPanel Margin="0,0,10,0">
+                  <TextBlock Text="{Binding MinutesText}" FontSize="{DynamicResource FontSizeXs}"
+                             HorizontalAlignment="Center" Foreground="{DynamicResource TextSecondaryBrush}"/>
+                  <Border Height="56" Margin="0,4,0,0">
+                    <Border Width="26" HorizontalAlignment="Center" VerticalAlignment="Bottom"
+                            CornerRadius="{DynamicResource RadiusSm}" Height="{Binding BarHeight}"
+                            Background="{DynamicResource AccentSoftBrush}">
+                      <Border.Style>
+                        <Style TargetType="Border">
+                          <Style.Triggers>
+                            <DataTrigger Binding="{Binding IsToday}" Value="True">
+                              <Setter Property="Background" Value="{DynamicResource AccentPrimaryBrush}"/>
+                            </DataTrigger>
+                          </Style.Triggers>
+                        </Style>
+                      </Border.Style>
+                    </Border>
+                  </Border>
+                  <TextBlock Text="{Binding DayText}" Margin="0,6,0,0" FontSize="{DynamicResource FontSizeXs}"
+                             HorizontalAlignment="Center" Foreground="{DynamicResource TextTertiaryBrush}"/>
+                  <TextBlock Text="{Binding DistractText}" Margin="0,2,0,0" FontSize="{DynamicResource FontSizeXs}"
+                             HorizontalAlignment="Center" TextAlignment="Center" TextWrapping="Wrap"
+                             Foreground="{DynamicResource DangerBrush}"/>
+                </StackPanel>
+              </DataTemplate>
+            </ItemsControl.ItemTemplate>
+          </ItemsControl>
+        </StackPanel>
+      </Border>
+
       <StackPanel x:Name="ZoneHealth" Visibility="{Binding HealthZoneVisible, Converter={StaticResource BoolVis}}">
         <Border Style="{DynamicResource SettingsGroup}" Padding="16,14" Margin="0,0,0,16"
                 AutomationProperties.Name="维护中心">

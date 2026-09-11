@@ -349,6 +349,9 @@ namespace CaelusApp
             // 初始全量扫描：检测启动前已运行的场景进程（如已开的 VS Code、浏览器）
             try { devFocus.InitialScan(); } catch { }
             try { dailyCare.InitialScan(); } catch { }
+            // 开发服务已在运行的实例补捕启动命令（晚于服务启动时退出才有得自动拉起）
+            devServiceGuard.RestartEnabled = () => Settings.Load("DevSvcRestartOn", false);
+            try { devServiceGuard.CaptureSnapshot(); } catch { }
 
             // 健康维护独立调度：与 DailyCare 掌权解耦，任何使用形态下到点即执行；
             // 游戏进行中让路（着色器缓存是游戏热用文件，对局中不清理）
@@ -519,6 +522,26 @@ namespace CaelusApp
                     panel.BeginInvoke((MethodInvoker)(() =>
                     {
                         try { icon.ShowBalloonTip(6000, App.DisplayName, Lang.F("bal.devsvc", name), ToolTipIcon.Warning); } catch { }
+                    }));
+                }
+                catch { }
+            };
+            devServiceGuard.RestartAttempted += (name, reason) =>
+            {
+                try
+                {
+                    panel.BeginInvoke((MethodInvoker)(() =>
+                    {
+                        try
+                        {
+                            if (reason == "ok")
+                                icon.ShowBalloonTip(6000, App.DisplayName, Lang.F("bal.devsvc.restart", name), ToolTipIcon.Info);
+                            else if (reason == "giveup")
+                                icon.ShowBalloonTip(8000, App.DisplayName, Lang.F("bal.devsvc.giveup", name), ToolTipIcon.Warning);
+                            else if (reason == "nocmd")
+                                icon.ShowBalloonTip(6000, App.DisplayName, Lang.F("bal.devsvc.nocmd", name), ToolTipIcon.Warning);
+                        }
+                        catch { }
                     }));
                 }
                 catch { }

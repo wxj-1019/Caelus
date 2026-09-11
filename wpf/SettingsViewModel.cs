@@ -22,6 +22,7 @@ namespace CaelusApp
         private bool focusMode;
         private bool ideOn;
         private bool distractBlockOn;
+        private bool devSvcRestartOn;
         private bool dailyCare;
         private bool batteryOn;
         private string shaderStatus;
@@ -48,6 +49,7 @@ namespace CaelusApp
             focusMode = Settings.Load("DevFocusModeOn", false);
             ideOn = Settings.Load("DevFocusIdeOn", true);
             distractBlockOn = Settings.Load("DevFocusDistractBlock", false);
+            devSvcRestartOn = Settings.Load("DevSvcRestartOn", false);
             this.dailyCare = Settings.Load("DailyCareOn", true);
             batteryOn = Settings.Load("DailyCareBatteryOn", true);
             shaderStatus = Lang.T("set.shader.n");
@@ -80,6 +82,7 @@ namespace CaelusApp
             focusMode = Settings.Load("DevFocusModeOn", false);
             ideOn = Settings.Load("DevFocusIdeOn", true);
             distractBlockOn = Settings.Load("DevFocusDistractBlock", false);
+            devSvcRestartOn = Settings.Load("DevSvcRestartOn", false);
             dailyCare = Settings.Load("DailyCareOn", true);
             batteryOn = Settings.Load("DailyCareBatteryOn", true);
             Raise("AutoStart");
@@ -90,6 +93,7 @@ namespace CaelusApp
             Raise("FocusMode");
             Raise("IdeOn");
             Raise("DistractBlockOn");
+            Raise("DevSvcRestartOn");
             Raise("DailyCare");
             Raise("BatteryOn");
             Raise("PreferenceSummary");
@@ -265,6 +269,21 @@ namespace CaelusApp
             Settings.SaveStr("DevServiceList", text ?? "");
             DevServiceCatalog.Reload();
             ShowFeedback("开发服务守护清单已保存。", "Success");
+        }
+
+        // —— 服务自动拉起（默认关） ——
+        public string DevSvcRestartTitle { get { return Lang.T("set.devsvc.restart"); } }
+        public string DevSvcRestartNote { get { return Lang.T("set.devsvc.restart.n"); } }
+        public bool DevSvcRestartOn
+        {
+            get { return devSvcRestartOn; }
+            set
+            {
+                if (!SetProperty(ref devSvcRestartOn, value, "DevSvcRestartOn")) return;
+                Settings.Save("DevSvcRestartOn", value);
+                ShowFeedback(value ? "服务自动拉起已开启：守护清单内的服务退出后将按原命令行重启。"
+                                   : "服务自动拉起已关闭：服务退出仅提醒。", "Success");
+            }
         }
 
         // —— 开发环境体检（只读） ——

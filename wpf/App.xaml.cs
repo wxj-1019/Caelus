@@ -434,6 +434,20 @@ namespace CaelusApp.WpfHost
                 // 服务停止属告警，与 WinForms 一致用警告图标
                 try { ShowBalloon(Lang.F("bal.devsvc", name), 6000, System.Windows.Forms.ToolTipIcon.Warning); } catch { }
             }));
+            host.DevServiceGuard.RestartAttempted += (name, reason) => Dispatcher.BeginInvoke(new Action(delegate
+            {
+                // fail 静默重试不弹泡（留日志）；熔断/无命令行给警告，成功给确认
+                try
+                {
+                    if (reason == "ok")
+                        ShowBalloon(Lang.F("bal.devsvc.restart", name), 6000);
+                    else if (reason == "giveup")
+                        ShowBalloon(Lang.F("bal.devsvc.giveup", name), 8000, System.Windows.Forms.ToolTipIcon.Warning);
+                    else if (reason == "nocmd")
+                        ShowBalloon(Lang.F("bal.devsvc.nocmd", name), 6000, System.Windows.Forms.ToolTipIcon.Warning);
+                }
+                catch { }
+            }));
         }
 
         private void ShowBalloon(string text, int ms)

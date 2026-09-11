@@ -155,6 +155,38 @@ namespace CaelusApp
             }
         }
 
+        // 拉起预算：连续失败达到上限熔断，达到前允许重试
+        private static void TestDevSvcRestartBudget()
+        {
+            Eq(true, DevServiceGuard.BudgetAllows(0));
+            Eq(true, DevServiceGuard.BudgetAllows(1));
+            Eq(true, DevServiceGuard.BudgetAllows(DevServiceGuard.MaxConsecutiveRestarts - 1));
+            Eq(false, DevServiceGuard.BudgetAllows(DevServiceGuard.MaxConsecutiveRestarts));
+            Eq(false, DevServiceGuard.BudgetAllows(DevServiceGuard.MaxConsecutiveRestarts + 1));
+        }
+
+        // 命令行拆分：引号感知——首段（含空格路径）为 exe，其余为参数
+        private static void TestSplitCommandLine()
+        {
+            string exe, args;
+            DevServiceGuard.SplitCommandLine("\"C:\\Program Files\\x\\nginx.exe\" -c conf\\a.conf", out exe, out args);
+            Eq("C:\\Program Files\\x\\nginx.exe", exe);
+            Eq("-c conf\\a.conf", args);
+            DevServiceGuard.SplitCommandLine("node server.js --port 80", out exe, out args);
+            Eq("node", exe);
+            Eq("server.js --port 80", args);
+            DevServiceGuard.SplitCommandLine("just.exe", out exe, out args);
+            Eq("just.exe", exe);
+            Eq("", args);
+            DevServiceGuard.SplitCommandLine("", out exe, out args);
+            Eq("", exe);
+            DevServiceGuard.SplitCommandLine(null, out exe, out args);
+            Eq("", exe);
+            DevServiceGuard.SplitCommandLine("\"unterminated", out exe, out args);
+            Eq("unterminated", exe);
+            Eq("", args);
+        }
+
         private static void TestDevServiceExemptFromSuppression()
         {
             string winRoot = Environment.GetFolderPath(Environment.SpecialFolder.Windows);

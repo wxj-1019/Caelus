@@ -920,6 +920,8 @@ namespace CaelusApp
             test("开发服务：同名多实例未归零不触发", TestDevServiceGuardNoFireWhileOthersAlive);
             test("开发服务：Stopped 丢失时死 PID 兜底清理并通知", TestDevServiceGuardPrunesDeadPid);
             test("开发服务：注册服务在压制扫描中豁免", TestDevServiceExemptFromSuppression);
+            test("服务拉起：连败预算熔断判定", TestDevSvcRestartBudget);
+            test("服务拉起：命令行拆分引号感知", TestSplitCommandLine);
             test("编译台架：提速百分比计算", TestBuildProbeSpeedupPct);
             test("专注时长：累计与跨天归零", TestFocusStatsAccumulateAndReset);
             test("专注时长：专注开关往返计入会话", TestDevFocusRecordsFocusStats);

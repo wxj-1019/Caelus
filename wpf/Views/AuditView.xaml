@@ -122,37 +122,45 @@
     </Grid>
 
     <Grid Grid.Row="3">
-      <Border x:Name="IdlePanel"
-              Style="{DynamicResource SettingsGroup}"
-              Padding="28"
+      <!-- 体检入口 Hero：夜空烟花光晕 + 引导标题 + 开始按钮（页面第一眼） -->
+      <controls:GlassCard x:Name="IdlePanel"
+              Style="{DynamicResource HeroGlassCard}"
               Visibility="Collapsed"
               IsHitTestVisible="False">
-        <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center">
-          <TextBlock Text="{Binding IdleTitle}"
-                     FontSize="{DynamicResource FontSizeEmpty}"
-                     FontWeight="SemiBold"
-                     Foreground="{DynamicResource TextPrimaryBrush}"
-                     HorizontalAlignment="Center"
-                     TextAlignment="Center"
-                     TextWrapping="Wrap"
-                     Margin="0,0,0,8"/>
-          <TextBlock Text="{Binding IdleHint}"
-                     FontSize="{DynamicResource FontSizeCaption}"
-                     Foreground="{DynamicResource TextSecondaryBrush}"
-                     HorizontalAlignment="Center"
-                     TextAlignment="Center"
-                     TextWrapping="Wrap"
-                     MaxWidth="440"
-                     Margin="0,0,0,16"/>
-          <Button x:Name="BtnStart"
-                  Style="{DynamicResource PrimaryButton}"
-                  Content="{Binding StartButtonText}"
-                  Click="OnStartClick"
-                  Padding="20,8"
-                  HorizontalAlignment="Center"
-                  AutomationProperties.Name="{Binding StartButtonText}"/>
-        </StackPanel>
-      </Border>
+        <Grid>
+          <Border Style="{StaticResource AuroraPrimaryHost}"/>
+          <Border Style="{StaticResource AuroraSecondaryHost}"/>
+          <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center" Margin="28">
+            <Border Style="{StaticResource HeroMedallionSmall}" HorizontalAlignment="Center" Margin="0,0,0,14">
+              <controls:IconView Key="IconAudit" Width="24" Height="24" Foreground="{DynamicResource AccentPrimaryBrush}"
+                                 HorizontalAlignment="Center" VerticalAlignment="Center"/>
+            </Border>
+            <TextBlock Text="{Binding IdleTitle}"
+                       FontSize="{DynamicResource FontSizeHero}"
+                       FontWeight="ExtraBold"
+                       Foreground="{DynamicResource HeroTitleBrush}"
+                       HorizontalAlignment="Center"
+                       TextAlignment="Center"
+                       TextWrapping="Wrap"
+                       Margin="0,0,0,8"/>
+            <TextBlock Text="{Binding IdleHint}"
+                       FontSize="{DynamicResource FontSizeCaption}"
+                       Foreground="{DynamicResource TextSecondaryBrush}"
+                       HorizontalAlignment="Center"
+                       TextAlignment="Center"
+                       TextWrapping="Wrap"
+                       MaxWidth="440"
+                       Margin="0,0,0,16"/>
+            <Button x:Name="BtnStart"
+                    Style="{DynamicResource PrimaryButton}"
+                    Content="{Binding StartButtonText}"
+                    Click="OnStartClick"
+                    Padding="20,8"
+                    HorizontalAlignment="Center"
+                    AutomationProperties.Name="{Binding StartButtonText}"/>
+          </StackPanel>
+        </Grid>
+      </controls:GlassCard>
 
       <Border x:Name="ScanningPanel"
               Style="{DynamicResource SettingsGroup}"
@@ -192,10 +200,13 @@
                     Visibility="Collapsed"
                     IsHitTestVisible="False">
         <StackPanel Margin="0,0,0,16">
-          <!-- 健康摘要：评分 + 等级 + 关注项 + 上次体检 -->
-          <Border x:Name="ZoneHealth" Style="{DynamicResource StatusBanner}"
-                  Padding="14,12" Margin="0,0,0,16"
+          <!-- 健康摘要 Hero：夜空烟花光晕 + 大号评分 + 等级 + 关注项 + 上次体检 -->
+          <controls:GlassCard x:Name="ZoneHealth" Style="{DynamicResource HeroGlassCard}"
+                  Margin="0,0,0,16"
                   AutomationProperties.Name="体检健康摘要">
+            <Grid>
+              <Border Style="{StaticResource AuroraPrimaryHost}"/>
+              <Border Style="{StaticResource AuroraSecondaryHost}"/>
             <StackPanel>
               <WrapPanel>
               <TextBlock Text="{Binding Score, Mode=OneWay}" FontSize="{DynamicResource FontSizeScore}" FontWeight="SemiBold"
@@ -237,7 +248,8 @@
               </WrapPanel>
               <TextBlock Text="{Binding ScoreMethodText}" FontSize="{DynamicResource FontSizeXs}" Foreground="{DynamicResource TextTertiaryBrush}" TextWrapping="Wrap" Margin="0,6,0,0"/>
             </StackPanel>
-          </Border>
+            </Grid>
+          </controls:GlassCard>
 
           <UniformGrid x:Name="ZoneMetrics" Columns="2" Margin="0,0,-8,16">
             <Border Style="{DynamicResource MetricPanel}" Margin="0,0,8,8">
@@ -328,13 +340,9 @@
 
           <StackPanel x:Name="ZoneCapability" Margin="0,0,0,16">
             <StackPanel Orientation="Horizontal" Margin="0,0,0,8">
-              <Border Width="30" Height="30" CornerRadius="{DynamicResource RadiusSm}"
-                      Background="{DynamicResource AccentSoftBrush}"
-                      BorderBrush="{DynamicResource AccentEdgeBrush}" BorderThickness="1"
-                      VerticalAlignment="Center" Margin="0,0,12,0">
-                <Viewbox Width="16" Height="16">
-                  <Path Data="M20 6L9 17l-5-5" Stroke="{DynamicResource ModeAccentBrush}" StrokeThickness="2.4" StrokeStartLineCap="Round" StrokeEndLineCap="Round"/>
-                </Viewbox>
+              <Border Style="{StaticResource SectionHeaderIcon}" Margin="0,0,12,0">
+                <controls:IconView Key="IconCheck" Width="16" Height="16" Foreground="{DynamicResource ModeAccentBrush}"
+                                   HorizontalAlignment="Center" VerticalAlignment="Center"/>
               </Border>
               <TextBlock Text="{Binding CapabilityTitle, Mode=OneWay}" FontSize="{DynamicResource FontSizeBody}"
                          FontWeight="SemiBold" Foreground="{DynamicResource TextPrimaryBrush}" VerticalAlignment="Center"/>
@@ -351,10 +359,7 @@
 
           <StackPanel x:Name="ZoneMachine" Margin="0,0,0,16">
             <StackPanel Orientation="Horizontal" Margin="0,0,0,8">
-              <Border Width="30" Height="30" CornerRadius="{DynamicResource RadiusSm}"
-                      Background="{DynamicResource AccentSoftBrush}"
-                      BorderBrush="{DynamicResource AccentEdgeBrush}" BorderThickness="1"
-                      VerticalAlignment="Center" Margin="0,0,12,0">
+              <Border Style="{StaticResource SectionHeaderIcon}" Margin="0,0,12,0">
                 <Viewbox Width="16" Height="16">
                   <Path Data="M3 6h18v13H3z M8 6V4h8v2" Stroke="{DynamicResource ModeAccentBrush}" StrokeThickness="2" StrokeLineJoin="Round"/>
                 </Viewbox>
@@ -374,10 +379,7 @@
 
           <StackPanel x:Name="ZonePersistent" Margin="0,0,0,16">
             <StackPanel Orientation="Horizontal" Margin="0,0,0,8">
-              <Border Width="30" Height="30" CornerRadius="{DynamicResource RadiusSm}"
-                      Background="{DynamicResource AccentSoftBrush}"
-                      BorderBrush="{DynamicResource AccentEdgeBrush}" BorderThickness="1"
-                      VerticalAlignment="Center" Margin="0,0,12,0">
+              <Border Style="{StaticResource SectionHeaderIcon}" Margin="0,0,12,0">
                 <Viewbox Width="16" Height="16">
                   <Path Data="M4 6h16 M4 12h16 M4 18h10" Stroke="{DynamicResource ModeAccentBrush}" StrokeThickness="2" StrokeStartLineCap="Round" StrokeEndLineCap="Round"/>
                 </Viewbox>
@@ -397,13 +399,9 @@
 
           <StackPanel x:Name="ZoneVerdict">
             <StackPanel Orientation="Horizontal" Margin="0,0,0,8">
-              <Border Width="30" Height="30" CornerRadius="{DynamicResource RadiusSm}"
-                      Background="{DynamicResource AccentSoftBrush}"
-                      BorderBrush="{DynamicResource AccentEdgeBrush}" BorderThickness="1"
-                      VerticalAlignment="Center" Margin="0,0,12,0">
-                <Viewbox Width="16" Height="16">
-                  <Path Data="M12 3l7 3v5c0 4.5-3 8.5-7 10-4-1.5-7-5.5-7-10V6z" Stroke="{DynamicResource ModeAccentBrush}" StrokeThickness="2" StrokeLineJoin="Round"/>
-                </Viewbox>
+              <Border Style="{StaticResource SectionHeaderIcon}" Margin="0,0,12,0">
+                <controls:IconView Key="IconShield" Width="16" Height="16" Foreground="{DynamicResource ModeAccentBrush}"
+                                   HorizontalAlignment="Center" VerticalAlignment="Center"/>
               </Border>
               <TextBlock Text="{Binding VerdictTitle, Mode=OneWay}" FontSize="{DynamicResource FontSizeBody}"
                          FontWeight="SemiBold" Foreground="{DynamicResource TextPrimaryBrush}" VerticalAlignment="Center"/>

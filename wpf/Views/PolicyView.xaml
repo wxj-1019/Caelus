@@ -56,43 +56,46 @@
                    Margin="0,4,0,0"/>
       </StackPanel>
 
-      <!-- 摘要使用两列 Grid；右侧说明在窄窗口中自动换行。 -->
-      <Border x:Name="ZoneSummary" Style="{DynamicResource StatusBanner}"
-              Padding="14,12" Margin="0,0,0,14"
+      <!-- 摘要 Hero：夜空烟花光晕；左侧大号启用计数，右侧模式预设与提示。窄窗口右列自动换行。 -->
+      <ctl:GlassCard x:Name="ZoneSummary" Style="{DynamicResource HeroGlassCard}"
+              Margin="0,0,0,14"
               AutomationProperties.Name="{Binding SummaryAutomationName}">
         <Grid>
-          <Grid.ColumnDefinitions>
-            <ColumnDefinition Width="Auto"/>
-            <ColumnDefinition Width="20"/>
-            <ColumnDefinition Width="*"/>
-          </Grid.ColumnDefinitions>
-          <StackPanel Grid.Column="0" Orientation="Horizontal" VerticalAlignment="Center">
-            <TextBlock FontSize="{DynamicResource FontSizeMetric}" FontWeight="SemiBold"
-                       Foreground="{DynamicResource TextPrimaryBrush}"
-                       Typography.NumeralAlignment="Tabular">
-              <Run Text="{Binding TotalEnabled, Mode=OneWay}"/><Run Text="/" Foreground="{DynamicResource TextTertiaryBrush}"/><Run Text="{Binding TotalCount, Mode=OneWay}"/>
-            </TextBlock>
-            <TextBlock Text="项已启用" Margin="8,0,0,0" FontSize="{DynamicResource FontSizeSmall}"
-                       VerticalAlignment="Center"
-                       Foreground="{DynamicResource TextSecondaryBrush}"/>
-          </StackPanel>
-          <StackPanel Grid.Column="2" VerticalAlignment="Center">
-            <WrapPanel Margin="0,0,0,5">
-              <Border x:Name="SummaryModeBadge" Style="{DynamicResource StatusBadge}"
-                      Padding="10,3" Margin="0,0,8,3"
-                      AutomationProperties.Name="{Binding ModeAutomationName}">
-                <TextBlock Text="{Binding ModeBadgeText, Mode=OneWay}" FontSize="{DynamicResource FontSizeXs}"
-                           FontWeight="SemiBold" Foreground="{DynamicResource ModeAccentBrush}"/>
-              </Border>
-              <TextBlock Text="模式预设" FontSize="{DynamicResource FontSizeSmall}" VerticalAlignment="Center"
-                         Foreground="{DynamicResource TextSecondaryBrush}" Margin="0,0,0,3"/>
-            </WrapPanel>
-            <TextBlock Text="{Binding HintText, Mode=OneWay}" FontSize="{DynamicResource FontSizeSmall}"
-                       Foreground="{DynamicResource TextTertiaryBrush}"
-                       TextWrapping="Wrap"/>
-          </StackPanel>
+          <Border Style="{StaticResource AuroraPrimaryHost}"/>
+          <Border Style="{StaticResource AuroraSecondaryHost}"/>
+          <Grid>
+            <Grid.ColumnDefinitions>
+              <ColumnDefinition Width="Auto"/>
+              <ColumnDefinition Width="32"/>
+              <ColumnDefinition Width="*"/>
+            </Grid.ColumnDefinitions>
+            <StackPanel Grid.Column="0" Orientation="Horizontal" VerticalAlignment="Center">
+              <TextBlock Style="{DynamicResource MetricNumber}"
+                         Typography.NumeralAlignment="Tabular">
+                <Run Text="{Binding TotalEnabled, Mode=OneWay}"/><Run Text="/" Foreground="{DynamicResource TextTertiaryBrush}"/><Run Text="{Binding TotalCount, Mode=OneWay}"/>
+              </TextBlock>
+              <TextBlock Text="项已启用" Margin="8,0,0,0" FontSize="{DynamicResource FontSizeSmall}"
+                         VerticalAlignment="Center"
+                         Foreground="{DynamicResource TextSecondaryBrush}"/>
+            </StackPanel>
+            <StackPanel Grid.Column="2" VerticalAlignment="Center">
+              <WrapPanel Margin="0,0,0,5">
+                <Border x:Name="SummaryModeBadge" Style="{DynamicResource StatusBadge}"
+                        Padding="10,3" Margin="0,0,8,3"
+                        AutomationProperties.Name="{Binding ModeAutomationName}">
+                  <TextBlock Text="{Binding ModeBadgeText, Mode=OneWay}" FontSize="{DynamicResource FontSizeXs}"
+                             FontWeight="SemiBold" Foreground="{DynamicResource ModeAccentBrush}"/>
+                </Border>
+                <TextBlock Text="模式预设" FontSize="{DynamicResource FontSizeSmall}" VerticalAlignment="Center"
+                           Foreground="{DynamicResource TextSecondaryBrush}" Margin="0,0,0,3"/>
+              </WrapPanel>
+              <TextBlock Text="{Binding HintText, Mode=OneWay}" FontSize="{DynamicResource FontSizeSmall}"
+                         Foreground="{DynamicResource TextTertiaryBrush}"
+                         TextWrapping="Wrap"/>
+            </StackPanel>
+          </Grid>
         </Grid>
-      </Border>
+      </ctl:GlassCard>
 
       <!-- 一次只展示一个策略分组，避免 21 行同时展开。 -->
       <ctl:SegmentedControl x:Name="PolicyGroupSelector"
@@ -105,9 +108,7 @@
       <Grid x:Name="ZoneGroups">
         <StackPanel x:Name="ZoneCore">
           <StackPanel Orientation="Horizontal" Margin="0,0,0,8">
-            <Border Width="30" Height="30" CornerRadius="{DynamicResource RadiusSm}"
-                    Background="{DynamicResource AccentSoftBrush}" BorderBrush="{DynamicResource AccentEdgeBrush}"
-                    BorderThickness="1" VerticalAlignment="Center" Margin="0,0,12,0">
+            <Border Style="{StaticResource SectionHeaderIcon}" Margin="0,0,12,0">
               <ctl:IconView Key="IconPolicy" Width="16" Height="16" Foreground="{DynamicResource ModeAccentBrush}"
                             HorizontalAlignment="Center" VerticalAlignment="Center"/>
             </Border>
@@ -126,9 +127,7 @@
 
         <StackPanel x:Name="ZoneCustom" Visibility="Collapsed">
           <StackPanel Orientation="Horizontal" Margin="0,0,0,8">
-            <Border Width="30" Height="30" CornerRadius="{DynamicResource RadiusSm}"
-                    Background="{DynamicResource AccentSoftBrush}" BorderBrush="{DynamicResource AccentEdgeBrush}"
-                    BorderThickness="1" VerticalAlignment="Center" Margin="0,0,12,0">
+            <Border Style="{StaticResource SectionHeaderIcon}" Margin="0,0,12,0">
               <ctl:IconView Key="IconSettings" Width="16" Height="16" Foreground="{DynamicResource ModeAccentBrush}"
                             HorizontalAlignment="Center" VerticalAlignment="Center"/>
             </Border>
@@ -147,9 +146,7 @@
 
         <StackPanel x:Name="ZoneExtra" Visibility="Collapsed">
           <StackPanel Orientation="Horizontal" Margin="0,0,0,8">
-            <Border Width="30" Height="30" CornerRadius="{DynamicResource RadiusSm}"
-                    Background="{DynamicResource AccentSoftBrush}" BorderBrush="{DynamicResource AccentEdgeBrush}"
-                    BorderThickness="1" VerticalAlignment="Center" Margin="0,0,12,0">
+            <Border Style="{StaticResource SectionHeaderIcon}" Margin="0,0,12,0">
               <ctl:IconView Key="IconBolt" Width="16" Height="16" Foreground="{DynamicResource ModeAccentBrush}"
                             HorizontalAlignment="Center" VerticalAlignment="Center"/>
             </Border>

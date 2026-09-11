@@ -125,9 +125,7 @@
 
       <StackPanel x:Name="ZoneGraphics" Margin="0,0,0,16">
         <StackPanel Orientation="Horizontal" Margin="0,0,0,8">
-          <Border Width="30" Height="30" CornerRadius="{DynamicResource RadiusSm}"
-                  Background="{DynamicResource AccentSoftBrush}" BorderBrush="{DynamicResource AccentEdgeBrush}"
-                  BorderThickness="1" Margin="0,0,12,0">
+          <Border Style="{StaticResource SectionHeaderIcon}" Margin="0,0,12,0">
             <ctl:IconView Key="IconGpu" Width="16" Height="16" Foreground="{DynamicResource ModeAccentBrush}"
                           HorizontalAlignment="Center" VerticalAlignment="Center"/>
           </Border>
@@ -141,9 +139,8 @@
 
       <StackPanel x:Name="ZoneSecurity" Margin="0,0,0,16">
         <StackPanel Orientation="Horizontal" Margin="0,0,0,8">
-          <Border Width="30" Height="30" CornerRadius="{DynamicResource RadiusSm}"
-                  Background="{DynamicResource WarningSoftBrush}" BorderBrush="{DynamicResource WarningEdgeBrush}"
-                  BorderThickness="1" Margin="0,0,12,0">
+          <Border Style="{StaticResource SectionHeaderIcon}" Margin="0,0,12,0"
+                  Background="{DynamicResource WarningSoftBrush}" BorderBrush="{DynamicResource WarningEdgeBrush}">
             <ctl:IconView Key="IconShield" Width="16" Height="16" Foreground="{DynamicResource WarningBrush}"
                           HorizontalAlignment="Center" VerticalAlignment="Center"/>
           </Border>
@@ -157,9 +154,7 @@
 
       <StackPanel x:Name="ZoneInterrupt" Margin="0,0,0,16">
         <StackPanel Orientation="Horizontal" Margin="0,0,0,8">
-          <Border Width="30" Height="30" CornerRadius="{DynamicResource RadiusSm}"
-                  Background="{DynamicResource AccentSoftBrush}" BorderBrush="{DynamicResource AccentEdgeBrush}"
-                  BorderThickness="1" Margin="0,0,12,0">
+          <Border Style="{StaticResource SectionHeaderIcon}" Margin="0,0,12,0">
             <ctl:IconView Key="IconEnvironment" Width="16" Height="16" Foreground="{DynamicResource ModeAccentBrush}"
                           HorizontalAlignment="Center" VerticalAlignment="Center"/>
           </Border>
@@ -173,9 +168,7 @@
 
       <StackPanel x:Name="ZoneNetwork">
         <StackPanel Orientation="Horizontal" Margin="0,0,0,8">
-          <Border Width="30" Height="30" CornerRadius="{DynamicResource RadiusSm}"
-                  Background="{DynamicResource AccentSoftBrush}" BorderBrush="{DynamicResource AccentEdgeBrush}"
-                  BorderThickness="1" Margin="0,0,12,0">
+          <Border Style="{StaticResource SectionHeaderIcon}" Margin="0,0,12,0">
             <ctl:IconView Key="IconPolicy" Width="16" Height="16" Foreground="{DynamicResource ModeAccentBrush}"
                           HorizontalAlignment="Center" VerticalAlignment="Center"/>
           </Border>

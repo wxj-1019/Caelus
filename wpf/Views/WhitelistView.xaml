@@ -1,16 +1,52 @@
 <UserControl x:Class="CaelusApp.WpfHost.Views.WhitelistView"
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:controls="clr-namespace:CaelusApp.WpfHost.Controls"
              AllowDrop="True" Drop="OnDrop" DragOver="OnDragOver" DragLeave="OnDragLeave"
              AutomationProperties.Name="白名单">
   <Grid>
-    <Grid.RowDefinitions><RowDefinition Height="Auto"/><RowDefinition Height="*"/></Grid.RowDefinitions>
+    <Grid.RowDefinitions><RowDefinition Height="Auto"/><RowDefinition Height="Auto"/><RowDefinition Height="*"/></Grid.RowDefinitions>
     <StackPanel x:Name="ZoneHeader" Grid.Row="0" Margin="0,0,0,16">
       <TextBlock Text="{Binding PageTitle}" Style="{DynamicResource PageHeader}"/>
       <TextBlock Text="{Binding PageSub}" Style="{DynamicResource PageSubtitle}"/>
     </StackPanel>
 
-    <Grid Grid.Row="1">
+    <!-- 统计 Hero：夜空烟花光晕 + 大号用户规则计数 -->
+    <controls:GlassCard Grid.Row="1" x:Name="ZoneHero" Style="{DynamicResource HeroGlassCard}" Margin="0,0,0,16"
+            AutomationProperties.Name="白名单规则统计">
+      <Grid>
+        <Border Style="{StaticResource AuroraPrimaryHost}"/>
+        <Border Style="{StaticResource AuroraSecondaryHost}"/>
+        <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+          <Border Style="{StaticResource HeroMedallionSmall}" Margin="0,0,14,0">
+            <controls:IconView Key="IconWhitelist" Width="24" Height="24" Foreground="{DynamicResource AccentPrimaryBrush}"
+                               HorizontalAlignment="Center" VerticalAlignment="Center"/>
+          </Border>
+          <StackPanel VerticalAlignment="Center">
+            <TextBlock FontSize="{DynamicResource FontSizeHero}" FontWeight="ExtraBold"
+                       Foreground="{DynamicResource HeroTitleBrush}"
+                       Typography.NumeralAlignment="Tabular">
+              <Run Text="{Binding UserRuleCount, Mode=OneWay}"/>
+            </TextBlock>
+            <TextBlock Margin="0,1,0,0" FontSize="{DynamicResource FontSizeXs}"
+                       Foreground="{DynamicResource TextTertiaryBrush}">
+              <TextBlock.Style>
+                <Style TargetType="TextBlock">
+                  <Setter Property="Text" Value="条用户规则在保护"/>
+                  <Style.Triggers>
+                    <DataTrigger Binding="{Binding IsEmpty}" Value="True">
+                      <Setter Property="Text" Value="还没有用户规则，从下方添加第一条"/>
+                    </DataTrigger>
+                  </Style.Triggers>
+                </Style>
+              </TextBlock.Style>
+            </TextBlock>
+          </StackPanel>
+        </StackPanel>
+      </Grid>
+    </controls:GlassCard>
+
+    <Grid Grid.Row="2">
       <Grid.ColumnDefinitions><ColumnDefinition Width="*" MinWidth="320"/><ColumnDefinition Width="16"/><ColumnDefinition Width="260"/></Grid.ColumnDefinitions>
       <Border Grid.Column="0" x:Name="ZoneLeft" Style="{DynamicResource SettingsGroup}" Padding="0">
         <Grid><Grid.RowDefinitions><RowDefinition Height="Auto"/><RowDefinition Height="*"/></Grid.RowDefinitions>

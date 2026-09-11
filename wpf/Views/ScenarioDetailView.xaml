@@ -75,25 +75,28 @@
         </DockPanel>
       </Border>
 
+      <!-- 场景 Hero：夜空烟花光晕 + 勋章图标 + 渐变展示标题 + 总开关 -->
       <controls:GlassCard x:Name="ZoneCard" Style="{DynamicResource HeroGlassCard}" Margin="0,0,0,16"
               AutomationProperties.Name="场景说明与总开关">
+        <Grid>
+          <Border Style="{StaticResource AuroraPrimaryHost}"/>
+          <Border Style="{StaticResource AuroraSecondaryHost}"/>
         <StackPanel>
           <DockPanel>
-            <Border DockPanel.Dock="Left" Width="44" Height="44" CornerRadius="{DynamicResource RadiusSm}"
-                    Background="{DynamicResource AccentSoftBrush}" BorderBrush="{DynamicResource AccentEdgeBrush}"
-                    BorderThickness="1" VerticalAlignment="Top" Margin="0,0,12,0">
-              <controls:IconView Key="{Binding IconKey}" Width="22" Height="22"
+            <Border DockPanel.Dock="Left" Style="{StaticResource HeroMedallionSmall}"
+                    VerticalAlignment="Top" Margin="0,0,14,0">
+              <controls:IconView Key="{Binding IconKey}" Width="26" Height="26"
                                  HorizontalAlignment="Center" VerticalAlignment="Center"
                                  Foreground="{DynamicResource AccentPrimaryBrush}"/>
             </Border>
             <ToggleButton DockPanel.Dock="Right" Style="{DynamicResource PolicyToggle}"
                           IsChecked="{Binding Enabled}" VerticalAlignment="Center" Margin="16,0,0,0"
                           AutomationProperties.Name="启用或关闭当前场景"/>
-            <StackPanel>
-              <TextBlock Text="{Binding Title}" FontSize="{DynamicResource FontSizeCaption}"
-                         FontWeight="SemiBold" Foreground="{DynamicResource TextPrimaryBrush}"/>
+            <StackPanel VerticalAlignment="Center">
+              <TextBlock Text="{Binding Title}" FontSize="{DynamicResource FontSizeHero}" FontWeight="ExtraBold"
+                         Foreground="{DynamicResource HeroTitleBrush}"/>
               <TextBlock Text="关闭后场景退出仲裁，已施加的副作用会立即还原。"
-                         Margin="0,3,0,0" FontSize="{DynamicResource FontSizeXs}"
+                         Margin="0,4,0,0" FontSize="{DynamicResource FontSizeXs}"
                          Foreground="{DynamicResource TextTertiaryBrush}" TextWrapping="Wrap"/>
             </StackPanel>
           </DockPanel>
@@ -112,6 +115,7 @@
             </StackPanel>
           </Border>
         </StackPanel>
+        </Grid>
       </controls:GlassCard>
 
       <StackPanel x:Name="ZoneSources" Margin="0,0,0,16">

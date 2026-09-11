@@ -71,6 +71,9 @@ namespace CaelusApp
         // 空态只看用户自建规则；内置必需规则不应遮掉“添加第一条规则”的任务入口。
         public bool IsEmpty { get { return userRuleCount == 0; } }
 
+        // 页头 Hero 指标：用户自建规则数（与 IsEmpty 同口径，不含内置必需规则）
+        public int UserRuleCount { get { return userRuleCount; } }
+
         public bool CanRemoveSelected
         {
             get { return selected != null && !selected.Required; }
@@ -130,6 +133,7 @@ namespace CaelusApp
                 (v.Required ? required : user).Add(v);
 
             userRuleCount = user.Count;
+            Raise("UserRuleCount");
             WhitelistItemSelected reselect = null;
             foreach (WhitelistRuleView v in user)
             {

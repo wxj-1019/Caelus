@@ -11,18 +11,24 @@
         <TextBlock x:Name="HdrSub" Text="三场景开关、应用偏好与维护工具" Style="{DynamicResource PageSubtitle}"/>
       </StackPanel>
 
-      <Border x:Name="ZoneSummary" Style="{DynamicResource StatusBanner}" Margin="0,0,0,16" Padding="14,11">
+      <!-- 偏好摘要 Hero：夜空烟花光晕；左侧偏好结论，右侧开发状态徽章。 -->
+      <ctl:GlassCard x:Name="ZoneSummary" Style="{DynamicResource HeroGlassCard}" Margin="0,0,0,16"
+              AutomationProperties.Name="当前偏好摘要">
         <Grid>
-          <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
-          <StackPanel>
-            <TextBlock Text="当前偏好" FontSize="{DynamicResource FontSizeSmall}" FontWeight="SemiBold" Foreground="{DynamicResource TextPrimaryBrush}"/>
-            <TextBlock Text="{Binding PreferenceSummary}" Margin="0,3,0,0" FontSize="{DynamicResource FontSizeXs}" Foreground="{DynamicResource TextSecondaryBrush}"/>
-          </StackPanel>
-          <Border Grid.Column="1" Style="{DynamicResource NeutralStatusBadge}" VerticalAlignment="Center" Margin="16,0,0,0">
-            <TextBlock Text="{Binding DevSummary}" MaxWidth="340" FontSize="{DynamicResource FontSizeXs}" Foreground="{DynamicResource TextSecondaryBrush}" TextWrapping="Wrap"/>
-          </Border>
+          <Border Style="{StaticResource AuroraPrimaryHost}"/>
+          <Border Style="{StaticResource AuroraSecondaryHost}"/>
+          <Grid>
+            <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
+            <StackPanel VerticalAlignment="Center">
+              <TextBlock Text="当前偏好" FontSize="{DynamicResource FontSizeRegion}" FontWeight="SemiBold" Foreground="{DynamicResource TextPrimaryBrush}"/>
+              <TextBlock Text="{Binding PreferenceSummary}" Margin="0,4,0,0" FontSize="{DynamicResource FontSizeSmall}" Foreground="{DynamicResource TextSecondaryBrush}" TextWrapping="Wrap"/>
+            </StackPanel>
+            <Border Grid.Column="1" Style="{DynamicResource NeutralStatusBadge}" VerticalAlignment="Center" Margin="16,0,0,0">
+              <TextBlock Text="{Binding DevSummary}" MaxWidth="340" FontSize="{DynamicResource FontSizeXs}" Foreground="{DynamicResource TextSecondaryBrush}" TextWrapping="Wrap"/>
+            </Border>
+          </Grid>
         </Grid>
-      </Border>
+      </ctl:GlassCard>
 
       <Border x:Name="PageFeedbackBanner" Margin="0,0,0,16">
         <Border.Style>
@@ -41,13 +47,9 @@
 
       <StackPanel x:Name="ZoneApp">
         <StackPanel Orientation="Horizontal" Margin="0,0,0,8">
-          <Border Width="28" Height="28" CornerRadius="{DynamicResource RadiusSm}"
-                  Background="{DynamicResource AccentSoftBrush}" BorderBrush="{DynamicResource AccentEdgeBrush}"
-                  BorderThickness="1" VerticalAlignment="Center" Margin="0,0,10,0">
-            <Viewbox Width="15" Height="15">
-              <Path Data="M3 12a9 9 0 1 1 18 0 9 9 0 1 1-18 0 M12 5v2 M12 17v2 M5 12h2 M17 12h2"
-                    Stroke="{DynamicResource ModeAccentBrush}" StrokeThickness="2" StrokeLineJoin="Round"/>
-            </Viewbox>
+          <Border Style="{StaticResource SectionHeaderIcon}" Margin="0,0,12,0">
+            <ctl:IconView Key="IconSettings" Width="16" Height="16" Foreground="{DynamicResource ModeAccentBrush}"
+                          HorizontalAlignment="Center" VerticalAlignment="Center"/>
           </Border>
           <TextBlock Text="{Binding AppSectionTitle}" FontSize="{DynamicResource FontSizeBody}"
                      FontWeight="SemiBold" Foreground="{DynamicResource TextPrimaryBrush}" VerticalAlignment="Center"/>
@@ -64,13 +66,9 @@
 
       <StackPanel x:Name="ZoneDev">
         <StackPanel Orientation="Horizontal" Margin="0,0,0,8">
-          <Border Width="28" Height="28" CornerRadius="{DynamicResource RadiusSm}"
-                  Background="{DynamicResource AccentSoftBrush}" BorderBrush="{DynamicResource AccentEdgeBrush}"
-                  BorderThickness="1" VerticalAlignment="Center" Margin="0,0,10,0">
-            <Viewbox Width="15" Height="15">
-              <Path Data="M9.5 2L2 9.5 4.5 12l5-5 2.5 2.5L22 2z M2 22h20"
-                    Stroke="{DynamicResource ModeAccentBrush}" StrokeThickness="2" StrokeStartLineCap="Round" StrokeEndLineCap="Round" StrokeLineJoin="Round"/>
-            </Viewbox>
+          <Border Style="{StaticResource SectionHeaderIcon}" Margin="0,0,12,0">
+            <ctl:IconView Key="IconCode" Width="16" Height="16" Foreground="{DynamicResource ModeAccentBrush}"
+                          HorizontalAlignment="Center" VerticalAlignment="Center"/>
           </Border>
           <TextBlock Text="开发" FontSize="{DynamicResource FontSizeBody}"
                      FontWeight="SemiBold" Foreground="{DynamicResource TextPrimaryBrush}" VerticalAlignment="Center"/>
@@ -92,13 +90,9 @@
 
       <StackPanel x:Name="ZoneDaily">
         <StackPanel Orientation="Horizontal" Margin="0,0,0,8">
-          <Border Width="28" Height="28" CornerRadius="{DynamicResource RadiusSm}"
-                  Background="{DynamicResource AccentSoftBrush}" BorderBrush="{DynamicResource AccentEdgeBrush}"
-                  BorderThickness="1" VerticalAlignment="Center" Margin="0,0,10,0">
-            <Viewbox Width="15" Height="15">
-              <Path Data="M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20zm0 4v4l3 3"
-                    Stroke="{DynamicResource ModeAccentBrush}" StrokeThickness="2" StrokeLineJoin="Round"/>
-            </Viewbox>
+          <Border Style="{StaticResource SectionHeaderIcon}" Margin="0,0,12,0">
+            <ctl:IconView Key="IconDaily" Width="16" Height="16" Foreground="{DynamicResource ModeAccentBrush}"
+                          HorizontalAlignment="Center" VerticalAlignment="Center"/>
           </Border>
           <TextBlock Text="{Binding DailySectionTitle}" FontSize="{DynamicResource FontSizeBody}"
                      FontWeight="SemiBold" Foreground="{DynamicResource TextPrimaryBrush}" VerticalAlignment="Center"/>
@@ -117,10 +111,8 @@
 
       <StackPanel x:Name="ZoneTheme">
         <StackPanel Orientation="Horizontal" Margin="0,0,0,8">
-          <Border Width="28" Height="28" CornerRadius="{DynamicResource RadiusSm}"
-                  Background="{DynamicResource AccentSoftBrush}" BorderBrush="{DynamicResource AccentEdgeBrush}"
-                  BorderThickness="1" VerticalAlignment="Center" Margin="0,0,10,0">
-            <ctl:IconView Key="IconSettings" Width="15" Height="15"
+          <Border Style="{StaticResource SectionHeaderIcon}" Margin="0,0,12,0">
+            <ctl:IconView Key="IconSettings" Width="16" Height="16"
                           Foreground="{DynamicResource ModeAccentBrush}"
                           HorizontalAlignment="Center" VerticalAlignment="Center"/>
           </Border>
@@ -187,13 +179,9 @@
 
       <StackPanel x:Name="ZoneMaint">
         <StackPanel Orientation="Horizontal" Margin="0,0,0,8">
-          <Border Width="28" Height="28" CornerRadius="{DynamicResource RadiusSm}"
-                  Background="{DynamicResource AccentSoftBrush}" BorderBrush="{DynamicResource AccentEdgeBrush}"
-                  BorderThickness="1" VerticalAlignment="Center" Margin="0,0,10,0">
-            <Viewbox Width="15" Height="15">
-              <Path Data="M12 3l7 3v5c0 4.5-3 8.5-7 10-4-1.5-7-5.5-7-10V6z"
-                    Stroke="{DynamicResource ModeAccentBrush}" StrokeThickness="2" StrokeLineJoin="Round"/>
-            </Viewbox>
+          <Border Style="{StaticResource SectionHeaderIcon}" Margin="0,0,12,0">
+            <ctl:IconView Key="IconShield" Width="16" Height="16" Foreground="{DynamicResource ModeAccentBrush}"
+                          HorizontalAlignment="Center" VerticalAlignment="Center"/>
           </Border>
           <TextBlock Text="{Binding MaintSectionTitle}" FontSize="{DynamicResource FontSizeBody}"
                      FontWeight="SemiBold" Foreground="{DynamicResource TextPrimaryBrush}" VerticalAlignment="Center"/>
@@ -210,12 +198,10 @@
 
       <StackPanel x:Name="ZoneDanger">
         <StackPanel Orientation="Horizontal" Margin="0,0,0,8">
-          <Border Width="28" Height="28" CornerRadius="{DynamicResource RadiusSm}"
-                  Background="{DynamicResource DangerSoftBrush}" BorderBrush="{DynamicResource DangerEdgeBrush}"
-                  BorderThickness="1" VerticalAlignment="Center" Margin="0,0,10,0">
-            <TextBlock Text="!" FontSize="16" FontWeight="Bold"
-                       Foreground="{DynamicResource DangerBrush}"
-                       HorizontalAlignment="Center" VerticalAlignment="Center"/>
+          <Border Style="{StaticResource SectionHeaderIcon}" Margin="0,0,12,0"
+                  Background="{DynamicResource DangerSoftBrush}" BorderBrush="{DynamicResource DangerEdgeBrush}">
+            <ctl:IconView Key="IconWarn" Width="16" Height="16" Foreground="{DynamicResource DangerBrush}"
+                          HorizontalAlignment="Center" VerticalAlignment="Center"/>
           </Border>
           <StackPanel VerticalAlignment="Center">
             <TextBlock Text="危险区" FontSize="{DynamicResource FontSizeBody}" FontWeight="SemiBold" Foreground="{DynamicResource DangerBrush}"/>

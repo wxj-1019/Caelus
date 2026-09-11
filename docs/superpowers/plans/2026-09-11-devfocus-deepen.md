@@ -65,4 +65,8 @@
 
 ## 自审记录
 
-- （实施过程中追加）
+- Task 1：IdeCatalog 与 DailyCatalog 逐字对齐（CustomKey/CustomList/LoadCustom + NameMatches 并集 + IsMatch 内置优先按名兜底）；TestIdeCatalogCustomList 断言内置双校验不受自定义污染。
+- Task 2：FocusHistory 仿 HealthHistory（FilePath 可覆写/AtomicFile/lock 单写），5 列纯数值免转义器；测试先修正了两次日期推算（截断后最旧保留日 06-07、LastDays 窗口内数据行）——TDD 红灯阶段发现。
+- Task 3：阻断段误用 `steam` 触发不了测试的 isDistract lambda（只认 discord），门禁红后修正；BlockAgain 也发阻断气球（规格 §11 已回写）。
+- Task 4：DevServiceGuard 需要 `using System.Threading`（ThreadPool）；现有守护用例全部不受影响（RestartEnabled 未注入即关闭）。
+- 收口：TOTAL 283（基线 277 + 新增 6），README 三语 276→283（含上轮漂移修正）。

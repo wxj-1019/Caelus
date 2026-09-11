@@ -97,7 +97,27 @@ namespace CaelusApp.WpfHost
             }
             if (e.Args.Length >= 3 && e.Args[0] == "--screenshot")
             {
-                int code = RunSingleShot(e.Args[1], e.Args[2]);
+                // 可选第 4 参：视口高度（默认 768）；可选第 5 参：页内滚动偏移（长页分段出图）
+                int code;
+                int shotHeight = 768;
+                int shotScrollY = 0;
+                if (e.Args.Length >= 4)
+                {
+                    if (!int.TryParse(e.Args[3], out shotHeight) || shotHeight < 768) shotHeight = 768;
+                }
+                if (e.Args.Length >= 5)
+                {
+                    if (!int.TryParse(e.Args[4], out shotScrollY) || shotScrollY < 0) shotScrollY = 0;
+                    code = RunSingleShot(e.Args[1], e.Args[2], shotHeight, shotScrollY);
+                }
+                else if (e.Args.Length >= 4)
+                {
+                    code = RunSingleShot(e.Args[1], e.Args[2], shotHeight);
+                }
+                else
+                {
+                    code = RunSingleShot(e.Args[1], e.Args[2]);
+                }
                 Shutdown(code);
                 return;
             }
@@ -739,13 +759,28 @@ namespace CaelusApp.WpfHost
             return RunSingleShot(Path.Combine(dir, "wpf-" + page + "-" + ShotTag(tone, mode) + ".png"), page, tone, mode);
         }
 
-        // --screenshot <png> <page>：离屏渲染单页存 PNG（对齐 WinForms 同名开发入口；WPF 页以名称指定）
+        // --screenshot <png> <page> [height]：离屏渲染单页存 PNG（对齐 WinForms 同名开发入口；WPF 页以名称指定）
         private int RunSingleShot(string pngPath, string page)
         {
             return RunSingleShot(pngPath, page, UiTone.Dark, AppMode.Standard);
         }
 
+        private int RunSingleShot(string pngPath, string page, int height)
+        {
+            return RunSingleShot(pngPath, page, UiTone.Dark, AppMode.Standard, height, 0);
+        }
+
+        private int RunSingleShot(string pngPath, string page, int height, int scrollY)
+        {
+            return RunSingleShot(pngPath, page, UiTone.Dark, AppMode.Standard, height, scrollY);
+        }
+
         private int RunSingleShot(string pngPath, string page, UiTone tone, AppMode mode)
+        {
+            return RunSingleShot(pngPath, page, tone, mode, 768, 0);
+        }
+
+        private int RunSingleShot(string pngPath, string page, UiTone tone, AppMode mode, int height, int scrollY)
         {
             try
             {
@@ -763,10 +798,10 @@ namespace CaelusApp.WpfHost
                 Views.ScenarioDetailView.InjectSampleData = (page == "dev" || page == "daily");
                 MainWindow window = new MainWindow(new GameMode(Paths.Data, new SuppressionCore()));
                 window.ApplyPersistedMode(mode);
-                // 探针摆脱用户持久化的尺寸/最大化态（同 --wpf-shot）
+                // 探针摆脱用户持久化的尺寸/最大化态（同 --wpf-shot）；高度参数支持长页全页出图
                 window.WindowState = WindowState.Normal;
                 window.Width = 1196;
-                window.Height = 768;
+                window.Height = height;
                 window.WindowStartupLocation = WindowStartupLocation.Manual;
                 window.Left = -20000;
                 window.Top = -20000;
@@ -777,11 +812,19 @@ namespace CaelusApp.WpfHost
                 // 体检结果态无真实探测数据，导航到位后显式注入样例（避免 OnLoaded 静态标志时序问题）
                 Views.AuditView auditShown = shown as Views.AuditView;
                 if (auditShown != null) auditShown.ApplySampleResult();
-                Size size = new Size(1196, 768);
+                Size size = new Size(1196, height);
                 window.Measure(size);
                 window.Arrange(new Rect(size));
                 window.UpdateLayout();
-                RenderTargetBitmap bitmap = new RenderTargetBitmap(1196, 768, 96, 96, PixelFormats.Pbgra32);
+                // scrollY>0：把页内 ScrollViewer 滚到指定偏移再渲染（长页分段出图）
+                if (scrollY > 0)
+                {
+                    System.Windows.Controls.ScrollViewer sv = FindPageScrollViewer(shown);
+                    if (sv == null) sv = FindPageScrollViewer(window.PageHost.Content as System.Windows.Media.Visual);
+                    if (sv != null) sv.ScrollToVerticalOffset(scrollY);
+                    window.UpdateLayout();
+                }
+                RenderTargetBitmap bitmap = new RenderTargetBitmap(1196, height, 96, 96, PixelFormats.Pbgra32);
                 bitmap.Render(window);
                 PngBitmapEncoder encoder = new PngBitmapEncoder();
                 encoder.Frames.Add(BitmapFrame.Create(bitmap));
@@ -797,6 +840,22 @@ namespace CaelusApp.WpfHost
                 try { File.WriteAllText(pngPath + ".error.txt", ex.ToString()); } catch { }
                 return 1;
             }
+        }
+
+        /// <summary>视觉树递归找第一个 ScrollViewer（探针分段截图用）。</summary>
+        private static System.Windows.Controls.ScrollViewer FindPageScrollViewer(System.Windows.Media.Visual root)
+        {
+            if (root == null) return null;
+            var hit = root as System.Windows.Controls.ScrollViewer;
+            if (hit != null) return hit;
+            int n = System.Windows.Media.VisualTreeHelper.GetChildrenCount(root);
+            for (int i = 0; i < n; i++)
+            {
+                var child = System.Windows.Media.VisualTreeHelper.GetChild(root, i) as System.Windows.Media.Visual;
+                var sv = FindPageScrollViewer(child);
+                if (sv != null) return sv;
+            }
+            return null;
         }
 
         // --ui-preview：轻量 UI 预览（对齐 WinForms 同名入口）：真实 GameMode/Core，

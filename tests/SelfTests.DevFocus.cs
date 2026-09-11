@@ -692,6 +692,28 @@ namespace CaelusApp
             Eq(true, AntiCheatCatalog.IsKnownProcess("SGuard64.exe"));
         }
 
+        // IDE 自定义名录：写入即生效与内置名录合并；坏行容错；自定义按名匹配（无目录锚点），
+        // 内置项仍走安装目录双校验。写 Settings——必须注册在临时存储启用之后。
+        private static void TestIdeCatalogCustomList()
+        {
+            string old = IdeCatalog.CustomList;
+            try
+            {
+                IdeCatalog.CustomList = "notepad; ;\r\nmyide.exe\r\nBad Row  ";
+                Eq(true, IdeCatalog.NameMatches("myide"));
+                Eq(true, IdeCatalog.NameMatches("myide.exe"));   // .exe 后缀归一
+                Eq(true, IdeCatalog.NameMatches("MYIDE"));       // 大小写不敏感
+                Eq(true, IdeCatalog.IsMatch("myide", @"C:\ anywhere\myide.exe")); // 无目录锚点
+                Eq(false, IdeCatalog.NameMatches(""));           // 空行容错
+                Eq(true, IdeCatalog.NameMatches("Bad Row"));     // Trim 容错
+                Eq(true, IdeCatalog.NameMatches("code"));        // 内置名录不受影响
+                Eq(false, IdeCatalog.IsMatch("code", @"C:\Temp\code.exe")); // 内置双校验照旧
+                Eq(true, IdeCatalog.CustomList.Contains("myide.exe")); // 原文保存，展示层原样回显
+            }
+            finally { IdeCatalog.CustomList = old; }
+            Eq(false, IdeCatalog.NameMatches("myide"));          // 还原后失效
+        }
+
         private static void TestIdeCatalogDbTools()
         {
             string pf = Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles);

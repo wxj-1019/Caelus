@@ -49,6 +49,35 @@ namespace CaelusApp
 
         private static readonly object Sync = new object();
         private static Dictionary<string, IdeEntry> byName;
+        private const string CustomKey = "CustomIdeProcs";
+        private static HashSet<string> customNames;
+
+        /// <summary>自定义 IDE 进程名（分号/换行分隔），存注册表，设置页可编辑。
+        /// 无安装目录锚点，按名匹配（对齐 CustomDailyProcs/CustomBuildProcs 模式）。</summary>
+        public static string CustomList
+        {
+            get { return Settings.LoadStr(CustomKey, ""); }
+            set { Settings.SaveStr(CustomKey, value ?? ""); lock (Sync) customNames = null; }
+        }
+
+        private static HashSet<string> LoadCustom()
+        {
+            lock (Sync)
+            {
+                if (customNames != null) return customNames;
+                var set = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+                string raw = Settings.LoadStr(CustomKey, "");
+                if (raw != null)
+                    foreach (string part in raw.Split(new[] { ';', '\r', '\n' }, StringSplitOptions.RemoveEmptyEntries))
+                    {
+                        string t = part.Trim();
+                        if (t.EndsWith(".exe", StringComparison.OrdinalIgnoreCase)) t = t.Substring(0, t.Length - 4);
+                        if (t.Length > 0) set.Add(t);
+                    }
+                customNames = set;
+                return set;
+            }
+        }
 
         private static Dictionary<string, IdeEntry> Map()
         {
@@ -62,25 +91,30 @@ namespace CaelusApp
             }
         }
 
-        /// <summary>名称预筛（零开销，事件热路径先用它过滤）</summary>
+        /// <summary>名称预筛（零开销，事件热路径先用它过滤）。内置与自定义名录合并。</summary>
         public static bool NameMatches(string name)
         {
             if (string.IsNullOrEmpty(name)) return false;
             string n = StripExe(name);
-            return Map().ContainsKey(n);
+            return Map().ContainsKey(n) || LoadCustom().Contains(n);
         }
 
-        /// <summary>双校验：名称命中且路径位于该 IDE 的已知安装目录前缀下</summary>
+        /// <summary>双校验：内置名录名称命中且路径位于已知安装目录前缀下；
+        /// 自定义名录无目录锚点，按名即真。</summary>
         public static bool IsMatch(string name, string path)
         {
             if (string.IsNullOrEmpty(name) || string.IsNullOrEmpty(path)) return false;
+            string bare = StripExe(name);
             IdeEntry e;
-            if (!Map().TryGetValue(StripExe(name), out e)) return false;
-            string full = path;
-            try { full = Path.GetFullPath(path); } catch { }
-            foreach (string prefix in e.RootPrefixes)
-                if (full.StartsWith(prefix, StringComparison.OrdinalIgnoreCase)) return true;
-            return false;
+            if (Map().TryGetValue(bare, out e))
+            {
+                string full = path;
+                try { full = Path.GetFullPath(path); } catch { }
+                foreach (string prefix in e.RootPrefixes)
+                    if (full.StartsWith(prefix, StringComparison.OrdinalIgnoreCase)) return true;
+                return false;
+            }
+            return LoadCustom().Contains(bare);
         }
 
         private static string StripExe(string name)

@@ -282,6 +282,16 @@ namespace CaelusApp
             ShowFeedback("自定义编译进程已保存。", "Success");
         }
 
+        // —— 自定义 IDE 进程 ——
+        public string IdeCustomTitle { get { return Lang.T("set.ide.custom.title"); } }
+        public string IdeCustomNote { get { return Lang.T("set.ide.custom.note"); } }
+        public string IdeCustomInitial { get { return IdeCatalog.CustomList; } }
+        public void SaveIdeCustom(string text)
+        {
+            IdeCatalog.CustomList = text ?? "";
+            ShowFeedback(Lang.T("set.ide.custom.saved"), "Success");
+        }
+
         // —— 自定义日常进程 ——
         public string DailyCustomTitle { get { return Lang.T("set.daily.custom.title"); } }
         public string DailyCustomNote { get { return Lang.T("set.daily.custom.note"); } }

@@ -1496,6 +1496,7 @@ namespace CaelusApp
             test("IDE 目录：自定义名录合并与坏行容错", TestIdeCatalogCustomList);
             test("专注历史：按日合并、截断与近 7 日补零", TestFocusHistoryMergeAndTrim);
             test("专注历史：会话与分心计数写入当日趋势", TestFocusStatsFeedsHistory);
+            test("分心策略：掌权且专注才动作，阻断开关分级", TestDistractActionPolicy);
             test("崩溃日志：加入 QoS 字段后仍能读取旧的 9 字段记录", () =>
             {
                 string name = Convert.ToBase64String(Encoding.UTF8.GetBytes("game"));

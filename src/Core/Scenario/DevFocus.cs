@@ -9,6 +9,15 @@ using System.Threading;
 
 namespace CaelusApp
 {
+    /// <summary>分心应用命中时的动作分级（分心策略纯函数的返回值）。</summary>
+    internal enum DistractAction
+    {
+        None,           // 未掌权或专注模式未开：不动作
+        NotifyOnly,     // 首次命中：一次性托盘提醒
+        NotifyAndBlock, // 首次命中且阻断开：提醒 + 阻断关闭
+        BlockAgain      // 已提醒过且阻断开：不重复提醒，仍阻断关闭
+    }
+
     internal sealed class DevFocus : ScenarioBase
     {
         private readonly SuppressionCore core;
@@ -47,6 +56,9 @@ namespace CaelusApp
 
         /// <summary>IDE 优化开关（默认开）。关闭后 IDE 家族不再提优、也不再作为活性来源。</summary>
         public bool IdeOn { get { return Settings.Load("DevFocusIdeOn", true); } }
+
+        /// <summary>分心阻断开关（默认关）。开启后掌权期间命中的分心应用会被自动关闭。</summary>
+        public bool BlockDistractOn { get { return Settings.Load("DevFocusDistractBlock", false); } }
 
         /// <summary>IDE 进程有可见窗口才计入活性（后台挂起的常驻程序不激活场景）。</summary>
         private bool ideVisible;
@@ -162,6 +174,7 @@ namespace CaelusApp
             bool wasBuildActive;
             bool ideChanged = false;
             List<int> newlyBuilt = null;
+            List<int> toBlock = null;
 
             lock (sync)
             {
@@ -196,18 +209,29 @@ namespace CaelusApp
                         if (activeIdePids.Remove(pc.Pid)) ideChanged = true;
                     }
 
-                    // 专注模式下新进程的分心提醒
-                    if (pc.Kind == ProcessChangeKind.Started && granted && FocusModeOn
-                        && isDistract != null && isDistract(pc.Name)
-                        && !distractNotified.Contains(pc.Name))
+                    // 专注模式下的分心应用：策略分级动作——提醒按名去重、阻断不去重；
+                    // 关闭进程在锁外执行（CloseMainWindow 最多等 1 秒，不能压住事件线程）
+                    if (pc.Kind == ProcessChangeKind.Started && isDistract != null && isDistract(pc.Name))
                     {
-                        distractNotified.Add(pc.Name);
-                        try
+                        DistractAction act = DecideDistractAction(
+                            granted, FocusModeOn, distractNotified.Contains(pc.Name), BlockDistractOn);
+                        if (act != DistractAction.None)
                         {
-                            var h = SessionChanged;
-                            if (h != null) h("bal.distract");
+                            bool blocked = act == DistractAction.NotifyAndBlock || act == DistractAction.BlockAgain;
+                            if (act != DistractAction.BlockAgain) distractNotified.Add(pc.Name);
+                            try { FocusStats.RecordDistract(blocked); } catch { }
+                            if (blocked)
+                            {
+                                if (toBlock == null) toBlock = new List<int>();
+                                toBlock.Add(pc.Pid);
+                            }
+                            try
+                            {
+                                var h = SessionChanged;
+                                if (h != null) h(blocked ? "bal.distract.block" : "bal.distract");
+                            }
+                            catch { }
                         }
-                        catch { }
                     }
                 }
 
@@ -230,6 +254,10 @@ namespace CaelusApp
 
                 buildActivity = wasBuildActive != (activeBuildPids.Count > 0);
             }
+
+            // 分心阻断在锁外执行：优雅关闭最多等 1 秒，不能压住进程事件线程
+            if (toBlock != null)
+                foreach (int pid in toBlock) CloseDistractProcess(pid);
 
             // 掌权期间新启动的编译进程同步提优（Grant 只提当时已存在的进程）；
             // 未掌权时不在此提优，交给随后的 Grant 统一处理
@@ -292,6 +320,34 @@ namespace CaelusApp
                 finally { Native.CloseHandle(h); }
             }
             foreach (int pid in dead) pids.Remove(pid);
+        }
+
+        /// <summary>分心动作策略（纯逻辑，可单测）：只在「掌权且专注模式开」时动作；
+        /// 提醒按名去重（alreadyNotified），阻断开关把动作升级为阻断且不去重。</summary>
+        internal static DistractAction DecideDistractAction(bool granted, bool focusOn, bool alreadyNotified, bool blockOn)
+        {
+            if (!granted || !focusOn) return DistractAction.None;
+            if (blockOn) return alreadyNotified ? DistractAction.BlockAgain : DistractAction.NotifyAndBlock;
+            return alreadyNotified ? DistractAction.None : DistractAction.NotifyOnly;
+        }
+
+        /// <summary>阻断关闭分心应用：先发优雅关闭消息，1 秒未退再强杀，全程故障隔离。
+        /// PID 来自毫秒级新鲜的 Started 事件，复用窗口可忽略。</summary>
+        private static void CloseDistractProcess(int pid)
+        {
+            try
+            {
+                Process p = Process.GetProcessById(pid);
+                try
+                {
+                    bool closed = p.CloseMainWindow();
+                    if (!closed) p.Kill();
+                    else if (!p.WaitForExit(1000)) p.Kill();
+                }
+                finally { p.Dispose(); }
+                Logger.Log("开发专注：分心应用已阻断关闭（PID " + pid + "）");
+            }
+            catch (Exception ex) { Logger.LogFailure("开发专注：阻断关闭分心应用失败", ex); }
         }
 
         /// <summary>判断进程是否为 IDE 进程。名称预筛 + 安装目录双重校验。</summary>

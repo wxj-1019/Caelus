@@ -21,6 +21,7 @@ namespace CaelusApp
         private bool devMode;
         private bool focusMode;
         private bool ideOn;
+        private bool distractBlockOn;
         private bool dailyCare;
         private bool batteryOn;
         private string shaderStatus;
@@ -46,6 +47,7 @@ namespace CaelusApp
             devMode = Settings.Load("DevModeOn", true);
             focusMode = Settings.Load("DevFocusModeOn", false);
             ideOn = Settings.Load("DevFocusIdeOn", true);
+            distractBlockOn = Settings.Load("DevFocusDistractBlock", false);
             this.dailyCare = Settings.Load("DailyCareOn", true);
             batteryOn = Settings.Load("DailyCareBatteryOn", true);
             shaderStatus = Lang.T("set.shader.n");
@@ -77,6 +79,7 @@ namespace CaelusApp
             devMode = Settings.Load("DevModeOn", true);
             focusMode = Settings.Load("DevFocusModeOn", false);
             ideOn = Settings.Load("DevFocusIdeOn", true);
+            distractBlockOn = Settings.Load("DevFocusDistractBlock", false);
             dailyCare = Settings.Load("DailyCareOn", true);
             batteryOn = Settings.Load("DailyCareBatteryOn", true);
             Raise("AutoStart");
@@ -86,6 +89,7 @@ namespace CaelusApp
             Raise("DevMode");
             Raise("FocusMode");
             Raise("IdeOn");
+            Raise("DistractBlockOn");
             Raise("DailyCare");
             Raise("BatteryOn");
             Raise("PreferenceSummary");
@@ -235,6 +239,21 @@ namespace CaelusApp
             Settings.SaveStr("DevFocusDistractList", text ?? "");
             DistractCatalog.Reload();
             ShowFeedback("分心应用清单已保存。", "Success");
+        }
+
+        // —— 分心专注阻断（默认关） ——
+        public string DistractBlockTitle { get { return Lang.T("set.distract.block"); } }
+        public string DistractBlockNote { get { return Lang.T("set.distract.block.n"); } }
+        public bool DistractBlockOn
+        {
+            get { return distractBlockOn; }
+            set
+            {
+                if (!SetProperty(ref distractBlockOn, value, "DistractBlockOn")) return;
+                Settings.Save("DevFocusDistractBlock", value);
+                ShowFeedback(value ? "专注阻断已开启：掌权期间命中的分心应用将被自动关闭。"
+                                   : "专注阻断已关闭：分心应用命中仅提醒。", "Success");
+            }
         }
 
         // —— 开发服务守护 ——

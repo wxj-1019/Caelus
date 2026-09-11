@@ -345,11 +345,27 @@ namespace CaelusApp
                 distractCount = 0;
                 foreach (string k in balloons) if (k == "bal.distract") distractCount++;
                 Eq(2, distractCount);
+
+                // —— 阻断开关打开：首次命中 = 提醒+阻断（假 PID 关闭失败被隔离），
+                //     再次命中 = 不重复提醒但仍阻断（阻断不去重）——
+                Settings.Save("DevFocusDistractBlock", true);
+                dev.NotifyProcessChanges(new ProcessChangeBatch(
+                    new[] { MakeChange(42004, "discord", ProcessChangeKind.Started) }, false));
+                dev.NotifyProcessChanges(new ProcessChangeBatch(
+                    new[] { MakeChange(42005, "discord", ProcessChangeKind.Started) }, false));
+                int blockCount = 0;
+                foreach (string k in balloons) if (k == "bal.distract.block") blockCount++;
+                Eq(2, blockCount);
+                int distractInBlock = 0;
+                foreach (string k in balloons) if (k == "bal.distract") distractInBlock++;
+                Eq(2, distractInBlock);   // 已提醒过的 discord 不再发普通提醒
             }
             finally
             {
                 if (dev != null) try { dev.Stop(); } catch { }
                 try { Settings.Save("DevFocusModeOn", false); } catch { }
+                try { Settings.Save("DevFocusDistractBlock", false); } catch { }
+                try { FocusStats.ResetForTest(); } catch { }
                 DeleteTempDir(dir);
             }
         }
@@ -799,6 +815,18 @@ namespace CaelusApp
                 FocusStats.ResetForTest();
                 DeleteTempDir(Path.GetDirectoryName(file));
             }
+        }
+
+        // 分心策略真值表：未掌权/未开专注不动作；提醒按名去重；阻断开关把动作升级为阻断
+        // （阻断不去重——用户手滑再开分心应用仍会被关回去，但不会被气球刷屏）
+        private static void TestDistractActionPolicy()
+        {
+            Eq(DistractAction.None, DevFocus.DecideDistractAction(false, true, false, false));
+            Eq(DistractAction.None, DevFocus.DecideDistractAction(true, false, false, false));
+            Eq(DistractAction.None, DevFocus.DecideDistractAction(true, true, true, false));
+            Eq(DistractAction.NotifyOnly, DevFocus.DecideDistractAction(true, true, false, false));
+            Eq(DistractAction.NotifyAndBlock, DevFocus.DecideDistractAction(true, true, false, true));
+            Eq(DistractAction.BlockAgain, DevFocus.DecideDistractAction(true, true, true, true));
         }
 
         private static void TestIdeCatalogDbTools()

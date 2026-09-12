@@ -451,6 +451,8 @@ namespace CaelusApp
 #endif
 
         public string ActiveGame { get { lock (sync) return active ? activeGame : null; } }
+        /// <summary>实时监控页用的压制核心访问器（同程序集只读）。</summary>
+        internal SuppressionCore Core { get { return core; } }
 
         public PerformancePreset Preset
         {

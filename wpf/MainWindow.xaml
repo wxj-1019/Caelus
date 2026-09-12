@@ -190,6 +190,13 @@
                   <TextBlock x:Name="LblNavLog" Text="日志" Margin="9,0,0,0" VerticalAlignment="Center"/>
                 </StackPanel>
               </RadioButton>
+              <RadioButton x:Name="NavActivity" Style="{DynamicResource NavItem}" GroupName="nav"
+                           Checked="NavChecked" AutomationProperties.Name="导航：实时监控">
+                <StackPanel Orientation="Horizontal">
+                  <controls:IconView Key="IconActivity" Width="15" Height="15" VerticalAlignment="Center"/>
+                  <TextBlock x:Name="LblNavActivity" Text="实时监控" Margin="9,0,0,0" VerticalAlignment="Center"/>
+                </StackPanel>
+              </RadioButton>
             </StackPanel>
           </ScrollViewer>
         </DockPanel>

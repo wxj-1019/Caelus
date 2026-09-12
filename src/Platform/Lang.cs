@@ -24,6 +24,7 @@ namespace CaelusApp
             { "nav.tame", new[]{ "反作弊" } },
             { "nav.white", new[]{ "白名单" } },
             { "nav.log", new[]{ "日志" } },
+            { "nav.activity", new[]{ "实时监控" } },
             { "nav.set", new[]{ "设置" } },
             { "nav.about", new[]{ "关于" } },
             { "nav.overview", new[]{ "场景总览" } },

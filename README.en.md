@@ -8,7 +8,7 @@
 
 [![Platform](https://img.shields.io/badge/platform-Windows%2010%2F11-%235E5CE6)](https://github.com/wxj-1019/Caelus)
 [![Language](https://img.shields.io/badge/language-C%23%20.NET%20Framework%204.x-%237A78F0)](https://github.com/wxj-1019/Caelus)
-[![Self-tests](https://img.shields.io/badge/self%2Dtests-286%20passing-%233DD68C)](https://github.com/wxj-1019/Caelus)
+[![Self-tests](https://img.shields.io/badge/self%2Dtests-287%20passing-%233DD68C)](https://github.com/wxj-1019/Caelus)
 [![Privacy](https://img.shields.io/badge/privacy-local%20only%20%C2%B7%20zero%20upload-%233DD68C)](https://github.com/wxj-1019/Caelus)
 [![License](https://img.shields.io/badge/license-resale%20forbidden-%23E5A13D)](LICENSE)
 
@@ -65,6 +65,8 @@ Recovery works from records: for every process it touches, Caelus stores the sta
 - Power plan, network, MMCSS, Game DVR, notifications and service pauses are all restorable
 - NVIDIA tuning: maximum-performance power and a frame cap, original values snapshotted, off restores them
 - Standby-memory cleanup before a match (off by default) and an MPO troubleshooting switch
+- Dev-focus deepening: the IDE roster (VS / VS Code / Rider / JetBrains / Cursor and friends) can be extended with your own entries; focus time keeps a per-day history locally (60 days) with a 7-day trend on the scenario page; distraction hits are counted per day and per app, with an optional focus block (graceful close first, off by default)
+- Dev-service watchdog: listed local services (node, redis-server and friends) are exempt from background suppression; when the last instance exits you get a tray notice, and an optional auto-relaunch starts it again with its original command line (circuit breaker after 5 consecutive failures, off by default)
 - Each session's outcome goes to the runtime log: how long you played, how many background processes were suppressed, how much CPU they used in total
 - The UI ships in Simplified Chinese only; the multi-language machinery is still in the code
 
@@ -158,7 +160,7 @@ The implementation uses Windows APIs including `SetPriorityClass`, `SetProcessDe
 
 ## Validation scope
 
-The built-in suite currently contains `286` tests, covering target detection and session protection, suppression and recovery (including PID reuse and crash wake-up), CPU topology and partitioning, profile storage format compatibility and unknown-version protection, game scanning and accelerator filtering, the boundaries of the launcher-learning mechanism, system audit thresholds, League column boundaries and UI rendering. A missing platform capability is recorded as `SKIP`, never as `PASS`.
+The built-in suite currently contains `287` tests, covering target detection and session protection, suppression and recovery (including PID reuse and crash wake-up), CPU topology and partitioning, profile storage format compatibility and unknown-version protection, game scanning and accelerator filtering, the boundaries of the launcher-learning mechanism, system audit thresholds, League column boundaries and UI rendering. A missing platform capability is recorded as `SKIP`, never as `PASS`.
 
 The same-core contention test deliberately puts two compute processes on one core and suspends the contender. It only shows that throughput recovers once CPU time is released — it is not evidence of real-game FPS or 1% Low gains.
 

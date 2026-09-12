@@ -922,6 +922,7 @@ namespace CaelusApp
             test("开发服务：注册服务在压制扫描中豁免", TestDevServiceExemptFromSuppression);
             test("服务拉起：连败预算熔断判定", TestDevSvcRestartBudget);
             test("服务拉起：重新捕获命令行即重置预算", TestDevSvcCaptureResetsBudget);
+            test("服务拉起：快照入册使预存服务可跟踪", TestDevSvcSnapshotSeedsTracking);
             test("服务拉起：命令行拆分引号感知", TestSplitCommandLine);
             test("编译台架：提速百分比计算", TestBuildProbeSpeedupPct);
             test("专注时长：累计与跨天归零", TestFocusStatsAccumulateAndReset);

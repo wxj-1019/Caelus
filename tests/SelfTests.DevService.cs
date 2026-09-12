@@ -203,6 +203,31 @@ namespace CaelusApp
             finally { guard.Stop(); }
         }
 
+        // 快照入册：ProcNotify 纯事件驱动，Caelus 启动前已运行的服务没有 Started 事件——
+        // CaptureSnapshot 必须把预存实例纳入跟踪（否则退出提醒/自动拉起对预存服务失明）。
+        // 用自测进程自身充当"预存服务"验证入册。
+        private static void TestDevSvcSnapshotSeedsTracking()
+        {
+            Settings.SaveStr("DevServiceList", Process.GetCurrentProcess().ProcessName);
+            DevServiceCatalog.Reload();
+            DevServiceGuard.MinAliveTicks = 0;
+            var guard = new DevServiceGuard();
+            try
+            {
+                guard.CaptureSnapshot();
+                Eq(true, guard.LiveCount >= 1);
+                guard.NotifyProcessChanges(new ProcessChangeBatch(new ProcessChange[0], false));
+                Eq(true, guard.LiveCount >= 1);   // 兜底清理不会误清存活实例
+            }
+            finally
+            {
+                guard.Stop();
+                Settings.SaveStr("DevServiceList", "");
+                DevServiceCatalog.Reload();
+                DevServiceGuard.MinAliveTicks = 3L * TimeSpan.TicksPerSecond;
+            }
+        }
+
         private static void TestDevServiceExemptFromSuppression()
         {
             string winRoot = Environment.GetFolderPath(Environment.SpecialFolder.Windows);

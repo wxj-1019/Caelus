@@ -151,8 +151,9 @@ namespace CaelusApp
             }
         }
 
-        /// <summary>启动补捕：对名录内已在运行的进程补一次命令行捕获
-        /// （Caelus 晚于服务启动的场景，等它退出时才有得拉）。宿主在初始扫描后调用。</summary>
+        /// <summary>启动补捕：对名录内已在运行的进程补一次命令行捕获，并把实例纳入跟踪。
+        /// ProcNotify 是纯 WMI 事件驱动——预存实例没有 Started 事件，不在这里入册的话，
+        /// Caelus 启动前就在跑的服务退出时既不会提醒也不会自动拉起。宿主在初始扫描后调用。</summary>
         public void CaptureSnapshot()
         {
             Process[] all;
@@ -165,6 +166,15 @@ namespace CaelusApp
                     try { nm = p.ProcessName; } catch { continue; }
                     if (!DevServiceCatalog.IsMatch(nm)) continue;
                     CaptureLaunchAsync(p.Id, nm);
+                    lock (sync)
+                    {
+                        if (stopped || live.ContainsKey(p.Id)) continue;
+                        live[p.Id] = nm;
+                        int c;
+                        counts.TryGetValue(nm, out c);
+                        counts[nm] = c + 1;
+                        if (c == 0) firstSeen[nm] = DateTime.UtcNow.Ticks;
+                    }
                 }
                 catch { }
                 finally { p.Dispose(); }

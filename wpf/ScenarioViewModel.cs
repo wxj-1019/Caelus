@@ -577,8 +577,10 @@ namespace CaelusApp
         {
             if (!isDev) return;
             DateTime now = DateTime.Now;
+            // 签名含目标：设置页改目标后进度行即时刷新（GoalMinutes 为注册表读，频率同今日键）
             string sig = FocusStats.TodaySeconds(now) + "|" + FocusStats.TodaySessions(now)
-                + "|" + FocusStats.TodayDistract(now) + "|" + now.ToString("yyyy-MM-dd");
+                + "|" + FocusStats.TodayDistract(now) + "|" + FocusStats.GoalMinutes()
+                + "|" + now.ToString("yyyy-MM-dd");
             if (focusTrendLoaded && !force && sig == lastTrendSignature) return;
             focusTrendLoaded = true;
             lastTrendSignature = sig;
@@ -698,11 +700,12 @@ namespace CaelusApp
         public void RefreshHealthZone(bool force)
         {
             if (isDev) return;
+            // 到期倒计时只在门内会随页面停留变陈旧（小时粒度也一样）：每次刷新都重算（纯注册表读）
+            RefreshHealthNextDue();
             if (healthZoneLoaded && !force) return;
             healthZoneLoaded = true;
 
             RefreshHealthRunGate();
-            RefreshHealthNextDue();
 
             var all = HealthHistory.LoadAll();
             HealthHistoryRows.Clear();

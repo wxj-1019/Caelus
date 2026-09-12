@@ -1504,6 +1504,7 @@ namespace CaelusApp
             test("编译统计：时长写今日键与 TSV 编译列、日切归零", TestFocusBuildRecorded);
             test("专注目标：解析校验边界回落 240", TestFocusGoalParse);
             test("编译统计：真实编译起止经 DevFocus 落盘", TestDevFocusRecordsBuildStats);
+            test("编译统计：无起点守卫不写出天文时长", TestBuildEndedElapsedGuard);
             test("分心策略：掌权且专注才动作，阻断开关分级", TestDistractActionPolicy);
             test("分心统计：按名归一合并与 Top8 截断", TestFocusStatsDistractNames);
             test("分心阻断：气球 30 秒限频判定", TestDistractBlockBalloonRateLimit);

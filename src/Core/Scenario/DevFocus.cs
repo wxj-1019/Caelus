@@ -271,11 +271,11 @@ namespace CaelusApp
                 }
 
                 buildActivity = wasBuildActive != (activeBuildPids.Count > 0);
-                // 编译统计真实起止：集合 空→非空 记起点、非空→空 记时长
+                // 编译统计真实起止：集合 空→非空 记起点、非空→空 记时长（无起点不记——初始扫描外的边界防护）
                 if (activeBuildPids.Count > 0 && !wasBuildActive)
                     buildStartTicks = DateTime.UtcNow.Ticks;
                 else if (activeBuildPids.Count == 0 && wasBuildActive)
-                    buildEndedElapsed = DateTime.UtcNow.Ticks - buildStartTicks;
+                    buildEndedElapsed = BuildEndedElapsed(buildStartTicks, DateTime.UtcNow.Ticks);
             }
 
             // 编译结束（场景仍在运行也记账）：写今日统计与按日历史，替代旧「场景会话起点近似」日志
@@ -330,7 +330,13 @@ namespace CaelusApp
             if (string.IsNullOrEmpty(change.Name)) return;
             if (BuildCatalog.IsMatch(change.Name))
             {
-                lock (sync) activeBuildPids.Add(change.Pid);
+                // 初始扫描加入的编译进程也要起钟：否则它在第一批事件里就结束时，
+                // 转换逻辑以 buildStartTicks==0 计出天文数字时长，写爆今日统计
+                lock (sync)
+                {
+                    if (activeBuildPids.Add(change.Pid) && buildStartTicks == 0)
+                        buildStartTicks = DateTime.UtcNow.Ticks;
+                }
             }
             if (IdeOn && IsIdeProcess(change.Pid, change.Name, change.Path))
             {
@@ -351,6 +357,15 @@ namespace CaelusApp
                 finally { Native.CloseHandle(h); }
             }
             foreach (int pid in dead) pids.Remove(pid);
+        }
+
+        /// <summary>编译结束时长计算（纯逻辑，可单测）：无起点（初始扫描外的边界）一律记 0，
+        /// 杜绝 buildStartTicks==0 时计出天文时长写爆统计。</summary>
+        internal static long BuildEndedElapsed(long startTicks, long nowTicks)
+        {
+            if (startTicks <= 0) return 0;
+            long e = nowTicks - startTicks;
+            return e > 0 ? e : 0;
         }
 
         /// <summary>分心动作策略（纯逻辑，可单测）：只在「掌权且专注模式开」时动作；

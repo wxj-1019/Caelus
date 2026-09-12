@@ -921,6 +921,17 @@ namespace CaelusApp
             }
         }
 
+
+        // 编译起止守卫（纯逻辑）：无起点一律记 0——初始扫描加入的进程在第一批事件里结束时
+        // 若 buildStartTicks 未置位，旧实现会计出天文时长写爆今日统计
+        private static void TestBuildEndedElapsedGuard()
+        {
+            Eq(0L, DevFocus.BuildEndedElapsed(0, 999999));            // 无起点：不记
+            Eq(0L, DevFocus.BuildEndedElapsed(-5, 999999));           // 非法起点：不记
+            Eq(0L, DevFocus.BuildEndedElapsed(500, 100));             // 时钟回拨：不记负值
+            Eq(150L, DevFocus.BuildEndedElapsed(100, 250));           // 正常起止
+        }
+
         // 分心策略真值表：未掌权/未开专注不动作；提醒按名去重；阻断开关把动作升级为阻断
         // （阻断不去重——用户手滑再开分心应用仍会被关回去，但不会被气球刷屏）；
         // 守护服务清单优先——命中服务的名字绝不按分心处理（否则自动拉起与阻断互相残杀成死循环）

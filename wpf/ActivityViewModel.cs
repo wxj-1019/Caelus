@@ -21,8 +21,15 @@ namespace CaelusApp
         public string Name { get; set; }
         public string PidText { get; set; }
         public string LevelText { get; set; }
-        public string ReasonsText { get; set; }
+        public string LevelKey { get; set; }       // Neutral/Info/Warning/Error → 档位胶囊色
+        public List<string> ReasonList { get; set; }
         public string DurationText { get; set; }
+    }
+
+    internal sealed class ActivityStatCell
+    {
+        public string Label { get; set; }
+        public string Value { get; set; }
     }
 
     internal sealed class ActivityFeedRow
@@ -45,13 +52,18 @@ namespace CaelusApp
         public ObservableCollection<string> BoostRows { get; private set; }
         public ObservableCollection<ActivityFeedRow> FeedRows { get; private set; }
 
-        private string todayText = "";
         private string suppressedHeader = "";
         private string boostHeader = "";
 
-        public string TodayText { get { return todayText; } private set { SetProperty(ref todayText, value, "TodayText"); } }
+        public ObservableCollection<ActivityStatCell> StatCells { get; private set; }
         public string SuppressedHeader { get { return suppressedHeader; } private set { SetProperty(ref suppressedHeader, value, "SuppressedHeader"); } }
         public string BoostHeader { get { return boostHeader; } private set { SetProperty(ref boostHeader, value, "BoostHeader"); } }
+        private bool suppressedEmpty;
+        private bool boostEmpty;
+        public bool SuppressedEmpty { get { return suppressedEmpty; } private set { SetProperty(ref suppressedEmpty, value, "SuppressedEmpty"); } }
+        public bool BoostEmpty { get { return boostEmpty; } private set { SetProperty(ref boostEmpty, value, "BoostEmpty"); } }
+        public bool SuppressedAny { get { return !suppressedEmpty; } }
+        public bool BoostAny { get { return !boostEmpty; } }
 
         public ActivityViewModel(ScenarioStatusSource source, GameMode gameMode,
             DevFocus devFocus, DailyCare dailyCare)
@@ -63,6 +75,7 @@ namespace CaelusApp
             this.dailyCare = dailyCare;
             this.core = gameMode != null ? gameMode.Core : null;
             StatusRows = new ObservableCollection<ActivityStatusRow>();
+            StatCells = new ObservableCollection<ActivityStatCell>();
             SuppressedRows = new ObservableCollection<SuppressedRowVm>();
             BoostRows = new ObservableCollection<string>();
             FeedRows = new ObservableCollection<ActivityFeedRow>();
@@ -118,13 +131,12 @@ namespace CaelusApp
                     : "家族窗口 " + (dailyCare.FamilyVisibleNow ? "可见" : "无") + " · 电池 " + (dailyCare.OnBatteryNow ? "供电" : "市电")
             });
 
-            // —— 今日统计条 ——
-            long fSec = FocusStats.TodaySeconds(now);
-            long dSec = DailyStats.TodaySeconds(now);
-            int buildN = FocusStats.TodayBuildSessions(now);
-            int dis = FocusStats.TodayDistract(now);
-            TodayText = "今日：专注 " + FormatDur(fSec) + " · 日常家族 " + FormatDur(dSec)
-                + " · 编译 " + buildN + " 次" + (dis > 0 ? " · 分心 " + dis + " 次" : "");
+            // —— 今日统计（大数字格）——
+            StatCells.Clear();
+            StatCells.Add(new ActivityStatCell { Label = "今日专注", Value = FormatDur(FocusStats.TodaySeconds(now)) });
+            StatCells.Add(new ActivityStatCell { Label = "编译会话", Value = FocusStats.TodayBuildSessions(now) + " 次" });
+            StatCells.Add(new ActivityStatCell { Label = "日常家族", Value = FormatDur(DailyStats.TodaySeconds(now)) });
+            StatCells.Add(new ActivityStatCell { Label = "分心命中", Value = FocusStats.TodayDistract(now) + " 次" });
 
             // —— 实时压制清单 ——
             SuppressedRows.Clear();
@@ -140,17 +152,21 @@ namespace CaelusApp
                 long nowTicks = DateTime.UtcNow.Ticks;
                 foreach (SuppressionCore.SuppressedRow r in rows)
                 {
+                    var reasons = new List<string>(r.ReasonsText.Split('·'));
                     SuppressedRows.Add(new SuppressedRowVm
                     {
                         Name = r.Name,
                         PidText = r.Pid.ToString(),
                         LevelText = r.LevelText,
-                        ReasonsText = r.ReasonsText,
+                        LevelKey = LevelKeyOf(r.LevelText),
+                        ReasonList = reasons,
                         DurationText = r.AcquiredTicks > 0 ? FormatDur((nowTicks - r.AcquiredTicks) / TimeSpan.TicksPerSecond) : "—"
                     });
                 }
             }
-            SuppressedHeader = "当前压制 " + supCount + " 个进程（还原后自动移除）";
+            SuppressedHeader = "实时压制 · " + supCount + " 个进程";
+            SuppressedEmpty = supCount == 0;
+            Raise("SuppressedAny");
 
             // —— 实时提优清单 ——
             BoostRows.Clear();
@@ -159,7 +175,9 @@ namespace CaelusApp
             if (dailyCare != null)
                 foreach (string s in dailyCare.DescribeBoosts()) BoostRows.Add(s);
             if (gameOn && gameMode.ActiveGame != null) BoostRows.Add(gameMode.ActiveGame + "（游戏提优 High）");
-            BoostHeader = "提优中 " + BoostRows.Count + " 个进程";
+            BoostHeader = "实时提优 · " + BoostRows.Count + " 个进程";
+            BoostEmpty = BoostRows.Count == 0;
+            Raise("BoostAny");
 
             // —— 最近动作流 ——
             FeedRows.Clear();
@@ -170,6 +188,17 @@ namespace CaelusApp
                     TimeText = new DateTime(e.Ticks).ToLocalTime().ToString("HH:mm:ss"),
                     Text = e.Text
                 });
+            }
+        }
+
+        private static string LevelKeyOf(string levelText)
+        {
+            switch (levelText)
+            {
+                case "克制": return "Info";
+                case "隔离": return "Warning";
+                case "冻结": return "Error";
+                default: return "Neutral";
             }
         }
 
@@ -188,13 +217,18 @@ namespace CaelusApp
             StatusRows.Add(new ActivityStatusRow { Label = "游戏", StateText = "未检测", StateKey = "Neutral", Detail = "等待游戏启动" });
             StatusRows.Add(new ActivityStatusRow { Label = "开发专注", StateText = "掌权中", StateKey = "Success", Detail = "编译 2 · IDE 1 · 专注开" });
             StatusRows.Add(new ActivityStatusRow { Label = "日常优化", StateText = "待机", StateKey = "Neutral", Detail = "家族窗口 无 · 电池 市电" });
-            TodayText = "今日：专注 2 小时 21 分钟 · 日常家族 5 小时 30 分钟 · 编译 4 次 · 分心 3 次";
-            SuppressedHeader = "当前压制 4 个进程（还原后自动移除）";
-            SuppressedRows.Add(new SuppressedRowVm { Name = "SearchIndexer", PidText = "8124", LevelText = "常规", ReasonsText = "编译", DurationText = "12 分钟" });
-            SuppressedRows.Add(new SuppressedRowVm { Name = "OneDrive", PidText = "6612", LevelText = "常规", ReasonsText = "编译·后台", DurationText = "3 分钟" });
-            SuppressedRows.Add(new SuppressedRowVm { Name = "msiexec", PidText = "9900", LevelText = "常规", ReasonsText = "后台", DurationText = "1 分钟" });
-            SuppressedRows.Add(new SuppressedRowVm { Name = "svchost", PidText = "4212", LevelText = "常规", ReasonsText = "后台", DurationText = "38 秒" });
-            BoostHeader = "提优中 3 个进程";
+            StatCells.Add(new ActivityStatCell { Label = "今日专注", Value = "2 小时 21 分" });
+            StatCells.Add(new ActivityStatCell { Label = "编译会话", Value = "4 次" });
+            StatCells.Add(new ActivityStatCell { Label = "日常家族", Value = "5 小时 30 分" });
+            StatCells.Add(new ActivityStatCell { Label = "分心命中", Value = "3 次" });
+            SuppressedHeader = "实时压制 · 4 个进程";
+            SuppressedEmpty = false;
+            SuppressedRows.Add(new SuppressedRowVm { Name = "SearchIndexer", PidText = "8124", LevelText = "常规", LevelKey = "Neutral", ReasonList = new List<string> { "编译" }, DurationText = "12 分钟" });
+            SuppressedRows.Add(new SuppressedRowVm { Name = "OneDrive", PidText = "6612", LevelText = "常规", LevelKey = "Neutral", ReasonList = new List<string> { "编译", "后台" }, DurationText = "3 分钟" });
+            SuppressedRows.Add(new SuppressedRowVm { Name = "msiexec", PidText = "9900", LevelText = "克制", LevelKey = "Info", ReasonList = new List<string> { "后台" }, DurationText = "1 分钟" });
+            SuppressedRows.Add(new SuppressedRowVm { Name = "svchost", PidText = "4212", LevelText = "常规", LevelKey = "Neutral", ReasonList = new List<string> { "后台" }, DurationText = "38 秒" });
+            BoostHeader = "实时提优 · 3 个进程";
+            BoostEmpty = false;
             BoostRows.Add("devenv（IDE 提优 AboveNormal）");
             BoostRows.Add("msbuild（编译提优 High）");
             BoostRows.Add("chrome（日常家族提优 AboveNormal）");

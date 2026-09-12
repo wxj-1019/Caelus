@@ -6,6 +6,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using System.Threading;
 
 namespace CaelusApp
 {
@@ -55,6 +56,45 @@ namespace CaelusApp
             finally
             {
                 if (daily != null) try { daily.Stop(); } catch { }
+                DeleteTempDir(dir);
+            }
+        }
+
+        // 日常统计：掌权 → 挂起时按真实掌权时长记录（注册表今日键 + TSV dailySec/dailySessions 列）。
+        // 写 Settings——必须注册在临时存储启用之后。
+        private static void TestDailyCareRecordsSession()
+        {
+            string dir = NewTempDir("daily-stats");
+            string file = dir + "\\focus-history.tsv";
+            string old = FocusHistory.FilePath;
+            FocusHistory.FilePath = file;
+            DailyStats.ResetForTest();
+            DailyCare daily = null;
+            try
+            {
+                var arbiter = new ScenarioArbiter();
+                var core = new SuppressionCore(Path.Combine(dir, "s.state"));
+                daily = new DailyCare(arbiter, core, () => true, (n, p) => false);
+
+                daily.SetBatteryForTest(true);
+                Eq(true, daily.IsGranted);
+                Thread.Sleep(1200);   // 掌权满 1 秒以上
+                daily.SetBatteryForTest(false);
+                Eq(false, daily.IsGranted);
+
+                Eq(true, DailyStats.TodaySeconds(DateTime.Now) >= 1);
+                Eq(1, DailyStats.TodaySessions(DateTime.Now));
+                var all = FocusHistory.LoadAll();
+                Eq(1, all.Count);
+                Eq(true, all[0].DailySeconds >= 1);
+                Eq(1, all[0].DailySessions);
+                Eq(0L, all[0].FocusSeconds);   // 日常列与专注列同日独立
+            }
+            finally
+            {
+                if (daily != null) try { daily.Stop(); } catch { }
+                FocusHistory.FilePath = old;
+                DailyStats.ResetForTest();
                 DeleteTempDir(dir);
             }
         }

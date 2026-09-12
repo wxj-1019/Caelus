@@ -25,6 +25,7 @@ namespace CaelusApp
         private long lastWindowCheckTicks;
         private System.Threading.Timer reconcileTimer;
         private bool grantedFlag;
+        private long grantStartTicks;
 
         /// <summary>测试挂钩：隔离真实注册表（生产为 null 走 PowerOverlay 真实实现）</summary>
         internal static Func<bool> BatterySaverApplyHook;
@@ -271,6 +272,7 @@ namespace CaelusApp
             {
                 if (grantedFlag) return;
                 grantedFlag = true;
+                grantStartTicks = DateTime.UtcNow.Ticks;
             }
             try
             {
@@ -289,10 +291,17 @@ namespace CaelusApp
         /// 单步抛异常若跳过后续步骤，残留只能等启动自愈。每步独立 try，失败计数并明示。</summary>
         public override void Suspend()
         {
+            long elapsed = 0;
             lock (sync)
             {
                 if (!grantedFlag) return;
                 grantedFlag = false;
+                elapsed = DateTime.UtcNow.Ticks - grantStartTicks;
+            }
+            if (elapsed > 0)
+            {
+                try { DailyStats.RecordSession(elapsed); }
+                catch (Exception ex) { Logger.LogFailure("日常优化挂起：记录日常统计失败", ex); }
             }
             int failed = 0;
             try { StopReconcileTimer(); }

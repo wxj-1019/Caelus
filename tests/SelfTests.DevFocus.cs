@@ -730,7 +730,7 @@ namespace CaelusApp
             Eq(false, IdeCatalog.NameMatches("myide"));          // 还原后失效
         }
 
-        // 专注历史：同日合并增量、Keep 截断、坏行跳过、近 N 日补零升序。
+        // 专注历史：同日合并增量、Keep 截断、近 N 日补零升序、8 列读写、旧 5 列行兼容。
         // 文件级测试——FilePath 覆写到临时目录，不碰真实数据。
         private static void TestFocusHistoryMergeAndTrim()
         {
@@ -739,34 +739,54 @@ namespace CaelusApp
             FocusHistory.FilePath = file;
             try
             {
-                FocusHistory.AppendOrUpdate("2026-09-01", 60, 1, 0, 0);
-                FocusHistory.AppendOrUpdate("2026-09-01", 30, 1, 2, 1);   // 同日合并
+                FocusHistory.AppendOrUpdate(new FocusDayRecord { Day = "2026-09-01", FocusSeconds = 60, FocusSessions = 1 });
+                FocusHistory.AppendOrUpdate(new FocusDayRecord { Day = "2026-09-01", FocusSeconds = 30, FocusSessions = 1, Distract = 2, Blocked = 1 });   // 同日合并
                 var all = FocusHistory.LoadAll();
                 Eq(1, all.Count);
                 Eq("2026-09-01", all[0].Day);
-                Eq(90L, all[0].Seconds);
-                Eq(2, all[0].Sessions);
+                Eq(90L, all[0].FocusSeconds);
+                Eq(2, all[0].FocusSessions);
                 Eq(2, all[0].Distract);
                 Eq(1, all[0].Blocked);
 
+                // 双场景同日合并：日常/编译列累加，与专注列互不干扰
+                FocusHistory.AppendOrUpdate(new FocusDayRecord { Day = "2026-09-01", DailySeconds = 300, DailySessions = 1, BuildSeconds = 45 });
+                all = FocusHistory.LoadAll();
+                Eq(90L, all[0].FocusSeconds);
+                Eq(300L, all[0].DailySeconds);
+                Eq(1, all[0].DailySessions);
+                Eq(45L, all[0].BuildSeconds);
+
                 // Keep 截断：共 66 行（65 天循环 + 09-01），只留最近 60 天
                 for (int i = 0; i < 65; i++)
-                    FocusHistory.AppendOrUpdate(new DateTime(2026, 6, 1).AddDays(i).ToString("yyyy-MM-dd"), 10, 1, 0, 0);
+                    FocusHistory.AppendOrUpdate(new FocusDayRecord { Day = new DateTime(2026, 6, 1).AddDays(i).ToString("yyyy-MM-dd"), FocusSeconds = 10, FocusSessions = 1 });
                 all = FocusHistory.LoadAll();
                 Eq(60, all.Count);
                 Eq("2026-06-07", all[0].Day);   // 最旧 6 行（06-01..06-06）被截掉
                 Eq("2026-09-01", all[59].Day);
-                Eq(90L, all[59].Seconds);       // 合并行数据保留
+                Eq(90L, all[59].FocusSeconds);  // 合并行数据保留
 
                 // 近 7 日补零：老→新、含今日、缺日补零
-                FocusHistory.AppendOrUpdate("2026-09-09", 10, 1, 0, 0);
+                FocusHistory.AppendOrUpdate(new FocusDayRecord { Day = "2026-09-09", FocusSeconds = 10, FocusSessions = 1 });
                 var last = FocusHistory.LastDays(7, new DateTime(2026, 9, 11));
                 Eq(7, last.Count);
                 Eq("2026-09-05", last[0].Day);
                 Eq("2026-09-11", last[6].Day);
-                Eq(0L, last[0].Seconds);        // 09-05 无数据 → 补零
-                Eq(10L, last[4].Seconds);       // 09-09 有数据
-                Eq(0L, last[6].Seconds);        // 今日无数据 → 补零
+                Eq(0L, last[0].FocusSeconds);   // 09-05 无数据 → 补零
+                Eq(10L, last[4].FocusSeconds);  // 09-09 有数据
+                Eq(0L, last[6].FocusSeconds);   // 今日无数据 → 补零
+
+                // 旧 5 列行无损读取：尾部三列补零
+                File.WriteAllText(file, "2026-08-01\t120\t2\t3\t1\n");
+                all = FocusHistory.LoadAll();
+                Eq(1, all.Count);
+                Eq(120L, all[0].FocusSeconds);
+                Eq(2, all[0].FocusSessions);
+                Eq(3, all[0].Distract);
+                Eq(1, all[0].Blocked);
+                Eq(0L, all[0].DailySeconds);
+                Eq(0, all[0].DailySessions);
+                Eq(0L, all[0].BuildSeconds);
             }
             finally { FocusHistory.FilePath = old; DeleteTempDir(Path.GetDirectoryName(file)); }
         }
@@ -795,8 +815,8 @@ namespace CaelusApp
                 var all = FocusHistory.LoadAll();
                 Eq(1, all.Count);
                 Eq("2026-09-11", all[0].Day);
-                Eq(120L, all[0].Seconds);
-                Eq(2, all[0].Sessions);
+                Eq(120L, all[0].FocusSeconds);
+                Eq(2, all[0].FocusSessions);
                 Eq(2, all[0].Distract);
                 Eq(1, all[0].Blocked);
 
@@ -807,7 +827,7 @@ namespace CaelusApp
                 Eq(0, FocusStats.TodayDistract(next));
                 all = FocusHistory.LoadAll();
                 Eq(2, all.Count);
-                Eq(60L, all[1].Seconds);
+                Eq(60L, all[1].FocusSeconds);
             }
             finally
             {

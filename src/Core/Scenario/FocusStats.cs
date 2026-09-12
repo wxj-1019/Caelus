@@ -37,7 +37,7 @@ namespace CaelusApp
                 Settings.SaveStr(NKey, (LoadInt(NKey) + 1).ToString());
             }
             // 历史合并失败不影响今日键（统计不许反噬挂起路径）
-            try { FocusHistory.AppendOrUpdate(today, sec, 1, 0, 0); } catch { }
+            try { FocusHistory.AppendOrUpdate(new FocusDayRecord { Day = today, FocusSeconds = sec, FocusSessions = 1 }); } catch { }
         }
 
         /// <summary>记录一次分心应用命中（专注模式掌权期间）。wasBlocked=本次被阻断关闭。</summary>
@@ -57,7 +57,7 @@ namespace CaelusApp
                 if (wasBlocked) Settings.SaveStr(BlockedKey, (LoadInt(BlockedKey) + 1).ToString());
                 if (!string.IsNullOrEmpty(name)) UpdateDistractNamesLocked(name);
             }
-            try { FocusHistory.AppendOrUpdate(today, 0, 0, 1, wasBlocked ? 1 : 0); } catch { }
+            try { FocusHistory.AppendOrUpdate(new FocusDayRecord { Day = today, Distract = 1, Blocked = wasBlocked ? 1 : 0 }); } catch { }
         }
 
         /// <summary>不带名版本（不参与按名统计）。</summary>

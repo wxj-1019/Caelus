@@ -563,7 +563,7 @@ namespace CaelusApp
 
             var all = FocusHistory.LastDays(7, now);
             long max = 1;
-            foreach (FocusDayRecord r in all) if (r.Seconds > max) max = r.Seconds;
+            foreach (FocusDayRecord r in all) if (r.FocusSeconds > max) max = r.FocusSeconds;
             FocusTrendRows.Clear();
             for (int i = 0; i < all.Count; i++)
             {
@@ -572,8 +572,8 @@ namespace CaelusApp
                 FocusTrendRows.Add(new FocusTrendRow
                 {
                     DayText = today ? "今天" : r.Day.Substring(5),
-                    MinutesText = r.Seconds >= 60 ? (r.Seconds / 60) + "m" : (r.Seconds > 0 ? "<1m" : ""),
-                    BarHeight = r.Seconds <= 0 ? 2.0 : Math.Max(6.0, 56.0 * r.Seconds / max),
+                    MinutesText = r.FocusSeconds >= 60 ? (r.FocusSeconds / 60) + "m" : (r.FocusSeconds > 0 ? "<1m" : ""),
+                    BarHeight = r.FocusSeconds <= 0 ? 2.0 : Math.Max(6.0, 56.0 * r.FocusSeconds / max),
                     DistractText = r.Distract > 0
                         ? "分心 " + r.Distract + (r.Blocked > 0 ? " · 阻断 " + r.Blocked : "")
                         : "",

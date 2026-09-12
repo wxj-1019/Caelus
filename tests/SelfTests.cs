@@ -1500,6 +1500,7 @@ namespace CaelusApp
             test("IDE 目录：自定义名录合并与坏行容错", TestIdeCatalogCustomList);
             test("专注历史：按日合并、截断与近 7 日补零", TestFocusHistoryMergeAndTrim);
             test("专注历史：会话与分心计数写入当日趋势", TestFocusStatsFeedsHistory);
+            test("日常统计：掌权时长写入今日键与 TSV 日常列", TestDailyCareRecordsSession);
             test("分心策略：掌权且专注才动作，阻断开关分级", TestDistractActionPolicy);
             test("分心统计：按名归一合并与 Top8 截断", TestFocusStatsDistractNames);
             test("分心阻断：气球 30 秒限频判定", TestDistractBlockBalloonRateLimit);

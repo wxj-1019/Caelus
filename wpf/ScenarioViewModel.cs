@@ -805,7 +805,7 @@ namespace CaelusApp
         {
             long h = seconds / 3600;
             long m = (seconds % 3600) / 60;
-            if (h > 0) return h + " 小时 " + m + " 分钟";
+            if (h > 0) return m > 0 ? h + " 小时 " + m + " 分钟" : h + " 小时";
             return m + " 分钟";
         }
     }

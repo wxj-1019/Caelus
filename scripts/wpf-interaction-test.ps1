@@ -57,13 +57,13 @@ function Select-ByName([string]$name) {
 
 # —— T2 导航全部 13 页（验证每页回写后仍可加载渲染；末页回到场景总览供 T3 找模式选择器） ——
 if ($null -ne $root) {
-    $navs = @("游戏库","优化策略","显卡","反作弊专项","系统环境","白名单","系统体检","日志","设置","关于","开发专注","日常优化","场景总览")
+    $navs = @("游戏库","优化策略","显卡","反作弊专项","系统环境","白名单","系统体检","日志","实时监控","设置","关于","开发专注","日常优化","场景总览")
     $navOk = 0
     foreach ($n in $navs) {
         if (Select-ByName "导航：$n") { $navOk++; Start-Sleep -Milliseconds 120 }
         $root = [System.Windows.Automation.AutomationElement]::FromHandle($proc.MainWindowHandle)
     }
-    Record "T2 导航 13 页均可选中" ($navOk -eq 13) "选中 $navOk/13"
+    Record "T2 导航 14 页均可选中" ($navOk -eq 14) "选中 $navOk/14"
 }
 
 # —— T3 模式切换（巡航→竞技→自定义→巡航，验证 ModeChanged 订阅不崩） ——

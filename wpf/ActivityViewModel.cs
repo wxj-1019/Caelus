@@ -81,6 +81,8 @@ namespace CaelusApp
         /// <summary>导航到本页时由窗口调用：立即刷新一帧（计时器之外的首次进入也即时）。</summary>
         public void Refresh(bool force)
         {
+            // 探针样例态不重建行——导航会触发 Refresh(true)，否则样例数据被真实（空）数据覆盖
+            if (WpfHost.Views.ActivityView.InjectSampleData) return;
             DateTime now = DateTime.Now;
 
             // —— 状态瓦片 ——

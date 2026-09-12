@@ -543,7 +543,7 @@ namespace CaelusApp.WpfHost
                 string[] pages = new string[]
                 {
                     "library", "policy", "graphics", "anticheat", "environment",
-                    "whitelist", "audit", "log", "settings", "dev", "daily", "about"
+                    "whitelist", "audit", "log", "activity", "settings", "dev", "daily", "about"
                 };
                 var toneModes = new[]
                 {
@@ -560,7 +560,12 @@ namespace CaelusApp.WpfHost
                     // 并防未来 CapturePage 换成自身不含 Apply 的实现
                     ThemeManager.Apply(this, tm.Tone, tm.Mode);
                     foreach (string p in pages)
+                    {
+                        // 矩阵逐页捕获：样例注入开关与单页探针同语义（实时监控页空数据看不出布局）
+                        Views.ActivityView.InjectSampleData = (p == "activity");
                         failed += CapturePage(dir, p, tm.Tone, tm.Mode);
+                    }
+                    Views.ActivityView.InjectSampleData = false;
                 }
                 if (failed > 0)
                 {
@@ -642,7 +647,7 @@ namespace CaelusApp.WpfHost
                 string[] pages = new string[]
                 {
                     "overview", "library", "policy", "graphics", "anticheat",
-                    "environment", "whitelist", "audit", "log", "settings", "dev", "daily", "about"
+                    "environment", "whitelist", "audit", "log", "activity", "settings", "dev", "daily", "about"
                 };
 
                 // Warm every cached page and theme before taking the baseline.
@@ -796,6 +801,7 @@ namespace CaelusApp.WpfHost
                 Views.PolicyView.InjectSampleData = (page == "policy");
                 Views.GraphicsView.InjectSampleData = (page == "graphics");
                 Views.ScenarioDetailView.InjectSampleData = (page == "dev" || page == "daily");
+                Views.ActivityView.InjectSampleData = (page == "activity");
                 MainWindow window = new MainWindow(new GameMode(Paths.Data, new SuppressionCore()));
                 window.ApplyPersistedMode(mode);
                 // 探针摆脱用户持久化的尺寸/最大化态（同 --wpf-shot）；高度参数支持长页全页出图

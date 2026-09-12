@@ -84,6 +84,22 @@ namespace CaelusApp
         /// <summary>仲裁器授权状态：副作用是否已施加</summary>
         public bool IsGranted { get { lock (sync) return granted; } }
 
+        /// <summary>实时监控页：当前编译/IDE 活性进程数（锁内计数）。</summary>
+        public int BuildActivityCount { get { lock (sync) return activeBuildPids.Count; } }
+        public int IdeActivityCount { get { lock (sync) return activeIdePids.Count; } }
+
+        /// <summary>实时监控页：当前提优中的进程描述（IDE/编译两档）。</summary>
+        internal List<string> DescribeBoosts()
+        {
+            var rows = new List<string>();
+            lock (sync)
+            {
+                foreach (var kv in ideBoostedName) rows.Add(kv.Value + "（IDE 提优 AboveNormal）");
+                foreach (var kv in buildBoostedName) rows.Add(kv.Value + "（编译提优 High）");
+            }
+            return rows;
+        }
+
         /// <summary>测试钩子：校正定时器是否运行中（应只在掌权期间为 true）</summary>
         internal bool FocusTimerRunning { get { lock (sync) return reconcileTimer != null; } }
 
@@ -425,6 +441,7 @@ namespace CaelusApp
                 }
                 finally { p.Dispose(); }
                 Logger.Log("开发专注：分心应用已阻断关闭（PID " + pid + "）");
+                ActivityLog.Add("分心应用已阻断关闭");
             }
             catch (Exception ex) { Logger.LogFailure("开发专注：阻断关闭分心应用失败", ex); }
         }
@@ -486,6 +503,7 @@ namespace CaelusApp
                 if (ide) ReconcileIdeBoost();
 
                 Logger.Log("开发专注：获得掌职权（编译=" + build + " 专注=" + focus + " IDE=" + ide + "）");
+                ActivityLog.Add("开发专注掌权（编译=" + build + " 专注=" + focus + " IDE=" + ide + "）");
             }
             catch (Exception ex) { Logger.LogFailure("开发专注掌权失败", ex); }
         }
@@ -539,6 +557,7 @@ namespace CaelusApp
 
             if (failed == 0) Logger.Log("开发专注：挂起，全部副作用已还原（检测继续）");
             else Logger.Log("开发专注：挂起完成，但 " + failed + " 个还原步骤失败（残留由下次启动自愈兜底）");
+            ActivityLog.Add(failed == 0 ? "开发专注挂起（副作用已还原）" : "开发专注挂起（" + failed + " 个还原步骤失败）");
         }
 
         private void BoostBuildProcesses()
@@ -652,6 +671,7 @@ namespace CaelusApp
             }
             if (suppressed > 0)
                 Logger.Log("开发专注：编译期间压制 " + suppressed + " 个后台进程（编译位，退出即还原）");
+            if (suppressed > 0) ActivityLog.Add("编译位压制 " + suppressed + " 个后台进程");
         }
 
         private void StartReconcileTimer()

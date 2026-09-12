@@ -273,6 +273,9 @@ namespace CaelusApp
         {
             // fail 静默重试不弹泡，但留日志（连败可查）
             if (reason == "fail") try { Logger.Log("开发服务自动拉起失败（预算内将重试）：" + name); } catch { }
+            if (reason == "ok") ActivityLog.Add("开发服务自动拉起：" + name);
+            else if (reason == "giveup") ActivityLog.Add("开发服务拉起熔断放弃：" + name);
+            else if (reason == "nocmd") ActivityLog.Add("开发服务退出（无命令行未拉起）：" + name);
             var h = RestartAttempted;
             if (h != null) try { h(name, reason); } catch { }
         }

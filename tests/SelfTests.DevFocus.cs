@@ -923,6 +923,73 @@ namespace CaelusApp
 
 
 
+
+        // 监控日志：环形 60 条截断、新→旧序、返回副本
+        private static void TestActivityLogRing()
+        {
+            ActivityLog.ResetForTest();
+            try
+            {
+                for (int i = 1; i <= 70; i++) ActivityLog.Add("动作 " + i);
+                var all = ActivityLog.Recent(60);
+                Eq(60, all.Count);
+                Eq("动作 70", all[0].Text);   // 新→旧
+                Eq("动作 11", all[59].Text);  // 最旧 10 条被挤出
+                var top5 = ActivityLog.Recent(5);
+                Eq(5, top5.Count);
+                Eq("动作 70", top5[0].Text);
+                Eq("动作 66", top5[4].Text);
+                Eq(true, top5[0].Ticks > 0);
+            }
+            finally { ActivityLog.ResetForTest(); }
+        }
+
+        // 压制快照：行含名称/级别/原因/起钟时刻，释放后清空
+        private static void TestSuppressionSnapshotRows()
+        {
+            string dir = NewTempDir("sup-snap");
+            Process probe = null;
+            try
+            {
+                string beat;
+                probe = StartNamedProbe(dir, "testhelper.exe", out beat);
+                WaitAdvance(beat, -1, 4000);
+
+                var core = new SuppressionCore(Path.Combine(dir, "s.state"));
+                try
+                {
+                    core.Acquire(probe.Id, probe.ProcessName,
+                        SuppressReason.Build, "snap", SuppressionLevel.Eco);
+                    var rows = core.SnapshotRows();
+                    bool hit = false;
+                    string dump = "";
+                    foreach (var r in rows)
+                    {
+                        dump += r.Pid + "/" + r.Name + "/" + r.LevelText + "/" + r.ReasonsText + ";";
+                        if (r.Pid != probe.Id) continue;
+                        hit = true;
+                        Eq(probe.ProcessName, r.Name);
+                        Eq("常规", r.LevelText);
+                        Eq(true, r.ReasonsText.Contains("编译"));
+                        Eq(true, r.AcquiredTicks > 0);
+                    }
+                    if (!hit)
+                        throw new Exception("pid=" + probe.Id + " rows=" + rows.Count + " throttled="
+                            + core.IsThrottled(probe.Id) + " dump=" + dump);
+
+                    core.ReleaseReason(SuppressReason.Build);
+                    foreach (var r in core.SnapshotRows())
+                        Eq(false, r.Pid == probe.Id);
+                }
+                finally { core.ReleaseReason(SuppressReason.Build); }
+            }
+            finally
+            {
+                if (probe != null) try { StopOwned(probe); } catch { }
+                DeleteTempDir(dir);
+            }
+        }
+
         // 压制豁免组合：游戏白名单 OR 守护服务 OR 日常家族（浏览器/Office/会议）。
         // 日常家族入列修复实机问题：编译位压制降无窗口后台优先级时误伤浏览器 GPU/解码进程，
         // 看视频卡顿（2026-09-12 实机：压制 191 进程后视频卡）。写 Settings——注册在临时存储之后。

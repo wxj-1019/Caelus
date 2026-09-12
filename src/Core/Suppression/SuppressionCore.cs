@@ -44,6 +44,7 @@ namespace CaelusApp
             public int OrigQoSControl = -1;
             public int OrigQoSState = -1;
             public long Creation;
+            public long AcquiredTicks;   // 首次实际压制生效时刻（实时监控页「已压制时长」用）
             public SuppressionLevel Level;
             public SuppressionLevel AntiCheatLevel;
             public SuppressionLevel BackgroundLevel;
@@ -299,6 +300,10 @@ namespace CaelusApp
                         {
                             if (QueueApplyLocked(pid, name)) return AcquireResult.AlreadyThrottled;
                             e.Applied = ApplyThrottleWithFreeze(h, e, pid, e.Level, e.OrigPri, e.OrigAff, e.OrigCpuSets, DesiredGpu(e));
+                        if (e.Applied && e.AcquiredTicks == 0)
+                            e.AcquiredTicks = DateTime.UtcNow.Ticks;
+                            if (e.Applied && e.AcquiredTicks == 0)
+                                e.AcquiredTicks = DateTime.UtcNow.Ticks;
                             ScheduleAfterApply(e, e.Applied, pid);
                             if (!e.Applied && TryNeutralizeUnwritableLocked(h, pid, e))
                                 return AcquireResult.AlreadyProtected;
@@ -391,6 +396,8 @@ namespace CaelusApp
                     if (map.TryGetValue(pid, out appliedEntry) && !queued)
                     {
                         appliedEntry.Applied = applied;
+                        if (appliedEntry.Applied && appliedEntry.AcquiredTicks == 0)
+                            appliedEntry.AcquiredTicks = DateTime.UtcNow.Ticks;
                         ScheduleAfterApply(appliedEntry, applied, pid);
                         if (!applied && TryNeutralizeUnwritableLocked(h, pid, appliedEntry))
                             return AcquireResult.NewlyProtected;
@@ -492,6 +499,8 @@ namespace CaelusApp
                     if (map.TryGetValue(pid, out cur) && cur == e)
                     {
                         cur.Applied = applied;
+                        if (cur.Applied && cur.AcquiredTicks == 0)
+                            cur.AcquiredTicks = DateTime.UtcNow.Ticks;
                         ScheduleAfterApply(cur, applied, pid);
                     }
                     else entryGone = true;
@@ -712,6 +721,7 @@ namespace CaelusApp
                         if (!currentEntry.Applied && currentEntry.ReconcileFailures > 0)
                             Logger.Log("后台策略核验已生效：" + expectedName + " (pid " + pid
                                 + ")，此前写入未完全生效 " + currentEntry.ReconcileFailures + " 次");
+                        if (currentEntry.AcquiredTicks == 0) currentEntry.AcquiredTicks = DateTime.UtcNow.Ticks;
                         currentEntry.Applied = true;
                         ScheduleAfterMatch(currentEntry, pid);
                         return true;
@@ -719,6 +729,8 @@ namespace CaelusApp
                     bool previouslyApplied = currentEntry.Applied;
                     int previousFailures = currentEntry.ReconcileFailures;
                     currentEntry.Applied = ApplyThrottleWithFreeze(h, currentEntry, pid, level, pri, aff, cpuSets, desiredGpu);
+                    if (currentEntry.Applied && currentEntry.AcquiredTicks == 0)
+                        currentEntry.AcquiredTicks = DateTime.UtcNow.Ticks;
                     ScheduleAfterApply(currentEntry, currentEntry.Applied, pid);
                     if (currentEntry.Applied)
                     {
@@ -755,6 +767,66 @@ namespace CaelusApp
             lock (sync)
                 foreach (var kv in map) if ((kv.Value.Reasons & reason) != 0) list.Add(kv.Key);
             return list;
+        }
+
+        /// <summary>实时监控页用的实时压制快照：仅实际生效行，锁内复制（调用方只读）。</summary>
+        internal sealed class SuppressedRow
+        {
+            public int Pid;
+            public string Name;
+            public string LevelText;
+            public string ReasonsText;
+            public long AcquiredTicks;   // 0=未知（旧会话升级路径）
+        }
+
+        internal List<SuppressedRow> SnapshotRows()
+        {
+            var list = new List<SuppressedRow>();
+            lock (sync)
+            {
+                foreach (var kv in map)
+                {
+                    Entry e = kv.Value;
+                    if (!e.Applied) continue;
+                    list.Add(new SuppressedRow
+                    {
+                        Pid = kv.Key,
+                        Name = e.Name ?? "",
+                        LevelText = LevelTextOf(e.Level),
+                        ReasonsText = ReasonsTextOf(e.Reasons),
+                        AcquiredTicks = e.AcquiredTicks
+                    });
+                }
+            }
+            return list;
+        }
+
+        private static string LevelTextOf(SuppressionLevel level)
+        {
+            switch (level)
+            {
+                case SuppressionLevel.Eco: return "常规";
+                case SuppressionLevel.Restrained: return "克制";
+                case SuppressionLevel.Isolated: return "隔离";
+                case SuppressionLevel.Frozen: return "冻结";
+                default: return "—";
+            }
+        }
+
+        private static string ReasonsTextOf(SuppressReason reasons)
+        {
+            var sb = new System.Text.StringBuilder();
+            if ((reasons & SuppressReason.AntiCheat) != 0) AppendReason(sb, "反作弊");
+            if ((reasons & SuppressReason.Background) != 0) AppendReason(sb, "后台");
+            if ((reasons & SuppressReason.Build) != 0) AppendReason(sb, "编译");
+            if ((reasons & SuppressReason.Daily) != 0) AppendReason(sb, "日常");
+            return sb.Length == 0 ? "—" : sb.ToString();
+        }
+
+        private static void AppendReason(System.Text.StringBuilder sb, string text)
+        {
+            if (sb.Length > 0) sb.Append('·');
+            sb.Append(text);
         }
 
         private int lastThrottledCount;
@@ -1463,6 +1535,8 @@ namespace CaelusApp
                     }
                     if (!applied) error = string.IsNullOrEmpty(LastApplyError) ? "apply" : LastApplyError;
                     currentEntry.Applied = applied;
+                    if (currentEntry.Applied && currentEntry.AcquiredTicks == 0)
+                        currentEntry.AcquiredTicks = DateTime.UtcNow.Ticks;
                     ScheduleAfterApply(currentEntry, applied, pid);
                 }
                 return applied;

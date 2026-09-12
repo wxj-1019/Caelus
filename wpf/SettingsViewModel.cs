@@ -309,9 +309,26 @@ namespace CaelusApp
             DevEnvResult = text ?? "";
         }
 
+        // —— 每日专注目标（分钟） ——
+        public string FocusGoalTitle { get { return Lang.T("set.goal.title"); } }
+        public string FocusGoalNote { get { return Lang.T("set.goal.note"); } }
+        public string FocusGoalInitial { get { return FocusStats.GoalMinutes().ToString(); } }
+        public void SaveFocusGoal(string text)
+        {
+            string raw = (text ?? "").Trim();
+            int parsed = FocusStats.ParseGoalMinutes(raw);
+            int asInt;
+            if (!int.TryParse(raw, out asInt) || asInt != parsed)
+            {
+                ShowFeedback("请输入 30-1440 之间的分钟数。", "Error");
+                return;
+            }
+            Settings.SaveStr("FocusGoalMinutes", parsed.ToString());
+            ShowFeedback("每日专注目标已保存（" + parsed + " 分钟）。", "Success");
+        }
+
         // —— 自定义编译进程 ——
-        public string DevCustomTitle { get { return Lang.T("set.dev.custom"); } }
-        public string DevCustomNote { get { return Lang.T("set.dev.custom.n"); } }
+        public string DevCustomTitle { get { return Lang.T("set.dev.custom"); } }        public string DevCustomNote { get { return Lang.T("set.dev.custom.n"); } }
         public string DevCustomSaveText { get { return Lang.T("set.dev.custom.save"); } }
         public string DevCustomInitial { get { return BuildCatalog.CustomList; } }
         public void SaveDevCustom(string text)

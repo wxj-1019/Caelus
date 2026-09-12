@@ -500,6 +500,8 @@ namespace CaelusApp
             { "set.focus", new[]{ "专注模式" } },
             { "set.focus.n", new[]{ "开启后静默通知、持续压制后台；可配分心应用清单，清单程序启动时提醒一次" } },
             { "set.focus.stats", new[]{ "今日开发专注：{0} 分钟 · {1} 次会话" } },
+            { "set.goal.title", new[]{ "每日专注目标（分钟）" } },
+            { "set.goal.note", new[]{ "开发专注详情页趋势卡的进度参照线，只显示、不提醒；30-1440 分钟，默认 240" } },
             { "set.distract", new[]{ "分心应用清单（分号分隔）" } },
             { "set.distract.n", new[]{ "专注模式期间这些程序启动时托盘提醒一次（如 discord、steam），只提醒不处理" } },
             { "set.distract.block", new[]{ "专注阻断" } },

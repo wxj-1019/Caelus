@@ -266,6 +266,14 @@ namespace CaelusApp.WpfHost.Views
             Motion.Emphasize(PageFeedbackBanner);
         }
 
+        private void OnFocusGoalSave(object sender, RoutedEventArgs e)
+        {
+            SettingsViewModel vm = DataContext as SettingsViewModel;
+            if (vm == null) return;
+            vm.SaveFocusGoal(TbFocusGoal.Text);
+            Motion.Emphasize(PageFeedbackBanner);
+        }
+
         private void OnDevEnvRun(object sender, RoutedEventArgs e)
         {
             SettingsViewModel vm = DataContext as SettingsViewModel;

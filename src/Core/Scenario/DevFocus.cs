@@ -38,6 +38,7 @@ namespace CaelusApp
         private Timer reconcileTimer;
         private long sessionStartTicks;
         private long grantStartTicks;
+        private long buildStartTicks;   // 编译集合 空→非空 的真实起点（统计用，取代场景会话起点近似）
         private readonly Dictionary<int, uint> ideBoosted = new Dictionary<int, uint>();
         private readonly Dictionary<int, long> ideBoostedCreation = new Dictionary<int, long>();
         private readonly Dictionary<int, string> ideBoostedName = new Dictionary<int, string>();
@@ -178,6 +179,7 @@ namespace CaelusApp
             bool ideChanged = false;
             List<int> newlyBuilt = null;
             List<int> toBlock = null;
+            long buildEndedElapsed = 0;
 
             lock (sync)
             {
@@ -269,6 +271,19 @@ namespace CaelusApp
                 }
 
                 buildActivity = wasBuildActive != (activeBuildPids.Count > 0);
+                // 编译统计真实起止：集合 空→非空 记起点、非空→空 记时长
+                if (activeBuildPids.Count > 0 && !wasBuildActive)
+                    buildStartTicks = DateTime.UtcNow.Ticks;
+                else if (activeBuildPids.Count == 0 && wasBuildActive)
+                    buildEndedElapsed = DateTime.UtcNow.Ticks - buildStartTicks;
+            }
+
+            // 编译结束（场景仍在运行也记账）：写今日统计与按日历史，替代旧「场景会话起点近似」日志
+            if (buildEndedElapsed > 0)
+            {
+                try { FocusStats.RecordBuild(buildEndedElapsed, DateTime.Now); } catch { }
+                try { Logger.Log(string.Format("开发专注：本次编译 {0:0.#} 秒",
+                    buildEndedElapsed / (double)TimeSpan.TicksPerSecond)); } catch { }
             }
 
             // 分心阻断在锁外执行：优雅关闭最多等 1 秒，不能压住进程事件线程
@@ -301,8 +316,8 @@ namespace CaelusApp
             {
                 if (buildActivity)
                 {
-                    long elapsedMs = (DateTime.UtcNow.Ticks - sessionStartTicks) / TimeSpan.TicksPerMillisecond;
-                    Logger.Log(string.Format("开发专注：本次编译 {0:0.#} 秒", elapsedMs / 1000.0));
+                    // 编译时长日志改在编译集合 1→0 处按真实起点记（见上 buildEndedElapsed），
+                    // 此处只发场景结束气球
                     try { var h = SessionChanged; if (h != null) h("bal.buildend"); } catch { }
                 }
                 arbiter.ReportActivity(Kind, false);

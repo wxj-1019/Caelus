@@ -5,6 +5,7 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
+using System.Threading;
 using System.Windows.Forms;
 
 namespace CaelusApp
@@ -834,6 +835,89 @@ namespace CaelusApp
                 FocusHistory.FilePath = old;
                 FocusStats.ResetForTest();
                 DeleteTempDir(Path.GetDirectoryName(file));
+            }
+        }
+
+
+        // 编译统计：时长经 FocusStats 写今日键与 TSV buildSec 列，日切归零
+        private static void TestFocusBuildRecorded()
+        {
+            string file = NewTempDir("focus-build") + "\\focus-history.tsv";
+            string old = FocusHistory.FilePath;
+            FocusHistory.FilePath = file;
+            FocusStats.ResetForTest();
+            try
+            {
+                var day = new DateTime(2026, 9, 11, 10, 0, 0);
+                FocusStats.RecordBuild(150 * TimeSpan.TicksPerSecond, day);
+                FocusStats.RecordBuild(30 * TimeSpan.TicksPerSecond, day);
+                Eq(180L, FocusStats.TodayBuildSeconds(day));
+                Eq(2, FocusStats.TodayBuildSessions(day));
+                var all = FocusHistory.LoadAll();
+                Eq(1, all.Count);
+                Eq(180L, all[0].BuildSeconds);
+                Eq(0L, all[0].FocusSeconds);   // 编译列与专注列独立
+
+                var next = day.AddDays(1);
+                FocusStats.RecordBuild(60 * TimeSpan.TicksPerSecond, next);
+                Eq(60L, FocusStats.TodayBuildSeconds(next));
+                all = FocusHistory.LoadAll();
+                Eq(2, all.Count);
+                Eq(180L, all[0].BuildSeconds);
+                Eq(60L, all[1].BuildSeconds);
+            }
+            finally
+            {
+                FocusHistory.FilePath = old;
+                FocusStats.ResetForTest();
+                DeleteTempDir(Path.GetDirectoryName(file));
+            }
+        }
+
+        // 专注目标解析：30-1440 之外或非法一律回落默认 240（纯逻辑）
+        private static void TestFocusGoalParse()
+        {
+            Eq(240, FocusStats.ParseGoalMinutes("240"));
+            Eq(30, FocusStats.ParseGoalMinutes("30"));
+            Eq(1440, FocusStats.ParseGoalMinutes("1440"));
+            Eq(240, FocusStats.ParseGoalMinutes("29"));
+            Eq(240, FocusStats.ParseGoalMinutes("1441"));
+            Eq(240, FocusStats.ParseGoalMinutes("abc"));
+            Eq(240, FocusStats.ParseGoalMinutes(""));
+            Eq(240, FocusStats.ParseGoalMinutes(null));
+        }
+
+        // 编译统计集成：真实编译进程起止（探针扮演 msbuild）经 DevFocus 起止跟踪落盘
+        private static void TestDevFocusRecordsBuildStats()
+        {
+            string dir = NewTempDir("devfocus-buildstats");
+            Process probe = null;
+            DevFocus dev = null;
+            FocusStats.ResetForTest();
+            try
+            {
+                var arbiter = new ScenarioArbiter();
+                var core = new SuppressionCore(Path.Combine(dir, "s.state"));
+                dev = new DevFocus(arbiter, core, () => true, (n, p) => false, name => false);
+
+                string beat;
+                probe = StartNamedProbe(dir, "msbuild.exe", out beat);
+                WaitAdvance(beat, -1, 4000);
+                dev.NotifyProcessChanges(new ProcessChangeBatch(
+                    new[] { MakeChange(probe.Id, "msbuild", ProcessChangeKind.Started) }, false));
+                Eq(true, dev.IsGranted);
+                Thread.Sleep(1200);   // 编译进行 1 秒以上
+                dev.NotifyProcessChanges(new ProcessChangeBatch(
+                    new[] { MakeChange(probe.Id, "msbuild", ProcessChangeKind.Stopped) }, false));
+                Eq(1, FocusStats.TodayBuildSessions(DateTime.Now));
+                Eq(true, FocusStats.TodayBuildSeconds(DateTime.Now) >= 1);
+            }
+            finally
+            {
+                if (dev != null) try { dev.Stop(); } catch { }
+                if (probe != null) try { StopOwned(probe); } catch { }
+                FocusStats.ResetForTest();
+                DeleteTempDir(dir);
             }
         }
 

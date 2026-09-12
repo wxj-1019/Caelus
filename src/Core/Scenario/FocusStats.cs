@@ -15,6 +15,12 @@ namespace CaelusApp
         private const string DistractKey = "FocusStatsDistract";
         private const string BlockedKey = "FocusStatsBlocked";
         private const string DistractNamesKey = "FocusStatsDistractNames";
+        private const string BuildSecKey = "FocusStatsBuildSec";
+        private const string BuildNKey = "FocusStatsBuildN";
+        private const string GoalKey = "FocusGoalMinutes";
+        internal const int GoalDefaultMinutes = 240;
+        internal const int GoalMinMinutes = 30;
+        internal const int GoalMaxMinutes = 1440;
         private const int DistractNamesTop = 8;
         private static readonly object sync = new object();
 
@@ -136,6 +142,50 @@ namespace CaelusApp
             return sb.ToString();
         }
 
+        /// <summary>记录一段编译会话时长（编译集合 1→0 时由 DevFocus 调用）。</summary>
+        internal static void RecordBuild(long elapsedTicks, DateTime now)
+        {
+            if (elapsedTicks <= 0) return;
+            string today = now.ToString("yyyy-MM-dd");
+            long sec = elapsedTicks / TimeSpan.TicksPerSecond;
+            lock (sync)
+            {
+                EnsureDayLocked(today);
+                Settings.SaveStr(BuildSecKey, (LoadLong(BuildSecKey) + sec).ToString());
+                Settings.SaveStr(BuildNKey, (LoadInt(BuildNKey) + 1).ToString());
+            }
+            try { FocusHistory.AppendOrUpdate(new FocusDayRecord { Day = today, BuildSeconds = sec }); } catch { }
+        }
+
+        internal static long TodayBuildSeconds(DateTime now)
+        {
+            if (Settings.LoadStr(DayKey, "") != now.ToString("yyyy-MM-dd")) return 0;
+            return LoadLong(BuildSecKey);
+        }
+
+        internal static int TodayBuildSessions(DateTime now)
+        {
+            if (Settings.LoadStr(DayKey, "") != now.ToString("yyyy-MM-dd")) return 0;
+            return LoadInt(BuildNKey);
+        }
+
+        /// <summary>每日专注目标（分钟）。读注册表，默认 240。</summary>
+        internal static int GoalMinutes()
+        {
+            int v;
+            return int.TryParse(Settings.LoadStr(GoalKey, ""), out v) && v >= GoalMinMinutes && v <= GoalMaxMinutes
+                ? v : GoalDefaultMinutes;
+        }
+
+        /// <summary>目标分钟数解析校验（纯逻辑，可单测）：30-1440 之外或非法一律回落默认 240。</summary>
+        internal static int ParseGoalMinutes(string raw)
+        {
+            int v;
+            if (!int.TryParse(raw, out v)) return GoalDefaultMinutes;
+            if (v < GoalMinMinutes || v > GoalMaxMinutes) return GoalDefaultMinutes;
+            return v;
+        }
+
         internal static long TodaySeconds(DateTime now)
         {
             if (Settings.LoadStr(DayKey, "") != now.ToString("yyyy-MM-dd")) return 0;
@@ -170,6 +220,8 @@ namespace CaelusApp
             Settings.SaveStr(DistractKey, "0");
             Settings.SaveStr(BlockedKey, "0");
             Settings.SaveStr(DistractNamesKey, "");
+            Settings.SaveStr(BuildSecKey, "0");
+            Settings.SaveStr(BuildNKey, "0");
         }
 
         private static long LoadLong(string key)
@@ -193,6 +245,8 @@ namespace CaelusApp
             Settings.SaveStr(DistractKey, "0");
             Settings.SaveStr(BlockedKey, "0");
             Settings.SaveStr(DistractNamesKey, "");
+            Settings.SaveStr(BuildSecKey, "0");
+            Settings.SaveStr(BuildNKey, "0");
         }
 #endif
     }

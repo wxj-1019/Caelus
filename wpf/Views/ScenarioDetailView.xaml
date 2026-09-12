@@ -161,6 +161,8 @@
                        FontSize="{DynamicResource FontSizeXs}" Foreground="{DynamicResource TextTertiaryBrush}"/>
             <TextBlock Text="{Binding FocusDistractText}" Margin="0,2,0,0"
                        FontSize="{DynamicResource FontSizeXs}" Foreground="{DynamicResource DangerBrush}"/>
+            <TextBlock Text="{Binding BuildStatsText}" Margin="0,2,0,0"
+                       FontSize="{DynamicResource FontSizeXs}" Foreground="{DynamicResource TextTertiaryBrush}"/>
           </StackPanel>
         </DockPanel>
       </Border>
@@ -172,8 +174,12 @@
           <TextBlock Text="近 7 日专注趋势" FontSize="{DynamicResource FontSizeCaption}" FontWeight="SemiBold"
                      Foreground="{DynamicResource TextPrimaryBrush}"/>
           <TextBlock Text="每日掌权专注时长，柱高按 7 日内最大值归一；分心命中计入当日小字。"
-                     Margin="0,3,0,10" FontSize="{DynamicResource FontSizeXs}"
+                     Margin="0,3,0,0" FontSize="{DynamicResource FontSizeXs}"
                      Foreground="{DynamicResource TextTertiaryBrush}" TextWrapping="Wrap"/>
+          <TextBlock Text="{Binding FocusTrendGoalText}" Margin="0,6,0,0"
+                     FontSize="{DynamicResource FontSizeXs}" Foreground="{DynamicResource TextSecondaryBrush}"/>
+          <TextBlock Text="{Binding FocusTrendTotalsText}" Margin="0,2,0,10"
+                     FontSize="{DynamicResource FontSizeXs}" Foreground="{DynamicResource TextTertiaryBrush}"/>
           <ItemsControl ItemsSource="{Binding FocusTrendRows}" AutomationProperties.Name="近 7 日专注柱状图">
             <ItemsControl.ItemsPanel>
               <ItemsPanelTemplate>

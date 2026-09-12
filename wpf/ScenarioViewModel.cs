@@ -366,6 +366,9 @@ namespace CaelusApp
         private string stateDetail = "";
         private string focusStatsText = "—";
         private string focusDistractText = "";
+        private string buildStatsText = "";
+        private string focusTrendGoalText = "";
+        private string focusTrendTotalsText = "";
 
         // —— 维护中心（仅 Daily 页）——
         private string healthSummaryText = "—";
@@ -460,6 +463,12 @@ namespace CaelusApp
         public string FocusStatsText { get { return focusStatsText; } private set { SetProperty(ref focusStatsText, value, "FocusStatsText"); } }
         /// <summary>今日分心按名 Top 文案（空串时 XAML 行近零高）。</summary>
         public string FocusDistractText { get { return focusDistractText; } private set { SetProperty(ref focusDistractText, value, "FocusDistractText"); } }
+        /// <summary>今日编译次数与时长（空串时 XAML 行近零高）。</summary>
+        public string BuildStatsText { get { return buildStatsText; } private set { SetProperty(ref buildStatsText, value, "BuildStatsText"); } }
+        /// <summary>专注目标进度：「今日 141 / 240 分钟（59%）」。</summary>
+        public string FocusTrendGoalText { get { return focusTrendGoalText; } private set { SetProperty(ref focusTrendGoalText, value, "FocusTrendGoalText"); } }
+        /// <summary>近 7 日合计与分心/阻断汇总。</summary>
+        public string FocusTrendTotalsText { get { return focusTrendTotalsText; } private set { SetProperty(ref focusTrendTotalsText, value, "FocusTrendTotalsText"); } }
         public ObservableCollection<ScenarioSourceRowViewModel> SourceRows { get; private set; }
 
         public bool HealthZoneVisible { get { return !isDev; } }
@@ -497,6 +506,9 @@ namespace CaelusApp
                     : "今天专注 " + FormatSeconds(seconds) + " · " + sessions + " 次会话";
                 string top = FocusStats.TodayDistractTopText(DateTime.Now);
                 FocusDistractText = top.Length == 0 ? "" : "今日分心：" + top;
+                long buildSec = FocusStats.TodayBuildSeconds(DateTime.Now);
+                int buildN = FocusStats.TodayBuildSessions(DateTime.Now);
+                BuildStatsText = buildN <= 0 ? "" : "编译 " + buildN + " 次 · " + FormatSeconds(buildSec);
                 // 今日口径变化（会话结束/分心命中/日切）才重读历史文件，2 秒轮询不做无谓 IO
                 RefreshFocusTrend(false);
             }
@@ -580,6 +592,23 @@ namespace CaelusApp
                     IsToday = today
                 });
             }
+
+            // 目标进度与近 7 日合计（随趋势签名一起刷新，不做额外 IO）
+            int goal = FocusStats.GoalMinutes();
+            long todaySec = FocusStats.TodaySeconds(now);
+            long pct = todaySec * 100 / (goal * 60L);
+            if (pct > 100) pct = 100;
+            FocusTrendGoalText = "今日 " + (todaySec / 60) + " / " + goal + " 分钟（" + pct + "%）";
+            long totalSec = 0;
+            int totalDis = 0, totalBlk = 0;
+            foreach (FocusDayRecord r in all)
+            {
+                totalSec += r.FocusSeconds;
+                totalDis += r.Distract;
+                totalBlk += r.Blocked;
+            }
+            FocusTrendTotalsText = "近 7 日合计 " + FormatSeconds(totalSec)
+                + " · 分心 " + totalDis + " 次" + (totalBlk > 0 ? " · 阻断 " + totalBlk + " 次" : "");
         }
 
         /// <summary>「立即执行」门控：游戏掌权或 60 秒冷却内禁用。只读内存状态，可由 2 秒轮询反复调。</summary>

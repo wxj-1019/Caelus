@@ -217,7 +217,8 @@ namespace CaelusApp
                     if (pc.Kind == ProcessChangeKind.Started && isDistract != null && isDistract(pc.Name))
                     {
                         DistractAction act = DecideDistractAction(
-                            granted, FocusModeOn, distractNotified.Contains(pc.Name), BlockDistractOn);
+                            granted, FocusModeOn, distractNotified.Contains(pc.Name), BlockDistractOn,
+                            DevServiceCatalog.IsMatch(pc.Name));
                         if (act != DistractAction.None)
                         {
                             bool blocked = act == DistractAction.NotifyAndBlock || act == DistractAction.BlockAgain;
@@ -338,9 +339,12 @@ namespace CaelusApp
         }
 
         /// <summary>分心动作策略（纯逻辑，可单测）：只在「掌权且专注模式开」时动作；
-        /// 提醒按名去重（alreadyNotified），阻断开关把动作升级为阻断且不去重。</summary>
-        internal static DistractAction DecideDistractAction(bool granted, bool focusOn, bool alreadyNotified, bool blockOn)
+        /// 提醒按名去重（alreadyNotified），阻断开关把动作升级为阻断且不去重。
+        /// 守护服务清单优先：已注册开发服务不是分心应用（与后台压制豁免同序），
+        /// 否则「自动拉起 vs 专注阻断」会对同一进程形成拉起→关闭→再拉起的死循环。</summary>
+        internal static DistractAction DecideDistractAction(bool granted, bool focusOn, bool alreadyNotified, bool blockOn, bool isDevService)
         {
+            if (isDevService) return DistractAction.None;
             if (!granted || !focusOn) return DistractAction.None;
             if (blockOn) return alreadyNotified ? DistractAction.BlockAgain : DistractAction.NotifyAndBlock;
             return alreadyNotified ? DistractAction.None : DistractAction.NotifyOnly;

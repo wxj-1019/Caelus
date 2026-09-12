@@ -818,15 +818,21 @@ namespace CaelusApp
         }
 
         // 分心策略真值表：未掌权/未开专注不动作；提醒按名去重；阻断开关把动作升级为阻断
-        // （阻断不去重——用户手滑再开分心应用仍会被关回去，但不会被气球刷屏）
+        // （阻断不去重——用户手滑再开分心应用仍会被关回去，但不会被气球刷屏）；
+        // 守护服务清单优先——命中服务的名字绝不按分心处理（否则自动拉起与阻断互相残杀成死循环）
         private static void TestDistractActionPolicy()
         {
-            Eq(DistractAction.None, DevFocus.DecideDistractAction(false, true, false, false));
-            Eq(DistractAction.None, DevFocus.DecideDistractAction(true, false, false, false));
-            Eq(DistractAction.None, DevFocus.DecideDistractAction(true, true, true, false));
-            Eq(DistractAction.NotifyOnly, DevFocus.DecideDistractAction(true, true, false, false));
-            Eq(DistractAction.NotifyAndBlock, DevFocus.DecideDistractAction(true, true, false, true));
-            Eq(DistractAction.BlockAgain, DevFocus.DecideDistractAction(true, true, true, true));
+            Eq(DistractAction.None, DevFocus.DecideDistractAction(false, true, false, false, false));
+            Eq(DistractAction.None, DevFocus.DecideDistractAction(true, false, false, false, false));
+            Eq(DistractAction.None, DevFocus.DecideDistractAction(true, true, true, false, false));
+            Eq(DistractAction.NotifyOnly, DevFocus.DecideDistractAction(true, true, false, false, false));
+            Eq(DistractAction.NotifyAndBlock, DevFocus.DecideDistractAction(true, true, false, true, false));
+            Eq(DistractAction.BlockAgain, DevFocus.DecideDistractAction(true, true, true, true, false));
+
+            // 服务优先：即使掌权+专注+阻断全开、且名字在分心清单里，服务名一律不动作
+            Eq(DistractAction.None, DevFocus.DecideDistractAction(true, true, false, true, true));
+            Eq(DistractAction.None, DevFocus.DecideDistractAction(true, true, true, true, true));
+            Eq(DistractAction.None, DevFocus.DecideDistractAction(false, false, false, false, true));
         }
 
         // 阻断气球限频：30 秒/名，未记录过立即允许

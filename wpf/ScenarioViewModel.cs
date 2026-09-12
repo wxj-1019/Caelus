@@ -406,6 +406,7 @@ namespace CaelusApp
             SourceRows = new ObservableCollection<ScenarioSourceRowViewModel>();
             HealthHistoryRows = new ObservableCollection<HealthHistoryRow>();
             FocusTrendRows = new ObservableCollection<FocusTrendRow>();
+            DailyTrendRows = new ObservableCollection<FocusTrendRow>();
             StartupFindings = new ObservableCollection<StartupFindingRow>();
             StartupDisabled = new ObservableCollection<StartupFindingRow>();
             source.Changed += OnSourceChanged;
@@ -456,6 +457,10 @@ namespace CaelusApp
         public bool FocusModeOn { get { return FocusMode; } }
         public bool FocusTrendVisible { get { return isDev; } }
         public ObservableCollection<FocusTrendRow> FocusTrendRows { get; private set; }
+        public bool DailyTrendVisible { get { return !isDev; } }
+        public ObservableCollection<FocusTrendRow> DailyTrendRows { get; private set; }
+        /// <summary>距下次自动维护的倒计时文案（空串时 XAML 行近零高）。</summary>
+        public string HealthNextDueText { get { return healthNextDueText; } private set { SetProperty(ref healthNextDueText, value, "HealthNextDueText"); } }
 
         public string StateText { get { return stateText; } private set { SetProperty(ref stateText, value, "StateText"); } }
         public string StateKey { get { return stateKey; } private set { SetProperty(ref stateKey, value, "StateKey"); } }
@@ -555,11 +560,16 @@ namespace CaelusApp
             {
                 RefreshHealthZone(false);
                 RefreshHealthRunGate();   // 每 2 秒重算按钮门控（纯内存无 IO）：游戏退出/冷却结束自动恢复可点
+                RefreshDailyTrend(false);
             }
         }
 
         private bool focusTrendLoaded;
         private string lastTrendSignature;
+        private bool dailyTrendLoaded;
+        private string lastDailyTrendSignature;
+        private string dailyTrendTotalsText = "";
+        private string healthNextDueText = "";
 
         /// <summary>近 7 日趋势刷新。force=false 时仅当日口径（秒/会话/分心/日期）变化才重读文件。
         /// 只能 UI 线程调用（碰 ObservableCollection）。</summary>
@@ -621,6 +631,68 @@ namespace CaelusApp
                 : cooldown ? "刚刚执行过，请稍候再试（60 秒间隔）" : "";
         }
 
+        /// <summary>日常趋势刷新：近 7 日日常家族掌权时长。签名 = 今日秒/会话/日期，变化才重读文件。
+        /// 日常活跃可能整天（家族窗口常开），分钟标签换小时格式（9h18m）。</summary>
+        private void RefreshDailyTrend(bool force)
+        {
+            if (isDev) return;
+            DateTime now = DateTime.Now;
+            string sig = DailyStats.TodaySeconds(now) + "|" + DailyStats.TodaySessions(now)
+                + "|" + now.ToString("yyyy-MM-dd");
+            if (dailyTrendLoaded && !force && sig == lastDailyTrendSignature) return;
+            dailyTrendLoaded = true;
+            lastDailyTrendSignature = sig;
+
+            var all = FocusHistory.LastDays(7, now);
+            long max = 1;
+            foreach (FocusDayRecord r in all) if (r.DailySeconds > max) max = r.DailySeconds;
+            DailyTrendRows.Clear();
+            for (int i = 0; i < all.Count; i++)
+            {
+                FocusDayRecord r = all[i];
+                bool today = i == all.Count - 1;
+                DailyTrendRows.Add(new FocusTrendRow
+                {
+                    DayText = today ? "今天" : r.Day.Substring(5),
+                    MinutesText = r.DailySeconds >= 3600
+                        ? (r.DailySeconds / 3600) + "h" + ((r.DailySeconds % 3600) / 60) + "m"
+                        : (r.DailySeconds >= 60 ? (r.DailySeconds / 60) + "m" : (r.DailySeconds > 0 ? "<1m" : "")),
+                    BarHeight = r.DailySeconds <= 0 ? 2.0 : Math.Max(6.0, 56.0 * r.DailySeconds / max),
+                    DistractText = "",
+                    IsToday = today
+                });
+            }
+            long total = 0;
+            foreach (FocusDayRecord r in all) total += r.DailySeconds;
+            DailyTrendTotalsText = "近 7 日合计 " + FormatSeconds(total);
+        }
+
+        /// <summary>日常趋势近 7 日合计文案。</summary>
+        public string DailyTrendTotalsText { get { return dailyTrendTotalsText; } private set { SetProperty(ref dailyTrendTotalsText, value, "DailyTrendTotalsText"); } }
+
+        /// <summary>维护到期倒计时：纯日期计算（HealthLastRun + 间隔天数），不动调度语义。
+        /// 从未运行/数据损坏 → 空串（隐藏行）。</summary>
+        private void RefreshHealthNextDue()
+        {
+            string stamp = Settings.LoadStr("HealthLastRun", "");
+            DateTime last;
+            if (string.IsNullOrEmpty(stamp) || !DateTime.TryParseExact(stamp, "yyyy-MM-dd",
+                null, System.Globalization.DateTimeStyles.None, out last))
+            {
+                HealthNextDueText = "";
+                return;
+            }
+            DateTime due = last.Date.AddDays(HealthCare.IntervalDays());
+            DateTime now = DateTime.Now;
+            if (due <= now.Date)
+            {
+                HealthNextDueText = "维护已到期，满足条件时自动执行（游戏进行中会顺延）";
+                return;
+            }
+            double hours = Math.Ceiling((due - now).TotalHours);
+            HealthNextDueText = "距下次自动维护约 " + (int)hours + " 小时";
+        }
+
         /// <summary>维护区刷新。force=false 且已加载过则跳过（2 秒轮询不重复读 TSV/注册表）。
         /// 只能 UI 线程调用（碰 ObservableCollection）；后台动作完成后经 Dispatcher 回来调 force=true。</summary>
         public void RefreshHealthZone(bool force)
@@ -630,6 +702,7 @@ namespace CaelusApp
             healthZoneLoaded = true;
 
             RefreshHealthRunGate();
+            RefreshHealthNextDue();
 
             var all = HealthHistory.LoadAll();
             HealthHistoryRows.Clear();

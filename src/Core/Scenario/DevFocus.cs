@@ -368,6 +368,21 @@ namespace CaelusApp
             return e > 0 ? e : 0;
         }
 
+        /// <summary>开发专注/日常场景的压制豁免组合（两宿主共用，改动只此一处）：
+        /// 游戏白名单 OR 守护服务 OR 日常家族（浏览器/Office/会议）。
+        /// 日常家族入列的理由：编译位压制会降所有无窗口后台进程的优先级——浏览器的 GPU/解码
+        /// 进程正是无窗口的，看视频/开会时会被误伤卡顿（2026-09-12 实机报告：压制 191 进程后
+        /// 视频卡）；与日常场景「家族豁免压制」的既有语义一致，代价是编译期前台应用少让少量 CPU。
+        /// 注：日常家族走名称+路径双校验，路径取不到（受保护进程）时按未命中处理（这类进程
+        /// 本就被反作弊通道豁免）。</summary>
+        internal static Func<string, string, bool> ComposeWhitelist(Func<string, string, bool> gameWhitelist)
+        {
+            return (name, path) =>
+                (gameWhitelist != null && gameWhitelist(name, path))
+                || DevServiceCatalog.IsMatch(name)
+                || DailyCatalog.IsMatch(name, path);
+        }
+
         /// <summary>分心动作策略（纯逻辑，可单测）：只在「掌权且专注模式开」时动作；
         /// 提醒按名去重（alreadyNotified），阻断开关把动作升级为阻断且不去重。
         /// 守护服务清单优先：已注册开发服务不是分心应用（与后台压制豁免同序），

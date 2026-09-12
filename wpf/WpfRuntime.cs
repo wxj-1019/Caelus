@@ -468,8 +468,10 @@ namespace CaelusApp.WpfHost
             // 这里保证游戏活跃时开发/日常场景被还原式挂起。
             arbiter.Register(new GameScenario());
             // 开发服务在 DevFocus/DailyCare 的压制扫描中被豁免（白名单 OR 已注册开发服务）
-            Func<string, string, bool> devWhitelist = (name, path) =>
-                gameMode.IsProcessWhitelisted(name, path) || DevServiceCatalog.IsMatch(name);
+            // 压制豁免组合两宿主共用（游戏白名单 OR 守护服务 OR 日常家族）：
+            // 日常家族入列——编译位压制不再降浏览器/Office 的 GPU/解码进程优先级，看视频不误伤
+            Func<string, string, bool> devWhitelist =
+                DevFocus.ComposeWhitelist((name, path) => gameMode.IsProcessWhitelisted(name, path));
             devFocus = new DevFocus(arbiter, core,
                 () => Settings.Load("DevModeOn", true),
                 devWhitelist,

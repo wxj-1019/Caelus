@@ -922,6 +922,55 @@ namespace CaelusApp
         }
 
 
+
+        // 压制豁免组合：游戏白名单 OR 守护服务 OR 日常家族（浏览器/Office/会议）。
+        // 日常家族入列修复实机问题：编译位压制降无窗口后台优先级时误伤浏览器 GPU/解码进程，
+        // 看视频卡顿（2026-09-12 实机：压制 191 进程后视频卡）。写 Settings——注册在临时存储之后。
+        private static void TestDevFocusWhitelistComposed()
+        {
+            string dir = NewTempDir("devfocus-wl");
+            var core = new SuppressionCore(Path.Combine(dir, "s.state"));
+            Func<string, string, bool> wl = DevFocus.ComposeWhitelist((n, p) => false);
+            int self = Process.GetCurrentProcess().Id;
+            int session = Process.GetCurrentProcess().SessionId;
+            var noWindows = new HashSet<int>();
+            string winRoot = Environment.GetFolderPath(Environment.SpecialFolder.Windows);
+            string chrome = Path.Combine(
+                Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles),
+                @"Google\Chrome\Application\chrome.exe");
+            try
+            {
+                // 日常家族（浏览器标准路径）豁免——GPU/解码进程同族同路径一并安全
+                Eq(false, DevFocus.ShouldSuppressBackground(
+                    5000, self, "chrome", chrome,
+                    session, session, 0, noWindows, winRoot, wl));
+                // 守护服务豁免
+                Settings.SaveStr("DevServiceList", "node");
+                DevServiceCatalog.Reload();
+                Eq(false, DevFocus.ShouldSuppressBackground(
+                    5001, self, "node", @"C:
+ode
+ode.exe",
+                    session, session, 0, noWindows, winRoot, wl));
+                Settings.SaveStr("DevServiceList", "");
+                DevServiceCatalog.Reload();
+                // 游戏白名单透传
+                Eq(false, DevFocus.ShouldSuppressBackground(
+                    5002, self, "mygame", @"C:\Games\mygame.exe",
+                    session, session, 0, noWindows, winRoot,
+                    DevFocus.ComposeWhitelist((n, p) => n == "mygame")));
+                // 无关后台仍压制（豁免没有扩大化）
+                Eq(true, DevFocus.ShouldSuppressBackground(
+                    5003, self, "someapp", @"C:\Apps\someapp.exe",
+                    session, session, 0, noWindows, winRoot, wl));
+            }
+            finally
+            {
+                core.ReleaseReason(SuppressReason.Build);
+                DeleteTempDir(dir);
+            }
+        }
+
         // 编译起止守卫（纯逻辑）：无起点一律记 0——初始扫描加入的进程在第一批事件里结束时
         // 若 buildStartTicks 未置位，旧实现会计出天文时长写爆今日统计
         private static void TestBuildEndedElapsedGuard()

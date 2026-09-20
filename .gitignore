@@ -36,3 +36,5 @@ wpf/obj/
 .zcode/
 logs/
 release/
+
+.planflow/workflow.json

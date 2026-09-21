@@ -37,4 +37,4 @@ wpf/obj/
 logs/
 release/
 
-.planflow/workflow.json
+.waymark/workflow.json

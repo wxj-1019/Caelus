@@ -1,6 +1,6 @@
 // @author zenjiro 18967498922@163.com
-// 文件用途 颜色工具（Lerp/Alpha）。从 src/Ui/Theme.cs 拆出以便 WPF 宿主与
-// WinForms 界面共享（IconArt 图标渲染在双宿主都会用到）
+// 文件用途 颜色工具（Lerp/Alpha）。最初从旧 WinForms Theme.cs 拆出，
+// 现由 WPF 单一宿主使用（IconArt 图标渲染等）
 
 using System.Drawing;
 

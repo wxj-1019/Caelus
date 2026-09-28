@@ -8,7 +8,7 @@
 
 [![Platform](https://img.shields.io/badge/platform-Windows%2010%2F11-%235E5CE6)](https://github.com/wxj-1019/Caelus)
 [![Language](https://img.shields.io/badge/language-C%23%20.NET%20Framework%204.x-%237A78F0)](https://github.com/wxj-1019/Caelus)
-[![Self-tests](https://img.shields.io/badge/self%2Dtests-276%20passing-%233DD68C)](https://github.com/wxj-1019/Caelus)
+[![Self-tests](https://img.shields.io/badge/self%2Dtests-271%20passing-%233DD68C)](https://github.com/wxj-1019/Caelus)
 [![Privacy](https://img.shields.io/badge/privacy-local%20only%20%C2%B7%20zero%20upload-%233DD68C)](https://github.com/wxj-1019/Caelus)
 [![License](https://img.shields.io/badge/license-resale%20forbidden-%23E5A13D)](LICENSE)
 
@@ -150,7 +150,8 @@ Put an empty `Caelus.portable` file next to the executable, and if that director
 
 - `src/Core` — target detection, scheduling, suppression and recovery
 - `src/Platform` — Windows APIs, settings, paths and service wrappers
-- `src/Ui` — WinForms interface and owner-drawn controls; `src/Ui/Pages` is one file per page, `src/Ui/Controls` holds the custom controls
+- `src/UiShared` — ViewModels, palettes and icon rendering shared by the UI layer
+- `wpf/` — the single WPF interface (marshmallow-sky design system + the WpfRuntime host, link-compiling `src/Core`)
 - `tests` — the built-in self-tests (compiled in only for `build.cmd xxx.exe --selftest`; release builds contain no test code)
 - `scripts` — application smoke test
 
@@ -158,7 +159,7 @@ The implementation uses Windows APIs including `SetPriorityClass`, `SetProcessDe
 
 ## Validation scope
 
-The built-in suite currently contains `276` tests, covering target detection and session protection, suppression and recovery (including PID reuse and crash wake-up), CPU topology and partitioning, profile storage format compatibility and unknown-version protection, game scanning and accelerator filtering, the boundaries of the launcher-learning mechanism, system audit thresholds, League column boundaries and UI rendering. A missing platform capability is recorded as `SKIP`, never as `PASS`.
+The built-in suite currently contains `271` tests, covering target detection and session protection, suppression and recovery (including PID reuse and crash wake-up), CPU topology and partitioning, profile storage format compatibility and unknown-version protection, game scanning and accelerator filtering, the boundaries of the launcher-learning mechanism, system audit thresholds, League column boundaries and UI rendering. A missing platform capability is recorded as `SKIP`, never as `PASS`.
 
 The same-core contention test deliberately puts two compute processes on one core and suspends the contender. It only shows that throughput recovers once CPU time is released — it is not evidence of real-game FPS or 1% Low gains.
 

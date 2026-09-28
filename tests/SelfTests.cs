@@ -8,7 +8,6 @@ using System.Drawing;
 using System.IO;
 using System.Text;
 using System.Threading;
-using System.Windows.Forms;
 using Microsoft.Win32;
 
 namespace CaelusApp
@@ -83,11 +82,6 @@ namespace CaelusApp
                 RunNvProbe(args[1], args.Length >= 3 ? args[2] : null);
                 return true;
             }
-            if (args[0] == "--white-shot" && args.Length >= 2)
-            {
-                RunWhitelistShot(args[1]);
-                return true;
-            }
             if (args[0] == "--irq-map" && args.Length >= 2)
             {
                 RunIrqMap(args[1], args.Length >= 3 ? args[2] : null,
@@ -120,21 +114,6 @@ namespace CaelusApp
             if (args[0] == "--host-probe" && args.Length >= 2)
             {
                 RunGameHostProbe(args[1], args.Length >= 3 ? args[2] : null);
-                return true;
-            }
-            if (args[0] == "--intro-probe" && args.Length >= 2)
-            {
-                RunIntroProbe(args[1]);
-                return true;
-            }
-            if (args[0] == "--menu-probe" && args.Length >= 2)
-            {
-                RunMenuProbe(args[1], args.Length >= 3 ? args[2] : null);
-                return true;
-            }
-            if (args[0] == "--notes-probe" && args.Length >= 2)
-            {
-                RunNotesProbe(args[1], args.Length >= 3 ? args[2] : "zh");
                 return true;
             }
             if (args[0] == "--profile-probe" && args.Length >= 3)
@@ -569,148 +548,6 @@ namespace CaelusApp
             Environment.ExitCode = 0;
         }
 
-        private static void RunIntroProbe(string output)
-        {
-            var sb = new System.Text.StringBuilder();
-            string data = Path.Combine(Path.GetTempPath(), "CaelusIntroProbe_" + Process.GetCurrentProcess().Id);
-            try
-            {
-                Directory.CreateDirectory(data);
-                Logger.LogPath = Path.Combine(data, "intro.log");
-                Dpi.Init();
-                Lang.Init();
-                Application.EnableVisualStyles();
-                Application.SetCompatibleTextRenderingDefault(false);
-                var core = new SuppressionCore();
-                var tamer = new Tamer(core);
-                var mode = new GameMode(data, core);
-                var testArbiter = new ScenarioArbiter();
-                var testDevFocus = new DevFocus(testArbiter, core, () => false, (a, b) => false, c => false);
-                using (var f = new PanelForm(tamer, mode, testDevFocus, IconArt.MakeIcon(Dpi.S(24)), true))
-                {
-                    GC.KeepAlive(f.Handle);
-                    f.StartPosition = FormStartPosition.Manual;
-                    f.Location = new Point(-20000, -20000);
-                    f.ShowPanel();
-                    int settledTop = 0;
-                    var samples = new List<string>();
-                    double minOpacity = 2d, maxOpacity = -1d;
-                    int topSpread = 0, firstTop = f.Top;
-                    for (int i = 0; i < 40; i++)
-                    {
-                        Application.DoEvents();
-                        double op = f.Opacity;
-                        int top = f.Top;
-                        if (op < minOpacity) minOpacity = op;
-                        if (op > maxOpacity) maxOpacity = op;
-                        int delta = top - firstTop;
-                        if (Math.Abs(delta) > Math.Abs(topSpread)) topSpread = delta;
-                        if (i % 4 == 0) samples.Add("  frame " + i + ": opacity=" + op.ToString("0.000") + " top=" + top);
-                        settledTop = top;
-                        Thread.Sleep(20);
-                    }
-                    Application.DoEvents();
-                    sb.AppendLine("=== 开场动画逐帧采样 ===");
-                    foreach (string s in samples) sb.AppendLine(s);
-                    sb.AppendLine();
-                    sb.AppendLine("opacity 区间: " + minOpacity.ToString("0.000") + " → " + maxOpacity.ToString("0.000"));
-                    sb.AppendLine("Top 相对起点最大位移: " + topSpread + " px");
-                    sb.AppendLine("最终 opacity=" + f.Opacity.ToString("0.000") + " 最终 Top=" + settledTop);
-                    sb.AppendLine();
-                    sb.AppendLine("判定 渐变生效: " + (minOpacity < 0.35d && maxOpacity > 0.95d));
-                    sb.AppendLine("判定 上浮生效: " + (Math.Abs(topSpread) >= 4));
-                    sb.AppendLine("判定 最终完全不透明: " + (Math.Abs(f.Opacity - 1d) < 0.001d));
-                }
-            }
-            catch (Exception ex) { sb.AppendLine("ERROR: " + ex); }
-            finally { try { Directory.Delete(data, true); } catch { } }
-            string text = sb.ToString();
-            try { if (output != null) File.WriteAllText(output, text, Encoding.UTF8); } catch { }
-            Environment.ExitCode = 0;
-        }
-
-        private static void RunMenuProbe(string output, string dumpPath)
-        {
-            string data = Path.Combine(Path.GetTempPath(), "CaelusMenuProbe_" + Process.GetCurrentProcess().Id);
-            var sb = new System.Text.StringBuilder();
-            try
-            {
-                Directory.CreateDirectory(data);
-                Logger.LogPath = Path.Combine(data, "menu.log");
-                Dpi.Init();
-                Lang.Init();
-                Application.EnableVisualStyles();
-                Application.SetCompatibleTextRenderingDefault(false);
-                var core = new SuppressionCore();
-                var tamer = new Tamer(core);
-                var mode = new GameMode(data, core);
-                var arbiter = new ScenarioArbiter();
-                var devFocus = new DevFocus(arbiter, core, () => false, (a, b) => false, c => false);
-                var tray = new TrayMenu(tamer, mode, devFocus, delegate { }, delegate { }, delegate { });
-                ContextMenuStrip strip = tray.Strip;
-                strip.Show(new Point(-20000, -20000));
-                for (int i = 0; i < 12; i++) { Application.DoEvents(); Thread.Sleep(20); }
-
-                sb.AppendLine("strip size=" + strip.Size + " padding=" + strip.Padding);
-                foreach (ToolStripItem it in strip.Items)
-                {
-                    if (it is ToolStripSeparator) { sb.AppendLine("  ---- separator h=" + it.Height); continue; }
-                    Size pref = it.GetPreferredSize(Size.Empty);
-                    Size text = TextRenderer.MeasureText(it.Text, it.Font, Size.Empty, TextFormatFlags.NoPadding);
-                    int topGap = it.Padding.Top;
-                    int bottomGap = it.Padding.Bottom;
-                    int slack = it.Height - it.Padding.Top - it.Padding.Bottom - text.Height;
-                    sb.AppendLine("  \"" + it.Text.Trim() + "\" h=" + it.Height
-                        + " pad=(t" + topGap + ",b" + bottomGap + ")"
-                        + " textH=" + text.Height + " pref=" + pref.Height
-                        + " 余量=" + slack + " textAlign=" + it.TextAlign);
-                }
-
-                using (var bmp = new Bitmap(strip.Width, strip.Height))
-                {
-                    strip.DrawToBitmap(bmp, new Rectangle(0, 0, strip.Width, strip.Height));
-                    bmp.Save(output, System.Drawing.Imaging.ImageFormat.Png);
-                }
-                strip.Close();
-            }
-            catch (Exception ex) { sb.AppendLine("ERROR: " + ex); }
-            finally { try { Directory.Delete(data, true); } catch { } }
-            try { if (dumpPath != null) File.WriteAllText(dumpPath, sb.ToString(), Encoding.UTF8); } catch { }
-            Environment.ExitCode = 0;
-        }
-
-        private static void RunNotesProbe(string output, string language)
-        {
-            const string seenKey = "LastSeenNotesVersion";
-            string prevSeen = null;
-            try
-            {
-                Dpi.Init();
-                Paths.Init();
-                Lang.Init();
-                Lang.Cur = language == "en" ? 1 : (language == "ja" ? 2 : 0);
-                Application.EnableVisualStyles();
-                Application.SetCompatibleTextRenderingDefault(false);
-                prevSeen = Settings.LoadStr(seenKey, "");
-                using (var dlg = new ReleaseNotesDialog())
-                {
-                    dlg.StartPosition = FormStartPosition.Manual;
-                    dlg.Location = new Point(-20000, -20000);
-                    dlg.Show();
-                    for (int i = 0; i < 25; i++) { Application.DoEvents(); Thread.Sleep(20); }
-                    using (var bmp = new Bitmap(dlg.ClientSize.Width, dlg.ClientSize.Height))
-                    {
-                        dlg.DrawToBitmap(bmp, new Rectangle(Point.Empty, dlg.ClientSize));
-                        bmp.Save(output, System.Drawing.Imaging.ImageFormat.Png);
-                    }
-                    dlg.Hide();
-                }
-            }
-            catch (Exception ex) { try { File.WriteAllText(output + ".err.txt", ex.ToString(), Encoding.UTF8); } catch { } }
-            finally { try { if (prevSeen != null) Settings.SaveStr(seenKey, prevSeen); } catch { } }
-            Environment.ExitCode = 0;
-        }
-
         private static void RunGameHostProbe(string dataDir, string output)
         {
             var sb = new System.Text.StringBuilder();
@@ -883,7 +720,6 @@ namespace CaelusApp
             test("场景仲裁：全部解除后掌权者为空", TestArbiterEmptyGrantsNull);
             test("场景仲裁：重复报告无副作用", TestArbiterDuplicateReportNoOp);
             test("场景仲裁：掌权者变更事件", TestArbiterGrantedChangedEvent);
-            test("场景仲裁：掌权场景状态后缀映射", TestScenarioStatusSuffix);
             test("场景仲裁：未注册场景的报告记账但被忽略", TestArbiterUnregisteredKindIgnored);
             test("场景仲裁：并发报告不产生交错非法序列", TestArbiterConcurrentReports);
             test("场景仲裁：游戏激活事件驱动仲裁报告", TestGameModeActiveChangedEvent);
@@ -1015,22 +851,6 @@ namespace CaelusApp
                 Eq(null, TaskHelper.ParseTaskArgumentsXml("<Task><Actions/></Task>"));
             });
             test("版本元数据：产品版本与文件版本齐全", TestReleaseMetadata);
-            test("模式配色：底色固定，常规 / 竞技 / 自定义强调色各不相同", () =>
-            {
-                Color bg = Theme.Bg;
-                if (Theme.ModeColor(PerformancePreset.Standard) == Theme.ModeColor(PerformancePreset.Competitive)) throw new Exception("Standard and Competitive accents match");
-                if (Theme.ModeColor(PerformancePreset.Competitive) == Theme.ModeColor(PerformancePreset.Custom)) throw new Exception("Competitive and Custom accents match");
-                Theme.SetMode(PerformancePreset.Competitive, false);
-                Eq(Theme.ModeColor(PerformancePreset.Competitive), Theme.Accent);
-                Eq(bg, Theme.Bg);
-                Theme.SetMode(PerformancePreset.Custom, true);
-                Color start = Theme.Accent;
-                Theme.StepTheme();
-                if (Theme.Accent == start || Theme.Accent == Theme.ModeColor(PerformancePreset.Custom)) throw new Exception("theme transition did not interpolate");
-                while (Theme.StepTheme()) { }
-                Eq(Theme.ModeColor(PerformancePreset.Custom), Theme.Accent);
-                Theme.SetMode(PerformancePreset.Standard, false);
-            });
             test("桌面主题钩子：未注入时安全回退，注入后跟随应用主题", TestNativeLightModeHook);
             test("调色板：深浅主题 13 个 Token 齐全且为合法 hex", TestPaletteCompleteness);
             test("调色板：语义色互异，品牌色跨主题固定为 #D4A847", TestPaletteSemantics);
@@ -1053,13 +873,12 @@ namespace CaelusApp
             test("模式色板：三模式互异且巡航/战备色相距足够远", TestModePaletteDistinct);
             test("模式色板：ModeAccent 深浅两档对比度达到 AA", TestModeAccentContrast);
             test("策略项：三分组共 21 项，标题/说明/属性名齐全", TestPolicyItemsCompleteness);
-            test("策略锁定矩阵：与 WinForms 一致的锁定语义（StrictCore 可编辑、PauseSvc 恒 false、Custom 放开）", TestPolicyLockMatrix);
+            test("策略锁定矩阵：StrictCore 可编辑、PauseSvc 恒 false、Custom 放开", TestPolicyLockMatrix);
             test("策略属性映射：21 项 get/set 正确读写 GameMode", TestPolicyPropertyAccess);
             test("游戏库 VM：列表刷新 + 添加 + 移除", TestLibraryRefresh);
             test("游戏库 VM：重复添加检测", TestLibraryAddDuplicate);
             test("游戏库 VM：空态显示", TestLibraryEmptyState);
             test("运行时图标：托盘图标铺满画布并随生效模式变化", TestModeIcons);
-            test("仪表盘动效：各图层逐帧独立推进", TestDashboardMotion);
             test("高 DPI 字体：100% 到 200% 缩放下正文字号都落在整数像素上", () =>
             {
                 float old = Dpi.Scale;
@@ -1078,7 +897,7 @@ namespace CaelusApp
                 }
                 finally { Dpi.Scale = old; }
             });
-            test("DPI 变化：仅在真实变化时更新缩放并丢弃字体缓存", () =>
+            test("DPI 变化：仅在真实变化时更新缩放", () =>
             {
                 float old = Dpi.Scale;
                 try
@@ -1094,16 +913,8 @@ namespace CaelusApp
                     Eq(false, Dpi.Update(0));
                     Eq(false, Dpi.Update(-96));
                     Eq(1f, Dpi.Scale);
-
-                    Dpi.Scale = 1f;
-                    float at100 = Theme.UI(9.5f, false).SizeInPoints;
-                    Eq(true, Dpi.Update(192));
-                    Theme.DropFontCache();
-                    float at200 = Theme.UI(9.5f, false).SizeInPoints;
-                    if (Math.Abs(at100 - at200) < 0.01f)
-                        throw new Exception("font cache survived a DPI change: " + at100 + " vs " + at200);
                 }
-                finally { Dpi.Scale = old; Theme.DropFontCache(); }
+                finally { Dpi.Scale = old; }
             });
             test("DPI 缩放：只认真实变化，探测本身不改变缩放值", () =>
             {
@@ -1125,7 +936,7 @@ namespace CaelusApp
                     Eq(1f, Dpi.Scale);
                     Eq(0, Dpi.WindowDpi(IntPtr.Zero));
                 }
-                finally { Dpi.Scale = old; Theme.DropFontCache(); }
+                finally { Dpi.Scale = old; }
             });
             test("后台压力控制：持续高压升档，压力消失后降档", TestPressureController);
             test("游戏模式事件预算：普通进程增删仍走 20 秒对账，不退化为高频扫描", () =>
@@ -1351,8 +1162,6 @@ namespace CaelusApp
                 if (App.CompareVersions("1.0", null) <= 0) throw new Exception("unknown version must be treated as older");
                 if (App.CompareVersions("1.0", "garbage") <= 0) throw new Exception("unparsable version must be treated as older");
             });
-            test("体检页：滚动后重建列表会回到顶部", TestScrolledRebuild);
-            test("体检页：条目滑入动画不会闪出横向滚动条", TestEnterSlideKeepsScrollbarsStable);
             test("语言表：任何页面都不会显示未翻译的原始键名", TestNoUntranslatedKeysOnScreen);
             test("系统体检：效率模式区分接口可用与完整生效", () =>
             {
@@ -1644,26 +1453,6 @@ namespace CaelusApp
                 Eq(true, GameMode.BasicBackgroundEligible(9652, 99, "ChsIME",
                     @"C:\Windows\System32\InputMethod\CHS\ChsIME.exe", 1, 1, 20, false, win, false, null, true));
             });
-            test("主题字体：共享字体缓存可承受反复绘制", () =>
-            {
-
-                using (var panel = new EmptyStatePanel())
-                {
-                    panel.Size = new Size(320, 220);
-                    panel.ShowEmpty = true;
-                    panel.EmptyTitle = "TITLE";
-                    panel.EmptyDetail = "DETAIL";
-                    for (int i = 0; i < 3; i++)
-                        using (var bmp = new Bitmap(320, 220))
-                            panel.DrawToBitmap(bmp, new Rectangle(0, 0, 320, 220));
-                }
-
-                foreach (float size in new[] { 9.25f, 8.4f, 10.2f, 7.8f, 7.6f })
-                {
-                    if (Theme.UI(size, true).Height <= 0) throw new Exception(size + "pt bold font is unusable");
-                    if (Theme.UI(size, false).Height <= 0) throw new Exception(size + "pt font is unusable");
-                }
-            });
             test("Defender 排除项：路径匹配不会把邻近目录误认成自己添加的条目", () =>
             {
 
@@ -1733,27 +1522,27 @@ namespace CaelusApp
             {
                 bool last = false, armed = false;
 
-                Eq(AutoHideAction.None, PanelForm.NextAutoHide(true, ref last, ref armed, false, true));
-                Eq(AutoHideAction.Cancel, PanelForm.NextAutoHide(false, ref last, ref armed, false, true));
+                Eq(AutoHideAction.None, AutoHidePolicy.Next(true, ref last, ref armed, false, true));
+                Eq(AutoHideAction.Cancel, AutoHidePolicy.Next(false, ref last, ref armed, false, true));
 
                 last = false; armed = false;
-                Eq(AutoHideAction.Schedule, PanelForm.NextAutoHide(true, ref last, ref armed, true, true));
+                Eq(AutoHideAction.Schedule, AutoHidePolicy.Next(true, ref last, ref armed, true, true));
 
-                Eq(AutoHideAction.None, PanelForm.NextAutoHide(true, ref last, ref armed, true, true));
-                Eq(AutoHideAction.None, PanelForm.NextAutoHide(true, ref last, ref armed, true, true));
+                Eq(AutoHideAction.None, AutoHidePolicy.Next(true, ref last, ref armed, true, true));
+                Eq(AutoHideAction.None, AutoHidePolicy.Next(true, ref last, ref armed, true, true));
 
-                Eq(AutoHideAction.Cancel, PanelForm.NextAutoHide(false, ref last, ref armed, true, true));
+                Eq(AutoHideAction.Cancel, AutoHidePolicy.Next(false, ref last, ref armed, true, true));
                 Eq(false, armed);
 
-                Eq(AutoHideAction.Schedule, PanelForm.NextAutoHide(true, ref last, ref armed, true, true));
+                Eq(AutoHideAction.Schedule, AutoHidePolicy.Next(true, ref last, ref armed, true, true));
 
                 last = false; armed = false;
-                Eq(AutoHideAction.None, PanelForm.NextAutoHide(true, ref last, ref armed, true, false));
+                Eq(AutoHideAction.None, AutoHidePolicy.Next(true, ref last, ref armed, true, false));
                 Eq(true, armed);
 
-                Eq(AutoHideAction.None, PanelForm.NextAutoHide(true, ref last, ref armed, true, true));
+                Eq(AutoHideAction.None, AutoHidePolicy.Next(true, ref last, ref armed, true, true));
             });
-            test("界面休眠：隐藏或最小化的窗口不会唤醒动画定时器", TestUiDormancyState);
+            test("自动收起：可见性切换同步基线，激活边沿只触发一次", TestUiDormancyState);
             test("网络 QoS：策略名唯一、纯 ASCII 且长度受限", () =>
             {
                 string a = NetworkAffinityTweak.SanitizePolicyName("Valorant", @"C:\Games\Valorant\VALORANT.exe");
@@ -2204,7 +1993,7 @@ namespace CaelusApp
                 declared.Revision < 0 ? 0 : declared.Revision).ToString();
             Version assemblyVersion = typeof(App).Assembly.GetName().Version;
             Eq(expected, assemblyVersion == null ? "" : assemblyVersion.ToString());
-            FileVersionInfo info = FileVersionInfo.GetVersionInfo(Application.ExecutablePath);
+            FileVersionInfo info = FileVersionInfo.GetVersionInfo(Process.GetCurrentProcess().MainModule.FileName);
             Eq(expected, info.FileVersion);
             Eq("Caelus", info.ProductName);
             Eq("zenjiro", info.CompanyName);
@@ -2532,101 +2321,6 @@ namespace CaelusApp
             using (Bitmap c = IconArt.Render(32, PerformancePreset.Competitive, true)) competitive = IconFingerprint(c, false);
             using (Bitmap x = IconArt.Render(32, PerformancePreset.Custom, true)) custom = IconFingerprint(x, false);
             if (standard == competitive || competitive == custom || standard == custom) throw new Exception("mode icons are not visually distinct");
-        }
-
-        private static void TestEnterSlideKeepsScrollbarsStable()
-        {
-            using (var scroll = new Panel())
-            {
-                scroll.AutoScroll = true;
-                scroll.SetBounds(0, 0, 300, 400);
-                scroll.CreateControl();
-                int rowWidth = scroll.ClientSize.Width - 6;
-                for (int i = 0; i < 3; i++)
-                {
-                    var row = new Panel();
-                    row.SetBounds(6, i * 40, rowWidth, 32);
-                    scroll.Controls.Add(row);
-                }
-                scroll.PerformLayout();
-                if (scroll.HorizontalScroll.Visible)
-                    throw new Exception("precondition failed: rows already overflow horizontally");
-
-                foreach (Control row in scroll.Controls) row.Left = 6 - 22;
-                scroll.PerformLayout();
-                if (scroll.HorizontalScroll.Visible)
-                    throw new Exception("负向入场偏移不应撑出横向滚动条");
-
-                foreach (Control row in scroll.Controls) row.Left = 6 + 22;
-                scroll.PerformLayout();
-                if (!scroll.HorizontalScroll.Visible)
-                    throw new Exception("precondition failed: 正向偏移本应撑出横向滚动条");
-
-                foreach (Control row in scroll.Controls) row.Left = 6;
-                scroll.PerformLayout();
-            }
-        }
-
-        private static void TestScrolledRebuild()
-        {
-            using (var scroll = new Panel())
-            {
-                scroll.AutoScroll = true;
-                scroll.SetBounds(0, 0, 300, 160);
-                scroll.CreateControl();
-                for (int i = 0; i < 24; i++)
-                {
-                    var filler = new Label();
-                    filler.SetBounds(0, i * 40, 200, 32);
-                    scroll.Controls.Add(filler);
-                }
-                scroll.PerformLayout();
-                scroll.AutoScrollPosition = new Point(0, 500);
-                if (scroll.AutoScrollPosition.Y == 0)
-                    throw new Exception("panel did not scroll, precondition not met");
-
-                scroll.AutoScrollPosition = Point.Empty;
-                var stale = new Control[scroll.Controls.Count];
-                scroll.Controls.CopyTo(stale, 0);
-                scroll.Controls.Clear();
-                int disposed = 0;
-                foreach (Control c in stale) { c.Dispose(); disposed++; }
-                if (disposed != stale.Length) throw new Exception("not every stale control was released");
-                if (scroll.Controls.Count != 0) throw new Exception("controls survived the clear");
-
-                var first = new Label();
-                first.SetBounds(0, 2, 200, 32);
-                scroll.Controls.Add(first);
-                if (first.Top != 2)
-                    throw new Exception("rebuilt content starts at " + first.Top + " instead of 2");
-            }
-        }
-
-        private static void TestDashboardMotion()
-        {
-            Theme.SetMode(PerformancePreset.Competitive, false);
-            try
-            {
-                using (var core = new CaelusCore())
-                using (var first = new Bitmap(360, 342))
-                using (var second = new Bitmap(360, 342))
-                {
-                    core.SetBounds(0, 0, 360, 342);
-                    core.SetState(PerformancePreset.Competitive, true, true);
-                    core.CreateControl();
-                    core.SetAnimationEnabled(false);
-                    core.DrawToBitmap(first, new Rectangle(0, 0, first.Width, first.Height));
-                    Thread.Sleep(175);
-                    core.DrawToBitmap(second, new Rectangle(0, 0, second.Width, second.Height));
-
-                    int changed = 0;
-                    for (int y = 0; y < first.Height; y += 2)
-                        for (int x = 0; x < first.Width; x += 2)
-                            if (first.GetPixel(x, y).ToArgb() != second.GetPixel(x, y).ToArgb()) changed++;
-                    if (changed < 180) throw new Exception("only " + changed + " sampled pixels changed");
-                }
-            }
-            finally { Theme.SetMode(PerformancePreset.Standard, false); }
         }
 
         private static long IconFingerprint(Bitmap bitmap, bool verifyBounds)
@@ -3246,7 +2940,7 @@ namespace CaelusApp
             Directory.CreateDirectory(Path.Combine(install, "Game"));
             Directory.CreateDirectory(Path.Combine(install, "LeagueClient"));
             string executable = Path.Combine(install, "LeagueClient", "LeagueClient.exe");
-            File.Copy(Application.ExecutablePath, executable, true);
+            File.Copy(Process.GetCurrentProcess().MainModule.FileName, executable, true);
             Eq(true, mode.AddGameExecutable("LeagueClient", executable));
 
             string[] lines = File.ReadAllLines(games, Encoding.UTF8);
@@ -3263,7 +2957,7 @@ namespace CaelusApp
             string dir = Path.Combine(root, "resolver");
             Directory.CreateDirectory(dir);
             string executable = Path.Combine(dir, "SampleGame.exe");
-            File.Copy(Application.ExecutablePath, executable, true);
+            File.Copy(Process.GetCurrentProcess().MainModule.FileName, executable, true);
             string resolved, error;
             Eq(true, GameExecutableResolver.TryResolve(executable, out resolved, out error));
             Eq(Path.GetFullPath(executable), resolved);
@@ -3284,7 +2978,7 @@ namespace CaelusApp
             Directory.CreateDirectory(dir);
             string executable = Path.Combine(dir, "HeadlessProbe.exe");
             string beat = Path.Combine(dir, "headless.beat");
-            File.Copy(Application.ExecutablePath, executable, true);
+            File.Copy(Process.GetCurrentProcess().MainModule.FileName, executable, true);
             Process probe = null;
             Process[] all = null;
             try
@@ -3359,10 +3053,10 @@ namespace CaelusApp
             string realExe = Path.Combine(gameRoot, "caelusfbtest64.exe");
             string rogueExe = Path.Combine(elsewhere, "caelusfbtest_x64.exe");
             string updaterExe = Path.Combine(elsewhere, "caelusfbtest_updater.exe");
-            File.Copy(Application.ExecutablePath, stubExe, true);
-            File.Copy(Application.ExecutablePath, realExe, true);
-            File.Copy(Application.ExecutablePath, rogueExe, true);
-            File.Copy(Application.ExecutablePath, updaterExe, true);
+            File.Copy(Process.GetCurrentProcess().MainModule.FileName, stubExe, true);
+            File.Copy(Process.GetCurrentProcess().MainModule.FileName, realExe, true);
+            File.Copy(Process.GetCurrentProcess().MainModule.FileName, rogueExe, true);
+            File.Copy(Process.GetCurrentProcess().MainModule.FileName, updaterExe, true);
             string beatReal = Path.Combine(dir, "real.beat");
             string beatRogue = Path.Combine(dir, "rogue.beat");
             string beatUpdater = Path.Combine(dir, "updater.beat");

@@ -1,12 +1,13 @@
 // @author zenjiro 18967498922@163.com
-// 文件用途 构建全部页面并检查界面上没有漏定义的文案键
+// 文件用途 扫描全部 WPF 页面 XAML，确保界面上不会显示漏定义的文案键
+//           （原实现构建 WinForms 面板遍历控件树；单一 WPF 界面后改为静态扫描 XAML，
+//           文本只可能来自 XAML 字面量或 ViewModel 的 Lang.T，后者由 LangKeys 测试覆盖）
 
 using System;
 using System.Collections.Generic;
-using System.Drawing;
 using System.IO;
+using System.Text;
 using System.Text.RegularExpressions;
-using System.Windows.Forms;
 
 namespace CaelusApp
 {
@@ -16,67 +17,39 @@ namespace CaelusApp
             new Regex(@"^[a-z][a-z0-9]*(\.[a-z0-9]+)*\.[a-z][a-z0-9]*(\.[a-z0-9]+)*$",
                 RegexOptions.CultureInvariant);
 
+        private static readonly Regex XamlTextAttribute =
+            new Regex("(?:Text|Content|Header|ToolTip)\\s*=\\s*\"([^\"]+)\"",
+                RegexOptions.CultureInvariant);
+
         private static void TestNoUntranslatedKeysOnScreen()
         {
-            string data = Path.Combine(Path.GetTempPath(),
-                "CaelusLangCov_" + System.Diagnostics.Process.GetCurrentProcess().Id);
-            Directory.CreateDirectory(data);
-            string previousLog = Logger.LogPath;
-            try
-            {
-                Logger.LogPath = Path.Combine(data, "langcov.log");
-                Dpi.Init();
-                Lang.Init();
-                var core = new SuppressionCore();
-                var tamer = new Tamer(core);
-                var mode = new GameMode(data, core);
-                PanelForm form;
-                var testArbiter = new ScenarioArbiter();
-                var testDevFocus = new DevFocus(testArbiter, core, () => false, (a, b) => false, c => false);
-                try { form = new PanelForm(tamer, mode, testDevFocus, IconArt.MakeIcon(Dpi.S(24)), true); }
-                catch (Exception ex) { throw new TestSkippedException("面板无法构建：" + ex.GetType().Name); }
-                using (form)
-                {
-                    form.StartPosition = FormStartPosition.Manual;
-                    form.Location = new Point(-20000, -20000);
-                    GC.KeepAlive(form.Handle);
+            string src = LocateSourceRoot();
+            if (src == null) throw new TestSkippedException("找不到源码目录，发布构建下跳过");
 
-                    var offenders = new List<string>();
-                    Collect(form, offenders);
-                    if (offenders.Count > 0)
-                        throw new Exception("界面上出现未定义的文案键："
-                            + string.Join("、", offenders.ToArray()));
+            // LocateSourceRoot 返回 src 目录，wpf 与其同级，需上溯一层
+            string wpfDir = Path.GetFullPath(Path.Combine(src, "..", "wpf"));
+            if (!Directory.Exists(wpfDir)) throw new TestSkippedException("找不到 wpf 目录");
+
+            Lang.Init();
+            var offenders = new List<string>();
+            foreach (string file in Directory.GetFiles(wpfDir, "*.xaml", SearchOption.AllDirectories))
+            {
+                string text;
+                try { text = File.ReadAllText(file, Encoding.UTF8); }
+                catch { continue; }
+                foreach (Match m in XamlTextAttribute.Matches(text))
+                {
+                    string value = m.Groups[1].Value.Trim();
+                    if (value.Length == 0 || value.StartsWith("{")) continue;
+                    if (!UntranslatedKey.IsMatch(value)) continue;
+                    if (Lang.Row(value) != null) continue;
+                    string entry = value + "  ←  " + Path.GetFileName(file);
+                    if (!offenders.Contains(entry)) offenders.Add(entry);
                 }
             }
-            finally
-            {
-                Logger.LogPath = previousLog;
-                try { Directory.Delete(data, true); } catch { }
-            }
-        }
-
-        private static void Collect(Control parent, List<string> offenders)
-        {
-            foreach (Control child in parent.Controls)
-            {
-                string text = child.Text;
-                if (!string.IsNullOrEmpty(text) && UntranslatedKey.IsMatch(text)
-                    && !offenders.Contains(text) && Lang.Row(text) == null)
-                    offenders.Add(text);
-                foreach (string extra in DescriptiveText(child))
-                    if (!string.IsNullOrEmpty(extra) && UntranslatedKey.IsMatch(extra)
-                        && !offenders.Contains(extra) && Lang.Row(extra) == null)
-                        offenders.Add(extra);
-                Collect(child, offenders);
-            }
-        }
-
-        private static IEnumerable<string> DescriptiveText(Control control)
-        {
-            var card = control as SettingCard;
-            if (card != null) { yield return card.Title; yield return card.Desc; }
-            var empty = control as EmptyStatePanel;
-            if (empty != null) { yield return empty.EmptyTitle; yield return empty.EmptyDetail; }
+            if (offenders.Count > 0)
+                throw new Exception("界面上出现未定义的文案键：" + Environment.NewLine
+                    + "   " + string.Join(Environment.NewLine + "   ", offenders.ToArray()));
         }
     }
 }

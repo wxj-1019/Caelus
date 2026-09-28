@@ -202,18 +202,14 @@
     </Compile>
 
     <!-- Link-compile framework-agnostic Core sources so new files auto-enter
-         both the legacy (build.cmd) and WPF builds. WinForms-only sources
-         (src/Ui, src/Program.cs) are intentionally excluded from the release
-         build; the selftest build (CaelusSelfTest=true) links them so the
-         249 self-tests and the WinForms UI probes keep running inside the WPF host. -->
-    <!-- 递归通配：src 下新增子目录自动进入编译，无需再手工加行。
-         刻意排除 src/Ui（WinForms 界面源码，仅自测构建链入）。 -->
+         the build. The legacy WinForms UI (src/Ui, src/Program.cs) has been
+         removed; WPF is the single UI host. -->
+    <!-- 递归通配：src 下新增子目录自动进入编译，无需再手工加行。 -->
     <Compile Include="..\src\Core\**\*.cs" />
     <Compile Include="..\src\Platform\**\*.cs" />
     <Compile Include="..\src\UiShared\**\*.cs" />
-    <!-- 自测版：链入测试与 WinForms 界面源码（仅 dev.cmd test 构建） -->
+    <!-- 自测版：链入测试源码（仅 dev.cmd test 构建） -->
     <Compile Include="..\tests\**\*.cs" Condition="'$(CaelusSelfTest)'=='true'" />
-    <Compile Include="..\src\Ui\**\*.cs" Condition="'$(CaelusSelfTest)'=='true'" />
     <None Include="app.manifest" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />

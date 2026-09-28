@@ -6,7 +6,6 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Threading;
-using System.Windows.Forms;
 
 namespace CaelusApp
 {
@@ -66,7 +65,7 @@ namespace CaelusApp
         {
             return new ProcessStartInfo
             {
-                FileName = Application.ExecutablePath,
+                FileName = Process.GetCurrentProcess().MainModule.FileName,
                 Arguments = args,
                 UseShellExecute = false,
                 CreateNoWindow = true,

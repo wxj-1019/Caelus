@@ -43,8 +43,8 @@ call :restorecp
 exit /b 0
 
 :selftest
-rem selftest build: links tests\*.cs and the WinForms UI sources so the 225
-rem self-tests keep running inside the WPF host (single pass, no icon needed)
+rem selftest build: links tests\*.cs so the self-tests run inside the WPF
+rem host (single pass, no icon needed)
 "%MSB%" wpf\Caelus.Wpf.csproj /p:Configuration=Release /p:AssemblyName=%NAME% /p:OutputPath=..\ /p:IntermediateOutputPath=obj\ReleaseTest\ /p:DefineConstants=CAELUS_SELFTEST /p:CaelusSelfTest=true /v:m /nologo
 if errorlevel 1 goto err
 echo.

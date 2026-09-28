@@ -8,7 +8,7 @@
 
 [![対応](https://img.shields.io/badge/対応-Windows%2010%2F11-%235E5CE6)](https://github.com/wxj-1019/Caelus)
 [![言語](https://img.shields.io/badge/言語-C%23%20.NET%20Framework%204.x-%237A78F0)](https://github.com/wxj-1019/Caelus)
-[![自己テスト](https://img.shields.io/badge/自己テスト-276%20件%20合格-%233DD68C)](https://github.com/wxj-1019/Caelus)
+[![自己テスト](https://img.shields.io/badge/自己テスト-271%20件%20合格-%233DD68C)](https://github.com/wxj-1019/Caelus)
 [![プライバシー](https://img.shields.io/badge/プライバシー-完全ローカル%20%C2%B7%20送信なし-%233DD68C)](https://github.com/wxj-1019/Caelus)
 [![ライセンス](https://img.shields.io/badge/ライセンス-販売禁止-%23E5A13D)](LICENSE)
 
@@ -150,7 +150,8 @@ dev.cmd test   rem セルフテスト入りでビルドし、実行して結果�
 
 - `src/Core` — 対象検出、スケジューリング、抑制、復元
 - `src/Platform` — Windows API、設定、パス、サービスのラッパー
-- `src/Ui` — WinForms 画面と自前描画コントロール。`src/Ui/Pages` は 1 ページ 1 ファイル、`src/Ui/Controls` にコントロール
+- `src/UiShared` — 画面層で共有する ViewModel・パレット・アイコン描画
+- `wpf/` — 唯一の画面（WPF マシュマロスカイ設計体系 + ランタイムホスト WpfRuntime、src/Core をリンクコンパイル）
 - `tests` — 内蔵セルフテスト（`build.cmd xxx.exe --selftest` のときだけ組み込まれ、リリースビルドには含まれません）
 - `scripts` — アプリのスモークテスト
 
@@ -158,7 +159,7 @@ dev.cmd test   rem セルフテスト入りでビルドし、実行して結果�
 
 ## 検証範囲
 
-内蔵セルフテストは現在 `276` 件です。対象検出とセッション保護、抑制と復元（PID 再利用、クラッシュ後の復帰を含む）、CPU 構成と分割、プロファイル保存形式の互換性と未知バージョンの保護、ゲームスキャンとアクセラレーターの除外、学習機構の発動境界、システム診断の閾値、League 専用機能の境界、画面描画を扱います。環境に必要な機能がない場合は `PASS` ではなく `SKIP` と記録します。
+内蔵セルフテストは現在 `271` 件です。対象検出とセッション保護、抑制と復元（PID 再利用、クラッシュ後の復帰を含む）、CPU 構成と分割、プロファイル保存形式の互換性と未知バージョンの保護、ゲームスキャンとアクセラレーターの除外、学習機構の発動境界、システム診断の閾値、League 専用機能の境界、画面描画を扱います。環境に必要な機能がない場合は `PASS` ではなく `SKIP` と記録します。
 
 同一コア競合テストは、2 つの計算プロセスを同じコアに置いて競合側を凍結するものです。CPU 時間を解放すればスループットが回復することを示すだけで、実ゲームの FPS や 1% Low の証拠ではありません。
 

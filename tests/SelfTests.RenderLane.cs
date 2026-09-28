@@ -5,7 +5,6 @@ using System;
 using System.Diagnostics;
 using System.IO;
 using System.Threading;
-using System.Windows.Forms;
 
 namespace CaelusApp
 {
@@ -21,7 +20,7 @@ namespace CaelusApp
             try
             {
                 string copy = Path.Combine(dir, "renderprobe.exe");
-                File.Copy(Application.ExecutablePath, copy, true);
+                File.Copy(Process.GetCurrentProcess().MainModule.FileName, copy, true);
                 var psi = new ProcessStartInfo(copy, "--cpu-burn");
                 psi.CreateNoWindow = true;
                 psi.UseShellExecute = false;

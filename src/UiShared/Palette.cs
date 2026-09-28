@@ -32,14 +32,14 @@ namespace CaelusApp
 
     internal static class Palette
     {
-        /// <summary>定位仓库根（向上找 src/Ui），找不到返回 null。</summary>
+        /// <summary>定位仓库根（向上找 src/Core），找不到返回 null。</summary>
         private static string FindRepoRoot()
         {
             string dir = AppDomain.CurrentDomain.BaseDirectory;
             for (int depth = 0; depth < 6 && !string.IsNullOrEmpty(dir); depth++)
             {
                 string candidate = Path.Combine(dir, "src");
-                if (Directory.Exists(candidate) && Directory.Exists(Path.Combine(candidate, "Ui")))
+                if (Directory.Exists(candidate) && Directory.Exists(Path.Combine(candidate, "Core")))
                     return dir;
                 DirectoryInfo parent = Directory.GetParent(dir.TrimEnd(Path.DirectorySeparatorChar));
                 if (parent == null) break;

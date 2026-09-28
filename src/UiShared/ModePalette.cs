@@ -28,12 +28,12 @@ namespace CaelusApp
         {
             string name = mode == AppMode.Competitive ? "Mode.Competitive.xaml"
                 : (mode == AppMode.Custom ? "Mode.Custom.xaml" : "Mode.Standard.xaml");
-            // 与 Palette 相同的仓库根定位：向上找 src/Ui
+            // 与 Palette 相同的仓库根定位：向上找 src/Core
             string dir = AppDomain.CurrentDomain.BaseDirectory;
             for (int depth = 0; depth < 6 && !string.IsNullOrEmpty(dir); depth++)
             {
                 string candidate = Path.Combine(dir, "src");
-                if (Directory.Exists(candidate) && Directory.Exists(Path.Combine(candidate, "Ui")))
+                if (Directory.Exists(candidate) && Directory.Exists(Path.Combine(candidate, "Core")))
                     return Path.Combine(dir, "wpf", "Themes", name);
                 DirectoryInfo parent = Directory.GetParent(dir.TrimEnd(Path.DirectorySeparatorChar));
                 if (parent == null) break;

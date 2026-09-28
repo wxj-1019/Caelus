@@ -1,11 +1,10 @@
-﻿// @author zenjiro 18967498922@163.com
+// @author zenjiro 18967498922@163.com
 // 文件用途 DevFocus 场景的自测：仲裁集成、活性报告、开关语义、抢占挂起
 
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
-using System.Windows.Forms;
 
 namespace CaelusApp
 {
@@ -26,7 +25,7 @@ namespace CaelusApp
         {
             beat = Path.Combine(dir, exeName + ".beat");
             string copy = Path.Combine(dir, exeName);
-            File.Copy(Application.ExecutablePath, copy, true);
+            File.Copy(Process.GetCurrentProcess().MainModule.FileName, copy, true);
             var psi = new ProcessStartInfo(copy, "--test-heartbeat-probe " + Quote(beat));
             psi.CreateNoWindow = true;
             psi.UseShellExecute = false;

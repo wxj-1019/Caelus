@@ -45,7 +45,7 @@ namespace CaelusApp
             for (int depth = 0; depth < 6 && !string.IsNullOrEmpty(dir); depth++)
             {
                 string candidate = Path.Combine(dir, "src");
-                if (Directory.Exists(candidate) && Directory.Exists(Path.Combine(candidate, "Ui")))
+                if (Directory.Exists(candidate) && Directory.Exists(Path.Combine(candidate, "Core")))
                     return candidate;
                 DirectoryInfo parent = Directory.GetParent(dir.TrimEnd(Path.DirectorySeparatorChar));
                 if (parent == null) break;

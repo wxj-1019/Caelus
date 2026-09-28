@@ -63,9 +63,9 @@ namespace CaelusApp
         private static void TestGpuModeRoundTrips()
         {
             for (int i = 0; i <= 4; i++)
-                Eq(i, PanelForm.FrlIndexOf(PanelForm.FrlModeOf(i)));
+                Eq(i, GraphicsViewModel.FrlIndexOf(GraphicsViewModel.FrlModeOf(i)));
             for (int i = 0; i <= 3; i++)
-                Eq(i, PanelForm.DlssIndexOf(PanelForm.DlssModeOf(i)));
+                Eq(i, GraphicsViewModel.DlssIndexOf(GraphicsViewModel.DlssModeOf(i)));
             Eq(240, GameMode.ResolveFrlFps("240"));
             Eq(60, GameMode.ResolveFrlFps("60"));
             Eq(0, GameMode.ResolveFrlFps("off"));

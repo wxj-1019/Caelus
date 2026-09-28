@@ -7,7 +7,6 @@ using System.Diagnostics;
 using System.IO;
 using System.Text;
 using System.Threading;
-using System.Windows.Forms;
 
 namespace CaelusApp
 {
@@ -32,9 +31,9 @@ namespace CaelusApp
             Directory.CreateDirectory(Path.Combine(crossPath, "empty"));
             Directory.CreateDirectory(Path.Combine(install, "CrossBackup"));
             Directory.CreateDirectory(Path.GetDirectoryName(outsideSentinel));
-            File.Copy(Application.ExecutablePath,
+            File.Copy(Process.GetCurrentProcess().MainModule.FileName,
                 Path.Combine(install, "LeagueClient", "LeagueClient.exe"), true);
-            File.Copy(Application.ExecutablePath,
+            File.Copy(Process.GetCurrentProcess().MainModule.FileName,
                 Path.Combine(install, "Launcher", "Client.exe"), true);
             File.WriteAllText(gameSentinel, "game", Encoding.UTF8);
             File.WriteAllText(aceSentinel, "ace", Encoding.UTF8);
@@ -58,7 +57,7 @@ namespace CaelusApp
                 if (!inspection.CanDelete) throw new Exception("initial delete unavailable: " + inspection.Error);
 
                 string probePath = Path.Combine(crossPath, "CrossProbe.exe");
-                File.Copy(Application.ExecutablePath, probePath, true);
+                File.Copy(Process.GetCurrentProcess().MainModule.FileName, probePath, true);
                 probe = Process.Start(new ProcessStartInfo(probePath, "--cpu-burn")
                 {
                     UseShellExecute = false,

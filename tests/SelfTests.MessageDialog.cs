@@ -1,6 +1,7 @@
 // @author zenjiro 18967498922@163.com
 // 文件用途 消息弹窗纯逻辑自测：级别映射 / 按钮组解析 / 标题正文拆分（规格 2026-08-23 §7）
 
+using System;
 using System.Windows;
 using CaelusApp.WpfHost.Dialogs;
 
@@ -89,6 +90,19 @@ namespace CaelusApp
             string[] r7 = MsgDialogMaps.SplitTitleBody("关闭后台冻结\r\n\r\n说明文字。\r\n\r\n继续吗？");
             Eq("关闭后台冻结", r7[0]);
             Eq("说明文字。", r7[1]);
+        }
+
+        private static void TestReleaseNoteRowBindable()
+        {
+            // WPF（.NET Framework 4.x）的 Binding 只解析属性、不解析公共字段：
+            // ReleaseNoteRow 成员一旦退化为字段，绑定静默失败，弹窗整片空白。
+            foreach (string member in new[] { "VersionTag", "DateText", "IsCurrent", "Items" })
+            {
+                if (typeof(ReleaseNoteRow).GetProperty(member) == null)
+                    throw new Exception(member + " 必须是属性（WPF 绑定不支持字段）");
+                if (typeof(ReleaseNoteRow).GetField(member) != null)
+                    throw new Exception(member + " 不允许以公共字段形式存在");
+            }
         }
     }
 }

@@ -11,10 +11,12 @@ namespace CaelusApp.WpfHost.Dialogs
 {
     internal sealed class ReleaseNoteRow
     {
-        public string VersionTag;
-        public string DateText;
-        public bool IsCurrent;
-        public List<string> Items;
+        // WPF 绑定只认属性不认字段（.NET Framework 4.x）：必须为 get/set 属性，
+        // 否则绑定静默失败、整行空白（回归见自测「版本说明弹窗行成员可绑定」）
+        public string VersionTag { get; set; }
+        public string DateText { get; set; }
+        public bool IsCurrent { get; set; }
+        public List<string> Items { get; set; }
     }
 
     internal partial class ReleaseNotesDialogWpf : Window

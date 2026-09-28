@@ -756,6 +756,10 @@ namespace CaelusApp
             test("开发服务：同名多实例未归零不触发", TestDevServiceGuardNoFireWhileOthersAlive);
             test("开发服务：Stopped 丢失时死 PID 兜底清理并通知", TestDevServiceGuardPrunesDeadPid);
             test("开发服务：注册服务在压制扫描中豁免", TestDevServiceExemptFromSuppression);
+            test("服务拉起：连败预算熔断判定", TestDevSvcRestartBudget);
+            test("服务拉起：重新捕获命令行即重置预算", TestDevSvcCaptureResetsBudget);
+            test("服务拉起：快照入册使预存服务可跟踪", TestDevSvcSnapshotSeedsTracking);
+            test("服务拉起：命令行拆分引号感知", TestSplitCommandLine);
             test("编译台架：提速百分比计算", TestBuildProbeSpeedupPct);
             test("专注时长：累计与跨天归零", TestFocusStatsAccumulateAndReset);
             test("专注时长：专注开关往返计入会话", TestDevFocusRecordsFocusStats);
@@ -1302,6 +1306,20 @@ namespace CaelusApp
             Settings.UseTransientStoreForCurrentProcess();
             // 自定义清单写 Settings：必须在临时存储启用之后跑，不污染真实注册表
             test("豁免名录：反作弊/加速器自定义清单即存即效", TestCustomExemptionCatalogs);
+            test("IDE 目录：自定义名录合并与坏行容错", TestIdeCatalogCustomList);
+            test("专注历史：按日合并、截断与近 7 日补零", TestFocusHistoryMergeAndTrim);
+            test("专注历史：会话与分心计数写入当日趋势", TestFocusStatsFeedsHistory);
+            test("日常统计：掌权时长写入今日键与 TSV 日常列", TestDailyCareRecordsSession);
+            test("编译统计：时长写今日键与 TSV 编译列、日切归零", TestFocusBuildRecorded);
+            test("专注目标：解析校验边界回落 240", TestFocusGoalParse);
+            test("编译统计：真实编译起止经 DevFocus 落盘", TestDevFocusRecordsBuildStats);
+            test("编译统计：无起点守卫不写出天文时长", TestBuildEndedElapsedGuard);
+            test("压制豁免：日常家族与守护服务豁免、无关进程仍压制", TestDevFocusWhitelistComposed);
+            test("监控日志：环形截断与新到旧序", TestActivityLogRing);
+            test("压制快照：行内容与释放清空", TestSuppressionSnapshotRows);
+            test("分心策略：掌权且专注才动作，阻断开关分级", TestDistractActionPolicy);
+            test("分心统计：按名归一合并与 Top8 截断", TestFocusStatsDistractNames);
+            test("分心阻断：气球 30 秒限频判定", TestDistractBlockBalloonRateLimit);
             test("崩溃日志：加入 QoS 字段后仍能读取旧的 9 字段记录", () =>
             {
                 string name = Convert.ToBase64String(Encoding.UTF8.GetBytes("game"));

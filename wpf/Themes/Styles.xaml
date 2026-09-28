@@ -14,6 +14,7 @@
   <!--   [导航/分段]  NavItem NavGroupLabel SegmentItem SegmentHost            -->
   <!--   [输入/列表]  InputBox ListItem PolicyToggle                            -->
   <!--   [行/容器]    PolicyRow ResultRow GlassCard HeroGlassCard DropZoneEmpty  -->
+  <!--   [夜空烟花]  AuroraPrimaryHost AuroraSecondaryHost HeroMedallion HeroMedallionSmall SectionHeaderIcon -->
   <!--   [排版]      PageHeader PageSubtitle CardLabel DisplayNumber MetricNumber -->
   <!--   [系统]      FocusRing ScrollBar ScrollThumb                            -->
   <!-- 令牌（颜色/字号/圆角/间距）来自 Tokens.xaml 与 Colors.*.xaml；强调色来自 Mode.*.xaml。 -->
@@ -639,6 +640,76 @@
   <!-- Hero 卡（概览主卡）：与普通卡同构，仅留白更大；极简路线去掉了渐变描边/角部光晕/顶部高光 -->
   <Style x:Key="HeroGlassCard" TargetType="controls:GlassCard" BasedOn="{StaticResource GlassCard}">
     <Setter Property="Padding" Value="20"/>
+  </Style>
+
+  <!-- ========== [夜空烟花] Hero 角部径向光晕 ==========
+       两枚光晕叠在 HeroGlassCard 内的 Grid 最底层（Grid.ColumnSpan 拉满 + IsHitTestVisible=False）。
+       槽位：Primary=右上（模式主色）、Secondary=左下（次强调），色/透明度走 Aurora* 令牌按模式轴自适应；
+       高对比度下 Aurora*Opacity 被覆盖为 0，光晕自动隐去。
+       尺寸/负偏移是沙盒 300px/240px 圆的几何换算——圆心落在卡片角上、半出卡外；
+       Radius 取 0.5（相对包围盒半宽/半高），让 alpha 恰在 Border 边界归零。 -->
+  <Style x:Key="AuroraPrimaryHost" TargetType="Border">
+    <Setter Property="IsHitTestVisible" Value="False"/>
+    <Setter Property="HorizontalAlignment" Value="Right"/>
+    <Setter Property="VerticalAlignment" Value="Top"/>
+    <Setter Property="Width" Value="360"/>
+    <Setter Property="Height" Value="220"/>
+    <Setter Property="Margin" Value="0,-40,-30,0"/>
+    <Setter Property="Opacity" Value="{DynamicResource AuroraPrimaryOpacity}"/>
+    <Setter Property="Background">
+      <Setter.Value>
+        <RadialGradientBrush RadiusX="0.5" RadiusY="0.5">
+          <GradientStop Color="{DynamicResource AuroraPrimaryColor}" Offset="0"/>
+          <GradientStop Color="{DynamicResource AuroraPrimaryFadeColor}" Offset="1"/>
+        </RadialGradientBrush>
+      </Setter.Value>
+    </Setter>
+  </Style>
+  <Style x:Key="AuroraSecondaryHost" TargetType="Border">
+    <Setter Property="IsHitTestVisible" Value="False"/>
+    <Setter Property="HorizontalAlignment" Value="Left"/>
+    <Setter Property="VerticalAlignment" Value="Bottom"/>
+    <Setter Property="Width" Value="280"/>
+    <Setter Property="Height" Value="180"/>
+    <Setter Property="Margin" Value="-30,0,0,-36"/>
+    <Setter Property="Opacity" Value="{DynamicResource AuroraSecondaryOpacity}"/>
+    <Setter Property="Background">
+      <Setter.Value>
+        <RadialGradientBrush RadiusX="0.5" RadiusY="0.5">
+          <GradientStop Color="{DynamicResource AuroraSecondaryColor}" Offset="0"/>
+          <GradientStop Color="{DynamicResource AuroraSecondaryFadeColor}" Offset="1"/>
+        </RadialGradientBrush>
+      </Setter.Value>
+    </Setter>
+  </Style>
+
+  <!-- 分组头图标勋章：30px 圆角柔色底 + 描边（分组头标准，语义色可本地覆盖 Background/BorderBrush） -->
+  <Style x:Key="SectionHeaderIcon" TargetType="Border">
+    <Setter Property="Width" Value="30"/>
+    <Setter Property="Height" Value="30"/>
+    <Setter Property="CornerRadius" Value="{DynamicResource RadiusSm}"/>
+    <Setter Property="Background" Value="{DynamicResource AccentSoftBrush}"/>
+    <Setter Property="BorderBrush" Value="{DynamicResource AccentEdgeBrush}"/>
+    <Setter Property="BorderThickness" Value="1"/>
+    <Setter Property="VerticalAlignment" Value="Center"/>
+  </Style>
+
+  <!-- Hero 图标勋章：圆形柔色底 + 描边，居中 IconView（概览 88px / 页头 56px 两档） -->
+  <Style x:Key="HeroMedallion" TargetType="Border">
+    <Setter Property="Width" Value="88"/>
+    <Setter Property="Height" Value="88"/>
+    <Setter Property="CornerRadius" Value="44"/>
+    <Setter Property="Background" Value="{DynamicResource AccentSoftBrush}"/>
+    <Setter Property="BorderBrush" Value="{DynamicResource AccentEdgeBrush}"/>
+    <Setter Property="BorderThickness" Value="1"/>
+  </Style>
+  <Style x:Key="HeroMedallionSmall" TargetType="Border">
+    <Setter Property="Width" Value="56"/>
+    <Setter Property="Height" Value="56"/>
+    <Setter Property="CornerRadius" Value="28"/>
+    <Setter Property="Background" Value="{DynamicResource AccentSoftBrush}"/>
+    <Setter Property="BorderBrush" Value="{DynamicResource AccentEdgeBrush}"/>
+    <Setter Property="BorderThickness" Value="1"/>
   </Style>
 
   <!-- 策略行：悬停浅底 + 发丝线提亮 -->

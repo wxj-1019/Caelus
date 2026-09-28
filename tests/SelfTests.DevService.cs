@@ -155,6 +155,79 @@ namespace CaelusApp
             }
         }
 
+        // 拉起预算：连续失败达到上限熔断，达到前允许重试
+        private static void TestDevSvcRestartBudget()
+        {
+            Eq(true, DevServiceGuard.BudgetAllows(0));
+            Eq(true, DevServiceGuard.BudgetAllows(1));
+            Eq(true, DevServiceGuard.BudgetAllows(DevServiceGuard.MaxConsecutiveRestarts - 1));
+            Eq(false, DevServiceGuard.BudgetAllows(DevServiceGuard.MaxConsecutiveRestarts));
+            Eq(false, DevServiceGuard.BudgetAllows(DevServiceGuard.MaxConsecutiveRestarts + 1));
+        }
+
+        // 命令行拆分：引号感知——首段（含空格路径）为 exe，其余为参数
+        private static void TestSplitCommandLine()
+        {
+            string exe, args;
+            DevServiceGuard.SplitCommandLine("\"C:\\Program Files\\x\\nginx.exe\" -c conf\\a.conf", out exe, out args);
+            Eq("C:\\Program Files\\x\\nginx.exe", exe);
+            Eq("-c conf\\a.conf", args);
+            DevServiceGuard.SplitCommandLine("node server.js --port 80", out exe, out args);
+            Eq("node", exe);
+            Eq("server.js --port 80", args);
+            DevServiceGuard.SplitCommandLine("just.exe", out exe, out args);
+            Eq("just.exe", exe);
+            Eq("", args);
+            DevServiceGuard.SplitCommandLine("", out exe, out args);
+            Eq("", exe);
+            DevServiceGuard.SplitCommandLine(null, out exe, out args);
+            Eq("", exe);
+            DevServiceGuard.SplitCommandLine("\"unterminated", out exe, out args);
+            Eq("unterminated", exe);
+            Eq("", args);
+        }
+
+        // 拉起预算：重新捕获到启动命令（新健康实例，多为用户手动拉起）即重置连败预算
+        private static void TestDevSvcCaptureResetsBudget()
+        {
+            var guard = new DevServiceGuard();
+            try
+            {
+                guard.TestSeedRestartFails("node", DevServiceGuard.MaxConsecutiveRestarts);
+                Eq(DevServiceGuard.MaxConsecutiveRestarts, guard.TestConsecFails("node"));
+                Eq(false, DevServiceGuard.BudgetAllows(guard.TestConsecFails("node")));   // 已熔断
+                guard.StoreLaunch("node", "C:\\x\\node.exe", "server.js", "C:\\x");
+                Eq(0, guard.TestConsecFails("node"));                                     // 捕获即重置
+                Eq(true, DevServiceGuard.BudgetAllows(guard.TestConsecFails("node")));
+            }
+            finally { guard.Stop(); }
+        }
+
+        // 快照入册：ProcNotify 纯事件驱动，Caelus 启动前已运行的服务没有 Started 事件——
+        // CaptureSnapshot 必须把预存实例纳入跟踪（否则退出提醒/自动拉起对预存服务失明）。
+        // 用自测进程自身充当"预存服务"验证入册。
+        private static void TestDevSvcSnapshotSeedsTracking()
+        {
+            Settings.SaveStr("DevServiceList", Process.GetCurrentProcess().ProcessName);
+            DevServiceCatalog.Reload();
+            DevServiceGuard.MinAliveTicks = 0;
+            var guard = new DevServiceGuard();
+            try
+            {
+                guard.CaptureSnapshot();
+                Eq(true, guard.LiveCount >= 1);
+                guard.NotifyProcessChanges(new ProcessChangeBatch(new ProcessChange[0], false));
+                Eq(true, guard.LiveCount >= 1);   // 兜底清理不会误清存活实例
+            }
+            finally
+            {
+                guard.Stop();
+                Settings.SaveStr("DevServiceList", "");
+                DevServiceCatalog.Reload();
+                DevServiceGuard.MinAliveTicks = 3L * TimeSpan.TicksPerSecond;
+            }
+        }
+
         private static void TestDevServiceExemptFromSuppression()
         {
             string winRoot = Environment.GetFolderPath(Environment.SpecialFolder.Windows);

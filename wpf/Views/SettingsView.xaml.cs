@@ -234,6 +234,14 @@ namespace CaelusApp.WpfHost.Views
             Motion.Emphasize(PageFeedbackBanner);
         }
 
+        private void OnIdeCustomSave(object sender, RoutedEventArgs e)
+        {
+            SettingsViewModel vm = DataContext as SettingsViewModel;
+            if (vm == null) return;
+            vm.SaveIdeCustom(TbIdeCustom.Text);
+            Motion.Emphasize(PageFeedbackBanner);
+        }
+
         private void OnDevSvcSave(object sender, RoutedEventArgs e)
         {
             SettingsViewModel vm = DataContext as SettingsViewModel;
@@ -255,6 +263,14 @@ namespace CaelusApp.WpfHost.Views
             SettingsViewModel vm = DataContext as SettingsViewModel;
             if (vm == null) return;
             vm.SaveDailyCustom(TbDailyCustom.Text);
+            Motion.Emphasize(PageFeedbackBanner);
+        }
+
+        private void OnFocusGoalSave(object sender, RoutedEventArgs e)
+        {
+            SettingsViewModel vm = DataContext as SettingsViewModel;
+            if (vm == null) return;
+            vm.SaveFocusGoal(TbFocusGoal.Text);
             Motion.Emphasize(PageFeedbackBanner);
         }
 

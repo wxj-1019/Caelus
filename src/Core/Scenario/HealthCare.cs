@@ -2,6 +2,7 @@
 // 文件用途 系统健康维护：到点判定与执行编排（独立定时调度，与 DailyCare 掌权解耦）
 
 using System;
+using System.Collections.Generic;
 using System.Threading;
 
 namespace CaelusApp
@@ -91,8 +92,19 @@ namespace CaelusApp
                 return;   // 不写 HealthLastRun：下个 30 分钟周期继续尝试
             }
 
-            try { HealthRunner.Run(HealthTrigger.Auto, CatalogOverride ?? HealthCatalog.Shared, null); }
+            List<HealthResult> healthResults = null;
+            try { healthResults = HealthRunner.Run(HealthTrigger.Auto, CatalogOverride ?? HealthCatalog.Shared, null); }
             catch (Exception ex) { Logger.LogFailure("健康维护执行异常", ex); }
+            if (healthResults != null)
+            {
+                int ok = 0, bad = 0;
+                foreach (HealthResult r in healthResults)
+                {
+                    if (r.Outcome == HealthOutcome.Success) ok++;
+                    else if (r.Outcome == HealthOutcome.Failed) bad++;
+                }
+                ActivityLog.Add("健康维护自动执行完成（成功 " + ok + " 项" + (bad > 0 ? "，失败 " + bad + " 项" : "") + "）");
+            }
 
             Settings.SaveStr("HealthLastRun", today);
         }

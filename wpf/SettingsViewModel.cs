@@ -21,6 +21,8 @@ namespace CaelusApp
         private bool devMode;
         private bool focusMode;
         private bool ideOn;
+        private bool distractBlockOn;
+        private bool devSvcRestartOn;
         private bool dailyCare;
         private bool batteryOn;
         private string shaderStatus;
@@ -46,6 +48,8 @@ namespace CaelusApp
             devMode = Settings.Load("DevModeOn", true);
             focusMode = Settings.Load("DevFocusModeOn", false);
             ideOn = Settings.Load("DevFocusIdeOn", true);
+            distractBlockOn = Settings.Load("DevFocusDistractBlock", false);
+            devSvcRestartOn = Settings.Load("DevSvcRestartOn", false);
             this.dailyCare = Settings.Load("DailyCareOn", true);
             batteryOn = Settings.Load("DailyCareBatteryOn", true);
             shaderStatus = Lang.T("set.shader.n");
@@ -77,6 +81,8 @@ namespace CaelusApp
             devMode = Settings.Load("DevModeOn", true);
             focusMode = Settings.Load("DevFocusModeOn", false);
             ideOn = Settings.Load("DevFocusIdeOn", true);
+            distractBlockOn = Settings.Load("DevFocusDistractBlock", false);
+            devSvcRestartOn = Settings.Load("DevSvcRestartOn", false);
             dailyCare = Settings.Load("DailyCareOn", true);
             batteryOn = Settings.Load("DailyCareBatteryOn", true);
             Raise("AutoStart");
@@ -86,6 +92,8 @@ namespace CaelusApp
             Raise("DevMode");
             Raise("FocusMode");
             Raise("IdeOn");
+            Raise("DistractBlockOn");
+            Raise("DevSvcRestartOn");
             Raise("DailyCare");
             Raise("BatteryOn");
             Raise("PreferenceSummary");
@@ -237,6 +245,21 @@ namespace CaelusApp
             ShowFeedback("分心应用清单已保存。", "Success");
         }
 
+        // —— 分心专注阻断（默认关） ——
+        public string DistractBlockTitle { get { return Lang.T("set.distract.block"); } }
+        public string DistractBlockNote { get { return Lang.T("set.distract.block.n"); } }
+        public bool DistractBlockOn
+        {
+            get { return distractBlockOn; }
+            set
+            {
+                if (!SetProperty(ref distractBlockOn, value, "DistractBlockOn")) return;
+                Settings.Save("DevFocusDistractBlock", value);
+                ShowFeedback(value ? "专注阻断已开启：掌权期间命中的分心应用将被自动关闭。"
+                                   : "专注阻断已关闭：分心应用命中仅提醒。", "Success");
+            }
+        }
+
         // —— 开发服务守护 ——
         public string DevSvcTitle { get { return Lang.T("set.devsvc"); } }
         public string DevSvcNote { get { return Lang.T("set.devsvc.n"); } }
@@ -246,6 +269,21 @@ namespace CaelusApp
             Settings.SaveStr("DevServiceList", text ?? "");
             DevServiceCatalog.Reload();
             ShowFeedback("开发服务守护清单已保存。", "Success");
+        }
+
+        // —— 服务自动拉起（默认关） ——
+        public string DevSvcRestartTitle { get { return Lang.T("set.devsvc.restart"); } }
+        public string DevSvcRestartNote { get { return Lang.T("set.devsvc.restart.n"); } }
+        public bool DevSvcRestartOn
+        {
+            get { return devSvcRestartOn; }
+            set
+            {
+                if (!SetProperty(ref devSvcRestartOn, value, "DevSvcRestartOn")) return;
+                Settings.Save("DevSvcRestartOn", value);
+                ShowFeedback(value ? "服务自动拉起已开启：守护清单内的服务退出后将按原命令行重启。"
+                                   : "服务自动拉起已关闭：服务退出仅提醒。", "Success");
+            }
         }
 
         // —— 开发环境体检（只读） ——
@@ -271,15 +309,42 @@ namespace CaelusApp
             DevEnvResult = text ?? "";
         }
 
+        // —— 每日专注目标（分钟） ——
+        public string FocusGoalTitle { get { return Lang.T("set.goal.title"); } }
+        public string FocusGoalNote { get { return Lang.T("set.goal.note"); } }
+        public string FocusGoalInitial { get { return FocusStats.GoalMinutes().ToString(); } }
+        public void SaveFocusGoal(string text)
+        {
+            string raw = (text ?? "").Trim();
+            int parsed = FocusStats.ParseGoalMinutes(raw);
+            int asInt;
+            if (!int.TryParse(raw, out asInt) || asInt != parsed)
+            {
+                ShowFeedback("请输入 30-1440 之间的分钟数。", "Error");
+                return;
+            }
+            Settings.SaveStr("FocusGoalMinutes", parsed.ToString());
+            ShowFeedback("每日专注目标已保存（" + parsed + " 分钟）。", "Success");
+        }
+
         // —— 自定义编译进程 ——
-        public string DevCustomTitle { get { return Lang.T("set.dev.custom"); } }
-        public string DevCustomNote { get { return Lang.T("set.dev.custom.n"); } }
+        public string DevCustomTitle { get { return Lang.T("set.dev.custom"); } }        public string DevCustomNote { get { return Lang.T("set.dev.custom.n"); } }
         public string DevCustomSaveText { get { return Lang.T("set.dev.custom.save"); } }
         public string DevCustomInitial { get { return BuildCatalog.CustomList; } }
         public void SaveDevCustom(string text)
         {
             BuildCatalog.CustomList = text ?? "";
             ShowFeedback("自定义编译进程已保存。", "Success");
+        }
+
+        // —— 自定义 IDE 进程 ——
+        public string IdeCustomTitle { get { return Lang.T("set.ide.custom.title"); } }
+        public string IdeCustomNote { get { return Lang.T("set.ide.custom.note"); } }
+        public string IdeCustomInitial { get { return IdeCatalog.CustomList; } }
+        public void SaveIdeCustom(string text)
+        {
+            IdeCatalog.CustomList = text ?? "";
+            ShowFeedback(Lang.T("set.ide.custom.saved"), "Success");
         }
 
         // —— 自定义日常进程 ——

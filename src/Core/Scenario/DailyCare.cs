@@ -25,6 +25,7 @@ namespace CaelusApp
         private long lastWindowCheckTicks;
         private System.Threading.Timer reconcileTimer;
         private bool grantedFlag;
+        private long grantStartTicks;
 
         /// <summary>测试挂钩：隔离真实注册表（生产为 null 走 PowerOverlay 真实实现）</summary>
         internal static Func<bool> BatterySaverApplyHook;
@@ -58,6 +59,21 @@ namespace CaelusApp
 
         public bool IsActive { get { lock (sync) return WantsActiveLocked; } }
         public bool IsGranted { get { lock (sync) return grantedFlag; } }
+
+        /// <summary>实时监控页：家族窗口可见 / 电池供电当前状态。</summary>
+        public bool FamilyVisibleNow { get { lock (sync) return familyVisible; } }
+        public bool OnBatteryNow { get { lock (sync) return onBattery; } }
+
+        /// <summary>实时监控页：当前提优中的家族进程描述。</summary>
+        internal List<string> DescribeBoosts()
+        {
+            var rows = new List<string>();
+            lock (sync)
+            {
+                foreach (var kv in dailyBoostedName) rows.Add(kv.Value + "（日常家族提优 AboveNormal）");
+            }
+            return rows;
+        }
 
         /// <summary>场景气球（bal.daily.batt 等文案 key）</summary>
         public event Action<string> SessionChanged;
@@ -271,6 +287,7 @@ namespace CaelusApp
             {
                 if (grantedFlag) return;
                 grantedFlag = true;
+                grantStartTicks = DateTime.UtcNow.Ticks;
             }
             try
             {
@@ -281,6 +298,9 @@ namespace CaelusApp
                 bool saverOn = ApplyBatterySaverIfNeeded();
                 MaybeShowBatteryBalloon(saverOn);
                 Logger.Log("日常优化：获得掌职权（家族窗口/电池），后台转入常规档压制");
+                bool battSnapshot;
+                lock (sync) { battSnapshot = onBattery; }
+                ActivityLog.Add("日常优化掌权（" + (battSnapshot ? "电池供电" : "家族窗口") + "）");
             }
             catch (Exception ex) { Logger.LogFailure("日常优化掌权失败", ex); }
         }
@@ -289,10 +309,17 @@ namespace CaelusApp
         /// 单步抛异常若跳过后续步骤，残留只能等启动自愈。每步独立 try，失败计数并明示。</summary>
         public override void Suspend()
         {
+            long elapsed = 0;
             lock (sync)
             {
                 if (!grantedFlag) return;
                 grantedFlag = false;
+                elapsed = DateTime.UtcNow.Ticks - grantStartTicks;
+            }
+            if (elapsed > 0)
+            {
+                try { DailyStats.RecordSession(elapsed); }
+                catch (Exception ex) { Logger.LogFailure("日常优化挂起：记录日常统计失败", ex); }
             }
             int failed = 0;
             try { StopReconcileTimer(); }
@@ -305,6 +332,7 @@ namespace CaelusApp
             catch (Exception ex) { failed++; Logger.LogFailure("日常优化挂起：解除后台压制失败", ex); }
             if (failed == 0) Logger.Log("日常优化：挂起，全部副作用已还原（检测继续）");
             else Logger.Log("日常优化：挂起完成，但 " + failed + " 个还原步骤失败（残留由下次启动自愈兜底）");
+            ActivityLog.Add(failed == 0 ? "日常优化挂起（副作用已还原）" : "日常优化挂起（" + failed + " 个还原步骤失败）");
         }
 
         public void Stop()
@@ -443,6 +471,7 @@ namespace CaelusApp
                         if (!batch.WasApplied(pid)) suppressed--;
             }
             if (suppressed > 0)
+                ActivityLog.Add("日常优化压制 " + suppressed + " 个后台进程");
                 Logger.Log("日常优化：压制 " + suppressed + " 个后台进程（"
                     + (batt ? "电池档" : "常规档") + "）");
         }

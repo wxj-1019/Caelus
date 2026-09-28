@@ -9,6 +9,15 @@ using System.Threading;
 
 namespace CaelusApp
 {
+    /// <summary>分心应用命中时的动作分级（分心策略纯函数的返回值）。</summary>
+    internal enum DistractAction
+    {
+        None,           // 未掌权或专注模式未开：不动作
+        NotifyOnly,     // 首次命中：一次性托盘提醒
+        NotifyAndBlock, // 首次命中且阻断开：提醒 + 阻断关闭
+        BlockAgain      // 已提醒过且阻断开：不重复提醒，仍阻断关闭
+    }
+
     internal sealed class DevFocus : ScenarioBase
     {
         private readonly SuppressionCore core;
@@ -22,11 +31,14 @@ namespace CaelusApp
         private readonly HashSet<int> activeBuildPids = new HashSet<int>();
         private readonly HashSet<int> activeIdePids = new HashSet<int>();
         private readonly HashSet<string> distractNotified = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+        // 阻断气球按名限频：被阻断的自启循环应用不该刷屏（阻断照常执行，只是不重复弹泡）
+        private readonly Dictionary<string, long> blockBalloonTicks = new Dictionary<string, long>(StringComparer.OrdinalIgnoreCase);
         private bool granted;
         private bool quietApplied;
         private Timer reconcileTimer;
         private long sessionStartTicks;
         private long grantStartTicks;
+        private long buildStartTicks;   // 编译集合 空→非空 的真实起点（统计用，取代场景会话起点近似）
         private readonly Dictionary<int, uint> ideBoosted = new Dictionary<int, uint>();
         private readonly Dictionary<int, long> ideBoostedCreation = new Dictionary<int, long>();
         private readonly Dictionary<int, string> ideBoostedName = new Dictionary<int, string>();
@@ -48,6 +60,9 @@ namespace CaelusApp
         /// <summary>IDE 优化开关（默认开）。关闭后 IDE 家族不再提优、也不再作为活性来源。</summary>
         public bool IdeOn { get { return Settings.Load("DevFocusIdeOn", true); } }
 
+        /// <summary>分心阻断开关（默认关）。开启后掌权期间命中的分心应用会被自动关闭。</summary>
+        public bool BlockDistractOn { get { return Settings.Load("DevFocusDistractBlock", false); } }
+
         /// <summary>IDE 进程有可见窗口才计入活性（后台挂起的常驻程序不激活场景）。</summary>
         private bool ideVisible;
         private long lastIdeWindowCheckTicks;
@@ -68,6 +83,22 @@ namespace CaelusApp
 
         /// <summary>仲裁器授权状态：副作用是否已施加</summary>
         public bool IsGranted { get { lock (sync) return granted; } }
+
+        /// <summary>实时监控页：当前编译/IDE 活性进程数（锁内计数）。</summary>
+        public int BuildActivityCount { get { lock (sync) return activeBuildPids.Count; } }
+        public int IdeActivityCount { get { lock (sync) return activeIdePids.Count; } }
+
+        /// <summary>实时监控页：当前提优中的进程描述（IDE/编译两档）。</summary>
+        internal List<string> DescribeBoosts()
+        {
+            var rows = new List<string>();
+            lock (sync)
+            {
+                foreach (var kv in ideBoostedName) rows.Add(kv.Value + "（IDE 提优 AboveNormal）");
+                foreach (var kv in buildBoostedName) rows.Add(kv.Value + "（编译提优 High）");
+            }
+            return rows;
+        }
 
         /// <summary>测试钩子：校正定时器是否运行中（应只在掌权期间为 true）</summary>
         internal bool FocusTimerRunning { get { lock (sync) return reconcileTimer != null; } }
@@ -95,7 +126,7 @@ namespace CaelusApp
         public void SetFocusMode(bool on)
         {
             Settings.Save("DevFocusModeOn", on);
-            if (!on) { lock (sync) { distractNotified.Clear(); } }
+            if (!on) { lock (sync) { distractNotified.Clear(); blockBalloonTicks.Clear(); } }
             RecomputeActivity();
         }
 
@@ -128,6 +159,7 @@ namespace CaelusApp
                     activeIdePids.Clear();
                     ideVisible = false;
                     distractNotified.Clear();
+                    blockBalloonTicks.Clear();
                 }
                 ForceReportInactive();
             }
@@ -162,6 +194,8 @@ namespace CaelusApp
             bool wasBuildActive;
             bool ideChanged = false;
             List<int> newlyBuilt = null;
+            List<int> toBlock = null;
+            long buildEndedElapsed = 0;
 
             lock (sync)
             {
@@ -196,18 +230,42 @@ namespace CaelusApp
                         if (activeIdePids.Remove(pc.Pid)) ideChanged = true;
                     }
 
-                    // 专注模式下新进程的分心提醒
-                    if (pc.Kind == ProcessChangeKind.Started && granted && FocusModeOn
-                        && isDistract != null && isDistract(pc.Name)
-                        && !distractNotified.Contains(pc.Name))
+                    // 专注模式下的分心应用：策略分级动作——提醒按名去重、阻断不去重；
+                    // 关闭进程在锁外执行（CloseMainWindow 最多等 1 秒，不能压住事件线程）
+                    if (pc.Kind == ProcessChangeKind.Started && isDistract != null && isDistract(pc.Name))
                     {
-                        distractNotified.Add(pc.Name);
-                        try
+                        DistractAction act = DecideDistractAction(
+                            granted, FocusModeOn, distractNotified.Contains(pc.Name), BlockDistractOn,
+                            DevServiceCatalog.IsMatch(pc.Name));
+                        if (act != DistractAction.None)
                         {
-                            var h = SessionChanged;
-                            if (h != null) h("bal.distract");
+                            bool blocked = act == DistractAction.NotifyAndBlock || act == DistractAction.BlockAgain;
+                            if (act != DistractAction.BlockAgain) distractNotified.Add(pc.Name);
+                            try { FocusStats.RecordDistract(blocked, BareProcessName(pc.Name), DateTime.Now); } catch { }
+                            if (blocked)
+                            {
+                                if (toBlock == null) toBlock = new List<int>();
+                                toBlock.Add(pc.Pid);
+                            }
+                            // 阻断气球 30 秒/名限频：阻断照常，弹泡不刷屏
+                            bool balloon = true;
+                            if (blocked)
+                            {
+                                long last;
+                                blockBalloonTicks.TryGetValue(pc.Name, out last);
+                                balloon = BlockBalloonReady(last, DateTime.UtcNow.Ticks);
+                                if (balloon) blockBalloonTicks[pc.Name] = DateTime.UtcNow.Ticks;
+                            }
+                            if (balloon)
+                            {
+                                try
+                                {
+                                    var h = SessionChanged;
+                                    if (h != null) h(blocked ? "bal.distract.block" : "bal.distract");
+                                }
+                                catch { }
+                            }
                         }
-                        catch { }
                     }
                 }
 
@@ -229,7 +287,24 @@ namespace CaelusApp
                 }
 
                 buildActivity = wasBuildActive != (activeBuildPids.Count > 0);
+                // 编译统计真实起止：集合 空→非空 记起点、非空→空 记时长（无起点不记——初始扫描外的边界防护）
+                if (activeBuildPids.Count > 0 && !wasBuildActive)
+                    buildStartTicks = DateTime.UtcNow.Ticks;
+                else if (activeBuildPids.Count == 0 && wasBuildActive)
+                    buildEndedElapsed = BuildEndedElapsed(buildStartTicks, DateTime.UtcNow.Ticks);
             }
+
+            // 编译结束（场景仍在运行也记账）：写今日统计与按日历史，替代旧「场景会话起点近似」日志
+            if (buildEndedElapsed > 0)
+            {
+                try { FocusStats.RecordBuild(buildEndedElapsed, DateTime.Now); } catch { }
+                try { Logger.Log(string.Format("开发专注：本次编译 {0:0.#} 秒",
+                    buildEndedElapsed / (double)TimeSpan.TicksPerSecond)); } catch { }
+            }
+
+            // 分心阻断在锁外执行：优雅关闭最多等 1 秒，不能压住进程事件线程
+            if (toBlock != null)
+                foreach (int pid in toBlock) CloseDistractProcess(pid);
 
             // 掌权期间新启动的编译进程同步提优（Grant 只提当时已存在的进程）；
             // 未掌权时不在此提优，交给随后的 Grant 统一处理
@@ -257,8 +332,8 @@ namespace CaelusApp
             {
                 if (buildActivity)
                 {
-                    long elapsedMs = (DateTime.UtcNow.Ticks - sessionStartTicks) / TimeSpan.TicksPerMillisecond;
-                    Logger.Log(string.Format("开发专注：本次编译 {0:0.#} 秒", elapsedMs / 1000.0));
+                    // 编译时长日志改在编译集合 1→0 处按真实起点记（见上 buildEndedElapsed），
+                    // 此处只发场景结束气球
                     try { var h = SessionChanged; if (h != null) h("bal.buildend"); } catch { }
                 }
                 arbiter.ReportActivity(Kind, false);
@@ -271,7 +346,13 @@ namespace CaelusApp
             if (string.IsNullOrEmpty(change.Name)) return;
             if (BuildCatalog.IsMatch(change.Name))
             {
-                lock (sync) activeBuildPids.Add(change.Pid);
+                // 初始扫描加入的编译进程也要起钟：否则它在第一批事件里就结束时，
+                // 转换逻辑以 buildStartTicks==0 计出天文数字时长，写爆今日统计
+                lock (sync)
+                {
+                    if (activeBuildPids.Add(change.Pid) && buildStartTicks == 0)
+                        buildStartTicks = DateTime.UtcNow.Ticks;
+                }
             }
             if (IdeOn && IsIdeProcess(change.Pid, change.Name, change.Path))
             {
@@ -292,6 +373,77 @@ namespace CaelusApp
                 finally { Native.CloseHandle(h); }
             }
             foreach (int pid in dead) pids.Remove(pid);
+        }
+
+        /// <summary>编译结束时长计算（纯逻辑，可单测）：无起点（初始扫描外的边界）一律记 0，
+        /// 杜绝 buildStartTicks==0 时计出天文时长写爆统计。</summary>
+        internal static long BuildEndedElapsed(long startTicks, long nowTicks)
+        {
+            if (startTicks <= 0) return 0;
+            long e = nowTicks - startTicks;
+            return e > 0 ? e : 0;
+        }
+
+        /// <summary>开发专注/日常场景的压制豁免组合（两宿主共用，改动只此一处）：
+        /// 游戏白名单 OR 守护服务 OR 日常家族（浏览器/Office/会议）。
+        /// 日常家族入列的理由：编译位压制会降所有无窗口后台进程的优先级——浏览器的 GPU/解码
+        /// 进程正是无窗口的，看视频/开会时会被误伤卡顿（2026-09-12 实机报告：压制 191 进程后
+        /// 视频卡）；与日常场景「家族豁免压制」的既有语义一致，代价是编译期前台应用少让少量 CPU。
+        /// 注：日常家族走名称+路径双校验，路径取不到（受保护进程）时按未命中处理（这类进程
+        /// 本就被反作弊通道豁免）。</summary>
+        internal static Func<string, string, bool> ComposeWhitelist(Func<string, string, bool> gameWhitelist)
+        {
+            return (name, path) =>
+                (gameWhitelist != null && gameWhitelist(name, path))
+                || DevServiceCatalog.IsMatch(name)
+                || DailyCatalog.IsMatch(name, path);
+        }
+
+        /// <summary>分心动作策略（纯逻辑，可单测）：只在「掌权且专注模式开」时动作；
+        /// 提醒按名去重（alreadyNotified），阻断开关把动作升级为阻断且不去重。
+        /// 守护服务清单优先：已注册开发服务不是分心应用（与后台压制豁免同序），
+        /// 否则「自动拉起 vs 专注阻断」会对同一进程形成拉起→关闭→再拉起的死循环。</summary>
+        internal static DistractAction DecideDistractAction(bool granted, bool focusOn, bool alreadyNotified, bool blockOn, bool isDevService)
+        {
+            if (isDevService) return DistractAction.None;
+            if (!granted || !focusOn) return DistractAction.None;
+            if (blockOn) return alreadyNotified ? DistractAction.BlockAgain : DistractAction.NotifyAndBlock;
+            return alreadyNotified ? DistractAction.None : DistractAction.NotifyOnly;
+        }
+
+        /// <summary>阻断气球限频判定（纯逻辑，可单测）：距上次弹泡不足 30 秒不再弹。</summary>
+        internal static bool BlockBalloonReady(long lastTicks, long nowTicks)
+        {
+            if (lastTicks <= 0) return true;
+            return nowTicks - lastTicks >= 30L * TimeSpan.TicksPerSecond;
+        }
+
+        /// <summary>进程名去 .exe 后缀（分心按名统计的归一键）。</summary>
+        private static string BareProcessName(string name)
+        {
+            if (string.IsNullOrEmpty(name)) return "";
+            if (name.EndsWith(".exe", StringComparison.OrdinalIgnoreCase)) return name.Substring(0, name.Length - 4);
+            return name;
+        }
+
+        /// <summary>阻断关闭分心应用：先发优雅关闭消息，1 秒未退再强杀，全程故障隔离。
+        /// PID 来自毫秒级新鲜的 Started 事件，复用窗口可忽略。</summary>
+        private static void CloseDistractProcess(int pid)
+        {
+            try
+            {
+                Process p = Process.GetProcessById(pid);
+                try
+                {
+                    bool closed = p.CloseMainWindow();
+                    if (!closed) p.Kill();
+                    else if (!p.WaitForExit(1000)) p.Kill();
+                }
+                finally { p.Dispose(); }
+                Logger.Log("开发专注：分心应用已阻断关闭（PID " + pid + "）");
+                ActivityLog.Add("分心应用已阻断关闭");
+            }
+            catch (Exception ex) { Logger.LogFailure("开发专注：阻断关闭分心应用失败", ex); }
         }
 
         /// <summary>判断进程是否为 IDE 进程。名称预筛 + 安装目录双重校验。</summary>
@@ -351,6 +503,7 @@ namespace CaelusApp
                 if (ide) ReconcileIdeBoost();
 
                 Logger.Log("开发专注：获得掌职权（编译=" + build + " 专注=" + focus + " IDE=" + ide + "）");
+                ActivityLog.Add("开发专注掌权（编译=" + build + " 专注=" + focus + " IDE=" + ide + "）");
             }
             catch (Exception ex) { Logger.LogFailure("开发专注掌权失败", ex); }
         }
@@ -404,6 +557,7 @@ namespace CaelusApp
 
             if (failed == 0) Logger.Log("开发专注：挂起，全部副作用已还原（检测继续）");
             else Logger.Log("开发专注：挂起完成，但 " + failed + " 个还原步骤失败（残留由下次启动自愈兜底）");
+            ActivityLog.Add(failed == 0 ? "开发专注挂起（副作用已还原）" : "开发专注挂起（" + failed + " 个还原步骤失败）");
         }
 
         private void BoostBuildProcesses()
@@ -517,6 +671,7 @@ namespace CaelusApp
             }
             if (suppressed > 0)
                 Logger.Log("开发专注：编译期间压制 " + suppressed + " 个后台进程（编译位，退出即还原）");
+            if (suppressed > 0) ActivityLog.Add("编译位压制 " + suppressed + " 个后台进程");
         }
 
         private void StartReconcileTimer()
@@ -650,6 +805,7 @@ namespace CaelusApp
                 activeBuildPids.Clear();
                 activeIdePids.Clear();
                 distractNotified.Clear();
+                blockBalloonTicks.Clear();
             }
             // 走仲裁器单一路径还原（若正掌权会回调 Suspend）
             if (wasReported) arbiter.ReportActivity(Kind, false);

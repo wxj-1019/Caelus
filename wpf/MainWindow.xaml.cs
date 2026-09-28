@@ -22,6 +22,7 @@ namespace CaelusApp.WpfHost
         private readonly PolicyPageViewModel policyVm;
         private readonly LibraryViewModel libraryVm;
         private readonly LogViewModel logVm;
+        private readonly ActivityViewModel activityVm;
         private readonly AboutViewModel aboutVm;
         private readonly SettingsViewModel settingsVm;
         private readonly AntiCheatViewModel antiCheatVm;
@@ -41,6 +42,7 @@ namespace CaelusApp.WpfHost
         private readonly PolicyView policyView;
         private readonly LibraryView libraryView;
         private readonly LogView logView;
+        private readonly ActivityView activityView;
         private readonly AboutView aboutView;
         private readonly SettingsView settingsView;
         private readonly AntiCheatView antiCheatView;
@@ -74,6 +76,7 @@ namespace CaelusApp.WpfHost
             LblNavWhitelist.Text = Lang.T("nav.white");
             LblNavAudit.Text = Lang.T("nav.audit");
             LblNavLog.Text = Lang.T("nav.log");
+            LblNavActivity.Text = Lang.T("nav.activity");
             LblNavSettings.Text = Lang.T("nav.set");
             LblNavAbout.Text = Lang.T("nav.about");
         }
@@ -148,6 +151,8 @@ namespace CaelusApp.WpfHost
             whitelistView = new WhitelistView { DataContext = whitelistVm };
             devFocusView = new ScenarioDetailView { DataContext = devDetailVm };
             dailyCareView = new ScenarioDetailView { DataContext = dailyDetailVm };
+            activityVm = new ActivityViewModel(source, gameMode, runtimeDevFocus, runtimeDailyCare);
+            activityView = new ActivityView { DataContext = activityVm };
             Pump();
 
             // 截图探针：注入“游戏掌权 / 开发活跃待命 / 日常待机”的完整三场景构图
@@ -652,6 +657,11 @@ namespace CaelusApp.WpfHost
                 logVm.Refresh();
                 next = logView;
             }
+            else if (rb == NavActivity)
+            {
+                activityVm.Refresh(true);
+                next = activityView;
+            }
             else if (rb == NavSettings) next = settingsView;
             else if (rb == NavAbout) next = aboutView;
             if (next == null || PageHost.Content == next) return;
@@ -692,6 +702,7 @@ namespace CaelusApp.WpfHost
                 : page == "whitelist" ? NavWhitelist
                 : page == "audit" ? NavAudit
                 : page == "log" ? NavLog
+                : page == "activity" ? NavActivity
                 : page == "settings" ? NavSettings
                 : page == "dev" ? NavDevFocus
                 : page == "daily" ? NavDailyCare

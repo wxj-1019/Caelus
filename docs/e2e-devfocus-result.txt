@@ -1,0 +1,12 @@
+PASS  启动 Caelus 并进入专注掌权 :: PID=113044
+PASS  A1 首次命中：notepad 被自动关闭
+PASS  A2 命中计数落盘（hits=blocked 且 ≥2：存根+真进程各计一次）
+PASS  A3 按名统计落盘 notepad:N :: names=Notepad:2
+PASS  A4 TSV 当日行分心/阻断列与计数器一致 :: row=2026-09-12	0	0	2	2 hits=2
+PASS  A5 日志含阻断关闭记录（本次启动后）
+PASS  A6 再次命中：静默再阻断（气球限频不阻断执行）
+PASS  B1 预存服务被杀后自动重启（快照入册生效） :: old=112568 new=69912
+PASS  B2 重启保留原命令行参数 :: cmdline="C:\WINDOWS\System32\ping.exe" -t 127.0.0.1
+PASS  应用优雅退出（还原链完整）
+CLEANUP 注册表与数据文件已还原
+TOTAL 11  FAIL 0

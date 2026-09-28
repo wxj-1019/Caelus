@@ -5,6 +5,7 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
+using System.Threading;
 
 namespace CaelusApp
 {
@@ -344,11 +345,27 @@ namespace CaelusApp
                 distractCount = 0;
                 foreach (string k in balloons) if (k == "bal.distract") distractCount++;
                 Eq(2, distractCount);
+
+                // —— 阻断开关打开：首次命中 = 提醒+阻断（假 PID 关闭失败被隔离），
+                //     再次命中 = 仍阻断但气球被 30 秒/名限频压住 ——
+                Settings.Save("DevFocusDistractBlock", true);
+                dev.NotifyProcessChanges(new ProcessChangeBatch(
+                    new[] { MakeChange(42004, "discord", ProcessChangeKind.Started) }, false));
+                dev.NotifyProcessChanges(new ProcessChangeBatch(
+                    new[] { MakeChange(42005, "discord", ProcessChangeKind.Started) }, false));
+                int blockCount = 0;
+                foreach (string k in balloons) if (k == "bal.distract.block") blockCount++;
+                Eq(1, blockCount);
+                int distractInBlock = 0;
+                foreach (string k in balloons) if (k == "bal.distract") distractInBlock++;
+                Eq(2, distractInBlock);   // 已提醒过的 discord 不再发普通提醒
             }
             finally
             {
                 if (dev != null) try { dev.Stop(); } catch { }
                 try { Settings.Save("DevFocusModeOn", false); } catch { }
+                try { Settings.Save("DevFocusDistractBlock", false); } catch { }
+                try { FocusStats.ResetForTest(); } catch { }
                 DeleteTempDir(dir);
             }
         }
@@ -689,6 +706,412 @@ namespace CaelusApp
             Eq(true, NetAcceleratorCatalog.IsAcceleratorLikeName("steam++"));
             Eq(true, NetAcceleratorCatalog.IsAcceleratorLikeName("ourplay"));
             Eq(true, AntiCheatCatalog.IsKnownProcess("SGuard64.exe"));
+        }
+
+        // IDE 自定义名录：写入即生效与内置名录合并；坏行容错；自定义按名匹配（无目录锚点），
+        // 内置项仍走安装目录双校验。写 Settings——必须注册在临时存储启用之后。
+        private static void TestIdeCatalogCustomList()
+        {
+            string old = IdeCatalog.CustomList;
+            try
+            {
+                IdeCatalog.CustomList = "notepad; ;\r\nmyide.exe\r\nBad Row  ";
+                Eq(true, IdeCatalog.NameMatches("myide"));
+                Eq(true, IdeCatalog.NameMatches("myide.exe"));   // .exe 后缀归一
+                Eq(true, IdeCatalog.NameMatches("MYIDE"));       // 大小写不敏感
+                Eq(true, IdeCatalog.IsMatch("myide", @"C:\ anywhere\myide.exe")); // 无目录锚点
+                Eq(false, IdeCatalog.NameMatches(""));           // 空行容错
+                Eq(true, IdeCatalog.NameMatches("Bad Row"));     // Trim 容错
+                Eq(true, IdeCatalog.NameMatches("code"));        // 内置名录不受影响
+                Eq(false, IdeCatalog.IsMatch("code", @"C:\Temp\code.exe")); // 内置双校验照旧
+                Eq(true, IdeCatalog.CustomList.Contains("myide.exe")); // 原文保存，展示层原样回显
+            }
+            finally { IdeCatalog.CustomList = old; }
+            Eq(false, IdeCatalog.NameMatches("myide"));          // 还原后失效
+        }
+
+        // 专注历史：同日合并增量、Keep 截断、近 N 日补零升序、8 列读写、旧 5 列行兼容。
+        // 文件级测试——FilePath 覆写到临时目录，不碰真实数据。
+        private static void TestFocusHistoryMergeAndTrim()
+        {
+            string file = NewTempDir("focus-hist") + "\\focus-history.tsv";
+            string old = FocusHistory.FilePath;
+            FocusHistory.FilePath = file;
+            try
+            {
+                FocusHistory.AppendOrUpdate(new FocusDayRecord { Day = "2026-09-01", FocusSeconds = 60, FocusSessions = 1 });
+                FocusHistory.AppendOrUpdate(new FocusDayRecord { Day = "2026-09-01", FocusSeconds = 30, FocusSessions = 1, Distract = 2, Blocked = 1 });   // 同日合并
+                var all = FocusHistory.LoadAll();
+                Eq(1, all.Count);
+                Eq("2026-09-01", all[0].Day);
+                Eq(90L, all[0].FocusSeconds);
+                Eq(2, all[0].FocusSessions);
+                Eq(2, all[0].Distract);
+                Eq(1, all[0].Blocked);
+
+                // 双场景同日合并：日常/编译列累加，与专注列互不干扰
+                FocusHistory.AppendOrUpdate(new FocusDayRecord { Day = "2026-09-01", DailySeconds = 300, DailySessions = 1, BuildSeconds = 45 });
+                all = FocusHistory.LoadAll();
+                Eq(90L, all[0].FocusSeconds);
+                Eq(300L, all[0].DailySeconds);
+                Eq(1, all[0].DailySessions);
+                Eq(45L, all[0].BuildSeconds);
+
+                // Keep 截断：共 66 行（65 天循环 + 09-01），只留最近 60 天
+                for (int i = 0; i < 65; i++)
+                    FocusHistory.AppendOrUpdate(new FocusDayRecord { Day = new DateTime(2026, 6, 1).AddDays(i).ToString("yyyy-MM-dd"), FocusSeconds = 10, FocusSessions = 1 });
+                all = FocusHistory.LoadAll();
+                Eq(60, all.Count);
+                Eq("2026-06-07", all[0].Day);   // 最旧 6 行（06-01..06-06）被截掉
+                Eq("2026-09-01", all[59].Day);
+                Eq(90L, all[59].FocusSeconds);  // 合并行数据保留
+
+                // 近 7 日补零：老→新、含今日、缺日补零
+                FocusHistory.AppendOrUpdate(new FocusDayRecord { Day = "2026-09-09", FocusSeconds = 10, FocusSessions = 1 });
+                var last = FocusHistory.LastDays(7, new DateTime(2026, 9, 11));
+                Eq(7, last.Count);
+                Eq("2026-09-05", last[0].Day);
+                Eq("2026-09-11", last[6].Day);
+                Eq(0L, last[0].FocusSeconds);   // 09-05 无数据 → 补零
+                Eq(10L, last[4].FocusSeconds);  // 09-09 有数据
+                Eq(0L, last[6].FocusSeconds);   // 今日无数据 → 补零
+
+                // 旧 5 列行无损读取：尾部三列补零
+                File.WriteAllText(file, "2026-08-01\t120\t2\t3\t1\n");
+                all = FocusHistory.LoadAll();
+                Eq(1, all.Count);
+                Eq(120L, all[0].FocusSeconds);
+                Eq(2, all[0].FocusSessions);
+                Eq(3, all[0].Distract);
+                Eq(1, all[0].Blocked);
+                Eq(0L, all[0].DailySeconds);
+                Eq(0, all[0].DailySessions);
+                Eq(0L, all[0].BuildSeconds);
+            }
+            finally { FocusHistory.FilePath = old; DeleteTempDir(Path.GetDirectoryName(file)); }
+        }
+
+        // 专注历史：会话与分心命中经 FocusStats 写当日趋势（注册表今日键 + TSV 双写、日切归零）。
+        // 写 Settings——必须注册在临时存储启用之后。
+        private static void TestFocusStatsFeedsHistory()
+        {
+            string file = NewTempDir("focus-stats") + "\\focus-history.tsv";
+            string old = FocusHistory.FilePath;
+            FocusHistory.FilePath = file;
+            FocusStats.ResetForTest();
+            try
+            {
+                var day = new DateTime(2026, 9, 11, 10, 0, 0);
+                FocusStats.RecordSession(90 * TimeSpan.TicksPerSecond, day);
+                FocusStats.RecordSession(30 * TimeSpan.TicksPerSecond, day);
+                Eq(120L, FocusStats.TodaySeconds(day));
+                Eq(2, FocusStats.TodaySessions(day));
+
+                FocusStats.RecordDistract(false, day);
+                FocusStats.RecordDistract(true, day);
+                Eq(2, FocusStats.TodayDistract(day));
+                Eq(1, FocusStats.TodayBlocked(day));
+
+                var all = FocusHistory.LoadAll();
+                Eq(1, all.Count);
+                Eq("2026-09-11", all[0].Day);
+                Eq(120L, all[0].FocusSeconds);
+                Eq(2, all[0].FocusSessions);
+                Eq(2, all[0].Distract);
+                Eq(1, all[0].Blocked);
+
+                // 日切归零：次日会话从零起算，历史新增一行
+                var next = day.AddDays(1);
+                FocusStats.RecordSession(60 * TimeSpan.TicksPerSecond, next);
+                Eq(60L, FocusStats.TodaySeconds(next));
+                Eq(0, FocusStats.TodayDistract(next));
+                all = FocusHistory.LoadAll();
+                Eq(2, all.Count);
+                Eq(60L, all[1].FocusSeconds);
+            }
+            finally
+            {
+                FocusHistory.FilePath = old;
+                FocusStats.ResetForTest();
+                DeleteTempDir(Path.GetDirectoryName(file));
+            }
+        }
+
+
+        // 编译统计：时长经 FocusStats 写今日键与 TSV buildSec 列，日切归零
+        private static void TestFocusBuildRecorded()
+        {
+            string file = NewTempDir("focus-build") + "\\focus-history.tsv";
+            string old = FocusHistory.FilePath;
+            FocusHistory.FilePath = file;
+            FocusStats.ResetForTest();
+            try
+            {
+                var day = new DateTime(2026, 9, 11, 10, 0, 0);
+                FocusStats.RecordBuild(150 * TimeSpan.TicksPerSecond, day);
+                FocusStats.RecordBuild(30 * TimeSpan.TicksPerSecond, day);
+                Eq(180L, FocusStats.TodayBuildSeconds(day));
+                Eq(2, FocusStats.TodayBuildSessions(day));
+                var all = FocusHistory.LoadAll();
+                Eq(1, all.Count);
+                Eq(180L, all[0].BuildSeconds);
+                Eq(0L, all[0].FocusSeconds);   // 编译列与专注列独立
+
+                var next = day.AddDays(1);
+                FocusStats.RecordBuild(60 * TimeSpan.TicksPerSecond, next);
+                Eq(60L, FocusStats.TodayBuildSeconds(next));
+                all = FocusHistory.LoadAll();
+                Eq(2, all.Count);
+                Eq(180L, all[0].BuildSeconds);
+                Eq(60L, all[1].BuildSeconds);
+            }
+            finally
+            {
+                FocusHistory.FilePath = old;
+                FocusStats.ResetForTest();
+                DeleteTempDir(Path.GetDirectoryName(file));
+            }
+        }
+
+        // 专注目标解析：30-1440 之外或非法一律回落默认 240（纯逻辑）
+        private static void TestFocusGoalParse()
+        {
+            Eq(240, FocusStats.ParseGoalMinutes("240"));
+            Eq(30, FocusStats.ParseGoalMinutes("30"));
+            Eq(1440, FocusStats.ParseGoalMinutes("1440"));
+            Eq(240, FocusStats.ParseGoalMinutes("29"));
+            Eq(240, FocusStats.ParseGoalMinutes("1441"));
+            Eq(240, FocusStats.ParseGoalMinutes("abc"));
+            Eq(240, FocusStats.ParseGoalMinutes(""));
+            Eq(240, FocusStats.ParseGoalMinutes(null));
+        }
+
+        // 编译统计集成：真实编译进程起止（探针扮演 msbuild）经 DevFocus 起止跟踪落盘
+        private static void TestDevFocusRecordsBuildStats()
+        {
+            string dir = NewTempDir("devfocus-buildstats");
+            Process probe = null;
+            DevFocus dev = null;
+            FocusStats.ResetForTest();
+            try
+            {
+                var arbiter = new ScenarioArbiter();
+                var core = new SuppressionCore(Path.Combine(dir, "s.state"));
+                dev = new DevFocus(arbiter, core, () => true, (n, p) => false, name => false);
+
+                string beat;
+                probe = StartNamedProbe(dir, "msbuild.exe", out beat);
+                WaitAdvance(beat, -1, 4000);
+                dev.NotifyProcessChanges(new ProcessChangeBatch(
+                    new[] { MakeChange(probe.Id, "msbuild", ProcessChangeKind.Started) }, false));
+                Eq(true, dev.IsGranted);
+                Thread.Sleep(1200);   // 编译进行 1 秒以上
+                dev.NotifyProcessChanges(new ProcessChangeBatch(
+                    new[] { MakeChange(probe.Id, "msbuild", ProcessChangeKind.Stopped) }, false));
+                Eq(1, FocusStats.TodayBuildSessions(DateTime.Now));
+                Eq(true, FocusStats.TodayBuildSeconds(DateTime.Now) >= 1);
+            }
+            finally
+            {
+                if (dev != null) try { dev.Stop(); } catch { }
+                if (probe != null) try { StopOwned(probe); } catch { }
+                FocusStats.ResetForTest();
+                DeleteTempDir(dir);
+            }
+        }
+
+
+
+
+        // 监控日志：环形 60 条截断、新→旧序、返回副本
+        private static void TestActivityLogRing()
+        {
+            ActivityLog.ResetForTest();
+            try
+            {
+                for (int i = 1; i <= 70; i++) ActivityLog.Add("动作 " + i);
+                var all = ActivityLog.Recent(60);
+                Eq(60, all.Count);
+                Eq("动作 70", all[0].Text);   // 新→旧
+                Eq("动作 11", all[59].Text);  // 最旧 10 条被挤出
+                var top5 = ActivityLog.Recent(5);
+                Eq(5, top5.Count);
+                Eq("动作 70", top5[0].Text);
+                Eq("动作 66", top5[4].Text);
+                Eq(true, top5[0].Ticks > 0);
+            }
+            finally { ActivityLog.ResetForTest(); }
+        }
+
+        // 压制快照：行含名称/级别/原因/起钟时刻，释放后清空
+        private static void TestSuppressionSnapshotRows()
+        {
+            string dir = NewTempDir("sup-snap");
+            Process probe = null;
+            try
+            {
+                string beat;
+                probe = StartNamedProbe(dir, "testhelper.exe", out beat);
+                WaitAdvance(beat, -1, 4000);
+
+                var core = new SuppressionCore(Path.Combine(dir, "s.state"));
+                try
+                {
+                    core.Acquire(probe.Id, probe.ProcessName,
+                        SuppressReason.Build, "snap", SuppressionLevel.Eco);
+                    var rows = core.SnapshotRows();
+                    bool hit = false;
+                    string dump = "";
+                    foreach (var r in rows)
+                    {
+                        dump += r.Pid + "/" + r.Name + "/" + r.LevelText + "/" + r.ReasonsText + ";";
+                        if (r.Pid != probe.Id) continue;
+                        hit = true;
+                        Eq(probe.ProcessName, r.Name);
+                        Eq("常规", r.LevelText);
+                        Eq(true, r.ReasonsText.Contains("编译"));
+                        Eq(true, r.AcquiredTicks > 0);
+                    }
+                    if (!hit)
+                        throw new Exception("pid=" + probe.Id + " rows=" + rows.Count + " throttled="
+                            + core.IsThrottled(probe.Id) + " dump=" + dump);
+
+                    core.ReleaseReason(SuppressReason.Build);
+                    foreach (var r in core.SnapshotRows())
+                        Eq(false, r.Pid == probe.Id);
+                }
+                finally { core.ReleaseReason(SuppressReason.Build); }
+            }
+            finally
+            {
+                if (probe != null) try { StopOwned(probe); } catch { }
+                DeleteTempDir(dir);
+            }
+        }
+
+        // 压制豁免组合：游戏白名单 OR 守护服务 OR 日常家族（浏览器/Office/会议）。
+        // 日常家族入列修复实机问题：编译位压制降无窗口后台优先级时误伤浏览器 GPU/解码进程，
+        // 看视频卡顿（2026-09-12 实机：压制 191 进程后视频卡）。写 Settings——注册在临时存储之后。
+        private static void TestDevFocusWhitelistComposed()
+        {
+            string dir = NewTempDir("devfocus-wl");
+            var core = new SuppressionCore(Path.Combine(dir, "s.state"));
+            Func<string, string, bool> wl = DevFocus.ComposeWhitelist((n, p) => false);
+            int self = Process.GetCurrentProcess().Id;
+            int session = Process.GetCurrentProcess().SessionId;
+            var noWindows = new HashSet<int>();
+            string winRoot = Environment.GetFolderPath(Environment.SpecialFolder.Windows);
+            string chrome = Path.Combine(
+                Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles),
+                @"Google\Chrome\Application\chrome.exe");
+            try
+            {
+                // 日常家族（浏览器标准路径）豁免——GPU/解码进程同族同路径一并安全
+                Eq(false, DevFocus.ShouldSuppressBackground(
+                    5000, self, "chrome", chrome,
+                    session, session, 0, noWindows, winRoot, wl));
+                // 守护服务豁免
+                Settings.SaveStr("DevServiceList", "node");
+                DevServiceCatalog.Reload();
+                Eq(false, DevFocus.ShouldSuppressBackground(
+                    5001, self, "node", @"C:
+ode
+ode.exe",
+                    session, session, 0, noWindows, winRoot, wl));
+                Settings.SaveStr("DevServiceList", "");
+                DevServiceCatalog.Reload();
+                // 游戏白名单透传
+                Eq(false, DevFocus.ShouldSuppressBackground(
+                    5002, self, "mygame", @"C:\Games\mygame.exe",
+                    session, session, 0, noWindows, winRoot,
+                    DevFocus.ComposeWhitelist((n, p) => n == "mygame")));
+                // 无关后台仍压制（豁免没有扩大化）
+                Eq(true, DevFocus.ShouldSuppressBackground(
+                    5003, self, "someapp", @"C:\Apps\someapp.exe",
+                    session, session, 0, noWindows, winRoot, wl));
+            }
+            finally
+            {
+                core.ReleaseReason(SuppressReason.Build);
+                DeleteTempDir(dir);
+            }
+        }
+
+        // 编译起止守卫（纯逻辑）：无起点一律记 0——初始扫描加入的进程在第一批事件里结束时
+        // 若 buildStartTicks 未置位，旧实现会计出天文时长写爆今日统计
+        private static void TestBuildEndedElapsedGuard()
+        {
+            Eq(0L, DevFocus.BuildEndedElapsed(0, 999999));            // 无起点：不记
+            Eq(0L, DevFocus.BuildEndedElapsed(-5, 999999));           // 非法起点：不记
+            Eq(0L, DevFocus.BuildEndedElapsed(500, 100));             // 时钟回拨：不记负值
+            Eq(150L, DevFocus.BuildEndedElapsed(100, 250));           // 正常起止
+        }
+
+        // 分心策略真值表：未掌权/未开专注不动作；提醒按名去重；阻断开关把动作升级为阻断
+        // （阻断不去重——用户手滑再开分心应用仍会被关回去，但不会被气球刷屏）；
+        // 守护服务清单优先——命中服务的名字绝不按分心处理（否则自动拉起与阻断互相残杀成死循环）
+        private static void TestDistractActionPolicy()
+        {
+            Eq(DistractAction.None, DevFocus.DecideDistractAction(false, true, false, false, false));
+            Eq(DistractAction.None, DevFocus.DecideDistractAction(true, false, false, false, false));
+            Eq(DistractAction.None, DevFocus.DecideDistractAction(true, true, true, false, false));
+            Eq(DistractAction.NotifyOnly, DevFocus.DecideDistractAction(true, true, false, false, false));
+            Eq(DistractAction.NotifyAndBlock, DevFocus.DecideDistractAction(true, true, false, true, false));
+            Eq(DistractAction.BlockAgain, DevFocus.DecideDistractAction(true, true, true, true, false));
+
+            // 服务优先：即使掌权+专注+阻断全开、且名字在分心清单里，服务名一律不动作
+            Eq(DistractAction.None, DevFocus.DecideDistractAction(true, true, false, true, true));
+            Eq(DistractAction.None, DevFocus.DecideDistractAction(true, true, true, true, true));
+            Eq(DistractAction.None, DevFocus.DecideDistractAction(false, false, false, false, true));
+        }
+
+        // 阻断气球限频：30 秒/名，未记录过立即允许
+        private static void TestDistractBlockBalloonRateLimit()
+        {
+            long interval = 30L * TimeSpan.TicksPerSecond;
+            Eq(true, DevFocus.BlockBalloonReady(0, 1000));                     // 无记录：允许
+            Eq(false, DevFocus.BlockBalloonReady(1000, 1000 + interval - 1));  // 未到期
+            Eq(true, DevFocus.BlockBalloonReady(1000, 1000 + interval));       // 恰好到期
+            Eq(true, DevFocus.BlockBalloonReady(1000, 1000 + interval * 5));   // 远超
+        }
+
+        // 分心按名统计：.exe/大小写归一合并、同数按名序稳定、Top8 截断、日切清空
+        private static void TestFocusStatsDistractNames()
+        {
+            string file = NewTempDir("focus-names") + "\\focus-history.tsv";
+            string old = FocusHistory.FilePath;
+            FocusHistory.FilePath = file;
+            FocusStats.ResetForTest();
+            try
+            {
+                var day = new DateTime(2026, 9, 11, 10, 0, 0);
+                FocusStats.RecordDistract(false, "discord.exe", day);   // .exe 归一
+                FocusStats.RecordDistract(true, "Discord", day);        // 大小写合并
+                FocusStats.RecordDistract(false, "steam", day);
+                FocusStats.RecordDistract(false, "steam", day);
+                Eq(4, FocusStats.TodayDistract(day));
+                Eq("discord×2 · steam×2", FocusStats.TodayDistractTopText(day));
+
+                // Top8 截断：再加 9 个名字，只留次数最高的 8 个（discord/steam×2 优先）
+                for (int i = 1; i <= 9; i++)
+                    FocusStats.RecordDistract(false, "app" + i, day);
+                string top = FocusStats.TodayDistractTopText(day);
+                Eq(8, top.Split(new[] { " · " }, StringSplitOptions.None).Length);
+                Eq(true, top.StartsWith("discord×2 · steam×2 · app1×1")); // 同数按名序
+                Eq(true, top.Contains("app6×1"));
+                Eq(false, top.Contains("app7"));                          // app7..app9 被截掉
+
+                // 日切清空
+                var next = day.AddDays(1);
+                FocusStats.RecordDistract(false, "other", next);
+                Eq("other×1", FocusStats.TodayDistractTopText(next));
+            }
+            finally
+            {
+                FocusHistory.FilePath = old;
+                FocusStats.ResetForTest();
+                DeleteTempDir(Path.GetDirectoryName(file));
+            }
         }
 
         private static void TestIdeCatalogDbTools()

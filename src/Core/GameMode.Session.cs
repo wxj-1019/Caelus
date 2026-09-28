@@ -34,6 +34,7 @@ namespace CaelusApp
                 repGame = game;
                 repStart = Stopwatch.GetTimestamp();
                 repCaelusCpuStart = caelusCpu;
+                ActivityLog.Add("游戏会话开始：" + game);
             }
         }
 
@@ -138,6 +139,7 @@ namespace CaelusApp
                 }
             }
 
+            ActivityLog.Add("对局结束：" + DisplayNameFor(game) + " " + FmtDur(dur) + "，压制 " + used.Count + " 个后台");
             string core = Lang.F("rep.done", DisplayNameFor(game), FmtDur(dur), used.Count, FmtCpu(total));
             long caelusCpuEnd = CurrentProcessCpuTicks();
             long caelusCpuDelta = caelusCpuStart > 0

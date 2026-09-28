@@ -11,18 +11,24 @@
         <TextBlock x:Name="HdrSub" Text="三场景开关、应用偏好与维护工具" Style="{DynamicResource PageSubtitle}"/>
       </StackPanel>
 
-      <Border x:Name="ZoneSummary" Style="{DynamicResource StatusBanner}" Margin="0,0,0,16" Padding="14,11">
+      <!-- 偏好摘要 Hero：夜空烟花光晕；左侧偏好结论，右侧开发状态徽章。 -->
+      <ctl:GlassCard x:Name="ZoneSummary" Style="{DynamicResource HeroGlassCard}" Margin="0,0,0,16"
+              AutomationProperties.Name="当前偏好摘要">
         <Grid>
-          <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
-          <StackPanel>
-            <TextBlock Text="当前偏好" FontSize="{DynamicResource FontSizeSmall}" FontWeight="SemiBold" Foreground="{DynamicResource TextPrimaryBrush}"/>
-            <TextBlock Text="{Binding PreferenceSummary}" Margin="0,3,0,0" FontSize="{DynamicResource FontSizeXs}" Foreground="{DynamicResource TextSecondaryBrush}"/>
-          </StackPanel>
-          <Border Grid.Column="1" Style="{DynamicResource NeutralStatusBadge}" VerticalAlignment="Center" Margin="16,0,0,0">
-            <TextBlock Text="{Binding DevSummary}" MaxWidth="340" FontSize="{DynamicResource FontSizeXs}" Foreground="{DynamicResource TextSecondaryBrush}" TextWrapping="Wrap"/>
-          </Border>
+          <Border Style="{StaticResource AuroraPrimaryHost}"/>
+          <Border Style="{StaticResource AuroraSecondaryHost}"/>
+          <Grid>
+            <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
+            <StackPanel VerticalAlignment="Center">
+              <TextBlock Text="当前偏好" FontSize="{DynamicResource FontSizeRegion}" FontWeight="SemiBold" Foreground="{DynamicResource TextPrimaryBrush}"/>
+              <TextBlock Text="{Binding PreferenceSummary}" Margin="0,4,0,0" FontSize="{DynamicResource FontSizeSmall}" Foreground="{DynamicResource TextSecondaryBrush}" TextWrapping="Wrap"/>
+            </StackPanel>
+            <Border Grid.Column="1" Style="{DynamicResource NeutralStatusBadge}" VerticalAlignment="Center" Margin="16,0,0,0">
+              <TextBlock Text="{Binding DevSummary}" MaxWidth="340" FontSize="{DynamicResource FontSizeXs}" Foreground="{DynamicResource TextSecondaryBrush}" TextWrapping="Wrap"/>
+            </Border>
+          </Grid>
         </Grid>
-      </Border>
+      </ctl:GlassCard>
 
       <Border x:Name="PageFeedbackBanner" Margin="0,0,0,16">
         <Border.Style>
@@ -41,13 +47,9 @@
 
       <StackPanel x:Name="ZoneApp">
         <StackPanel Orientation="Horizontal" Margin="0,0,0,8">
-          <Border Width="28" Height="28" CornerRadius="{DynamicResource RadiusSm}"
-                  Background="{DynamicResource AccentSoftBrush}" BorderBrush="{DynamicResource AccentEdgeBrush}"
-                  BorderThickness="1" VerticalAlignment="Center" Margin="0,0,10,0">
-            <Viewbox Width="15" Height="15">
-              <Path Data="M3 12a9 9 0 1 1 18 0 9 9 0 1 1-18 0 M12 5v2 M12 17v2 M5 12h2 M17 12h2"
-                    Stroke="{DynamicResource ModeAccentBrush}" StrokeThickness="2" StrokeLineJoin="Round"/>
-            </Viewbox>
+          <Border Style="{StaticResource SectionHeaderIcon}" Margin="0,0,12,0">
+            <ctl:IconView Key="IconSettings" Width="16" Height="16" Foreground="{DynamicResource ModeAccentBrush}"
+                          HorizontalAlignment="Center" VerticalAlignment="Center"/>
           </Border>
           <TextBlock Text="{Binding AppSectionTitle}" FontSize="{DynamicResource FontSizeBody}"
                      FontWeight="SemiBold" Foreground="{DynamicResource TextPrimaryBrush}" VerticalAlignment="Center"/>
@@ -64,13 +66,9 @@
 
       <StackPanel x:Name="ZoneDev">
         <StackPanel Orientation="Horizontal" Margin="0,0,0,8">
-          <Border Width="28" Height="28" CornerRadius="{DynamicResource RadiusSm}"
-                  Background="{DynamicResource AccentSoftBrush}" BorderBrush="{DynamicResource AccentEdgeBrush}"
-                  BorderThickness="1" VerticalAlignment="Center" Margin="0,0,10,0">
-            <Viewbox Width="15" Height="15">
-              <Path Data="M9.5 2L2 9.5 4.5 12l5-5 2.5 2.5L22 2z M2 22h20"
-                    Stroke="{DynamicResource ModeAccentBrush}" StrokeThickness="2" StrokeStartLineCap="Round" StrokeEndLineCap="Round" StrokeLineJoin="Round"/>
-            </Viewbox>
+          <Border Style="{StaticResource SectionHeaderIcon}" Margin="0,0,12,0">
+            <ctl:IconView Key="IconCode" Width="16" Height="16" Foreground="{DynamicResource ModeAccentBrush}"
+                          HorizontalAlignment="Center" VerticalAlignment="Center"/>
           </Border>
           <TextBlock Text="开发" FontSize="{DynamicResource FontSizeBody}"
                      FontWeight="SemiBold" Foreground="{DynamicResource TextPrimaryBrush}" VerticalAlignment="Center"/>
@@ -81,9 +79,13 @@
             <Border Style="{DynamicResource PolicyRow}" BorderThickness="0,0,0,1" local:RowToggle.Enabled="True"><DockPanel><ToggleButton Style="{DynamicResource PolicyToggle}" IsChecked="{Binding DevMode}" DockPanel.Dock="Right" VerticalAlignment="Center" Margin="16,0,0,0" AutomationProperties.Name="开发模式"/><StackPanel VerticalAlignment="Center"><TextBlock Text="{Binding DevModeTitle}" FontSize="{DynamicResource FontSizeCaption}" FontWeight="SemiBold" Foreground="{DynamicResource TextPrimaryBrush}"/><TextBlock Text="{Binding DevModeNote}" FontSize="{DynamicResource FontSizeSmall}" Foreground="{DynamicResource TextSecondaryBrush}" TextWrapping="Wrap" Margin="0,3,0,0"/></StackPanel></DockPanel></Border>
             <Border Style="{DynamicResource PolicyRow}" BorderThickness="0,0,0,1" local:RowToggle.Enabled="True"><DockPanel><ToggleButton Style="{DynamicResource PolicyToggle}" IsChecked="{Binding FocusMode}" DockPanel.Dock="Right" VerticalAlignment="Center" Margin="16,0,0,0" AutomationProperties.Name="专注模式"/><StackPanel VerticalAlignment="Center"><TextBlock Text="{Binding FocusModeTitle}" FontSize="{DynamicResource FontSizeCaption}" FontWeight="SemiBold" Foreground="{DynamicResource TextPrimaryBrush}"/><TextBlock Text="{Binding FocusModeNote}" FontSize="{DynamicResource FontSizeSmall}" Foreground="{DynamicResource TextSecondaryBrush}" TextWrapping="Wrap" Margin="0,3,0,0"/></StackPanel></DockPanel></Border>
             <Border Style="{DynamicResource PolicyRow}" BorderThickness="0,0,0,1" local:RowToggle.Enabled="True"><DockPanel><ToggleButton Style="{DynamicResource PolicyToggle}" IsChecked="{Binding IdeOn}" DockPanel.Dock="Right" VerticalAlignment="Center" Margin="16,0,0,0" AutomationProperties.Name="IDE 优化"/><StackPanel VerticalAlignment="Center"><TextBlock Text="{Binding IdeTitle}" FontSize="{DynamicResource FontSizeCaption}" FontWeight="SemiBold" Foreground="{DynamicResource TextPrimaryBrush}"/><TextBlock Text="{Binding IdeNote}" FontSize="{DynamicResource FontSizeSmall}" Foreground="{DynamicResource TextSecondaryBrush}" TextWrapping="Wrap" Margin="0,3,0,0"/></StackPanel></DockPanel></Border>
+            <Border Style="{DynamicResource PolicyRow}" BorderThickness="0,0,0,1"><StackPanel><DockPanel Margin="0,0,0,8"><Button x:Name="BtnIdeCustomSave" Content="{Binding DevCustomSaveText}" Click="OnIdeCustomSave" Style="{DynamicResource GhostButton}" Padding="10,5" DockPanel.Dock="Right" VerticalAlignment="Center" Margin="16,0,0,0" AutomationProperties.Name="保存自定义 IDE 进程"/><TextBlock Text="{Binding IdeCustomTitle}" FontSize="{DynamicResource FontSizeCaption}" FontWeight="SemiBold" Foreground="{DynamicResource TextPrimaryBrush}" VerticalAlignment="Center"/></DockPanel><TextBox x:Name="TbIdeCustom" Text="{Binding IdeCustomInitial, Mode=OneTime}" Style="{DynamicResource InputBox}" TextWrapping="Wrap" AcceptsReturn="True" VerticalScrollBarVisibility="Auto" MinHeight="48" MaxHeight="112" FontFamily="{DynamicResource FontMono}" FontSize="{DynamicResource FontSizeMono}" AutomationProperties.Name="自定义 IDE 进程列表"/><TextBlock Text="{Binding IdeCustomNote}" FontSize="{DynamicResource FontSizeSmall}" Foreground="{DynamicResource TextSecondaryBrush}" TextWrapping="Wrap" Margin="0,7,0,0"/></StackPanel></Border>
             <Border Style="{DynamicResource PolicyRow}" BorderThickness="0,0,0,1"><StackPanel><TextBlock Text="{Binding FocusStatsText}" FontSize="{DynamicResource FontSizeSmall}" Foreground="{DynamicResource TextSecondaryBrush}" TextWrapping="Wrap" AutomationProperties.Name="今日专注时长统计"/></StackPanel></Border>
+            <Border Style="{DynamicResource PolicyRow}" BorderThickness="0,0,0,1"><StackPanel><DockPanel Margin="0,0,0,8"><Button x:Name="BtnFocusGoalSave" Content="{Binding DevCustomSaveText}" Click="OnFocusGoalSave" Style="{DynamicResource GhostButton}" Padding="10,5" DockPanel.Dock="Right" VerticalAlignment="Center" Margin="16,0,0,0" AutomationProperties.Name="保存每日专注目标"/><TextBlock Text="{Binding FocusGoalTitle}" FontSize="{DynamicResource FontSizeCaption}" FontWeight="SemiBold" Foreground="{DynamicResource TextPrimaryBrush}" VerticalAlignment="Center"/></DockPanel><TextBox x:Name="TbFocusGoal" Text="{Binding FocusGoalInitial, Mode=OneTime}" Style="{DynamicResource InputBox}" Width="120" HorizontalAlignment="Left" Padding="10,5" FontSize="{DynamicResource FontSizeMono}" AutomationProperties.Name="每日专注目标（分钟）"/><TextBlock Text="{Binding FocusGoalNote}" FontSize="{DynamicResource FontSizeSmall}" Foreground="{DynamicResource TextSecondaryBrush}" TextWrapping="Wrap" Margin="0,7,0,0"/></StackPanel></Border>
             <Border Style="{DynamicResource PolicyRow}" BorderThickness="0,0,0,1"><StackPanel><DockPanel Margin="0,0,0,8"><Button x:Name="BtnDistractSave" Content="{Binding DevCustomSaveText}" Click="OnDistractSave" Style="{DynamicResource GhostButton}" Padding="10,5" DockPanel.Dock="Right" VerticalAlignment="Center" Margin="16,0,0,0" AutomationProperties.Name="保存分心应用清单"/><TextBlock Text="{Binding DistractTitle}" FontSize="{DynamicResource FontSizeCaption}" FontWeight="SemiBold" Foreground="{DynamicResource TextPrimaryBrush}" VerticalAlignment="Center"/></DockPanel><TextBox x:Name="TbDistract" Text="{Binding DistractInitial, Mode=OneTime}" Style="{DynamicResource InputBox}" TextWrapping="Wrap" AcceptsReturn="True" VerticalScrollBarVisibility="Auto" MinHeight="44" MaxHeight="96" FontFamily="{DynamicResource FontMono}" FontSize="{DynamicResource FontSizeMono}" AutomationProperties.Name="分心应用清单"/><TextBlock Text="{Binding DistractNote}" FontSize="{DynamicResource FontSizeSmall}" Foreground="{DynamicResource TextSecondaryBrush}" TextWrapping="Wrap" Margin="0,7,0,0"/></StackPanel></Border>
+            <Border Style="{DynamicResource PolicyRow}" BorderThickness="0,0,0,1" local:RowToggle.Enabled="True"><DockPanel><ToggleButton Style="{DynamicResource PolicyToggle}" IsChecked="{Binding DistractBlockOn}" DockPanel.Dock="Right" VerticalAlignment="Center" Margin="16,0,0,0" AutomationProperties.Name="专注阻断"/><StackPanel VerticalAlignment="Center"><TextBlock Text="{Binding DistractBlockTitle}" FontSize="{DynamicResource FontSizeCaption}" FontWeight="SemiBold" Foreground="{DynamicResource TextPrimaryBrush}"/><TextBlock Text="{Binding DistractBlockNote}" FontSize="{DynamicResource FontSizeSmall}" Foreground="{DynamicResource TextSecondaryBrush}" TextWrapping="Wrap" Margin="0,3,0,0"/></StackPanel></DockPanel></Border>
             <Border Style="{DynamicResource PolicyRow}" BorderThickness="0,0,0,1"><StackPanel><DockPanel Margin="0,0,0,8"><Button x:Name="BtnDevSvcSave" Content="{Binding DevCustomSaveText}" Click="OnDevSvcSave" Style="{DynamicResource GhostButton}" Padding="10,5" DockPanel.Dock="Right" VerticalAlignment="Center" Margin="16,0,0,0" AutomationProperties.Name="保存开发服务守护清单"/><TextBlock Text="{Binding DevSvcTitle}" FontSize="{DynamicResource FontSizeCaption}" FontWeight="SemiBold" Foreground="{DynamicResource TextPrimaryBrush}" VerticalAlignment="Center"/></DockPanel><TextBox x:Name="TbDevSvc" Text="{Binding DevSvcInitial, Mode=OneTime}" Style="{DynamicResource InputBox}" TextWrapping="Wrap" AcceptsReturn="True" VerticalScrollBarVisibility="Auto" MinHeight="44" MaxHeight="96" FontFamily="{DynamicResource FontMono}" FontSize="{DynamicResource FontSizeMono}" AutomationProperties.Name="开发服务守护清单"/><TextBlock Text="{Binding DevSvcNote}" FontSize="{DynamicResource FontSizeSmall}" Foreground="{DynamicResource TextSecondaryBrush}" TextWrapping="Wrap" Margin="0,7,0,0"/></StackPanel></Border>
+            <Border Style="{DynamicResource PolicyRow}" BorderThickness="0,0,0,1" local:RowToggle.Enabled="True"><DockPanel><ToggleButton Style="{DynamicResource PolicyToggle}" IsChecked="{Binding DevSvcRestartOn}" DockPanel.Dock="Right" VerticalAlignment="Center" Margin="16,0,0,0" AutomationProperties.Name="服务自动拉起"/><StackPanel VerticalAlignment="Center"><TextBlock Text="{Binding DevSvcRestartTitle}" FontSize="{DynamicResource FontSizeCaption}" FontWeight="SemiBold" Foreground="{DynamicResource TextPrimaryBrush}"/><TextBlock Text="{Binding DevSvcRestartNote}" FontSize="{DynamicResource FontSizeSmall}" Foreground="{DynamicResource TextSecondaryBrush}" TextWrapping="Wrap" Margin="0,3,0,0"/></StackPanel></DockPanel></Border>
             <Border Style="{DynamicResource PolicyRow}" BorderThickness="0,0,0,1"><StackPanel><DockPanel Margin="0,0,0,8"><Button x:Name="BtnDevEnvRun" Content="{Binding DevEnvRunText}" Click="OnDevEnvRun" Style="{DynamicResource GhostButton}" Padding="10,5" DockPanel.Dock="Right" VerticalAlignment="Center" Margin="16,0,0,0" AutomationProperties.Name="检测开发环境"/><TextBlock Text="{Binding DevEnvTitle}" FontSize="{DynamicResource FontSizeCaption}" FontWeight="SemiBold" Foreground="{DynamicResource TextPrimaryBrush}" VerticalAlignment="Center"/></DockPanel><TextBlock Text="{Binding DevEnvNote}" FontSize="{DynamicResource FontSizeSmall}" Foreground="{DynamicResource TextSecondaryBrush}" TextWrapping="Wrap" Margin="0,0,0,7"/><TextBox Text="{Binding DevEnvResult, Mode=OneWay}" Style="{DynamicResource InputBox}" IsReadOnly="True" TextWrapping="Wrap" MinHeight="72" MaxHeight="180" VerticalScrollBarVisibility="Auto" FontFamily="{DynamicResource FontMono}" FontSize="{DynamicResource FontSizeMono}" AutomationProperties.Name="开发环境体检结果"/></StackPanel></Border>
             <Border Style="{DynamicResource PolicyRow}"><StackPanel><DockPanel Margin="0,0,0,8"><Button x:Name="BtnDevSave" Content="{Binding DevCustomSaveText}" Click="OnDevSave" Style="{DynamicResource GhostButton}" Padding="10,5" DockPanel.Dock="Right" VerticalAlignment="Center" Margin="16,0,0,0" AutomationProperties.Name="保存自定义编译进程"/><TextBlock Text="{Binding DevCustomTitle}" FontSize="{DynamicResource FontSizeCaption}" FontWeight="SemiBold" Foreground="{DynamicResource TextPrimaryBrush}" VerticalAlignment="Center"/></DockPanel><TextBox x:Name="TbDevCustom" Text="{Binding DevCustomInitial, Mode=OneTime}" Style="{DynamicResource InputBox}" TextWrapping="Wrap" AcceptsReturn="True" VerticalScrollBarVisibility="Auto" MinHeight="48" MaxHeight="112" FontFamily="{DynamicResource FontMono}" FontSize="{DynamicResource FontSizeMono}" AutomationProperties.Name="自定义编译进程列表"/><TextBlock Text="{Binding DevCustomNote}" FontSize="{DynamicResource FontSizeSmall}" Foreground="{DynamicResource TextSecondaryBrush}" TextWrapping="Wrap" Margin="0,7,0,0"/></StackPanel></Border>
           </StackPanel>
@@ -92,13 +94,9 @@
 
       <StackPanel x:Name="ZoneDaily">
         <StackPanel Orientation="Horizontal" Margin="0,0,0,8">
-          <Border Width="28" Height="28" CornerRadius="{DynamicResource RadiusSm}"
-                  Background="{DynamicResource AccentSoftBrush}" BorderBrush="{DynamicResource AccentEdgeBrush}"
-                  BorderThickness="1" VerticalAlignment="Center" Margin="0,0,10,0">
-            <Viewbox Width="15" Height="15">
-              <Path Data="M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20zm0 4v4l3 3"
-                    Stroke="{DynamicResource ModeAccentBrush}" StrokeThickness="2" StrokeLineJoin="Round"/>
-            </Viewbox>
+          <Border Style="{StaticResource SectionHeaderIcon}" Margin="0,0,12,0">
+            <ctl:IconView Key="IconDaily" Width="16" Height="16" Foreground="{DynamicResource ModeAccentBrush}"
+                          HorizontalAlignment="Center" VerticalAlignment="Center"/>
           </Border>
           <TextBlock Text="{Binding DailySectionTitle}" FontSize="{DynamicResource FontSizeBody}"
                      FontWeight="SemiBold" Foreground="{DynamicResource TextPrimaryBrush}" VerticalAlignment="Center"/>
@@ -117,10 +115,8 @@
 
       <StackPanel x:Name="ZoneTheme">
         <StackPanel Orientation="Horizontal" Margin="0,0,0,8">
-          <Border Width="28" Height="28" CornerRadius="{DynamicResource RadiusSm}"
-                  Background="{DynamicResource AccentSoftBrush}" BorderBrush="{DynamicResource AccentEdgeBrush}"
-                  BorderThickness="1" VerticalAlignment="Center" Margin="0,0,10,0">
-            <ctl:IconView Key="IconSettings" Width="15" Height="15"
+          <Border Style="{StaticResource SectionHeaderIcon}" Margin="0,0,12,0">
+            <ctl:IconView Key="IconSettings" Width="16" Height="16"
                           Foreground="{DynamicResource ModeAccentBrush}"
                           HorizontalAlignment="Center" VerticalAlignment="Center"/>
           </Border>
@@ -187,13 +183,9 @@
 
       <StackPanel x:Name="ZoneMaint">
         <StackPanel Orientation="Horizontal" Margin="0,0,0,8">
-          <Border Width="28" Height="28" CornerRadius="{DynamicResource RadiusSm}"
-                  Background="{DynamicResource AccentSoftBrush}" BorderBrush="{DynamicResource AccentEdgeBrush}"
-                  BorderThickness="1" VerticalAlignment="Center" Margin="0,0,10,0">
-            <Viewbox Width="15" Height="15">
-              <Path Data="M12 3l7 3v5c0 4.5-3 8.5-7 10-4-1.5-7-5.5-7-10V6z"
-                    Stroke="{DynamicResource ModeAccentBrush}" StrokeThickness="2" StrokeLineJoin="Round"/>
-            </Viewbox>
+          <Border Style="{StaticResource SectionHeaderIcon}" Margin="0,0,12,0">
+            <ctl:IconView Key="IconShield" Width="16" Height="16" Foreground="{DynamicResource ModeAccentBrush}"
+                          HorizontalAlignment="Center" VerticalAlignment="Center"/>
           </Border>
           <TextBlock Text="{Binding MaintSectionTitle}" FontSize="{DynamicResource FontSizeBody}"
                      FontWeight="SemiBold" Foreground="{DynamicResource TextPrimaryBrush}" VerticalAlignment="Center"/>
@@ -210,12 +202,10 @@
 
       <StackPanel x:Name="ZoneDanger">
         <StackPanel Orientation="Horizontal" Margin="0,0,0,8">
-          <Border Width="28" Height="28" CornerRadius="{DynamicResource RadiusSm}"
-                  Background="{DynamicResource DangerSoftBrush}" BorderBrush="{DynamicResource DangerEdgeBrush}"
-                  BorderThickness="1" VerticalAlignment="Center" Margin="0,0,10,0">
-            <TextBlock Text="!" FontSize="16" FontWeight="Bold"
-                       Foreground="{DynamicResource DangerBrush}"
-                       HorizontalAlignment="Center" VerticalAlignment="Center"/>
+          <Border Style="{StaticResource SectionHeaderIcon}" Margin="0,0,12,0"
+                  Background="{DynamicResource DangerSoftBrush}" BorderBrush="{DynamicResource DangerEdgeBrush}">
+            <ctl:IconView Key="IconWarn" Width="16" Height="16" Foreground="{DynamicResource DangerBrush}"
+                          HorizontalAlignment="Center" VerticalAlignment="Center"/>
           </Border>
           <StackPanel VerticalAlignment="Center">
             <TextBlock Text="危险区" FontSize="{DynamicResource FontSizeBody}" FontWeight="SemiBold" Foreground="{DynamicResource DangerBrush}"/>

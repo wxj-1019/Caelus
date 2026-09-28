@@ -77,6 +77,16 @@
    - 关闭弹窗 → 再次启动 → 不再弹
    - 设置页不再有"启动时显示反馈弹窗"开关
 
+### 2026-09-29 追加:WPF 版绑定坑——行模型成员必须是属性
+
+单 UI 化后本弹窗的现行为 `wpf/Dialogs/ReleaseNotesDialogWpf`(WinForms `ReleaseNotesDialog` 已随旧界面一并移除)。当日修复过一个弹窗空白 bug(commit c67b14b):
+
+- **症状**:弹窗能正常打开,但版本条目整片空白
+- **根因**:行模型 `ReleaseNoteRow` 的 `VersionTag`/`DateText`/`IsCurrent`/`Items` 写成了公共字段;.NET Framework 4.x 的 WPF Binding 只解析属性、不认公共字段,绑定静默失败(不抛异常、不留日志),属最难排查的一类 UI bug
+- **修复**:字段改为 get/set 自动属性
+- **回归守卫**:自测「版本说明弹窗:行成员必须是属性(WPF 绑定不支持字段)」(`TestReleaseNoteRowBindable`,反射断言四成员为属性且不得以公共字段存在)
+- **通则**:任何交给 XAML Binding 的类(行模型/视图模型),成员一律用属性,不要用公共字段
+
 ## 后续步骤(本次不做)
 
 - 关于页作者信息替换为新人(身份重构)

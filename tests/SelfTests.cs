@@ -709,6 +709,8 @@ namespace CaelusApp
             test("消息弹窗：单字符串标题正文拆分", TestMsgDialogSplitTitleBody);
             test("版本说明弹窗：行成员必须是属性（WPF 绑定不支持字段）", TestReleaseNoteRowBindable);
             test("动效：弹簧三档预设映射（规格 2026-09-29 §3.1）", TestSpringPresetMap);
+            test("动效：数字滚动插值边界", TestMotionInterpolate);
+            test("动效：NumberRoll 禁用时直出终值", TestNumberRollDisabledSetsFinal);
             test("白名单规则：旧版名称、带版本号路径与精确边界", TestWhitelistRules);
             test("白名单家族：后代仅在 PID 身份一致时保留", TestWhitelistFamilyIdentity);
             test("白名单家族事件：事件顺序与父进程创建时间阻断 PID 继承", TestWhitelistFamilyEvents);

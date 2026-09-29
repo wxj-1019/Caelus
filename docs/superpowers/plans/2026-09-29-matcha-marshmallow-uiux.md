@@ -274,7 +274,7 @@ Expected: 编译错误（`Motion` 不含 `Interpolate`/`NumberRoll`）
 
 - [ ] **Step 3: 实现 NumberRoll**
 
-`wpf/Motion.cs` 类内追加：
+`wpf/Motion.cs` 类内追加（顶部加 `using System.Globalization;`）：
 
 ```csharp
         // 数字滚动（规格 2026-09-29 §3.4）：220ms QuinticEase 驱动 0→1 进度附加属性，
@@ -298,7 +298,7 @@ Expected: 编译错误（`Motion` 不含 `Interpolate`/`NumberRoll`）
             if (target == null) return;
             if (!Enabled || Reduced)
             {
-                target.Text = string.Format(format, to);
+                target.Text = to.ToString(format, CultureInfo.InvariantCulture);
                 return;
             }
             target.SetValue(RollFromProperty, from);
@@ -313,7 +313,7 @@ Expected: 编译错误（`Motion` 不含 `Interpolate`/`NumberRoll`）
             animation.Completed += delegate
             {
                 target.BeginAnimation(RollProgressProperty, null);
-                target.Text = string.Format(format, to);
+                target.Text = to.ToString(format, CultureInfo.InvariantCulture);
             };
             target.BeginAnimation(RollProgressProperty, animation, HandoffBehavior.SnapshotAndReplace);
         }
@@ -326,7 +326,7 @@ Expected: 编译错误（`Motion` 不含 `Interpolate`/`NumberRoll`）
             if (format == null) return;
             double from = (double)target.GetValue(RollFromProperty);
             double to = (double)target.GetValue(RollToProperty);
-            target.Text = string.Format(format, Interpolate(from, to, (double)e.NewValue));
+            target.Text = Interpolate(from, to, (double)e.NewValue).ToString(format, CultureInfo.InvariantCulture);
         }
 ```
 

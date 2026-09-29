@@ -19,5 +19,25 @@ namespace CaelusApp
             UiMotion.SpringParams(UiMotion.SpringPreset.Bouncy, out ms, out amp);
             Eq(180, ms); Eq(0.5, amp);
         }
+
+        private static void TestMotionInterpolate()
+        {
+            Eq(10d, Motion.Interpolate(10, 20, 0));
+            Eq(20d, Motion.Interpolate(10, 20, 1));
+            Eq(15d, Motion.Interpolate(10, 20, 0.5));
+        }
+
+        private static void TestNumberRollDisabledSetsFinal()
+        {
+            var tb = new TextBlock();
+            bool prev = Motion.Enabled;
+            try
+            {
+                Motion.Enabled = false;
+                Motion.NumberRoll(tb, 0, 87, "0");
+                Eq("87", tb.Text);
+            }
+            finally { Motion.Enabled = prev; }
+        }
     }
 }

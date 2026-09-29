@@ -4,6 +4,7 @@
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
+using System.Globalization;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Controls.Primitives;
@@ -153,6 +154,58 @@ namespace CaelusApp.WpfHost
                 target.SetValue(property, to);
             };
             target.BeginAnimation(property, animation, HandoffBehavior.SnapshotAndReplace);
+        }
+
+        // 数字滚动（规格 2026-09-29 §3.4）：220ms QuinticEase 驱动 0→1 进度附加属性，
+        // 帧回调里 Interpolate 插值并格式化落文本；Reduced/禁用直出终值
+        public static double Interpolate(double from, double to, double t)
+        {
+            return from + (to - from) * t;
+        }
+
+        private static readonly DependencyProperty RollFromProperty = DependencyProperty.RegisterAttached(
+            "RollFrom", typeof(double), typeof(Motion), new PropertyMetadata(0d));
+        private static readonly DependencyProperty RollToProperty = DependencyProperty.RegisterAttached(
+            "RollTo", typeof(double), typeof(Motion), new PropertyMetadata(0d));
+        private static readonly DependencyProperty RollFormatProperty = DependencyProperty.RegisterAttached(
+            "RollFormat", typeof(string), typeof(Motion), new PropertyMetadata(null));
+        private static readonly DependencyProperty RollProgressProperty = DependencyProperty.RegisterAttached(
+            "RollProgress", typeof(double), typeof(Motion), new PropertyMetadata(0d, OnRollProgress));
+
+        public static void NumberRoll(TextBlock target, double from, double to, string format)
+        {
+            if (target == null) return;
+            if (!Enabled || Reduced)
+            {
+                target.Text = to.ToString(format, CultureInfo.InvariantCulture);
+                return;
+            }
+            target.SetValue(RollFromProperty, from);
+            target.SetValue(RollToProperty, to);
+            target.SetValue(RollFormatProperty, format);
+            target.SetValue(RollProgressProperty, 0d);
+            var animation = new DoubleAnimation(0, 1, TimeSpan.FromMilliseconds(UiMotion.NumberRollMs))
+            {
+                EasingFunction = new QuinticEase { EasingMode = EasingMode.EaseOut },
+                FillBehavior = FillBehavior.Stop
+            };
+            animation.Completed += delegate
+            {
+                target.BeginAnimation(RollProgressProperty, null);
+                target.Text = to.ToString(format, CultureInfo.InvariantCulture);
+            };
+            target.BeginAnimation(RollProgressProperty, animation, HandoffBehavior.SnapshotAndReplace);
+        }
+
+        private static void OnRollProgress(DependencyObject d, DependencyPropertyChangedEventArgs e)
+        {
+            TextBlock target = d as TextBlock;
+            if (target == null) return;
+            string format = (string)target.GetValue(RollFormatProperty);
+            if (format == null) return;
+            double from = (double)target.GetValue(RollFromProperty);
+            double to = (double)target.GetValue(RollToProperty);
+            target.Text = Interpolate(from, to, (double)e.NewValue).ToString(format, CultureInfo.InvariantCulture);
         }
 
         // 分区入场：透明度 + 上浮 10px，可带延迟做 staggered 编排（reduced 时直接落位）

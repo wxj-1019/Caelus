@@ -104,7 +104,7 @@
 [data-theme="light"] {
   color-scheme: light;
 
-  --success: #248A3D;
+  --success: #27755C;
   --warning: #C07A1B;
   --danger: #D70015;
   --info: #2F7BD6;
@@ -135,8 +135,8 @@
   --mode-accent: var(--mode-accent-on-light);
 
   /* ---- 夜空烟花（浅色）—— 与 Colors.Light.xaml 同步 ---- */
-  --hero-title-from: #2B1F1A;      /* light: 暖可可 */
-  --hero-title-to: #6D5CE0;        /* light: 深薰衣草 */
+  --hero-title-from: #26332A;      /* light: 墨绿（2026-09-29 抹茶） */
+  --hero-title-to: #3F7A58;        /* light: 深抹茶（2026-09-29 抹茶） */
   --scenario-dev: var(--success);
   --scenario-daily: #B84518;
   /* Hero 双光晕强度：overview.html 光晕为两主题共用的内联样式，明暗同值

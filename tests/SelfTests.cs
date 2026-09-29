@@ -861,7 +861,7 @@ namespace CaelusApp
             test("版本元数据：产品版本与文件版本齐全", TestReleaseMetadata);
             test("桌面主题钩子：未注入时安全回退，注入后跟随应用主题", TestNativeLightModeHook);
             test("调色板：深浅主题 13 个 Token 齐全且为合法 hex", TestPaletteCompleteness);
-            test("调色板：语义色互异，品牌色跨主题固定为 #D4A847", TestPaletteSemantics);
+            test("调色板：语义色互异，品牌色深浅分档（亮 #6FAF88 抹茶绿 / 暗 #A78BFA 薰衣草）", TestPaletteSemantics);
             test("调色板：正文/次级文字与底色对比度达到 AA", TestPaletteContrast);
             test("强调色派生：hex 解析（#RGB/#RRGGBB/非法/空）", TestAccentParseHex);
             test("强调色派生：HSL 亮化/暗化单调性", TestAccentBrightenDarken);

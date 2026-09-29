@@ -5,16 +5,16 @@
        奶油暖底 + 白棉花糖卡片，暖可可/暖褐文字三阶；
        糖果紫品牌色，层级靠留白与发丝线，暖调营造柔软氛围。 -->
 
-  <!-- 语义色（克制、专业，白底可读） -->
-  <Color x:Key="SuccessColor">#248A3D</Color>
+  <!-- 语义色（克制、专业，白底可读）；2026-09-29 抹茶：成功色转抹茶绿 -->
+  <Color x:Key="SuccessColor">#27755C</Color>
   <Color x:Key="WarningColor">#C07A1B</Color>
   <Color x:Key="DangerColor">#D70015</Color>
   <Color x:Key="InfoColor">#2F7BD6</Color>
-  <Color x:Key="BrandColor">#8B7CF6</Color>
+  <Color x:Key="BrandColor">#6FAF88</Color>
 
   <!-- 语义柔色（浅底 tint，低 alpha） -->
-  <SolidColorBrush x:Key="SuccessSoftBrush" Color="#16248A3D"/>
-  <SolidColorBrush x:Key="SuccessEdgeBrush" Color="#4D248A3D"/>
+  <SolidColorBrush x:Key="SuccessSoftBrush" Color="#1627755C"/>
+  <SolidColorBrush x:Key="SuccessEdgeBrush" Color="#4D27755C"/>
   <SolidColorBrush x:Key="WarningSoftBrush" Color="#14C07A1B"/>
   <SolidColorBrush x:Key="WarningEdgeBrush" Color="#4DC07A1B"/>
   <SolidColorBrush x:Key="DangerSoftBrush" Color="#12D70015"/>
@@ -24,16 +24,16 @@
   <SolidColorBrush x:Key="NeutralSoftBrush" Color="#08000000"/>
   <SolidColorBrush x:Key="NeutralEdgeBrush" Color="#1A000000"/>
 
-  <!-- 表面梯度： airy 灰底 + 纯白卡片（高层级=更灰的悬停/浮起，靠发丝线分层） -->
-  <Color x:Key="BackgroundColor">#FFFBF4EE</Color>
+  <!-- 表面梯度： 抹茶米白底 + 纯白卡片（2026-09-29 抹茶；高层级=更灰的悬停/浮起，靠发丝线分层） -->
+  <Color x:Key="BackgroundColor">#FFFAF8F1</Color>
   <Color x:Key="Surface0Color">#FFFFFFFF</Color>
-  <Color x:Key="Surface1Color">#FFFFF7F2</Color>
-  <Color x:Key="Surface2Color">#FFF5EDE7</Color>
+  <Color x:Key="Surface1Color">#FFFAF6EE</Color>
+  <Color x:Key="Surface2Color">#FFF3EFE4</Color>
 
-  <!-- 文字：排版驱动层级（主/次/辅三阶，对比度达标） -->
-  <Color x:Key="TextPrimaryColor">#2B1F1A</Color>
-  <Color x:Key="TextSecondaryColor">#6B5D55</Color>
-  <Color x:Key="TextTertiaryColor">#7F6E64</Color>
+  <!-- 文字：排版驱动层级（墨绿三阶，对比度达标；2026-09-29 抹茶） -->
+  <Color x:Key="TextPrimaryColor">#26332A</Color>
+  <Color x:Key="TextSecondaryColor">#5E7064</Color>
+  <Color x:Key="TextTertiaryColor">#66766A</Color>
   <Color x:Key="ButtonSheenColor">#33FFFFFF</Color>
 
   <!-- 画刷 -->
@@ -50,16 +50,16 @@
   <SolidColorBrush x:Key="TextSecondaryBrush" Color="{StaticResource TextSecondaryColor}"/>
   <SolidColorBrush x:Key="TextTertiaryBrush" Color="{StaticResource TextTertiaryColor}"/>
 
-  <!-- 夜空烟花：Hero 渐变标题（暖可可 → 深薰衣草；首 Stop 引用 TextPrimaryColor 保持同源）。
+  <!-- 夜空烟花：Hero 渐变标题（墨绿 → 深抹茶；2026-09-29 抹茶。首 Stop 引用 TextPrimaryColor 保持同源）。
        对角渐变线（0,0 → 1,0.5 ≈26.6° 下斜）对应沙盒 .hero-title 的 120deg CSS 渐变方向 -->
   <LinearGradientBrush x:Key="HeroTitleBrush" StartPoint="0,0" EndPoint="1,0.5">
     <GradientStop Color="{StaticResource TextPrimaryColor}" Offset="0.3"/>
-    <GradientStop Color="#6D5CE0" Offset="1"/>
+    <GradientStop Color="#3F7A58" Offset="1"/>
   </LinearGradientBrush>
   <!-- 场景卡图标着色：开发=成功绿（引用 SuccessColor）、日常=蜜桃橙（无对应 Color 资源，保持硬编码） -->
   <SolidColorBrush x:Key="ScenarioDevBrush" Color="{StaticResource SuccessColor}"/>
   <SolidColorBrush x:Key="ScenarioDailyBrush" Color="#B84518"/>
-  <SolidColorBrush x:Key="ScenarioDevSoftBrush" Color="#248A3D26"/>
+  <SolidColorBrush x:Key="ScenarioDevSoftBrush" Color="#27755C26"/>
   <SolidColorBrush x:Key="ScenarioDailySoftBrush" Color="#B8451824"/>
 
   <!-- 描边：发丝线（黑色低 alpha，≈#E7E7EA / #D4D4D8）；去掉卡顶高光与渐变描边的装饰 -->
@@ -71,9 +71,9 @@
   </LinearGradientBrush>
   <SolidColorBrush x:Key="CardEdgeBrush" Color="#17000000"/>
 
-  <!-- 分段控件选中态（白滑块 + 深字） -->
+  <!-- 分段控件选中态（白滑块 + 墨绿字；2026-09-29 抹茶） -->
   <SolidColorBrush x:Key="SegSelectedBrush" Color="#FFFFFF"/>
-  <SolidColorBrush x:Key="SegSelectedTextBrush" Color="#2B1F1A"/>
+  <SolidColorBrush x:Key="SegSelectedTextBrush" Color="#26332A"/>
 
   <!-- 滚动条（2px 玻璃：淡轨道 + 渐变玻璃胶囊 thumb） -->
   <SolidColorBrush x:Key="ScrollTrackBrush" Color="#0F000000"/>
@@ -100,8 +100,12 @@
   <SolidColorBrush x:Key="TrackBrush" Color="#10000000"/>
   <SolidColorBrush x:Key="ModeAccentBrush" Color="{DynamicResource ModeAccentOnLightColor}"/>
 
-  <!-- accent 画刷桥接（规格 2026-09-29 §4.2 偏差修正）：亮色走 OnLight 键，Task 8 落抹茶 -->
-  <SolidColorBrush x:Key="AccentPrimaryBrush" Color="{DynamicResource AccentPrimaryOnLightColor}"/>
+  <!-- accent 画刷桥接（规格 2026-09-29 §4.2 偏差修正）：亮色走 OnLight 键。
+       AccentPrimaryBrush 抹茶化为 135° 渐变（规格 §4.1——模板零改动，按钮/进度条自动渐变） -->
+  <LinearGradientBrush x:Key="AccentPrimaryBrush" StartPoint="0,0" EndPoint="1,1">
+    <GradientStop Color="{DynamicResource AccentPrimaryOnLightColor}" Offset="0"/>
+    <GradientStop Color="{DynamicResource AccentSecondaryOnLightColor}" Offset="1"/>
+  </LinearGradientBrush>
   <SolidColorBrush x:Key="AccentSecondaryBrush" Color="{DynamicResource AccentSecondaryOnLightColor}"/>
   <LinearGradientBrush x:Key="AccentGradientBrush" StartPoint="0,0" EndPoint="1,0">
     <GradientStop Color="{DynamicResource AccentPrimaryOnLightColor}" Offset="0"/>

@@ -53,8 +53,8 @@ namespace CaelusApp
                 throw new TestSkippedException("找不到主题 XAML（发布构建跳过）");
             if (l.Success == l.Warning || l.Warning == l.Danger || l.Danger == l.Info)
                 throw new Exception("semantic colors must be distinct");
-            // 棉花糖天空：品牌色为糖果薰衣草，深浅各档（对比度调优，不再要求一致）
-            Eq("#8B7CF6", l.Brand);
+            // 棉花糖天空→抹茶棉花糖（2026-09-29）：品牌色深浅分档（亮=抹茶绿，暗=薰衣草紫）
+            Eq("#6FAF88", l.Brand);
             Eq("#A78BFA", d.Brand);
         }
 

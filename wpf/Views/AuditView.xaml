@@ -247,6 +247,22 @@
                          Foreground="{DynamicResource TextTertiaryBrush}"/>
               </WrapPanel>
               <TextBlock Text="{Binding ScoreMethodText}" FontSize="{DynamicResource FontSizeXs}" Foreground="{DynamicResource TextTertiaryBrush}" TextWrapping="Wrap" Margin="0,6,0,0"/>
+              <!-- 达标插画 + caption（规格 2026-09-29 §5.2）：Score≥85 时现身 -->
+              <StackPanel x:Name="ExcellentPanel" HorizontalAlignment="Center" Margin="0,10,0,0">
+                <StackPanel.Style>
+                  <Style TargetType="StackPanel">
+                    <Setter Property="Visibility" Value="Collapsed"/>
+                    <Style.Triggers>
+                      <DataTrigger Binding="{Binding IsExcellent}" Value="True">
+                        <Setter Property="Visibility" Value="Visible"/>
+                      </DataTrigger>
+                    </Style.Triggers>
+                  </Style>
+                </StackPanel.Style>
+                <ContentControl Content="{DynamicResource IllusAuditWin}" Width="96" Height="96" HorizontalAlignment="Center"/>
+                <TextBlock Text="状态满分，去尽情玩耍吧" FontSize="{DynamicResource FontSizeCaption}"
+                           Foreground="{DynamicResource TextSecondaryBrush}" HorizontalAlignment="Center" Margin="0,4,0,0"/>
+              </StackPanel>
             </StackPanel>
             </Grid>
           </controls:GlassCard>

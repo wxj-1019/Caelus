@@ -57,6 +57,8 @@
           <Grid Grid.Row="1">
             <ContentControl x:Name="EmptyPanel" Style="{DynamicResource DropZoneEmpty}" Margin="12" Visibility="Collapsed">
               <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center" MaxWidth="360" Margin="24">
+                <ContentControl Content="{DynamicResource IllusWhitelist}" Width="96" Height="96"
+                                HorizontalAlignment="Center" Margin="0,0,0,10"/>
                 <TextBlock Text="{Binding EmptyTitle}" FontSize="{DynamicResource FontSizeEmpty}" FontWeight="SemiBold" Foreground="{DynamicResource TextPrimaryBrush}" HorizontalAlignment="Center" TextAlignment="Center"/>
                 <TextBlock Text="{Binding EmptyHint}" FontSize="{DynamicResource FontSizeCaption}" Foreground="{DynamicResource TextSecondaryBrush}" HorizontalAlignment="Center" TextAlignment="Center" TextWrapping="Wrap" Margin="0,8,0,18"/>
                 <Button Style="{DynamicResource PrimaryButton}" Click="OnPickClick" Content="{Binding PickText}" HorizontalAlignment="Center" AutomationProperties.Name="从运行中的程序添加白名单规则"/>

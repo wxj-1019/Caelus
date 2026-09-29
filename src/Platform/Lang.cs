@@ -1,4 +1,4 @@
-﻿// @author zenjiro 18967498922@163.com
+// @author zenjiro 18967498922@163.com
 // 文件用途 集中维护界面多语言文本
 
 using System;
@@ -296,7 +296,7 @@ namespace CaelusApp
             { "white.desc", new[]{ "白名单里的程序永远不会被压制。「应用家族」保护这个程序和它开出来的子进程，但不放开整个目录；加上立刻生效。" } },
             { "white.scope", new[]{ "新增规则类型" } },
             { "white.page.sub", new[]{ "这里列出的程序永远不会被压制。把 EXE 或快捷方式拖进来就行，作用范围自动判断。" } },
-            { "white.page.empty", new[]{ "白名单是空的\r\n把程序拖进来，或点右边「选运行中的程序」" } },
+            { "white.page.empty", new[]{ "加一条规则试试，把要保护的进程放进来" } },
             { "white.page.pick", new[]{ "选运行中的程序" } },
             { "white.page.drop", new[]{ "把 EXE 或快捷方式直接拖进左边就能加。\r\n\r\n普通程序会连它拉起的子进程一起保护；命令行、脚本宿主这类只保护它自己——这个规则自动判断，不用你选。\r\n\r\n想改范围就右键条目。" } },
             { "white.page.platforms", new[]{ "这些游戏平台的客户端已经内置豁免，不用手动加：{0}。" } },

@@ -164,6 +164,8 @@ namespace CaelusApp
             }
         }
         public bool IsCaution { get { return ConcernCount > 0; } }
+        // 达标态（规格 2026-09-29 §5.2）：插画 + caption 的触发位；HealthLabel 文案不动
+        public bool IsExcellent { get { return Score >= 85; } }
         public bool PersistentHasWarn { get { return AnyWarn(PersistentRows); } }
         public bool VerdictHasWarn { get { return AnyWarn(VerdictRows); } }
         public string LastCheckText
@@ -184,6 +186,7 @@ namespace CaelusApp
         {
             SetHasResultData(true);
             Raise("ConcernCount"); Raise("Score"); Raise("HealthLabel");
+            Raise("IsExcellent");
             Raise("IsCaution"); Raise("PersistentHasWarn"); Raise("VerdictHasWarn");
             Raise("LastCheckText");
         }

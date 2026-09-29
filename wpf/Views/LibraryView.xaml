@@ -23,16 +23,9 @@
                       AutomationProperties.Name="游戏库为空，可添加或拖放游戏"
                       AutomationProperties.HelpText="将游戏主程序拖放到此区域，或使用添加游戏按钮">
         <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center" MaxWidth="440" Margin="32">
-          <Border x:Name="EmptyHeroIcon" Width="48" Height="48" CornerRadius="6"
-                  HorizontalAlignment="Center" Margin="0,0,0,16"
-                  Background="{DynamicResource AccentSoftBrush}"
-                  BorderBrush="{DynamicResource AccentEdgeBrush}" BorderThickness="1">
-            <Viewbox Width="22" Height="22">
-              <Path Data="{DynamicResource IconLibrary}" Stroke="{DynamicResource AccentPrimaryBrush}" StrokeThickness="2"
-                    StrokeLineJoin="Round" StrokeStartLineCap="Round" StrokeEndLineCap="Round"/>
-            </Viewbox>
-          </Border>
-          <TextBlock Text="添加你的第一个游戏" FontSize="{DynamicResource FontSizeEmpty}" FontWeight="SemiBold"
+          <ContentControl x:Name="EmptyHeroIcon" Content="{DynamicResource IllusLibrary}"
+                          Width="96" Height="96" HorizontalAlignment="Center" Margin="0,0,0,16"/>
+          <TextBlock Text="还没有游戏哦，拖个 exe 进来养一只" FontSize="{DynamicResource FontSizeEmpty}" FontWeight="SemiBold"
                      Foreground="{DynamicResource TextPrimaryBrush}" HorizontalAlignment="Center" TextAlignment="Center"/>
           <TextBlock Text="{Binding EmptyHint}" Margin="0,6,0,0" FontSize="{DynamicResource FontSizeCaption}"
                      Foreground="{DynamicResource TextSecondaryBrush}" HorizontalAlignment="Center" TextAlignment="Center" TextWrapping="Wrap"/>

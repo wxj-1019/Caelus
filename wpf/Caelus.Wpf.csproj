@@ -90,6 +90,7 @@
     <Page Include="Themes\Mode.Standard.xaml" />
     <Page Include="Themes\Mode.Competitive.xaml" />
     <Page Include="Themes\Mode.Custom.xaml" />
+    <Page Include="Themes\Illustrations.xaml" />
     <Page Include="Themes\Styles.xaml" />
     <Page Include="Themes\Icons.xaml" />
     <Page Include="Views\OverviewView.xaml" />

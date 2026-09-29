@@ -28,7 +28,7 @@ namespace CaelusApp
         public string PageSub { get { return Lang.T("white.page.sub"); } }
 
         // —— 空闲态 ——
-        public string EmptyTitle { get { return "CAELUS SHIELD"; } }
+        public string EmptyTitle { get { return "白名单空空的"; } }
         public string EmptyHint { get { return Lang.T("white.page.empty"); } }
 
         // —— 按钮文案 ——

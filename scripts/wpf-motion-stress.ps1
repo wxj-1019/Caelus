@@ -18,15 +18,19 @@ $process = if ($ProcessId -gt 0) {
 
 $root = [System.Windows.Automation.AutomationElement]::FromHandle($process.MainWindowHandle)
 $names = @(
-    "导航：概览", "导航：游戏库", "导航：优化策略", "导航：显卡",
-    "导航：反作弊专项", "导航：系统环境", "导航：白名单", "导航：系统体检",
-    "导航：日志", "导航：设置", "导航：关于"
+    "导航：场景总览", "导航：游戏库", "导航：优化策略", "导航：显卡",
+    "导航：反作弊专项", "导航：开发专注", "导航：日常优化", "导航：系统环境",
+    "导航：白名单", "导航：系统体检", "导航：日志", "导航：实时监控",
+    "导航：设置", "导航：关于"
 )
 
 function Select-ByName([string]$name) {
+    # 每次重新抓根元素：页面切换会重建 UIA 子树，缓存的 $root 会变 stale（ElementNotAvailable）
+    $rootNow = [System.Windows.Automation.AutomationElement]::FromHandle($process.MainWindowHandle)
+    if ($rootNow -eq $null) { return $false }
     $condition = New-Object System.Windows.Automation.PropertyCondition(
         [System.Windows.Automation.AutomationElement]::AutomationIdProperty, "")
-    $all = $root.FindAll(
+    $all = $rootNow.FindAll(
         [System.Windows.Automation.TreeScope]::Descendants,
         [System.Windows.Automation.Condition]::TrueCondition)
     foreach ($element in $all) {
@@ -35,6 +39,13 @@ function Select-ByName([string]$name) {
         if ($element.TryGetCurrentPattern(
             [System.Windows.Automation.SelectionItemPattern]::Pattern, [ref]$pattern)) {
             $pattern.Select()
+            return $true
+        }
+        # SegmentedControl 段项不是 SelectionItem：退 InvokePattern（模式切换覆盖）
+        $invoke = $null
+        if ($element.TryGetCurrentPattern(
+            [System.Windows.Automation.InvokePattern]::Pattern, [ref]$invoke)) {
+            $invoke.Invoke()
             return $true
         }
     }
@@ -59,7 +70,7 @@ for ($round = 0; $round -lt $ModeRounds; $round++) {
     }
 }
 
-Select-ByName "导航：概览" | Out-Null
+Select-ByName "导航：场景总览" | Out-Null
 Select-ByName "常规" | Out-Null
 Start-Sleep -Seconds $SettleSeconds
 [GC]::Collect()

@@ -13,6 +13,14 @@ namespace CaelusApp.WpfHost.Views
         public ActivityView()
         {
             InitializeComponent();
+            Loaded += OnLoaded;
+        }
+
+        // 错落入场（规格 2026-09-29 §3.3）：与其余 12 页同一范式
+        private void OnLoaded(object sender, System.Windows.RoutedEventArgs e)
+        {
+            Motion.RiseIn(ZoneHeader, 40);
+            Motion.RiseIn(ZoneStatus, 100);
         }
     }
 }

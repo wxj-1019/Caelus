@@ -130,6 +130,31 @@ namespace CaelusApp.WpfHost
             Animate(scale, ScaleTransform.ScaleYProperty, 0.92, 1, ms);
         }
 
+        // 弹簧统一入口（规格 2026-09-29 §3.1）：三档预设参数化；opacity 勿走弹簧（过冲被 clamp 无意义）
+        public static void Spring(Animatable target, DependencyProperty property,
+            double from, double to, UiMotion.SpringPreset preset)
+        {
+            int ms; double amp;
+            UiMotion.SpringParams(preset, out ms, out amp);
+            if (!Enabled || Reduced || ms <= 0)
+            {
+                target.BeginAnimation(property, null);
+                target.SetValue(property, to);
+                return;
+            }
+            var animation = new DoubleAnimation(from, to, TimeSpan.FromMilliseconds(ms))
+            {
+                EasingFunction = new BackEase { Amplitude = amp, EasingMode = EasingMode.EaseOut },
+                FillBehavior = FillBehavior.Stop
+            };
+            animation.Completed += delegate
+            {
+                target.BeginAnimation(property, null);
+                target.SetValue(property, to);
+            };
+            target.BeginAnimation(property, animation, HandoffBehavior.SnapshotAndReplace);
+        }
+
         // 分区入场：透明度 + 上浮 10px，可带延迟做 staggered 编排（reduced 时直接落位）
         public static void RiseIn(FrameworkElement element, int delayMs)
         {
@@ -164,7 +189,10 @@ namespace CaelusApp.WpfHost
             TranslateTransform translate = TranslateOf(element);
             translate.Y = 10;
             // 位移走弹簧曲线（轻微过冲回正 = iOS 入场手感）；opacity 仍走标准减速
-            AnimateSpringDelayed(translate, TranslateTransform.YProperty, 10, 0, ms, delayMs);
+            // 位移时长取 Gentle 档 300ms（有意升级：弹簧尾更长 = iOS settle；opacity 仍 180ms）
+            int springMs; double springAmp;
+            UiMotion.SpringParams(UiMotion.SpringPreset.Gentle, out springMs, out springAmp);
+            AnimateSpringDelayed(translate, TranslateTransform.YProperty, 10, 0, springMs, springAmp, delayMs);
             // 轻微缩放落定（0.96→1，标准减速不过冲）= 材质感入场；reduced 时上方已置 1
             ScaleTransform scale = ScaleOf(element);
             scale.ScaleX = 0.96;
@@ -408,12 +436,14 @@ namespace CaelusApp.WpfHost
             Animate(scale, ScaleTransform.ScaleYProperty, scale.ScaleY, value, UiMotion.ButtonPressMs);
         }
 
-        // 棉花糖按压回弹：BackEase 过冲比入场更强（Amplitude 0.5），松手时「啵」地弹回
+        // 棉花糖按压回弹：Bouncy 档（180ms/0.5，取自 SpringParams），松手时「啵」地弹回
         private static DoubleAnimation BuildPressSpring(double from, double to)
         {
-            return new DoubleAnimation(from, to, TimeSpan.FromMilliseconds(UiMotion.ButtonPressMs * 2))
+            int ms; double amp;
+            UiMotion.SpringParams(UiMotion.SpringPreset.Bouncy, out ms, out amp);
+            return new DoubleAnimation(from, to, TimeSpan.FromMilliseconds(ms))
             {
-                EasingFunction = new BackEase { Amplitude = 0.5, EasingMode = EasingMode.EaseOut },
+                EasingFunction = new BackEase { Amplitude = amp, EasingMode = EasingMode.EaseOut },
                 FillBehavior = FillBehavior.Stop
             };
         }
@@ -541,12 +571,12 @@ namespace CaelusApp.WpfHost
         }
 
         // 弹性回弹变体：仅用于入场位移（RiseIn 的 translate），轻微过冲后回正 = iOS 弹簧手感。
-        // 不用于 opacity（过冲被 clamp 无意义）与占比条（过冲宽度显怪）。
-        private static DoubleAnimation BuildSpringAnimation(double from, double to, int milliseconds)
+        // 不用于 opacity（过冲被 clamp 无意义）与占比条（过冲宽度显怪）。时长/振幅由调用方取自 SpringParams(Gentle)。
+        private static DoubleAnimation BuildSpringAnimation(double from, double to, int milliseconds, double amplitude)
         {
             return new DoubleAnimation(from, to, TimeSpan.FromMilliseconds(milliseconds))
             {
-                EasingFunction = new BackEase { Amplitude = 0.3, EasingMode = EasingMode.EaseOut },
+                EasingFunction = new BackEase { Amplitude = amplitude, EasingMode = EasingMode.EaseOut },
                 FillBehavior = FillBehavior.Stop
             };
         }
@@ -590,9 +620,9 @@ namespace CaelusApp.WpfHost
             target.BeginAnimation(property, animation, HandoffBehavior.SnapshotAndReplace);
         }
 
-        // 弹性版（入场位移用）：BuildSpringAnimation 轻微过冲后回正
+        // 弹性版（入场位移用）：BuildSpringAnimation 轻微过冲后回正；时长/振幅取自 SpringParams(Gentle)
         private static void AnimateSpringDelayed(Animatable target, DependencyProperty property,
-            double from, double to, int milliseconds, int delayMs)
+            double from, double to, int milliseconds, double amplitude, int delayMs)
         {
             if (!Enabled || milliseconds <= 0)
             {
@@ -600,7 +630,7 @@ namespace CaelusApp.WpfHost
                 target.SetValue(property, to);
                 return;
             }
-            DoubleAnimation animation = BuildSpringAnimation(from, to, milliseconds);
+            DoubleAnimation animation = BuildSpringAnimation(from, to, milliseconds, amplitude);
             if (delayMs > 0) animation.BeginTime = TimeSpan.FromMilliseconds(delayMs);
             animation.Completed += delegate
             {

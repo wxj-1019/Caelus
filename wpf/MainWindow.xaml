@@ -77,7 +77,14 @@
 
       <Border Grid.Column="0" Background="{DynamicResource SurfaceBrush}"
               BorderBrush="{DynamicResource BorderSubtleBrush}" BorderThickness="0,0,1,0">
-        <DockPanel LastChildFill="True">
+        <Grid x:Name="NavRail">
+          <!-- 滑动指示 pill（规格 2026-09-29 §3.2）：衬在导航项下层，随选中弹簧滑动 -->
+          <Border x:Name="NavPill" VerticalAlignment="Top" Height="0" Margin="12,0,12,0"
+                  Background="{DynamicResource AccentSoftBrush}" CornerRadius="{DynamicResource RadiusSm}"
+                  Visibility="Collapsed" IsHitTestVisible="False">
+            <Border.RenderTransform><TranslateTransform Y="0"/></Border.RenderTransform>
+          </Border>
+          <DockPanel LastChildFill="True">
           <StackPanel DockPanel.Dock="Top" Margin="18,18,18,10">
             <TextBlock Text="caelus" FontSize="{DynamicResource FontSizeTitle}" FontWeight="SemiBold"
                        Foreground="{DynamicResource TextPrimaryBrush}"/>
@@ -102,7 +109,7 @@
             </RadioButton>
           </StackPanel>
 
-          <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
+          <ScrollViewer x:Name="NavScroll" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
             <StackPanel Margin="0,0,0,8">
               <TextBlock x:Name="LblGrpScenario" Text="场景" Style="{DynamicResource NavGroupLabel}"/>
               <RadioButton x:Name="NavOverview" Style="{DynamicResource NavItem}" IsChecked="True"
@@ -199,7 +206,8 @@
               </RadioButton>
             </StackPanel>
           </ScrollViewer>
-        </DockPanel>
+          </DockPanel>
+        </Grid>
       </Border>
 
       <Grid Grid.Column="1" Margin="28,24,28,24">

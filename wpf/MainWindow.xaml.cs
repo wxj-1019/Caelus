@@ -8,6 +8,7 @@ using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
 using System.Windows.Interop;
+using System.Windows.Media;
 using CaelusApp.WpfHost.Views;
 
 namespace CaelusApp.WpfHost
@@ -108,6 +109,10 @@ namespace CaelusApp.WpfHost
             ApplyShellLabels();
             // Aero Snap（Win+↑/拖到屏顶）也会改窗口状态：图标同步不能只挂在按钮路径上
             StateChanged += delegate { SyncMaximizeVisual(); };
+            // 侧栏滑动指示器（规格 2026-09-29 §3.2）：滚动/尺寸变化直落位，首帧定位不动画
+            NavScroll.ScrollChanged += delegate { SlideNavPill(currentNav, false); };
+            NavRail.SizeChanged += delegate { SlideNavPill(currentNav, false); };
+            Loaded += delegate { currentNav = NavOverview; SlideNavPill(NavOverview, false); };
             Pump();
             // 正式运行时注入真实数据源与 Tamer/DevFocus；截图/压力探针无注入时回退只读场景探测
             gameMode = gm ?? new GameMode(Paths.Data, new SuppressionCore());
@@ -629,10 +634,35 @@ namespace CaelusApp.WpfHost
             Close();
         }
 
+        // 侧栏滑动指示器（规格 2026-09-29 §3.2）：当前选中导航项，供滚动/尺寸变化时复位 pill
+        private RadioButton currentNav;
+
+        // iOS 分段控件式滑动指示：Snappy 弹簧（240ms/0.45）；首次/滚动/Reduced 直落位
+        private void SlideNavPill(RadioButton item, bool animate)
+        {
+            if (NavPill == null || NavRail == null || item == null || !item.IsLoaded) return;
+            Point origin = item.TransformToVisual(NavRail).Transform(new Point(0, 0));
+            double y = origin.Y;
+            if (double.IsNaN(y) || y < 0) { NavPill.Visibility = Visibility.Collapsed; return; }
+            NavPill.Height = item.ActualHeight;
+            NavPill.Visibility = Visibility.Visible;
+            TranslateTransform slide = NavPill.RenderTransform as TranslateTransform;
+            if (slide == null) { slide = new TranslateTransform(); NavPill.RenderTransform = slide; }
+            if (!animate || !Motion.Enabled || Motion.Reduced)
+            {
+                slide.BeginAnimation(TranslateTransform.YProperty, null);
+                slide.Y = y;
+                return;
+            }
+            Motion.Spring(slide, TranslateTransform.YProperty, slide.Y, y, UiMotion.SpringPreset.Snappy);
+        }
+
         private void NavChecked(object sender, RoutedEventArgs e)
         {
             RadioButton rb = sender as RadioButton;
             if (rb == null || PageHost == null || overviewView == null) return;
+            currentNav = rb;
+            SlideNavPill(rb, true);
             FrameworkElement next = null;
             if (rb == NavOverview) next = overviewView;
             else if (rb == NavPolicy) next = policyView;

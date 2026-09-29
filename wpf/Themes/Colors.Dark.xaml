@@ -99,4 +99,15 @@
   <SolidColorBrush x:Key="InnerHighlightBrush" Color="#00FFFFFF"/>
   <SolidColorBrush x:Key="TrackBrush" Color="#1FFFFFFF"/>
   <SolidColorBrush x:Key="ModeAccentBrush" Color="{DynamicResource ModeAccentOnDarkColor}"/>
+
+  <!-- accent 画刷桥接（规格 2026-09-29 §4.2 偏差修正）：暗色保持现值，键从模式槽迁入 -->
+  <SolidColorBrush x:Key="AccentPrimaryBrush" Color="{DynamicResource AccentPrimaryColor}"/>
+  <SolidColorBrush x:Key="AccentSecondaryBrush" Color="{DynamicResource AccentSecondaryColor}"/>
+  <LinearGradientBrush x:Key="AccentGradientBrush" StartPoint="0,0" EndPoint="1,0">
+    <GradientStop Color="{DynamicResource AccentPrimaryColor}" Offset="0"/>
+    <GradientStop Color="{DynamicResource AccentSecondaryColor}" Offset="1"/>
+  </LinearGradientBrush>
+  <SolidColorBrush x:Key="AccentSoftBrush" Color="{DynamicResource AccentSoftOnDarkColor}"/>
+  <SolidColorBrush x:Key="AccentEdgeBrush" Color="{DynamicResource AccentEdgeOnDarkColor}"/>
+  <SolidColorBrush x:Key="OnAccentBrush" Color="{DynamicResource OnAccentOnDarkColor}"/>
 </ResourceDictionary>

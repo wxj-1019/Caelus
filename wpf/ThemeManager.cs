@@ -32,20 +32,27 @@ namespace CaelusApp.WpfHost
         {
             var merged = app.Resources.MergedDictionaries;
 
-            string colorsUri = tone == UiTone.Light
-                ? "Themes/Colors.Light.xaml" : "Themes/Colors.Dark.xaml";
-            ResourceDictionary nextColors = DictionaryFor(colorsUri);
-            if (colors != null) merged.Remove(colors);
-            merged.Add(nextColors);
-            colors = nextColors;
-            CurrentTone = tone;
-
+            // 先换模式槽再换色板槽（规格 2026-09-29 §4.2 偏差修正）：
+            // accent 桥接画刷住在色板槽、DynamicResource 指模式档色键——
+            // 色板槽最后重挂，画刷表达式才按当前模式档重新求值；
+            // 两槽键集合不相交，先后调换不改变同键优先级
             string modeUri = modeUriFor(appMode);
             ResourceDictionary nextMode = DictionaryFor(modeUri);
             if (mode != null) merged.Remove(mode);
             merged.Add(nextMode);
             mode = nextMode;
             CurrentMode = appMode;
+
+            string colorsUri = tone == UiTone.Light
+                ? "Themes/Colors.Light.xaml" : "Themes/Colors.Dark.xaml";
+            // 色板档不走 DictionaryFor 缓存（规格 2026-09-29 §4.2 偏差修正）：
+            // accent 桥接画刷的 DynamicResource 在字典实例化时一次性求值固化，
+            // 模式换槽后必须重建色板实例才能按新模式档色键重新取色
+            ResourceDictionary nextColors = new ResourceDictionary { Source = new Uri(colorsUri, UriKind.Relative) };
+            if (colors != null) merged.Remove(colors);
+            merged.Add(nextColors);
+            colors = nextColors;
+            CurrentTone = tone;
 
             // 用户强调色覆盖层：mode 之后加入（空值=用预设，不叠加）
             if (overrideAccent != null) merged.Remove(overrideAccent);
@@ -158,7 +165,7 @@ namespace CaelusApp.WpfHost
             {
                 string path = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Caelus.theme.xaml");
                 if (!File.Exists(path)) return;
-                string[] missing = ThemeContract.MissingKeys(File.ReadAllText(path), ThemeContract.ModeKeys);
+                string[] missing = ThemeContract.MissingKeys(File.ReadAllText(path), ThemeContract.UserThemeKeys);
                 if (missing.Length > 0)
                 {
                     LogUserTheme("用户主题缺 key 已忽略：" + string.Join("、", missing));

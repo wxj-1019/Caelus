@@ -24,10 +24,33 @@ namespace CaelusApp
             "HeroTitleBrush",
             "ScenarioDevBrush", "ScenarioDailyBrush",
             "ScenarioDevSoftBrush", "ScenarioDailySoftBrush",
+            // accent 画刷明暗桥接（规格 2026-09-29 §4.2 偏差修正）：画刷迁色板槽，
+            // 色值经模式档 Accent*OnLight/OnDarkColor 键 DynamicResource 注入
+            "AccentPrimaryBrush", "AccentSecondaryBrush", "AccentGradientBrush",
+            "AccentSoftBrush", "AccentEdgeBrush", "OnAccentBrush",
         };
 
-        // 模式档（模式轴）：Mode.Standard/Competitive/Custom.xaml 与用户主题 Caelus.theme.xaml 必须全部实现
+        // 模式档（模式轴）：Mode.Standard/Competitive/Custom.xaml 必须全部实现
         public static readonly string[] ModeKeys = new[]
+        {
+            "AuroraPrimaryColor", "AuroraPrimaryFadeColor",
+            "AuroraSecondaryColor", "AuroraSecondaryFadeColor",
+            "AuroraTertiaryColor", "AuroraTertiaryFadeColor",
+            "AmbientPrimaryBrush", "AmbientSecondaryBrush", "AmbientTertiaryBrush",
+            "AuroraPrimaryOpacity", "AuroraSecondaryOpacity", "AuroraTertiaryOpacity",
+            "AuroraDriftSeconds",
+            "AccentPrimaryColor", "AccentSecondaryColor",
+            "AccentGlowColor",
+            // 明暗桥接色键：画刷迁色板槽后，模式档只留色值（规格 2026-09-29 §4.2）
+            "AccentPrimaryOnLightColor", "AccentSecondaryOnLightColor",
+            "AccentSoftOnLightColor", "AccentEdgeOnLightColor",
+            "AccentGlowOnLightColor", "OnAccentOnLightColor",
+            "AccentSoftOnDarkColor", "AccentEdgeOnDarkColor", "OnAccentOnDarkColor",
+        };
+
+        // 用户主题契约：Caelus.theme.xaml 校验用迁移前旧 ModeKeys 22 键快照——
+        // 老用户主题没有新增 9 个明暗桥接色键，不能因契约扩大被判不完整而忽略
+        public static readonly string[] UserThemeKeys = new[]
         {
             "AuroraPrimaryColor", "AuroraPrimaryFadeColor",
             "AuroraSecondaryColor", "AuroraSecondaryFadeColor",

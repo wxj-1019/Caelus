@@ -30,17 +30,18 @@
 
   <Color x:Key="AccentPrimaryColor">#FF8A5C</Color>
   <Color x:Key="AccentSecondaryColor">#FFA07A</Color>
-  <SolidColorBrush x:Key="AccentPrimaryBrush" Color="{StaticResource AccentPrimaryColor}"/>
-  <SolidColorBrush x:Key="AccentSecondaryBrush" Color="{StaticResource AccentSecondaryColor}"/>
-  <LinearGradientBrush x:Key="AccentGradientBrush" StartPoint="0,0" EndPoint="1,0">
-    <GradientStop Color="{StaticResource AccentPrimaryColor}" Offset="0"/>
-    <GradientStop Color="{StaticResource AccentSecondaryColor}" Offset="1"/>
-  </LinearGradientBrush>
-  <SolidColorBrush x:Key="AccentSoftBrush" Color="#16FF8A5C"/>
-  <SolidColorBrush x:Key="AccentEdgeBrush" Color="#44FF8A5C"/>
   <Color x:Key="AccentGlowColor">#FF8A5C</Color>
-  <!-- 深可可字落于亮蜜桃底（对比度 6.88） -->
-  <SolidColorBrush x:Key="OnAccentBrush" Color="#2B1F1A"/>
+  <!-- 明暗桥接色键（规格 2026-09-29 §4.2 偏差修正）：画刷迁色板槽，此处只留色值。
+       OnDark=现共享值；竞技模式 OnLight 保持现值不动 -->
+  <Color x:Key="AccentSoftOnDarkColor">#16FF8A5C</Color>
+  <Color x:Key="AccentEdgeOnDarkColor">#44FF8A5C</Color>
+  <Color x:Key="OnAccentOnDarkColor">#2B1F1A</Color>
+  <Color x:Key="AccentPrimaryOnLightColor">#FF8A5C</Color>
+  <Color x:Key="AccentSecondaryOnLightColor">#FFA07A</Color>
+  <Color x:Key="AccentSoftOnLightColor">#16FF8A5C</Color>
+  <Color x:Key="AccentEdgeOnLightColor">#44FF8A5C</Color>
+  <Color x:Key="AccentGlowOnLightColor">#FF8A5C</Color>
+  <Color x:Key="OnAccentOnLightColor">#2B1F1A</Color>
 
   <Color x:Key="ModeAccentOnDarkColor">#FFA07A</Color>
   <Color x:Key="ModeAccentOnLightColor">#B84518</Color>

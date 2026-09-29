@@ -99,4 +99,15 @@
   <SolidColorBrush x:Key="InnerHighlightBrush" Color="#00FFFFFF"/>
   <SolidColorBrush x:Key="TrackBrush" Color="#10000000"/>
   <SolidColorBrush x:Key="ModeAccentBrush" Color="{DynamicResource ModeAccentOnLightColor}"/>
+
+  <!-- accent 画刷桥接（规格 2026-09-29 §4.2 偏差修正）：亮色走 OnLight 键，Task 8 落抹茶 -->
+  <SolidColorBrush x:Key="AccentPrimaryBrush" Color="{DynamicResource AccentPrimaryOnLightColor}"/>
+  <SolidColorBrush x:Key="AccentSecondaryBrush" Color="{DynamicResource AccentSecondaryOnLightColor}"/>
+  <LinearGradientBrush x:Key="AccentGradientBrush" StartPoint="0,0" EndPoint="1,0">
+    <GradientStop Color="{DynamicResource AccentPrimaryOnLightColor}" Offset="0"/>
+    <GradientStop Color="{DynamicResource AccentSecondaryOnLightColor}" Offset="1"/>
+  </LinearGradientBrush>
+  <SolidColorBrush x:Key="AccentSoftBrush" Color="{DynamicResource AccentSoftOnLightColor}"/>
+  <SolidColorBrush x:Key="AccentEdgeBrush" Color="{DynamicResource AccentEdgeOnLightColor}"/>
+  <SolidColorBrush x:Key="OnAccentBrush" Color="{DynamicResource OnAccentOnLightColor}"/>
 </ResourceDictionary>

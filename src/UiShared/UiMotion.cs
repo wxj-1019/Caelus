@@ -32,5 +32,19 @@ namespace CaelusApp
         {
             return !reduced;
         }
+
+        // 弹簧三档预设（规格 2026-09-29 §3.1）：net4 无原生 SpringAnimation，以 BackEase 参数表近似
+        public enum SpringPreset { Gentle, Snappy, Bouncy }
+
+        // Gentle=页面/卡片入场 300ms/0.3；Snappy=指示器/开关 240ms/0.45；Bouncy=按压释放 180ms/0.5
+        public static void SpringParams(SpringPreset preset, out int milliseconds, out double amplitude)
+        {
+            switch (preset)
+            {
+                case SpringPreset.Snappy: milliseconds = 240; amplitude = 0.45; return;
+                case SpringPreset.Bouncy: milliseconds = 180; amplitude = 0.5; return;
+                default: milliseconds = 300; amplitude = 0.3; return; // Gentle
+            }
+        }
     }
 }

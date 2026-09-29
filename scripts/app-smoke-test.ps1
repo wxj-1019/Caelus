@@ -1,4 +1,4 @@
-# @author zenjiro 18967498922@163.com
+﻿# @author zenjiro 18967498922@163.com
 # 文件用途 启动测试程序并检查游戏会话识别结果
 
 param([string]$CaelusPath)
@@ -15,13 +15,22 @@ $spawnedApp = $null
 $testApp = $null
 try {
     $existingIds = @(Get-Process mspaint -ErrorAction SilentlyContinue | ForEach-Object { $_.Id })
-    $paintPath = (Get-Command mspaint.exe).Source
+    $testAppName = 'mspaint'
+    $paintCmd = Get-Command mspaint.exe -ErrorAction SilentlyContinue
+    if ($null -eq $paintCmd) {
+        # 本机无经典画图（Store 版 Paint 未注册执行别名）：回退记事本，同为非游戏 GUI 靶进程
+        $testAppName = 'notepad'
+        $existingIds = @(Get-Process notepad -ErrorAction SilentlyContinue | ForEach-Object { $_.Id })
+        $paintCmd = Get-Command notepad.exe -ErrorAction SilentlyContinue
+    }
+    if ($null -eq $paintCmd) { throw 'No usable GUI test target (mspaint.exe / notepad.exe both missing)' }
+    $paintPath = $paintCmd.Source
     $spawnedApp = Start-Process -FilePath $paintPath -PassThru
     $deadline = [DateTime]::UtcNow.AddSeconds(10)
     do {
         Start-Sleep -Milliseconds 150
         $spawnedApp.Refresh()
-        $testApp = Get-Process mspaint -ErrorAction SilentlyContinue | Where-Object { $existingIds -notcontains $_.Id } | Select-Object -First 1
+        $testApp = Get-Process $testAppName -ErrorAction SilentlyContinue | Where-Object { $existingIds -notcontains $_.Id } | Select-Object -First 1
     } while ($null -eq $testApp -and [DateTime]::UtcNow -lt $deadline)
 
     if ($null -eq $testApp) { throw 'Paint test instance did not remain alive' }
@@ -50,7 +59,7 @@ try {
 
     $after = Get-Process -Id $testApp.Id
     [pscustomobject]@{
-        App = 'mspaint.exe'
+        App = $testAppName + '.exe'
         Pid = $testApp.Id
         VisibleWindow = [bool]($testApp.MainWindowHandle -ne 0)
         Detector = Get-Content -Encoding UTF8 $detectorReport

@@ -193,3 +193,16 @@ Aurora 光晕结构改造（见 §4.4）、图标重绘、竞技/自定义模式
 - **字段绑定坑**（c67b14b）：若插画/指示器新增绑定类，成员一律属性，自测已有 `TestReleaseNoteRowBindable` 范式可仿
 - **ModeChanged 静态事件强引用**：订阅者必须 Unloaded 退订（ThemeManager.cs 注释既有约束），接线指示器时遵守
 - **文案三语闭环**：`TestEveryLangKeyIsDefined` 会扫 `Lang.T` 引用，先加定义后引用
+
+- **2026-09-29 实施偏差回写**（随落地 commit 同步）：
+  1. §3.3 错落入场 12/13 页已存在，仅补 ActivityView
+  2. §3.4 NumberRoll 落点仅体检 Score（概览 Hero 为 GrantedTitle 字符串大字，滚动需 VM 改造，YAGNI 移出）
+  3. §4.1 TextOnAccentColor 未新增，复用既有 OnAccentBrush 桥接（OnAccentOnLightColor #1E3328）
+  4. §4.1 BrandGradientBrush 未新增，渐变直接落在色板槽 AccentPrimaryBrush（StartPoint 0,0 EndPoint 1,1）
+  5. §4.2「只动一行」修正为 accent 家族明暗桥接：6 画刷迁色板槽 + 模式档 9 色键（竞技/自定义 OnLight=现值，视觉不变）；ModeAccentOnLightColor #6D5CE0→#3F7A58 按原案落地
+  6. §5.2 体检达标走新增 IsExcellent 触发位（插画+caption），HealthLabel 不动
+  7. §4.2 桥接实测追加修正（e8d7fa3）：桥接画刷的 DynamicResource 在字典实例化时一次性求值固化，缓存色板实例会让竞技/自定义渲染成常规紫（截图矩阵实证）——ThemeManager.Apply 改为模式槽先换、色板槽后换且不缓存重建；用户主题校验改用 UserThemeKeys 旧 22 键快照防老主题误判
+  8. §4.1 品牌色断言同步：TestPaletteSemantics 亮侧 BrandColor 期望 #8B7CF6→#6FAF88（既定色值变更的测试跟随，非规格改动）
+  9. §5.1 文案「三语」按现状只落 zh：Lang.cs 当前为中文单语值（Cur 恒 0），en/ja 数组不存在可改
+  10. 验收基线说明：HEAD 历史截图残留本机自定义青色强调色（非预设），本次 82 张矩阵为无覆盖干净基线重摄——暗色三档橙/金/紫归位，故暗色张张有差异属预期而非漂移
+  11. 冒烟脚本健壮性：app-smoke-test.ps1 测试靶进程 mspaint.exe 在本机（Store 版 Paint 无执行别名）不存在，加 notepad.exe 回退，语义不变（非游戏 GUI 进程应判 NONE 且优先级/亲和性零副作用）

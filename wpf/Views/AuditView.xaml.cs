@@ -19,6 +19,8 @@ namespace CaelusApp.WpfHost.Views
         // 切页时计时器停止但后台扫描继续：记下已流逝时长，返回本页时续跑估算
         private long progressBaseMs;
         private int displayedState = -1;
+        // 探针样例路径（ApplySampleResult）：数字直出，防矩阵截图拍到滚动中间值（规格 2026-09-29 §3.4）
+        private bool sampleMode;
 
         public AuditView()
         {
@@ -40,12 +42,14 @@ namespace CaelusApp.WpfHost.Views
             UpdateStateVisibility(vm != null && vm.HasResult);
             // 不恢复的话进度环会永久冻结在离开那一刻的值，直到扫描结束
             if (vm != null && vm.State == AuditState.Scanning) ResumeProgressTimer();
+            UpdateScoreText();
         }
 
         // 预览探针（--wpf-shot）显式调用：填充代表性结果，捕获结果态实机图。
         // 不依赖 OnLoaded 的静态标志时序（探针下多窗口串扰不可靠）。
         internal void ApplySampleResult()
         {
+            sampleMode = true;
             AuditViewModel m = DataContext as AuditViewModel;
             if (m == null || m.CapabilityRows.Count > 0) return;
             m.CapabilityRows.Add(new AuditRowView("CPU 虚拟化", "已启用", "", "cpu_feature: svm", false));
@@ -67,6 +71,7 @@ namespace CaelusApp.WpfHost.Views
             IdlePanel.Visibility = System.Windows.Visibility.Collapsed;
             ScanningPanel.Visibility = System.Windows.Visibility.Collapsed;
             ResultPanel.Visibility = System.Windows.Visibility.Visible;
+            UpdateScoreText();
             UpdateLayout();
         }
 
@@ -90,6 +95,23 @@ namespace CaelusApp.WpfHost.Views
                 || e.PropertyName == "IsScanning"
                 || e.PropertyName == "HasResult")
                 UpdateStateVisibility(true);
+            if (e.PropertyName == "Score") UpdateScoreText();
+        }
+
+        // 体检分数滚动（规格 2026-09-29 §3.4）：变化时从当前显示值滚到新值；探针/Reduced/禁用直出
+        private void UpdateScoreText()
+        {
+            AuditViewModel m = DataContext as AuditViewModel;
+            if (m == null || TxtScore == null) return;
+            if (sampleMode || !Motion.Enabled || Motion.Reduced)
+            {
+                TxtScore.Text = m.Score.ToString();
+                return;
+            }
+            int from;
+            if (!int.TryParse(TxtScore.Text, out from)) from = 0;
+            if (from == m.Score) { TxtScore.Text = m.Score.ToString(); return; }
+            Motion.NumberRoll(TxtScore, from, m.Score, "0");
         }
 
         private void UpdateStateVisibility(bool reveal)

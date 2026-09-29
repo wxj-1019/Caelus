@@ -209,7 +209,7 @@
               <Border Style="{StaticResource AuroraSecondaryHost}"/>
             <StackPanel>
               <WrapPanel>
-              <TextBlock Text="{Binding Score, Mode=OneWay}" FontSize="{DynamicResource FontSizeScore}" FontWeight="SemiBold"
+              <TextBlock x:Name="TxtScore" FontSize="{DynamicResource FontSizeScore}" FontWeight="SemiBold"
                          VerticalAlignment="Center" Typography.NumeralAlignment="Tabular">
                 <TextBlock.Style>
                   <Style TargetType="TextBlock">

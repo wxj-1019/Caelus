@@ -1,4 +1,5 @@
 # 消息弹窗主题化（MessageDialogWpf）实施计划
+> **落地状态（2026-10-01 复核）**：全部任务已落地——c17eff2（merge feature/message-dialog）；下文复选框为事后回填的执行记录。
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
@@ -45,7 +46,7 @@
 - Modify: `tests/SelfTests.cs`（Run() 内注册）
 - Modify: `wpf/Caelus.Wpf.csproj`（Compile 登记）
 
-- [ ] **Step 1.1: 写失败测试**
+- [x] **Step 1.1: 写失败测试**
 
 新建 `tests/SelfTests.MessageDialog.cs`（tests/ 是 glob 编入，无需 csproj 登记）：
 
@@ -141,7 +142,7 @@ namespace CaelusApp
 }
 ```
 
-- [ ] **Step 1.2: 注册测试**
+- [x] **Step 1.2: 注册测试**
 
 `tests/SelfTests.cs` Run() 内，`test("主题契约：校验器正反样例", TestThemeContractValidator);` 行后插入：
 
@@ -151,12 +152,12 @@ namespace CaelusApp
             test("消息弹窗：单字符串标题正文拆分", TestMsgDialogSplitTitleBody);
 ```
 
-- [ ] **Step 1.3: 验证失败（编译错误即红灯）**
+- [x] **Step 1.3: 验证失败（编译错误即红灯）**
 
 Run: `cmd //c dev.cmd test 2>&1 | tail -5`
 Expected: 构建失败，错误含 `MsgSeverity`/`MsgDialogMaps` 未定义（类型尚不存在）。
 
-- [ ] **Step 1.4: 实现 MsgSeverity.cs**
+- [x] **Step 1.4: 实现 MsgSeverity.cs**
 
 新建 `wpf/Dialogs/MsgSeverity.cs`：
 
@@ -277,7 +278,7 @@ namespace CaelusApp.WpfHost.Dialogs
 }
 ```
 
-- [ ] **Step 1.5: csproj 登记**
+- [x] **Step 1.5: csproj 登记**
 
 `wpf/Caelus.Wpf.csproj` 的 Compile ItemGroup（`<Compile Include="Dialogs\ReleaseNotesDialogWpf.xaml.cs">` 块之后、`..\src\Core` glob 之前）插入一行：
 
@@ -285,12 +286,12 @@ namespace CaelusApp.WpfHost.Dialogs
     <Compile Include="Dialogs\MsgSeverity.cs" />
 ```
 
-- [ ] **Step 1.6: 跑测试到绿**
+- [x] **Step 1.6: 跑测试到绿**
 
 Run: `cmd //c dev.cmd test 2>&1 | tail -6`
 Expected: `FAIL 0`，TOTAL 较基线 +3。
 
-- [ ] **Step 1.7: 提交**
+- [x] **Step 1.7: 提交**
 
 ```bash
 git add wpf/Dialogs/MsgSeverity.cs tests/SelfTests.MessageDialog.cs tests/SelfTests.cs wpf/Caelus.Wpf.csproj
@@ -306,7 +307,7 @@ git commit -m "wpf: 消息弹窗纯逻辑——级别/按钮映射与标题正�
 - Create: `wpf/Dialogs/MessageDialogWpf.xaml.cs`
 - Modify: `wpf/Caelus.Wpf.csproj`（Page + Compile + DependentUpon）
 
-- [ ] **Step 2.1: XAML**
+- [x] **Step 2.1: XAML**
 
 新建 `wpf/Dialogs/MessageDialogWpf.xaml`：
 
@@ -372,7 +373,7 @@ git commit -m "wpf: 消息弹窗纯逻辑——级别/按钮映射与标题正�
 </Window>
 ```
 
-- [ ] **Step 2.2: 代码后置**
+- [x] **Step 2.2: 代码后置**
 
 新建 `wpf/Dialogs/MessageDialogWpf.xaml.cs`：
 
@@ -592,7 +593,7 @@ namespace CaelusApp.WpfHost.Dialogs
 
 **注意**：`defaultResult` 传 `MessageBoxResult.None` 时 FocusDefault 走 else 分支聚焦主按钮，行为正确；`SoftKey` 映射在 Task 1 已实现（自测引用）。
 
-- [ ] **Step 2.3: csproj 登记**
+- [x] **Step 2.3: csproj 登记**
 
 `wpf/Caelus.Wpf.csproj`：Page ItemGroup 里 `<Page Include="Dialogs\ReleaseNotesDialogWpf.xaml" />` 后加：
 
@@ -608,7 +609,7 @@ Compile ItemGroup 里 Task 1 加过的 `<Compile Include="Dialogs\MsgSeverity.cs
     </Compile>
 ```
 
-- [ ] **Step 2.4: 构建验证**
+- [x] **Step 2.4: 构建验证**
 
 Run: `cmd //c build-wpf.cmd 2>&1 | tail -3`
 Expected: `WPF Build OK -> wpf\bin\Release\CaelusWpf.exe`（零新增警告）
@@ -616,7 +617,7 @@ Expected: `WPF Build OK -> wpf\bin\Release\CaelusWpf.exe`（零新增警告）
 Run: `cmd //c dev.cmd test 2>&1 | tail -6`
 Expected: `FAIL 0`（弹窗本体无新测试，确认无回归）
 
-- [ ] **Step 2.5: 提交**
+- [x] **Step 2.5: 提交**
 
 ```bash
 git add wpf/Dialogs/MessageDialogWpf.xaml wpf/Dialogs/MessageDialogWpf.xaml.cs wpf/Caelus.Wpf.csproj
@@ -632,7 +633,7 @@ git commit -m "wpf: MessageDialogWpf 主题化弹窗本体——无边框小窗/
 
 替换原则：**按钮组合与结果比较保持原样**（比较逻辑一行不改），只换调用本身。所有调用已按规格 §5 定级。
 
-- [ ] **Step 3.1: 文件头加 using**
+- [x] **Step 3.1: 文件头加 using**
 
 `using` 区加：
 
@@ -640,7 +641,7 @@ git commit -m "wpf: MessageDialogWpf 主题化弹窗本体——无边框小窗/
 using CaelusApp.WpfHost.Dialogs;
 ```
 
-- [ ] **Step 3.2: 12 处逐条替换**
+- [x] **Step 3.2: 12 处逐条替换**
 
 ① L206 附近（恢复配色确认）：
 
@@ -744,12 +745,12 @@ using CaelusApp.WpfHost.Dialogs;
                 != MessageBoxResult.Yes) return;
 ```
 
-- [ ] **Step 3.3: 构建验证**
+- [x] **Step 3.3: 构建验证**
 
 Run: `cmd //c build-wpf.cmd 2>&1 | tail -3`
 Expected: `WPF Build OK`（确认该文件已无 `MessageBox.Show` 残留：`grep -c "MessageBox.Show" wpf/Views/SettingsView.xaml.cs` → 0）
 
-- [ ] **Step 3.4: 提交**
+- [x] **Step 3.4: 提交**
 
 ```bash
 git add wpf/Views/SettingsView.xaml.cs
@@ -763,9 +764,9 @@ git commit -m "wpf: 设置页 12 处弹窗换用 MessageDialogWpf（Defender/配
 **Files:**
 - Modify: `wpf/Views/WhitelistView.xaml.cs`
 
-- [ ] **Step 4.1: using 同 Task 3.1**
+- [x] **Step 4.1: using 同 Task 3.1**
 
-- [ ] **Step 4.2: 7 处替换**
+- [x] **Step 4.2: 7 处替换**
 
 L178/198/207/216 四处错误弹（模式相同，error 变量名随现场）：
 
@@ -797,11 +798,11 @@ L228（重置失败）：
                     MsgSeverity.Danger, MsgButtons.Ok, error, null, MessageBoxResult.OK);
 ```
 
-- [ ] **Step 4.3: 构建验证**
+- [x] **Step 4.3: 构建验证**
 
 Run: `cmd //c build-wpf.cmd 2>&1 | tail -3`；`grep -c "MessageBox.Show" wpf/Views/WhitelistView.xaml.cs` → 0
 
-- [ ] **Step 4.4: 提交**
+- [x] **Step 4.4: 提交**
 
 ```bash
 git add wpf/Views/WhitelistView.xaml.cs
@@ -817,7 +818,7 @@ git commit -m "wpf: 白名单页 7 处弹窗换用 MessageDialogWpf（错误详�
 - Modify: `wpf/GraphicsViewModel.cs`
 - Modify: `wpf/PolicyRuntime.cs`
 
-- [ ] **Step 5.1: EnvironmentView（using 同前）**
+- [x] **Step 5.1: EnvironmentView（using 同前）**
 
 L43（vbs.needadmin）：
 
@@ -842,7 +843,7 @@ L69（VBS 操作失败，message 进技术详情）：
                     MsgSeverity.Danger, MsgButtons.Ok, message, null, MessageBoxResult.OK);
 ```
 
-- [ ] **Step 5.2: GraphicsViewModel（ViewModel 无窗口，owner 传 null）**
+- [x] **Step 5.2: GraphicsViewModel（ViewModel 无窗口，owner 传 null）**
 
 L242 附近：
 
@@ -854,7 +855,7 @@ L242 附近：
 
 （文件顶部若已 `using System.Windows;` 则只需加 `using CaelusApp.WpfHost.Dialogs;`；替换后该处 `System.Windows.MessageBox` 全限定调用一并删除。）
 
-- [ ] **Step 5.3: PolicyRuntime（动态 ConfirmKey，单字符串自动拆分重载）**
+- [x] **Step 5.3: PolicyRuntime（动态 ConfirmKey，单字符串自动拆分重载）**
 
 L56 附近：
 
@@ -865,11 +866,11 @@ L56 附近：
 
 （比较 `if (r != MessageBoxResult.OK)` 原样保留。）
 
-- [ ] **Step 5.4: 构建验证**
+- [x] **Step 5.4: 构建验证**
 
 Run: `cmd //c build-wpf.cmd 2>&1 | tail -3`；三文件 `grep -c "MessageBox.Show"` 均 → 0
 
-- [ ] **Step 5.5: 提交**
+- [x] **Step 5.5: 提交**
 
 ```bash
 git add wpf/Views/EnvironmentView.xaml.cs wpf/GraphicsViewModel.cs wpf/PolicyRuntime.cs
@@ -886,7 +887,7 @@ git commit -m "wpf: 环境页/VBS/窗口优化/策略确认 5 处弹窗换用 Me
 - Modify: `wpf/Views/LibraryView.xaml.cs`
 - Modify: `wpf/Dialogs/AddGameDialogWpf.xaml.cs`
 
-- [ ] **Step 6.1: WpfRuntime 托盘两处**
+- [x] **Step 6.1: WpfRuntime 托盘两处**
 
 ResetDefaults() 方法内，方法体开头取 owner（该类无窗口引用）：
 
@@ -921,7 +922,7 @@ L466（白名单写入失败）：
 
 （加 `using CaelusApp.WpfHost.Dialogs;`。托盘命令在共享 UI 线程执行；若实测出现跨线程异常，按规格 §9 降级保留原生并回写规格。）
 
-- [ ] **Step 6.2: LogView L81（原按钮 YesNo、比较 Yes 保留）**
+- [x] **Step 6.2: LogView L81（原按钮 YesNo、比较 Yes 保留）**
 
 ```csharp
             MessageBoxResult r = MessageDialogWpf.Show(Window.GetWindow(this), "清空运行日志？",
@@ -929,7 +930,7 @@ L466（白名单写入失败）：
                 MsgSeverity.Warning, MsgButtons.YesNo, null, "清空", MessageBoxResult.No);
 ```
 
-- [ ] **Step 6.3: LibraryView L183**
+- [x] **Step 6.3: LibraryView L183**
 
 ```csharp
             if (MessageDialogWpf.Show(Window.GetWindow(this), "从游戏库移除《" + item.Name + "》？",
@@ -938,19 +939,19 @@ L466（白名单写入失败）：
                 != MessageBoxResult.Yes) return;
 ```
 
-- [ ] **Step 6.4: AddGameDialogWpf L363**
+- [x] **Step 6.4: AddGameDialogWpf L363**
 
 ```csharp
                     MessageDialogWpf.Show(Window.GetWindow(this), "添加游戏失败", "详细信息见技术详情。",
                         MsgSeverity.Danger, MsgButtons.Ok, error, null, MessageBoxResult.OK);
 ```
 
-- [ ] **Step 6.5: 构建验证 + 残留清点**
+- [x] **Step 6.5: 构建验证 + 残留清点**
 
 Run: `cmd //c build-wpf.cmd 2>&1 | tail -3`
 Run: `grep -rn "MessageBox.Show" wpf --include="*.cs" | wc -l` → **0**
 
-- [ ] **Step 6.6: 提交**
+- [x] **Step 6.6: 提交**
 
 ```bash
 git add wpf/WpfRuntime.cs wpf/Views/LogView.xaml.cs wpf/Views/LibraryView.xaml.cs wpf/Dialogs/AddGameDialogWpf.xaml.cs
@@ -964,12 +965,12 @@ git commit -m "wpf: 托盘/日志/游戏库/添加游戏 5 处弹窗换用 Messa
 **Files:**
 - Modify: `docs/superpowers/specs/2026-08-23-message-dialog-design.md`
 
-- [ ] **Step 7.1: 全量自测**
+- [x] **Step 7.1: 全量自测**
 
 Run: `cmd //c dev.cmd test 2>&1 | tail -8`
 Expected: `FAIL 0`，TOTAL = 基线 + 3
 
-- [ ] **Step 7.2: 手工验收（GUI 不可自动化，人工跑清单）**
+- [x] **Step 7.2: 手工验收（GUI 不可自动化，人工跑清单）**
 
 启动：`wpf/bin/Release/CaelusWpf.exe`，逐项核对（触发入口 → 期望）：
 
@@ -986,7 +987,7 @@ Expected: `FAIL 0`，TOTAL = 基线 + 3
 
 任一项不符：修完重跑本清单。全部通过才进 Step 7.3。
 
-- [ ] **Step 7.3: 规格回写（执行偏差）**
+- [x] **Step 7.3: 规格回写（执行偏差）**
 
 修改 `docs/superpowers/specs/2026-08-23-message-dialog-design.md`：
 
@@ -996,7 +997,7 @@ Expected: `FAIL 0`，TOTAL = 基线 + 3
 4. §3 窗体行的 DropShadowEffect 表述改为"不使用 DropShadowEffect（本机不渲染，已实测），层次=描边+遮罩"
 5. 托盘 2 处如遇线程问题降级保留原生，则在 §5 表 #23/#24 标注
 
-- [ ] **Step 7.4: 提交**
+- [x] **Step 7.4: 提交**
 
 ```bash
 git add docs/superpowers/specs/2026-08-23-message-dialog-design.md

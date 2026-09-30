@@ -1,4 +1,5 @@
 # 场景扩展 P3：DailyCare 日常场景调度 + 电池能效 实施计划
+> **落地状态（2026-10-01 复核）**：全部任务已落地——a3edef4（审查 3d64021）；下文复选框为事后回填的执行记录。
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
@@ -55,7 +56,7 @@
 - Modify: `src/Core/Scenario/DevFocus.cs`
 - Test: 无新增（P1/P2 既有测试即回归网）
 
-- [ ] **Step 1: 枚举加位**
+- [x] **Step 1: 枚举加位**
 
 找到 `src/Core/Suppression/SuppressionCore.cs` L9-16：
 
@@ -84,7 +85,7 @@
     }
 ```
 
-- [ ] **Step 2: 新建 ScenarioBase.cs**
+- [x] **Step 2: 新建 ScenarioBase.cs**
 
 ```csharp
 // @author zenjiro 18967498922@163.com
@@ -163,7 +164,7 @@ namespace CaelusApp
 }
 ```
 
-- [ ] **Step 3: DevFocus 改造为继承**
+- [x] **Step 3: DevFocus 改造为继承**
 
 **改动 1 — 类声明**。找到：
 
@@ -272,7 +273,7 @@ DevFocus `NotifyProcessChanges` 开关关闭分支替换为：
         }
 ```
 
-- [ ] **Step 4: 全量自测回归**
+- [x] **Step 4: 全量自测回归**
 
 ```bash
 cmd.exe //c "dev.cmd test"
@@ -280,7 +281,7 @@ cmd.exe //c "dev.cmd test"
 
 预期：`TOTAL 197  PASS 195  FAIL 0  SKIP 2`——与 P2 终态完全一致（纯重构，测试数不变）。
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add -A
@@ -297,7 +298,7 @@ git commit -m "refactor: ScenarioBase 抽取——DevFocus 改继承，Suppressi
 - Test: `tests/SelfTests.DailyCare.cs`
 - Modify: `tests/SelfTests.cs`
 
-- [ ] **Step 1: 写失败测试**
+- [x] **Step 1: 写失败测试**
 
 新建 `tests/SelfTests.DailyCare.cs`：
 
@@ -407,7 +408,7 @@ namespace CaelusApp
             test("日常优化：家族进程无可见窗口不激活", TestDailyCareNoWindowNoActivate);
 ```
 
-- [ ] **Step 2: 运行自测确认编译失败**
+- [x] **Step 2: 运行自测确认编译失败**
 
 ```bash
 cmd.exe //c "dev.cmd test"
@@ -415,7 +416,7 @@ cmd.exe //c "dev.cmd test"
 
 预期：编译错误（`DailyCatalog`/`DailyCare`/`SetBatteryForTest` 不存在）。
 
-- [ ] **Step 3: 实现 DailyCatalog.cs**
+- [x] **Step 3: 实现 DailyCatalog.cs**
 
 ```csharp
 // @author zenjiro 18967498922@163.com
@@ -507,7 +508,7 @@ namespace CaelusApp
 }
 ```
 
-- [ ] **Step 4: 实现 DailyCare.cs 骨架**
+- [x] **Step 4: 实现 DailyCare.cs 骨架**
 
 ```csharp
 // @author zenjiro 18967498922@163.com
@@ -712,7 +713,7 @@ namespace CaelusApp
 
 **注意**：`TestDailyCareBatteryActivates` 断言 `IsGranted`——骨架的 Grant/Suspend 由仲裁器回调，空副作用实现已满足该测试；`TestDailyCareNoWindowNoActivate` 依赖 `RefreshFamilyVisible` 真实逻辑（骨架已含）。
 
-- [ ] **Step 5: 运行自测确认通过**
+- [x] **Step 5: 运行自测确认通过**
 
 ```bash
 cmd.exe //c "dev.cmd test"
@@ -720,7 +721,7 @@ cmd.exe //c "dev.cmd test"
 
 预期：`TOTAL 200  PASS 198  FAIL 0  SKIP 2`。
 
-- [ ] **Step 6: Commit**
+- [x] **Step 6: Commit**
 
 ```bash
 git add -A
@@ -736,7 +737,7 @@ git commit -m "feat: DailyCare 骨架——家族双校验 + 电池活性 + 仲�
 - Test: `tests/SelfTests.DailyCare.cs`
 - Modify: `tests/SelfTests.cs`
 
-- [ ] **Step 1: 写失败测试**
+- [x] **Step 1: 写失败测试**
 
 在 `tests/SelfTests.DailyCare.cs` 类内追加：
 
@@ -792,7 +793,7 @@ git commit -m "feat: DailyCare 骨架——家族双校验 + 电池活性 + 仲�
             test("日常优化：电池升档压制级别选择", TestDailyCareLevelChoice);
 ```
 
-- [ ] **Step 2: 运行自测确认编译失败**
+- [x] **Step 2: 运行自测确认编译失败**
 
 ```bash
 cmd.exe //c "dev.cmd test"
@@ -800,7 +801,7 @@ cmd.exe //c "dev.cmd test"
 
 预期：编译错误（`DailyCare.ResolveDailyLevel` 不存在）。
 
-- [ ] **Step 3: 实现压制与提优**
+- [x] **Step 3: 实现压制与提优**
 
 替换 Task 2 的空方法占位，在 `DailyCare.cs` 实现：
 
@@ -957,7 +958,7 @@ cmd.exe //c "dev.cmd test"
         }
 ```
 
-- [ ] **Step 4: 运行自测确认通过**
+- [x] **Step 4: 运行自测确认通过**
 
 ```bash
 cmd.exe //c "dev.cmd test"
@@ -965,7 +966,7 @@ cmd.exe //c "dev.cmd test"
 
 预期：`TOTAL 202  PASS 200  FAIL 0  SKIP 2`。
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add -A
@@ -983,7 +984,7 @@ git commit -m "feat: 日常压制 Sweep（Daily 位）+ 家族窗口提优（Abo
 - Test: `tests/SelfTests.DailyCare.cs`
 - Modify: `tests/SelfTests.cs`
 
-- [ ] **Step 1: 写失败测试**
+- [x] **Step 1: 写失败测试**
 
 在 `tests/SelfTests.DailyCare.cs` 类内追加：
 
@@ -1026,7 +1027,7 @@ git commit -m "feat: 日常压制 Sweep（Daily 位）+ 家族窗口提优（Abo
             test("日常优化：电池气球每次脱电只报一次", TestDailyCareBatteryBalloonOnce);
 ```
 
-- [ ] **Step 2: 运行自测确认编译失败**
+- [x] **Step 2: 运行自测确认编译失败**
 
 ```bash
 cmd.exe //c "dev.cmd test"
@@ -1034,7 +1035,7 @@ cmd.exe //c "dev.cmd test"
 
 预期：编译错误（`DailyCare.SessionChanged` 事件不存在）。
 
-- [ ] **Step 3: 实现 Timer、气球与接线**
+- [x] **Step 3: 实现 Timer、气球与接线**
 
 **改动 1 — DailyCare.cs 加事件声明**（字段区后）：
 
@@ -1183,7 +1184,7 @@ cmd.exe //c "dev.cmd test"
             };
 ```
 
-- [ ] **Step 4: 全量回归 + 双构建**
+- [x] **Step 4: 全量回归 + 双构建**
 
 ```bash
 cmd.exe //c "dev.cmd test"
@@ -1193,14 +1194,14 @@ cmd.exe //c "build-wpf.cmd"
 
 预期：`TOTAL 203  PASS 201  FAIL 0  SKIP 2`；双构建 OK。
 
-- [ ] **Step 5: 冒烟验证（手动）**
+- [x] **Step 5: 冒烟验证（手动）**
 
 1. 启动 `Caelus.exe`，打开 Chrome/Edge 浏览网页 → 日志出现"日常优化：获得掌职权"
 2. 笔记本拔电源（或电源选项模拟）→ 气球建议一次 + 日志"电池供电，后台压制已升档"
 3. 启动任意游戏 → 日志"日常优化：挂起"（游戏抢占）；退出游戏 → 日常场景补位恢复
 4. 关闭浏览器全部窗口 → 30 秒内日志"挂起，全部副作用已还原"
 
-- [ ] **Step 6: Commit**
+- [x] **Step 6: Commit**
 
 ```bash
 git add -A && git commit -m "feat: DailyCare 电池能效 + 全接线——三场景仲裁闭环（203 项自测 0 失败）"

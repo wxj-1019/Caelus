@@ -1,4 +1,5 @@
 # 启动弹窗重构 Implementation Plan
+> **落地状态（2026-10-01 复核）**：全部任务已落地——00c1830（随 v1.7.0 收口）；下文复选框为事后回填的执行记录。
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
@@ -40,13 +41,13 @@
 - Modify: `src/Program.cs:101-117`(`--shot-contact` 命令分支)
 - Modify: `src/Program.cs:315-317`(启动弹窗调用)
 
-- [ ] **Step 1: 删除 `--shot-contact` 命令分支**
+- [x] **Step 1: 删除 `--shot-contact` 命令分支**
 
 打开 `src/Program.cs`,删除第 101-117 行整个 `--shot-contact` 分支(从 `if (args.Length >= 2 && args[0] == "--shot-contact")` 到对应的 `return;` 结束的右花括号 `}`)。
 
 删除后,`--geniconpng` 分支(原 `:53`)和 `--screenshot` 分支(原 `:62`)之间应直接衔接,中间不再有 `--shot-contact` 块。
 
-- [ ] **Step 2: 替换启动弹窗调用**
+- [x] **Step 2: 替换启动弹窗调用**
 
 把 `src/Program.cs` 中的 ContactDialog 调用:
 
@@ -64,7 +65,7 @@
                 catch { }
 ```
 
-- [ ] **Step 3: 编译验证**
+- [x] **Step 3: 编译验证**
 
 此时 `ContactDialog.cs` 仍存在但已无人引用,`ContactDialog` 类不再被构造(但 `SettingsPage` 仍在引用它,见 Task 3,所以暂时还能编译)。
 
@@ -73,7 +74,7 @@
 
 注意:此时先不跑自测,因为设置页还在引用 `ContactDialog.ShouldShow()`。Task 3 删完后一起验证。
 
-- [ ] **Step 4: 暂不提交**
+- [x] **Step 4: 暂不提交**
 
 本任务与 Task 2/3 有依赖(全部删完才能编译通过自测),合并到 Task 4 后一起提交。
 
@@ -87,7 +88,7 @@
 - Modify: `src/Ui/Pages/PanelForm.SettingsPage.cs:14`(字段声明)
 - Modify: `src/Ui/Pages/PanelForm.SettingsPage.cs:42-47`(开关卡片)
 
-- [ ] **Step 1: 删除 `swContact` 字段声明**
+- [x] **Step 1: 删除 `swContact` 字段声明**
 
 打开 `src/Ui/Pages/PanelForm.SettingsPage.cs`,第 14 行:
 
@@ -101,7 +102,7 @@
         private Toggle swAuto, swAutoHide;
 ```
 
-- [ ] **Step 2: 删除开关卡片创建代码**
+- [x] **Step 2: 删除开关卡片创建代码**
 
 删除第 42-47 行整块:
 
@@ -116,14 +117,14 @@
 
 删除后,第 40 行的 `sy += cardH + 8;`(autohide 卡片结尾)之后直接接第 49 行的 `sy += 10;`(维护分区前的间距)。`sy` 是相对累加器,删除一段后后续卡片自然上移,布局不会错位。
 
-- [ ] **Step 3: 编译验证**
+- [x] **Step 3: 编译验证**
 
 运行:`cmd.exe //c "build.cmd"`
 期望:`Build OK -> Pavise.exe`
 
 此时 `ContactDialog` 类已无人引用,成为死代码(文件还在)。
 
-- [ ] **Step 4: 暂不提交**(合并到 Task 4)
+- [x] **Step 4: 暂不提交**(合并到 Task 4)
 
 ---
 
@@ -134,7 +135,7 @@
 **Files:**
 - Modify: `src/Ui/Pages/PanelForm.AboutPage.cs:49`
 
-- [ ] **Step 1: 删除 contact.hint 引用行**
+- [x] **Step 1: 删除 contact.hint 引用行**
 
 打开 `src/Ui/Pages/PanelForm.AboutPage.cs`,删除第 49 行:
 
@@ -144,12 +145,12 @@
 
 删除后,第 48 行的 `for` 循环右花括号 `}` 之后直接接第 51 行的 `bool unseenNotes = ReleaseNotes.HasUnseen;`。
 
-- [ ] **Step 2: 编译验证**
+- [x] **Step 2: 编译验证**
 
 运行:`cmd.exe //c "build.cmd"`
 期望:`Build OK -> Pavise.exe`
 
-- [ ] **Step 3: 暂不提交**(合并到 Task 4)
+- [x] **Step 3: 暂不提交**(合并到 Task 4)
 
 ---
 
@@ -160,13 +161,13 @@
 **Files:**
 - Delete: `src/Ui/ContactDialog.cs`
 
-- [ ] **Step 1: 删除文件**
+- [x] **Step 1: 删除文件**
 
 ```bash
 rm src/Ui/ContactDialog.cs
 ```
 
-- [ ] **Step 2: 编译 + 自测**
+- [x] **Step 2: 编译 + 自测**
 
 运行:`cmd.exe //c "dev.cmd test"`
 期望输出末尾:`TOTAL 152  PASS 149  FAIL 0  SKIP 3`
@@ -175,7 +176,7 @@ rm src/Ui/ContactDialog.cs
 - 若提示 `ContactDialog` 未定义 → 说明 Task 1/2/3 有遗漏的引用没删干净,回去补删。
 - 若 `TestEveryLangKeyIsDefined` 失败提示某 key 未定义 → 这是 Task 5 还没做导致的(此刻 `set.contact`/`contact.*` 仍在 Lang.cs 里定义着但已无引用,不会触发这个失败;真正会触发的是反过来——引用了已删的 key,此时不该发生)。
 
-- [ ] **Step 3: 提交**
+- [x] **Step 3: 提交**
 
 ```bash
 git add -A
@@ -200,7 +201,7 @@ ReleaseNotesDialog 已有按版本号判断未读的逻辑，关闭即 MarkSeen�
 - Modify: `src/Platform/Lang.cs:352-366`(contact.* 和 set.contact*)
 - Modify: `src/Platform/Lang.cs:451`(about.contact.hint)
 
-- [ ] **Step 1: 删除 contact.* 和 set.contact* 文案块**
+- [x] **Step 1: 删除 contact.* 和 set.contact* 文案块**
 
 打开 `src/Platform/Lang.cs`,删除第 352-366 行整块(共 15 行,从 `contact.title` 到 `set.contact.n`):
 
@@ -224,7 +225,7 @@ ReleaseNotesDialog 已有按版本号判断未读的逻辑，关闭即 MarkSeen�
 
 删除后,第 351 行 `nav.audit` 之后直接接原第 367 行 `nav.hardware`。
 
-- [ ] **Step 2: 删除 about.contact.hint 文案**
+- [x] **Step 2: 删除 about.contact.hint 文案**
 
 删除原第 451 行(因前面删了 15 行,现在行号约为 436):
 
@@ -232,14 +233,14 @@ ReleaseNotesDialog 已有按版本号判断未读的逻辑，关闭即 MarkSeen�
             { "about.contact.hint", new[]{ "反馈 Bug、提交新功能建议或交流使用问题，可加作者微信；也欢迎在 GitHub 提 Issue" } },
 ```
 
-- [ ] **Step 3: 编译 + 自测**
+- [x] **Step 3: 编译 + 自测**
 
 运行:`cmd.exe //c "dev.cmd test"`
 期望:`TOTAL 152  PASS 149  FAIL 0  SKIP 3`
 
 重点确认 `TestEveryLangKeyIsDefined` 仍通过(它在自测序列里)——这验证没有任何残留的 `Lang.T("contact...")` 引用。
 
-- [ ] **Step 4: 提交**
+- [x] **Step 4: 提交**
 
 ```bash
 git add src/Platform/Lang.cs
@@ -252,7 +253,7 @@ git commit -m "chore: 删除 ContactDialog 相关的 16 条无用语言文案"
 
 确认启动行为符合预期:首次/更新后弹 ReleaseNotesDialog,看过一次不再弹。
 
-- [ ] **Step 1: 模拟首次启动(强制弹窗)**
+- [x] **Step 1: 模拟首次启动(强制弹窗)**
 
 先停掉可能运行中的实例,然后清空 `LastSeenNotesVersion` 让 `HasUnseen = true`:
 
@@ -260,7 +261,7 @@ git commit -m "chore: 删除 ContactDialog 相关的 16 条无用语言文案"
 powershell.exe -NoProfile -Command "try { [System.Threading.EventWaitHandle]::OpenExisting('Global\Pavise_Exit').Set() } catch {}; Start-Sleep 3; Get-Process Pavise -ErrorAction SilentlyContinue | Stop-Process -Force; Start-Sleep 2; Remove-ItemProperty -Path 'HKCU:\Software\Pavise' -Name 'LastSeenNotesVersion' -ErrorAction SilentlyContinue; Write-Output 'cleared'"
 ```
 
-- [ ] **Step 2: 启动并确认弹窗**
+- [x] **Step 2: 启动并确认弹窗**
 
 ```bash
 powershell.exe -NoProfile -Command "Start-Process -FilePath 'E:\A_Project\Pavise-Game\Pavise.exe' -Verb RunAs; Start-Sleep 5"
@@ -268,7 +269,7 @@ powershell.exe -NoProfile -Command "Start-Process -FilePath 'E:\A_Project\Pavise
 
 期望:弹出的是**更新日志弹窗**(标题"版本说明"/`notes.title`,内容是版本更新列表),而不是联系方式弹窗。关闭弹窗后进入主界面。
 
-- [ ] **Step 3: 确认不再弹**
+- [x] **Step 3: 确认不再弹**
 
 关闭弹窗后(ReleaseNotesDialog 内部已调 `MarkSeen`),再次启动:
 
@@ -278,11 +279,11 @@ powershell.exe -NoProfile -Command "try { [System.Threading.EventWaitHandle]::Op
 
 期望:**不再弹窗**,直接进主界面。
 
-- [ ] **Step 4: 确认设置页无残留开关**
+- [x] **Step 4: 确认设置页无残留开关**
 
 打开主界面 → 设置页,确认原来的"启动时显示反馈弹窗"开关卡片已消失,布局正常(自动启动、自动隐藏开关之后直接是维护分区)。
 
-- [ ] **Step 5: 清理并结束实例**
+- [x] **Step 5: 清理并结束实例**
 
 ```bash
 powershell.exe -NoProfile -Command "try { [System.Threading.EventWaitHandle]::OpenExisting('Global\Pavise_Exit').Set() } catch {}; Start-Sleep 3; Get-Process Pavise -ErrorAction SilentlyContinue | Stop-Process -Force"

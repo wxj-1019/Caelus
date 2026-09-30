@@ -1,4 +1,5 @@
 # 深化开发模式 Implementation Plan
+> **落地状态（2026-10-01 复核）**：全部任务已落地——4945e00；下文复选框为事后回填的执行记录。
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
@@ -29,7 +30,7 @@
 **Files:**
 - Modify: `src/Core/DevServiceWhitelist.cs`
 
-- [ ] **Step 1: 扩展豁免列表**
+- [x] **Step 1: 扩展豁免列表**
 
 在 `DevServiceWhitelist.Names` 的"消息队列"行后追加:
 
@@ -42,11 +43,11 @@
             "clangd", "ccls", "language-server", "lsp"
 ```
 
-- [ ] **Step 2: 编译验证**
+- [x] **Step 2: 编译验证**
 
 `cmd.exe //c "build.cmd"` → `Build OK`
 
-- [ ] **Step 3: 暂不提交**
+- [x] **Step 3: 暂不提交**
 
 ---
 
@@ -57,7 +58,7 @@
 **Files:**
 - Modify: `src/Core/BuildCatalog.cs`
 
-- [ ] **Step 1: 扩展识别目录**
+- [x] **Step 1: 扩展识别目录**
 
 在 `BuildCatalog.Names` 的"调试器"行后追加:
 
@@ -70,11 +71,11 @@
             "nunit3-console", "vstest.console", "pytest", "jest", "mocha", "go-test"
 ```
 
-- [ ] **Step 2: 编译验证**
+- [x] **Step 2: 编译验证**
 
 `cmd.exe //c "build.cmd"` → `Build OK`
 
-- [ ] **Step 3: 暂不提交**
+- [x] **Step 3: 暂不提交**
 
 ---
 
@@ -85,7 +86,7 @@ BuildWatch 在编译会话期间记录开始时间和压制统计,结束时写�
 **Files:**
 - Modify: `src/Core/BuildWatch.cs`
 
-- [ ] **Step 1: 加统计字段**
+- [x] **Step 1: 加统计字段**
 
 在 `private bool suppressing;` 后加:
 
@@ -94,7 +95,7 @@ BuildWatch 在编译会话期间记录开始时间和压制统计,结束时写�
         private int sessionSuppressedCount;
 ```
 
-- [ ] **Step 2: 记录会话开始和压制数**
+- [x] **Step 2: 记录会话开始和压制数**
 
 `ActivateSuppression` 方法开头(在 `try {` 后)加:
 
@@ -111,11 +112,11 @@ BuildWatch 在编译会话期间记录开始时间和压制统计,结束时写�
                         elapsedMs / 1000.0, sessionSuppressedCount));
 ```
 
-- [ ] **Step 3: 编译 + 自测**
+- [x] **Step 3: 编译 + 自测**
 
 `cmd.exe //c "dev.cmd test"` → `TOTAL 152  PASS 149  FAIL 0  SKIP 3`
 
-- [ ] **Step 4: 暂不提交**
+- [x] **Step 4: 暂不提交**
 
 ---
 
@@ -128,7 +129,7 @@ BuildCatalog 从注册表加载用户自定义进程名;设置页加文本输入
 - Modify: `src/Ui/Pages/PanelForm.SettingsPage.cs`
 - Modify: `src/Platform/Lang.cs`
 
-- [ ] **Step 1: BuildCatalog 加自定义列表**
+- [x] **Step 1: BuildCatalog 加自定义列表**
 
 在 `BuildCatalog` 类里加:
 
@@ -186,7 +187,7 @@ BuildCatalog 从注册表加载用户自定义进程名;设置页加文本输入
         }
 ```
 
-- [ ] **Step 2: 设置页加文本输入**
+- [x] **Step 2: 设置页加文本输入**
 
 在 `swDev` 开关卡片(`:46-49`)之后、`sy += 10;` 之前,加:
 
@@ -216,7 +217,7 @@ BuildCatalog 从注册表加载用户自定义进程名;设置页加文本输入
 
 注意:需要核实 `DBPanel`、`PillButton`、`ScrollBars` 的 using 是否已在 SettingsPage 可用(通常已 in using System.Windows.Forms)。
 
-- [ ] **Step 3: Lang.cs 加文案**
+- [x] **Step 3: Lang.cs 加文案**
 
 在 `set.dev.n` 后加:
 
@@ -227,23 +228,23 @@ BuildCatalog 从注册表加载用户自定义进程名;设置页加文本输入
             { "set.dev.custom.saved", new[]{ "已保存" } },
 ```
 
-- [ ] **Step 4: 编译 + 自测**
+- [x] **Step 4: 编译 + 自测**
 
 `cmd.exe //c "dev.cmd test"` → `TOTAL 152  PASS 149  FAIL 0  SKIP 3`
 
 若 UI 构建报错(DBPanel/ScrollBars 不可见),按报错调整 using 或控件类型。
 
-- [ ] **Step 5: 暂不提交**
+- [x] **Step 5: 暂不提交**
 
 ---
 
 ### Task 5: 最终验证 + 提交
 
-- [ ] **Step 1: 全量编译 + 自测**
+- [x] **Step 1: 全量编译 + 自测**
 
 `cmd.exe //c "dev.cmd test"` → `TOTAL 152  PASS 149  FAIL 0  SKIP 3`
 
-- [ ] **Step 2: 手动验证**
+- [x] **Step 2: 手动验证**
 
 1. 启动 Caelus → 设置页 → 开发模式开关下应看到"自定义编译进程"输入框
 2. 输入 `mybuilder` 保存 → 运行一个名为 mybuilder.exe 的假进程 → 确认日志出现"开发模式:检测到编译/调试进程"
@@ -251,7 +252,7 @@ BuildCatalog 从注册表加载用户自定义进程名;设置页加文本输入
 4. 启动 nodemon(若装了)→ 触发编译 → 确认 nodemon 未被压
 5. 运行 `git gc`(在任意 git 仓库)→ 确认开发模式激活
 
-- [ ] **Step 3: 提交**
+- [x] **Step 3: 提交**
 
 ```bash
 git add -A

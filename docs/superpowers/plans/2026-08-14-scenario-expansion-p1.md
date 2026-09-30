@@ -1,4 +1,5 @@
 # 场景扩展 P1：场景仲裁器 + DevFocus 编译深化 实施计划
+> **落地状态（2026-10-01 复核）**：全部任务已落地——e6551e8（审查 3d64021）；下文复选框为事后回填的执行记录。
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
@@ -63,7 +64,7 @@
 - Test: `tests/SelfTests.Arbiter.cs`
 - Modify: `tests/SelfTests.cs`（注册测试）
 
-- [ ] **Step 1: 写失败测试**
+- [x] **Step 1: 写失败测试**
 
 新建 `tests/SelfTests.Arbiter.cs`：
 
@@ -210,7 +211,7 @@ namespace CaelusApp
             test("场景仲裁：掌权者变更事件", TestArbiterGrantedChangedEvent);
 ```
 
-- [ ] **Step 2: 运行自测确认编译失败**
+- [x] **Step 2: 运行自测确认编译失败**
 
 ```bash
 cmd.exe //c "dev.cmd test"
@@ -218,7 +219,7 @@ cmd.exe //c "dev.cmd test"
 
 预期：编译错误 `CS0246: 未能找到类型或命名空间 IScenario / ScenarioArbiter / ScenarioKind`。
 
-- [ ] **Step 3: 实现仲裁器三文件**
+- [x] **Step 3: 实现仲裁器三文件**
 
 新建 `src/Core/Scenario/ScenarioKind.cs`：
 
@@ -351,7 +352,7 @@ namespace CaelusApp
 }
 ```
 
-- [ ] **Step 4: 运行自测确认通过**
+- [x] **Step 4: 运行自测确认通过**
 
 ```bash
 cmd.exe //c "dev.cmd test"
@@ -359,7 +360,7 @@ cmd.exe //c "dev.cmd test"
 
 预期：`TOTAL 185  PASS 183  FAIL 0  SKIP 2`（基线 178 + 新增 7）。FAIL 必须为 0。
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add src/Core/Scenario/ tests/SelfTests.Arbiter.cs tests/SelfTests.cs
@@ -377,7 +378,7 @@ git commit -m "feat: 场景仲裁器 ScenarioArbiter——严格优先级仲裁�
 - Test: `tests/SelfTests.Arbiter.cs`（追加 GameMode 接线测试）
 - Modify: `tests/SelfTests.cs`（注册）
 
-- [ ] **Step 1: 写失败测试**
+- [x] **Step 1: 写失败测试**
 
 在 `tests/SelfTests.Arbiter.cs` **类内**追加：
 
@@ -448,7 +449,7 @@ grep -n "NewTempDir\|DeleteTempDir\|static.*TempDir" tests/SelfTests.Infrastruct
             test("场景仲裁：空白名单查询不误豁免", TestGameModeWhitelistQueryEmpty);
 ```
 
-- [ ] **Step 2: 运行自测确认编译失败**
+- [x] **Step 2: 运行自测确认编译失败**
 
 ```bash
 cmd.exe //c "dev.cmd test"
@@ -456,7 +457,7 @@ cmd.exe //c "dev.cmd test"
 
 预期：编译错误 `CS0117/CS1061: GameMode 不包含 ActiveChanged / IsProcessWhitelisted 的定义`。
 
-- [ ] **Step 3: 实现 GameMode 接线（3 处触发 + 1 个查询）**
+- [x] **Step 3: 实现 GameMode 接线（3 处触发 + 1 个查询）**
 
 **改动 1** — `src/Core/GameMode.cs` L435 附近，找到：
 
@@ -555,7 +556,7 @@ cmd.exe //c "dev.cmd test"
         }
 ```
 
-- [ ] **Step 4: 运行自测确认通过**
+- [x] **Step 4: 运行自测确认通过**
 
 ```bash
 cmd.exe //c "dev.cmd test"
@@ -563,7 +564,7 @@ cmd.exe //c "dev.cmd test"
 
 预期：`TOTAL 187  PASS 185  FAIL 0  SKIP 2`。
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add src/Core/GameMode.cs src/Core/GameMode.Boost.cs src/Core/GameMode.Whitelist.cs tests/
@@ -581,7 +582,7 @@ git commit -m "feat: GameMode 场景接线——ActiveChanged 事件 + 白名单
 - Test: `tests/SelfTests.DevFocus.cs`
 - Modify: `tests/SelfTests.cs`（注册）
 
-- [ ] **Step 1: 写失败测试**
+- [x] **Step 1: 写失败测试**
 
 新建 `tests/SelfTests.DevFocus.cs`：
 
@@ -761,7 +762,7 @@ grep -n "static.*StartProbe\|static.*WaitAdvance\|static.*StopOwned" tests/SelfT
             test("开发专注：开关关闭不激活且立即解除", TestDevFocusDisabledSwitch);
 ```
 
-- [ ] **Step 2: 运行自测确认编译失败**
+- [x] **Step 2: 运行自测确认编译失败**
 
 ```bash
 cmd.exe //c "dev.cmd test"
@@ -769,7 +770,7 @@ cmd.exe //c "dev.cmd test"
 
 预期：编译错误 `CS0246: 未能找到类型或命名空间 DevFocus`。
 
-- [ ] **Step 3: 实现 DevFocus.cs 并删除 BuildWatch.cs**
+- [x] **Step 3: 实现 DevFocus.cs 并删除 BuildWatch.cs**
 
 新建 `src/Core/Scenario/DevFocus.cs`：
 
@@ -1050,7 +1051,7 @@ git rm src/Core/BuildWatch.cs
             devFocus.SessionChanged += key =>
 ```
 
-- [ ] **Step 4: 运行自测确认通过**
+- [x] **Step 4: 运行自测确认通过**
 
 ```bash
 cmd.exe //c "dev.cmd test"
@@ -1060,7 +1061,7 @@ cmd.exe //c "dev.cmd test"
 
 **行为说明（供审查）**：原 `BuildWatch` 在游戏活跃时跳过 `SvcPause` 操作（`isGameActive` 委托）；新架构下游戏活跃时仲裁器不会 Grant DevFocus，互斥语义由仲裁器自然覆盖，行为等价。
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add -A
@@ -1076,7 +1077,7 @@ git commit -m "refactor: BuildWatch 场景化为 DevFocus——实现 IScenario 
 - Test: `tests/SelfTests.DevFocus.cs`（追加纯逻辑与集成测试）
 - Modify: `tests/SelfTests.cs`（注册）
 
-- [ ] **Step 1: 写失败测试**
+- [x] **Step 1: 写失败测试**
 
 在 `tests/SelfTests.DevFocus.cs` **类内**追加：
 
@@ -1169,7 +1170,7 @@ git commit -m "refactor: BuildWatch 场景化为 DevFocus——实现 IScenario 
             test("开发专注：编译压制位与游戏压制位引用计数隔离", TestDevFocusBuildReasonIsolation);
 ```
 
-- [ ] **Step 2: 运行自测确认编译失败**
+- [x] **Step 2: 运行自测确认编译失败**
 
 ```bash
 cmd.exe //c "dev.cmd test"
@@ -1177,7 +1178,7 @@ cmd.exe //c "dev.cmd test"
 
 预期：编译错误 `CS0117: DevFocus 不包含 ShouldSuppressBackground 的定义`。
 
-- [ ] **Step 3: 实现压制逻辑**
+- [x] **Step 3: 实现压制逻辑**
 
 在 `src/Core/Scenario/DevFocus.cs` 的 `BoostBuildProcesses` 方法之后插入两个方法：
 
@@ -1305,7 +1306,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 ```
 
-- [ ] **Step 4: 运行自测确认通过**
+- [x] **Step 4: 运行自测确认通过**
 
 ```bash
 cmd.exe //c "dev.cmd test"
@@ -1313,7 +1314,7 @@ cmd.exe //c "dev.cmd test"
 
 预期：`TOTAL 192  PASS 190  FAIL 0  SKIP 2`。
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add src/Core/Scenario/DevFocus.cs tests/
@@ -1326,7 +1327,7 @@ git commit -m "feat: 编译期真后台压制——启用 SuppressReason.Build �
 
 **Files:** 无新增（验证任务）
 
-- [ ] **Step 1: 全量自测**
+- [x] **Step 1: 全量自测**
 
 ```bash
 cmd.exe //c "dev.cmd test"
@@ -1334,7 +1335,7 @@ cmd.exe //c "dev.cmd test"
 
 预期输出末行：`TOTAL 192  PASS 190  FAIL 0  SKIP 2`。FAIL 必须为 0；SKIP 保持 2（机器环境固有，见 memory/build-test-workflow）。报告全文在 `%TEMP%\Caelus.selftest.txt`。
 
-- [ ] **Step 2: 发布构建验证**
+- [x] **Step 2: 发布构建验证**
 
 ```bash
 cmd.exe //c "build.cmd"
@@ -1342,7 +1343,7 @@ cmd.exe //c "build.cmd"
 
 预期：`Build OK -> Caelus.exe`（无测试代码编入发布构建）。
 
-- [ ] **Step 3: WPF 构建回归（确认零影响）**
+- [x] **Step 3: WPF 构建回归（确认零影响）**
 
 ```bash
 cmd.exe //c "build-wpf.cmd"
@@ -1350,14 +1351,14 @@ cmd.exe //c "build-wpf.cmd"
 
 预期：`WPF Build OK -> wpf\bin\Release\CaelusWpf.exe`。WPF 不引用 src/ 源码，应无变化——此步是回归确认。
 
-- [ ] **Step 4: 冒烟验证（手动）**
+- [x] **Step 4: 冒烟验证（手动）**
 
 启动 `Caelus.exe`，触发一次真实编译（任意 `msbuild`/`csc` 调用），确认：
 1. 托盘气球"编译优化中"弹出
 2. `%AppData%\Caelus\Caelus.log` 出现"开发专注：获得掌职权"与压制计数日志
 3. 编译结束后气球"编译结束"且日志出现"挂起/还原"记录
 
-- [ ] **Step 5: Commit（如有遗留改动）**
+- [x] **Step 5: Commit（如有遗留改动）**
 
 ```bash
 git add -A && git commit -m "test: P1 全量回归通过——192 项自测 0 失败"

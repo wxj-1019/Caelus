@@ -1,4 +1,5 @@
 # 日常养护维护动作框架 实施计划
+> **落地状态（2026-10-01 复核）**：全部任务已落地——8dbc9bb..b1c1f80（框架三件套至终审 Minor）；下文复选框为事后回填的执行记录。
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
@@ -35,7 +36,7 @@
 - Create: `src/Core/Scenario/Health/HealthCatalog.cs`
 - Test: `tests/SelfTests.HealthAction.cs`（新建）、`tests/SelfTests.cs`（注册）
 
-- [ ] **Step 1: 写失败的测试**
+- [x] **Step 1: 写失败的测试**
 
 新建 `tests/SelfTests.HealthAction.cs`：
 
@@ -227,12 +228,12 @@ namespace CaelusApp
             test("维护框架：单条还原追加 Undo 记录", TestHealthRunnerUndoRecord);
 ```
 
-- [ ] **Step 2: 跑门禁确认失败**
+- [x] **Step 2: 跑门禁确认失败**
 
 Run: `cmd //c dev.cmd test`
 Expected: 构建失败（`IHealthAction` 等类型不存在），或测试 FAIL。
 
-- [ ] **Step 3: 实现框架文件**
+- [x] **Step 3: 实现框架文件**
 
 `src/Core/Scenario/Health/HealthEsc.cs`（从 StartupAudit 抽出的共享转义，行为不变）：
 
@@ -631,12 +632,12 @@ namespace CaelusApp
 
 注意：此步骤先注释掉 `HealthCatalog` 里两行 Register（`ShaderCacheAction`/`StartupAuditAction` 在 Task 2/3 才存在），或把本文件留到 Task 2 再建。**推荐：本任务不建 `HealthCatalog.cs`**，Task 2 建。
 
-- [ ] **Step 4: 跑门禁确认通过**
+- [x] **Step 4: 跑门禁确认通过**
 
 Run: `cmd //c dev.cmd test`
 Expected: 无 FAIL 行；TOTAL 计数 +6（254→260）。
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add src/Core/Scenario/Health/ tests/SelfTests.HealthAction.cs tests/SelfTests.cs
@@ -653,7 +654,7 @@ git commit -m "feat(health): 维护动作框架三件套——IHealthAction 契�
 - Modify: `src/Core/Scenario/StartupAudit.cs`（Esc/Unesc 改为委托 HealthEsc）
 - Test: `tests/SelfTests.HealthCare.cs`（扩充）、`tests/SelfTests.cs`（注册）
 
-- [ ] **Step 1: 写失败的测试**
+- [x] **Step 1: 写失败的测试**
 
 在 `tests/SelfTests.HealthCare.cs` 末尾（命名空间闭合前）加：
 
@@ -728,12 +729,12 @@ git commit -m "feat(health): 维护动作框架三件套——IHealthAction 契�
             test("维护调度：RunIfDue 经 Runner 的到点/让路语义", TestHealthCareRunIfDueViaRunner);
 ```
 
-- [ ] **Step 2: 跑门禁确认失败**
+- [x] **Step 2: 跑门禁确认失败**
 
 Run: `cmd //c dev.cmd test`
 Expected: 构建失败（`ShaderCacheAction`、`HealthCare.CatalogOverride` 不存在）。
 
-- [ ] **Step 3: 实现**
+- [x] **Step 3: 实现**
 
 新建 `src/Core/Scenario/Health/ShaderCacheAction.cs`：
 
@@ -822,12 +823,12 @@ namespace CaelusApp
 
 `src/Core/Scenario/StartupAudit.cs`：删私有 `Esc`/`Unesc`，两处调用改为 `HealthEsc.Esc(...)` / `HealthEsc.Unesc(...)`（`LoadBaseline` 与 `SaveBaseline` 内各一处，方法体内替换）。现有 `TestStartupAuditEscapingRoundtrip` 是回归保底。
 
-- [ ] **Step 4: 跑门禁确认通过**
+- [x] **Step 4: 跑门禁确认通过**
 
 Run: `cmd //c dev.cmd test`
 Expected: 无 FAIL；TOTAL +2（260→262）。
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add src/Core/Scenario/Health/ src/Core/Scenario/HealthCare.cs src/Core/Scenario/StartupAudit.cs tests/SelfTests.HealthCare.cs tests/SelfTests.cs
@@ -850,7 +851,7 @@ git commit -m "feat(health): 着色器清理迁入动作框架，HealthCare 到�
 - 单行负载：`Esc(Hive)\tEsc(Name)\tEsc(Data)\tEsc(Extra)`（lnk 的 Extra=原完整路径，注册表 Extra 空）
 - 测试隔离：注册表三个操作 + 启动文件夹/备份目录全部可挂钩
 
-- [ ] **Step 1: 写失败的测试**
+- [x] **Step 1: 写失败的测试**
 
 `tests/SelfTests.HealthCare.cs` 追加：
 
@@ -1065,12 +1066,12 @@ git commit -m "feat(health): 着色器清理迁入动作框架，HealthCare 到�
             test("启动项审查：自动周期写新闻并提交基线", TestStartupAutoCycleNewsAndBaseline);
 ```
 
-- [ ] **Step 2: 跑门禁确认失败**
+- [x] **Step 2: 跑门禁确认失败**
 
 Run: `cmd //c dev.cmd test`
 Expected: 构建失败（`StartupAuditAction` 不存在）。
 
-- [ ] **Step 3: 实现 `src/Core/Scenario/Health/StartupAuditAction.cs`**
+- [x] **Step 3: 实现 `src/Core/Scenario/Health/StartupAuditAction.cs`**
 
 ```csharp
 // @author zenjiro 18967498922@163.com
@@ -1427,12 +1428,12 @@ namespace CaelusApp
 
 同时 `HealthCatalog.cs` 已在 Task 2 注册本动作，无需再改。`Program.cs`/`WpfRuntime.cs` 的 HealthCare 接线不变（RunIfDue 内部已改接 Runner）。
 
-- [ ] **Step 4: 跑门禁确认通过**
+- [x] **Step 4: 跑门禁确认通过**
 
 Run: `cmd //c dev.cmd test`
 Expected: 无 FAIL；TOTAL +6（262→268）。
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add src/Core/Scenario/Health/StartupAuditAction.cs tests/SelfTests.HealthCare.cs tests/SelfTests.cs
@@ -1450,7 +1451,7 @@ git commit -m "feat(health): 启动项审查升级为可禁用动作——只禁
 - Modify: `src/Platform/Lang.cs`（新键）
 - Test: 无新逻辑单测（VM 组成文本为视图层）；门禁回归
 
-- [ ] **Step 1: ScenarioDetailViewModel 加健康区**
+- [x] **Step 1: ScenarioDetailViewModel 加健康区**
 
 `wpf/ScenarioViewModel.cs` 的 `ScenarioDetailViewModel` 内加字段与属性（沿用现有 SetProperty/Raise 模式）：
 
@@ -1609,7 +1610,7 @@ git commit -m "feat(health): 启动项审查升级为可禁用动作——只禁
 
 注意 `DisableSelectedStartupCore` 在后台线程读 `StartupFindings`（UI 集合）——集合只读遍历在 Caelus 现有代码里与 DispatcherTimer 写入并发风险低，但稳妥起见先经 Dispatcher 取快照。代码后置处理器这样写（Step 3）。
 
-- [ ] **Step 2: XAML 两张卡**
+- [x] **Step 2: XAML 两张卡**
 
 `wpf/Views/ScenarioDetailView.xaml`：在 `ZoneFocus` 之后、`ZoneNote` 之前插入（沿用现有 SettingsGroup/PolicyRow/PolicyToggle/GhostButton 样式令牌）：
 
@@ -1719,7 +1720,7 @@ git commit -m "feat(health): 启动项审查升级为可禁用动作——只禁
 
 `StartupDisabled.Count` 绑定 int→Visibility 需要转换器：BoolVis 不适用。改用 `Converters.cs` 里已有的非零转换器（查 `Converters.cs` 是否有 `IntToVisibility`/`CountToVisibility`；没有就在 Converters.cs 加 `ZeroToCollapsedConverter`：0→Collapsed，否则 Visible，并登记到本 UserControl.Resources）。**实施时先查 `wpf/Converters.cs` 复用现有转换器。**
 
-- [ ] **Step 3: 代码后置处理器**
+- [x] **Step 3: 代码后置处理器**
 
 `wpf/Views/ScenarioDetailView.xaml.cs` 加（后台线程跑核心，Dispatcher 回 UI 刷新）：
 
@@ -1776,7 +1777,7 @@ git commit -m "feat(health): 启动项审查升级为可禁用动作——只禁
 
 （ZoneFocus 原 280、ZoneNote 原 340；ZoneHealth 插入后 Dev 页 ZoneFocus 保持 280，Daily 页 ZoneHealth 用 280，ZoneNote 不变。）
 
-- [ ] **Step 4: Lang 键登记**
+- [x] **Step 4: Lang 键登记**
 
 `src/Platform/Lang.cs` 字典追加（对齐现有 `new[]{ "…" }` 单行格式）：
 
@@ -1789,12 +1790,12 @@ git commit -m "feat(health): 启动项审查升级为可禁用动作——只禁
 
 （IHealthAction 的 TitleKey/DescKey 当前主要供将来面板/多语言使用；详情页静态文案与相邻卡片一致直接硬编码中文——`TestEveryLangKeyIsDefined` 只卡 `Lang.T("…")` 引用，这四键先登记防后续引用漏登记。）
 
-- [ ] **Step 5: 跑门禁 + 截图目检**
+- [x] **Step 5: 跑门禁 + 截图目检**
 
 Run: `cmd //c dev.cmd test`
 Expected: 无 FAIL（TOTAL 不变 268）。再 `cmd //c dev.cmd` 启动应用，打开「日常」详情页目检两张新卡（或 `--wpf-shot` 截图，见 README/scripts）。
 
-- [ ] **Step 6: Commit**
+- [x] **Step 6: Commit**
 
 ```bash
 git add wpf/Views/ScenarioDetailView.xaml wpf/Views/ScenarioDetailView.xaml.cs wpf/ScenarioViewModel.cs wpf/Converters.cs src/Platform/Lang.cs
@@ -1813,7 +1814,7 @@ git commit -m "feat(daily-ui): 详情页维护中心卡（结果/历史/立即�
 - Modify: `src/Platform/Lang.cs`
 - Test: `tests/SelfTests.DailyCare.cs`、`tests/SelfTests.cs`
 
-- [ ] **Step 1: 写失败的测试**
+- [x] **Step 1: 写失败的测试**
 
 `tests/SelfTests.DailyCare.cs` 末尾追加：
 
@@ -1843,11 +1844,11 @@ git commit -m "feat(daily-ui): 详情页维护中心卡（结果/历史/立即�
             test("日常名录：自定义名录合并与坏行容错", TestDailyCatalogCustomList);
 ```
 
-- [ ] **Step 2: 跑门禁确认失败**
+- [x] **Step 2: 跑门禁确认失败**
 
 Run: `cmd //c dev.cmd test` → 构建失败（`DailyCatalog.CustomList` 不存在）。
 
-- [ ] **Step 3: 实现**
+- [x] **Step 3: 实现**
 
 `DailyCatalog.cs` 加（照搬 `BuildCatalog` 模式，`Map()` 旁）：
 
@@ -1953,12 +1954,12 @@ Run: `cmd //c dev.cmd test` → 构建失败（`DailyCatalog.CustomList` 不存�
             { "set.daily.custom.saved", new[]{ "自定义日常进程已保存。" } },
 ```
 
-- [ ] **Step 4: 跑门禁确认通过**
+- [x] **Step 4: 跑门禁确认通过**
 
 Run: `cmd //c dev.cmd test`
 Expected: 无 FAIL；TOTAL +1（268→269）。
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add src/Core/Scenario/DailyCatalog.cs wpf/Views/SettingsView.xaml wpf/Views/SettingsView.xaml.cs wpf/SettingsViewModel.cs src/Platform/Lang.cs tests/SelfTests.DailyCare.cs tests/SelfTests.cs
@@ -1976,7 +1977,7 @@ git commit -m "feat(daily): 日常家族名录开放自定义（CustomDailyProcs
 
 续航档 GUID：`961cc777-2547-4f9d-8174-7d86181b8a7a`（「更长的续航」overlay）。
 
-- [ ] **Step 1: 写失败的测试**
+- [x] **Step 1: 写失败的测试**
 
 `tests/SelfTests.DailyCare.cs` 追加：
 
@@ -2065,11 +2066,11 @@ git commit -m "feat(daily): 日常家族名录开放自定义（CustomDailyProcs
             test("电源滑块：续航档 GUID 常量与判定", TestPowerOverlaySaverConstants);
 ```
 
-- [ ] **Step 2: 跑门禁确认失败**
+- [x] **Step 2: 跑门禁确认失败**
 
 Run: `cmd //c dev.cmd test` → 构建失败（`BatterySaverApplyHook`、`PowerOverlay.SaverGuidText` 等不存在）。
 
-- [ ] **Step 3: 实现**
+- [x] **Step 3: 实现**
 
 `src/Core/Tweaks/PowerOverlay.cs` 加（`Max` 字段旁及类尾前）：
 
@@ -2230,12 +2231,12 @@ Run: `cmd //c dev.cmd test` → 构建失败（`BatterySaverApplyHook`、`PowerO
 
 `MaybeShowBatteryBalloon` 的日志文案 `建议电源模式调至更长续航` 改为 `电池档电源滑块已切到更长续航`（行为已自动化）。
 
-- [ ] **Step 4: 跑门禁确认通过**
+- [x] **Step 4: 跑门禁确认通过**
 
 Run: `cmd //c dev.cmd test`
 Expected: 无 FAIL；TOTAL +3（269→272）。
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add src/Core/Tweaks/PowerOverlay.cs src/Core/Scenario/DailyCare.cs tests/SelfTests.DailyCare.cs tests/SelfTests.PowerPlan.cs tests/SelfTests.cs
@@ -2250,26 +2251,26 @@ git commit -m "feat(daily): 电池联动电源滑块——脱电切 DC 续航档
 - Modify: `README.md`、`README.en.md`、`README.ja.md`
 - Modify: `docs/superpowers/specs/2026-09-11-dailycare-health-framework-design.md`（偏差回写）
 
-- [ ] **Step 1: 全量门禁**
+- [x] **Step 1: 全量门禁**
 
 Run: `cmd //c dev.cmd test`
 Expected: 无 FAIL 行；记下 TOTAL 数（预期 272，以实际为准）。
 
-- [ ] **Step 2: README 三语同步**
+- [x] **Step 2: README 三语同步**
 
 把三份 README 中的自测计数（254）全部替换为实际 TOTAL：badge（`自测-254 项 0 失败`）、正文「内置 254 项自测」等处。英文版 `254 self-tests`、日文版对应文案一并改。用 `grep -n "254" README*.md` 找全。
 
-- [ ] **Step 3: 规格偏差回写**
+- [x] **Step 3: 规格偏差回写**
 
 在规格文档「状态」行更新为「已实施」，并把计划头部的三条偏差（Undo 单行负载签名 / ListDisabled 与备份存储枚举 / IHealthAutoCycle）追加一节「实施偏差记录」。
 
-- [ ] **Step 4: 真机验证（手动三步）**
+- [x] **Step 4: 真机验证（手动三步）**
 
 1. `cmd //c dev.cmd` 启动 → 日常详情页 → 「立即执行」→ 维护中心出现本轮记录（着色器跳过或清理 + 启动项仅扫描）
 2. 若启动项审查卡有新发现：勾一项非系统项 → 禁用所选 → 已禁用分组出现 → 还原 → 消失
 3. （笔记本才可行）拔电源：日志出现「电池档已切到更长的续航」；插回：还原日志。台式机此项 SKIP 并在提交说明里注明
 
-- [ ] **Step 5: Commit + 推送**
+- [x] **Step 5: Commit + 推送**
 
 ```bash
 git add README.md README.en.md README.ja.md docs/superpowers/specs/2026-09-11-dailycare-health-framework-design.md

@@ -1,4 +1,5 @@
 # Aurora Bento 视觉重构实现计划
+> **落地状态（2026-10-01 复核）**：全部任务已落地——bc8d806（merge Phase 5，17 任务）；下文复选框为事后回填的执行记录。
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
@@ -28,7 +29,7 @@
 - Create: `tests/SelfTests.ThemeContract.cs`
 - Modify: `tests/SelfTests.cs`（Run() 注册 3 个用例，约在 855 行文案键用例之后）
 
-- [ ] **Step 1: 编写校验器**
+- [x] **Step 1: 编写校验器**
 
 `src/UiShared/ThemeContract.cs`（UiShared 由 csproj glob `..\src\UiShared\*.cs` 自动进入两个 exe，无需登记）：
 
@@ -98,7 +99,7 @@ namespace CaelusApp
 }
 ```
 
-- [ ] **Step 2: 编写失败自测**
+- [x] **Step 2: 编写失败自测**
 
 `tests/SelfTests.ThemeContract.cs`：
 
@@ -166,12 +167,12 @@ namespace CaelusApp
             test("主题契约：校验器正反样例", TestThemeContractValidator);
 ```
 
-- [ ] **Step 3: 跑自测确认前两个用例失败（第三个应通过）**
+- [x] **Step 3: 跑自测确认前两个用例失败（第三个应通过）**
 
 Run: `cmd.exe //c "dev.cmd test"`
 Expected: 输出含 `FAIL ... 主题契约：色板档字典 key 完整`（缺 Surface0Color 等新 key）与 `FAIL ... 主题契约：模式档字典 key 完整`（缺 Aurora* 等新 key）；`主题契约：校验器正反样例` PASS。
 
-- [ ] **Step 4: Commit**
+- [x] **Step 4: Commit**
 
 ```bash
 git add src/UiShared/ThemeContract.cs tests/SelfTests.ThemeContract.cs tests/SelfTests.cs
@@ -188,7 +189,7 @@ git commit -m "test: 主题契约 v2 校验器与自测（先失败，驱动色�
 
 **设计要点（规格 §3.3）**：新语义 key + 兼容别名层（旧视图继续编译渲染，逐页精修后回收别名）。浅色本期不重构，但补齐契约 key 保持可用。
 
-- [ ] **Step 1: 整体替换 `wpf/Themes/Colors.Dark.xaml`**
+- [x] **Step 1: 整体替换 `wpf/Themes/Colors.Dark.xaml`**
 
 ```xml
 <ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
@@ -262,7 +263,7 @@ git commit -m "test: 主题契约 v2 校验器与自测（先失败，驱动色�
 
 注意：旧文件中的 `AmbientPrimaryOpacity`/`AmbientSecondaryOpacity` 已迁移到模式档（改名 `Aurora*Opacity`），此处删除是有意的——AmbientLayer v2（Task 4）改读新 key，旧引用随之清除。
 
-- [ ] **Step 2: 整体替换 `wpf/Themes/Colors.Light.xaml`**
+- [x] **Step 2: 整体替换 `wpf/Themes/Colors.Light.xaml`**
 
 浅色本期不精修，但补齐契约 key（沿用日间磨砂配方的观感）：
 
@@ -338,7 +339,7 @@ git commit -m "test: 主题契约 v2 校验器与自测（先失败，驱动色�
 
 注意：旧文件中的 `BorderSubtleColor`/`BorderSubtleBrush`(#E8EDF1) 被契约版 `#0F000000` 取代——有意为之（v2 语义统一）；`Ambient*Opacity` 同样迁往模式档。
 
-- [ ] **Step 3: Commit**
+- [x] **Step 3: Commit**
 
 ```bash
 git add wpf/Themes/Colors.Dark.xaml wpf/Themes/Colors.Light.xaml
@@ -356,7 +357,7 @@ git commit -m "feat: 色板档契约 v2——表面梯度/渐变描边/高光线
 
 **设计要点（规格 §3.2）**：每份模式字典 = 三层极光色 + 径向渐变画刷 + 强度/漂移参数 + Accent 梯度全套 + 兼容别名（`ModeAccent*` 旧 key）。
 
-- [ ] **Step 1: 整体替换 `wpf/Themes/Mode.Standard.xaml`（常规 · 青紫极光）**
+- [x] **Step 1: 整体替换 `wpf/Themes/Mode.Standard.xaml`（常规 · 青紫极光）**
 
 ```xml
 <ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
@@ -416,7 +417,7 @@ git commit -m "feat: 色板档契约 v2——表面梯度/渐变描边/高光线
 </ResourceDictionary>
 ```
 
-- [ ] **Step 2: 整体替换 `wpf/Themes/Mode.Competitive.xaml`（竞技 · 品红战意，漂移更快）**
+- [x] **Step 2: 整体替换 `wpf/Themes/Mode.Competitive.xaml`（竞技 · 品红战意，漂移更快）**
 
 与 Step 1 同构，仅替换以下值（结构、key 全集完全一致）：
 
@@ -435,7 +436,7 @@ git commit -m "feat: 色板档契约 v2——表面梯度/渐变描边/高光线
 | 别名 `ModeAccentOnDarkColor` / `OnLightColor` | `#FB7185` / `#CC2020` |
 | 别名 `ModeAccentSoftBrush` / `ModeAccentEdgeBrush` | `#24FB7185` / `#54FB7185` |
 
-- [ ] **Step 3: 整体替换 `wpf/Themes/Mode.Custom.xaml`（自定义 · 琥珀金，漂移最慢；致敬 v14）**
+- [x] **Step 3: 整体替换 `wpf/Themes/Mode.Custom.xaml`（自定义 · 琥珀金，漂移最慢；致敬 v14）**
 
 | key | 值 |
 |---|---|
@@ -452,12 +453,12 @@ git commit -m "feat: 色板档契约 v2——表面梯度/渐变描边/高光线
 | 别名 `ModeAccentOnDarkColor` / `OnLightColor` | `#E9C46A` / `#8A5A18` |
 | 别名 `ModeAccentSoftBrush` / `ModeAccentEdgeBrush` | `#24E9C46A` / `#54E9C46A` |
 
-- [ ] **Step 4: 跑契约自测确认全绿**
+- [x] **Step 4: 跑契约自测确认全绿**
 
 Run: `cmd.exe //c "dev.cmd test"`
 Expected: `TOTAL 178 / PASS 175 / FAIL 0 / SKIP 3`（基线 175 + 新增 3 个契约用例全过；FAIL 必须为 0）。
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add wpf/Themes/Mode.Standard.xaml wpf/Themes/Mode.Competitive.xaml wpf/Themes/Mode.Custom.xaml
@@ -474,7 +475,7 @@ git commit -m "feat: 三模式 Aurora 预设——常规青紫/竞技品红/自�
 
 **设计要点（规格 §4.2 AuroraDrift）**：保持公开 API `Show()` / `TransitionTo(bool)` 不变（MainWindow/ModeController 零改动）；前后两对各扩为 3 个光域；漂移只动 `RenderTransform`，`Motion.Enabled=false`（截图探针）或系统降级（`Motion.Reduced`）时不启动。
 
-- [ ] **Step 1: 整体替换 `wpf/Controls/AmbientLayer.xaml`**
+- [x] **Step 1: 整体替换 `wpf/Controls/AmbientLayer.xaml`**
 
 ```xml
 <UserControl x:Class="CaelusApp.WpfHost.Controls.AmbientLayer"
@@ -499,7 +500,7 @@ git commit -m "feat: 三模式 Aurora 预设——常规青紫/竞技品红/自�
 </UserControl>
 ```
 
-- [ ] **Step 2: 整体替换 `wpf/Controls/AmbientLayer.xaml.cs`**
+- [x] **Step 2: 整体替换 `wpf/Controls/AmbientLayer.xaml.cs`**
 
 ```csharp
 // @author zenjiro 18967498922@163.com
@@ -632,12 +633,12 @@ namespace CaelusApp.WpfHost.Controls
 }
 ```
 
-- [ ] **Step 3: 构建验证**
+- [x] **Step 3: 构建验证**
 
 Run: `cmd.exe //c build-wpf.cmd`
 Expected: `WPF Build OK -> wpf\bin\Release\CaelusWpf.exe`（MainWindow/ModeController 未改动，API 不变应直接通过）。
 
-- [ ] **Step 4: Commit**
+- [x] **Step 4: Commit**
 
 ```bash
 git add wpf/Controls/AmbientLayer.xaml wpf/Controls/AmbientLayer.xaml.cs
@@ -654,7 +655,7 @@ git commit -m "feat: 环境光层 v2——三层极光光晕 + 无限漂移动�
 
 **设计要点（规格 §3.4）**：本期只做加载机制——应用目录存在 `Caelus.theme.xaml` 且通过模式档契约校验，则并入为覆盖层（DynamicResource 全局生效）；校验失败/解析异常记日志忽略，不影响启动。设置页编辑/导出 UI 属后续项。
 
-- [ ] **Step 1: ThemeManager 追加方法**
+- [x] **Step 1: ThemeManager 追加方法**
 
 在 `wpf/ThemeManager.cs` 的 `modeUriFor` 方法之后追加（文件顶部 `using System;` `using System.Windows;` 之外需补 `using System.IO;`）：
 
@@ -697,7 +698,7 @@ git commit -m "feat: 环境光层 v2——三层极光光晕 + 无限漂移动�
         }
 ```
 
-- [ ] **Step 2: App.xaml.cs 接入**
+- [x] **Step 2: App.xaml.cs 接入**
 
 `wpf/App.xaml.cs` 的 `OnStartup` 中，在 `ThemeManager.Apply(this, UiTone.Dark, initial);`（约 43 行）之后插入一行：
 
@@ -705,12 +706,12 @@ git commit -m "feat: 环境光层 v2——三层极光光晕 + 无限漂移动�
             ThemeManager.TryApplyUserTheme(this);
 ```
 
-- [ ] **Step 3: 构建 + 自测**
+- [x] **Step 3: 构建 + 自测**
 
 Run: `cmd.exe //c build-wpf.cmd` 然后 `cmd.exe //c "dev.cmd test"`
 Expected: `WPF Build OK`；自测 `TOTAL 178 / PASS 175 / FAIL 0 / SKIP 3`（本任务不新增用例——校验逻辑已由契约正反样例覆盖，XamlReader 部分由构建+后续实机验证覆盖）。
 
-- [ ] **Step 4: Commit**
+- [x] **Step 4: Commit**
 
 ```bash
 git add wpf/ThemeManager.cs wpf/App.xaml.cs
@@ -731,7 +732,7 @@ git commit -m "feat: 用户自定义主题入口——Caelus.theme.xaml 契约�
 
 **设计要点（规格 §4.1）**：24×24 网格 StreamGeometry 线条路径；IconView 按 key 查找资源描边绘制，`Foreground` 随父级继承（选中态变色自动生效）。
 
-- [ ] **Step 1: 创建 `wpf/Themes/Icons.xaml`**
+- [x] **Step 1: 创建 `wpf/Themes/Icons.xaml`**
 
 ```xml
 <ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
@@ -753,7 +754,7 @@ git commit -m "feat: 用户自定义主题入口——Caelus.theme.xaml 契约�
 </ResourceDictionary>
 ```
 
-- [ ] **Step 2: 创建 `wpf/Controls/IconView.cs`**
+- [x] **Step 2: 创建 `wpf/Controls/IconView.cs`**
 
 ```csharp
 // @author zenjiro 18967498922@163.com
@@ -802,7 +803,7 @@ namespace CaelusApp.WpfHost.Controls
 }
 ```
 
-- [ ] **Step 3: App.xaml 合并 + csproj 登记**
+- [x] **Step 3: App.xaml 合并 + csproj 登记**
 
 `wpf/App.xaml` 的 `MergedDictionaries` 中在 `<ResourceDictionary Source="Themes/Tokens.xaml"/>` 之后加一行：
 
@@ -812,12 +813,12 @@ namespace CaelusApp.WpfHost.Controls
 
 `wpf/Caelus.Wpf.csproj`：在 `<Page Include="Themes\Styles.xaml" />` 之后加 `<Page Include="Themes\Icons.xaml" />`；在 `<Compile Include="Motion.cs" />` 之后加 `<Compile Include="Controls\IconView.cs" />`。
 
-- [ ] **Step 4: 构建验证**
+- [x] **Step 4: 构建验证**
 
 Run: `cmd.exe //c build-wpf.cmd`
 Expected: `WPF Build OK`。
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add wpf/Themes/Icons.xaml wpf/Controls/IconView.cs wpf/App.xaml wpf/Caelus.Wpf.csproj
@@ -834,7 +835,7 @@ git commit -m "feat: 几何线性图标体系——11 枚 StreamGeometry 图标 
 
 **设计要点（规格 §4.2）**：全部走 `RenderTransform`/`Opacity`；`Motion.Enabled=false`（截图探针）与系统降级（`Motion.Reduced`）时静默跳过。本期**不做**应用内「减弱动效」开关（用户已确认）。
 
-- [ ] **Step 1: ThemeManager 增加 ModeChanged 事件**
+- [x] **Step 1: ThemeManager 增加 ModeChanged 事件**
 
 `wpf/ThemeManager.cs`：`CurrentMode` 属性之后加事件声明；`Apply` 方法末尾（`Native.LightModeQuery = ...` 之前）触发：
 
@@ -849,7 +850,7 @@ git commit -m "feat: 几何线性图标体系——11 枚 StreamGeometry 图标 
             if (handler != null) handler(null, EventArgs.Empty);
 ```
 
-- [ ] **Step 2: Motion.cs 追加三个动效**
+- [x] **Step 2: Motion.cs 追加三个动效**
 
 `wpf/Motion.cs` 顶部补 `using System.Windows.Input;`，然后在 `FadeIn` 方法之后追加：
 
@@ -923,12 +924,12 @@ git commit -m "feat: 几何线性图标体系——11 枚 StreamGeometry 图标 
         }
 ```
 
-- [ ] **Step 3: 构建验证**
+- [x] **Step 3: 构建验证**
 
 Run: `cmd.exe //c build-wpf.cmd`
 Expected: `WPF Build OK`。
 
-- [ ] **Step 4: Commit**
+- [x] **Step 4: Commit**
 
 ```bash
 git add wpf/Motion.cs wpf/ThemeManager.cs
@@ -946,7 +947,7 @@ git commit -m "feat: 动效三件套——悬停浮起 Lift/READY 脉冲 Pulse/�
 
 **设计要点（规格 §4.3）**：132×132 组合体；外虚线环 14s 正转、中双弧环 22s 反转（`StrokeDashArray` 截弧 + RotateTransform，net4 最稳方案）；颜色全部 DynamicResource 随模式换肤；**仅概览页 Hero 使用**（Task 11 接入）。中层弧长：r=46 圆周≈289，四分之一弧≈72 → `StrokeDashArray="72 217"`，两条弧相位差 180°。
 
-- [ ] **Step 1: 创建 `wpf/Controls/CaelusCore.xaml`**
+- [x] **Step 1: 创建 `wpf/Controls/CaelusCore.xaml`**
 
 ```xml
 <UserControl x:Class="CaelusApp.WpfHost.Controls.CaelusCore"
@@ -1011,7 +1012,7 @@ git commit -m "feat: 动效三件套——悬停浮起 Lift/READY 脉冲 Pulse/�
 </UserControl>
 ```
 
-- [ ] **Step 2: 创建 `wpf/Controls/CaelusCore.xaml.cs`**
+- [x] **Step 2: 创建 `wpf/Controls/CaelusCore.xaml.cs`**
 
 ```csharp
 // @author zenjiro 18967498922@163.com
@@ -1059,7 +1060,7 @@ namespace CaelusApp.WpfHost.Controls
 }
 ```
 
-- [ ] **Step 3: csproj 登记 + 构建**
+- [x] **Step 3: csproj 登记 + 构建**
 
 `wpf/Caelus.Wpf.csproj`：`<Page Include="Controls\AmbientLayer.xaml" />` 之后加 `<Page Include="Controls\CaelusCore.xaml" />`；`<Compile Include="Controls\AmbientLayer.xaml.cs">...</Compile>` 块之后加：
 
@@ -1072,7 +1073,7 @@ namespace CaelusApp.WpfHost.Controls
 Run: `cmd.exe //c build-wpf.cmd`
 Expected: `WPF Build OK`。
 
-- [ ] **Step 4: Commit**
+- [x] **Step 4: Commit**
 
 ```bash
 git add wpf/Controls/CaelusCore.xaml wpf/Controls/CaelusCore.xaml.cs wpf/Caelus.Wpf.csproj
@@ -1090,7 +1091,7 @@ git commit -m "feat: CaelusCore 品牌核心——双环反向旋转 + 模式换
 
 **设计要点（规格 §4.4）**：`IList<double>` 归一化折线 + 描边色 9% 面积淡填充；真实遥测序列属遗留项「实时指标」，本期由 SampleOverviewSource 产出确定性随机游走示例（固定种子，截图可复现）。
 
-- [ ] **Step 1: 创建 `wpf/Controls/Sparkline.cs`**
+- [x] **Step 1: 创建 `wpf/Controls/Sparkline.cs`**
 
 ```csharp
 // @author zenjiro 18967498922@163.com
@@ -1184,11 +1185,11 @@ namespace CaelusApp.WpfHost.Controls
             return new Point(x, y);
         }
 
-- [ ] **Step 2: csproj 登记**
+- [x] **Step 2: csproj 登记**
 
 `wpf/Caelus.Wpf.csproj`：`<Compile Include="Controls\IconView.cs" />` 之后加 `<Compile Include="Controls\Sparkline.cs" />`。
 
-- [ ] **Step 3: ViewModel 数据源**
+- [x] **Step 3: ViewModel 数据源**
 
 `src/UiShared/OverviewViewModel.cs`（该文件同时含数据源接口与 `SampleOverviewSource`，两 exe 共享）：
 
@@ -1242,12 +1243,12 @@ c) `SampleOverviewSource` 类中追加（示例序列：固定种子随机游走
         }
 ```
 
-- [ ] **Step 4: 构建 + 自测**
+- [x] **Step 4: 构建 + 自测**
 
 Run: `cmd.exe //c build-wpf.cmd` 然后 `cmd.exe //c "dev.cmd test"`
 Expected: `WPF Build OK`；自测 `TOTAL 178 / PASS 175 / FAIL 0 / SKIP 3`。
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add wpf/Controls/Sparkline.cs wpf/Caelus.Wpf.csproj src/UiShared/OverviewViewModel.cs
@@ -1268,7 +1269,7 @@ git commit -m "feat: Sparkline 趋势线控件 + GPU 温度示例序列（固定
 
 **设计要点（规格 §5）**：GlassCard = ContentControl 子类 + 模板（渐变描边 + 顶部高光线 + 悬停 HoverEdge 点亮）；不用 DropShadowEffect（环境不渲染）。`CardBorder` 等旧样式描边直接升级为 `CardEdgeBrush` 渐变——全部旧视图自动受益。
 
-- [ ] **Step 1: 创建 `wpf/Controls/GlassCard.cs` + csproj 登记**
+- [x] **Step 1: 创建 `wpf/Controls/GlassCard.cs` + csproj 登记**
 
 ```csharp
 // @author zenjiro 18967498922@163.com
@@ -1296,7 +1297,7 @@ namespace CaelusApp.WpfHost.Controls
 
 csproj：`<Compile Include="Controls\Sparkline.cs" />` 之后加 `<Compile Include="Controls\GlassCard.cs" />`。
 
-- [ ] **Step 2: Tokens.xaml 追加字号**
+- [x] **Step 2: Tokens.xaml 追加字号**
 
 `wpf/Themes/Tokens.xaml` 的 `<sys:Double x:Key="FontSizeMono">13</sys:Double>` 之后追加：
 
@@ -1306,7 +1307,7 @@ csproj：`<Compile Include="Controls\Sparkline.cs" />` 之后加 `<Compile Inclu
   <sys:Double x:Key="FontSizeMetric">28</sys:Double>
 ```
 
-- [ ] **Step 3: Styles.xaml 追加 v2 样式**
+- [x] **Step 3: Styles.xaml 追加 v2 样式**
 
 `wpf/Themes/Styles.xaml`：文件尾 `</ResourceDictionary>` 之前追加（需先在根元素补命名空间声明 `xmlns:controls="clr-namespace:CaelusApp.WpfHost.Controls"`）：
 
@@ -1383,19 +1384,19 @@ csproj：`<Compile Include="Controls\Sparkline.cs" />` 之后加 `<Compile Inclu
   </Style>
 ```
 
-- [ ] **Step 4: 旧卡片样式描边升级（全部旧视图自动受益）**
+- [x] **Step 4: 旧卡片样式描边升级（全部旧视图自动受益）**
 
 `wpf/Themes/Styles.xaml` 中三处替换（`CardBorder`、`HeroCardBorder`、`PolicyCard`、`LibraryItemCard` 共四处）：
 - `Value="{DynamicResource GlassBorderBrush}"`（CardBorder / PolicyCard / LibraryItemCard 的 BorderBrush setter）→ `Value="{DynamicResource CardEdgeBrush}"`
 - `Value="{DynamicResource GlassBorderHiBrush}"`（HeroCardBorder 的 BorderBrush setter）→ `Value="{DynamicResource CardEdgeBrush}"`
 - 四处样式的 `CornerRadius` setter 由 `{DynamicResource RadiusMd}` → `{DynamicResource RadiusLg}`（14px，规格 §5）
 
-- [ ] **Step 5: 构建 + 自测**
+- [x] **Step 5: 构建 + 自测**
 
 Run: `cmd.exe //c build-wpf.cmd` 然后 `cmd.exe //c "dev.cmd test"`
 Expected: `WPF Build OK`；`TOTAL 178 / PASS 175 / FAIL 0 / SKIP 3`。
 
-- [ ] **Step 6: Commit**
+- [x] **Step 6: Commit**
 
 ```bash
 git add wpf/Controls/GlassCard.cs wpf/Caelus.Wpf.csproj wpf/Themes/Tokens.xaml wpf/Themes/Styles.xaml
@@ -1412,7 +1413,7 @@ git commit -m "feat: 卡片 v2——GlassCard 渐变描边+高光线+悬停点�
 
 **设计要点（规格 §6）**：ViewModel 零改动（`ConclusionTitle/ConclusionDetail/DetailVisible/ToggleDetailCommand/Metrics/GpuTempSeries`）；GPU 大卡聚光灯绑定 `Metrics[0]`（Refresh 固定首项为 GPU 温度——顺序契约，改动时需同步）；R2 指标行用 `CollectionViewSource.Filter` 过滤掉首项避免与大卡重复（纯视图层过滤，VM 不动）。
 
-- [ ] **Step 1: 整体替换 `wpf/Views/OverviewView.xaml`**
+- [x] **Step 1: 整体替换 `wpf/Views/OverviewView.xaml`**
 
 ```xml
 <UserControl x:Class="CaelusApp.WpfHost.Views.OverviewView"
@@ -1581,7 +1582,7 @@ git commit -m "feat: 卡片 v2——GlassCard 渐变描边+高光线+悬停点�
 </UserControl>
 ```
 
-- [ ] **Step 2: OverviewView.xaml.cs 增加 READY 脉冲 + 指标过滤器**
+- [x] **Step 2: OverviewView.xaml.cs 增加 READY 脉冲 + 指标过滤器**
 
 `wpf/Views/OverviewView.xaml.cs` 整体替换：
 
@@ -1617,12 +1618,12 @@ namespace CaelusApp.WpfHost.Views
 }
 ```
 
-- [ ] **Step 3: 构建 + 自测**
+- [x] **Step 3: 构建 + 自测**
 
 Run: `cmd.exe //c build-wpf.cmd` 然后 `cmd.exe //c "dev.cmd test"`
 Expected: `WPF Build OK`；`TOTAL 178 / PASS 175 / FAIL 0 / SKIP 3`。
 
-- [ ] **Step 4: Commit**
+- [x] **Step 4: Commit**
 
 ```bash
 git add wpf/Views/OverviewView.xaml wpf/Views/OverviewView.xaml.cs
@@ -1638,12 +1639,12 @@ git commit -m "feat: 概览页 Bento 重构——Hero(CaelusCore+READY 徽章)+G
 
 **背景**：`App.xaml.cs` 内置 `--wpf-shot <dir>` 离屏渲染探针（模式×主题矩阵 PNG，`Motion.Enabled=false` 时渲染最终视觉态，漂移/脉冲/旋转不影响截图）。
 
-- [ ] **Step 1: 离屏渲染**
+- [x] **Step 1: 离屏渲染**
 
 Run: `cmd.exe //c "wpf\bin\Release\CaelusWpf.exe --wpf-shot %TEMP%\aurora-shot"`（Git Bash 中用 `$TEMP` 或显式路径：`cmd.exe //c "wpf\bin\Release\CaelusWpf.exe --wpf-shot C:\Users\Administrator\AppData\Local\Temp\aurora-shot"`）
 Expected: 退出码 0；目录下生成模式×主题矩阵 PNG。
 
-- [ ] **Step 2: 视觉检查**
+- [x] **Step 2: 视觉检查**
 
 用 Read 工具查看概览页深色截图，对照基准稿 `.superpowers/brainstorm/1874-1786395437/content/aurora-v3-motion-brand.html` 检查：
 - 三层光晕可见（右上紫/蓝、左下青）且边缘无硬裁剪
@@ -1654,7 +1655,7 @@ Expected: 退出码 0；目录下生成模式×主题矩阵 PNG。
 
 发现偏差则回到对应任务调整色值/布局（只允许改 Task 2/3/10/11 的产物），然后重跑 Step 1。
 
-- [ ] **Step 3: 留档 + Commit**
+- [x] **Step 3: 留档 + Commit**
 
 ```bash
 cp "$TEMP/aurora-shot/<概览深色常规>.png" docs/aurora-overview-v2.png
@@ -1673,7 +1674,7 @@ git commit -m "test: Aurora Bento 概览页视觉验证留档（--wpf-shot）"
 
 **设计要点**：导航项 Content 改为 `StackPanel(IconView + TextBlock)`（IconView 的 Foreground 随 RadioButton 继承，选中变色自动生效）；分两组（总览 / 硬件与系统）+ 底部固定（设置/关于）；页头只留模式分段控件（页面标题副标题由 Task 14 下沉到各视图）；`x:Name` 全部保留，code-behind 零改动。
 
-- [ ] **Step 1: 整体替换 `wpf/MainWindow.xaml`**
+- [x] **Step 1: 整体替换 `wpf/MainWindow.xaml`**
 
 ```xml
 <Window x:Class="CaelusApp.WpfHost.MainWindow"
@@ -1842,7 +1843,7 @@ git commit -m "test: Aurora Bento 概览页视觉验证留档（--wpf-shot）"
 </Window>
 ```
 
-- [ ] **Step 2: Styles.xaml 补 NavGroupLabel 样式**
+- [x] **Step 2: Styles.xaml 补 NavGroupLabel 样式**
 
 `wpf/Themes/Styles.xaml` 的 Aurora Bento v2 区块内追加：
 
@@ -1855,12 +1856,12 @@ git commit -m "test: Aurora Bento 概览页视觉验证留档（--wpf-shot）"
   </Style>
 ```
 
-- [ ] **Step 3: 构建 + 自测**
+- [x] **Step 3: 构建 + 自测**
 
 Run: `cmd.exe //c build-wpf.cmd` 然后 `cmd.exe //c "dev.cmd test"`
 Expected: `WPF Build OK`；`TOTAL 178 / PASS 175 / FAIL 0 / SKIP 3`（code-behind 的 `NavChecked`/`ModeChecked`/`ApplyPersistedMode` 依赖的 x:Name 全部保留）。
 
-- [ ] **Step 4: Commit**
+- [x] **Step 4: Commit**
 
 ```bash
 git add wpf/MainWindow.xaml wpf/Themes/Styles.xaml
@@ -1900,16 +1901,16 @@ git commit -m "feat: 外壳重构——图标导航+总览/硬件与系统分组
 | SettingsView | 设置 | 偏好与恢复 |
 | AboutView | 关于 | 版本与致谢 |
 
-- [ ] **Step 1: 逐视图插入页头块（10 个文件）**
+- [x] **Step 1: 逐视图插入页头块（10 个文件）**
 
 按上表逐文件插入。注意：部分视图可能已有自己的标题 TextBlock（迁移期样式），保留页内容不动、只在最顶部加统一页头；若已有标题与新页头重复，删除旧标题 TextBlock。
 
-- [ ] **Step 2: 构建 + 自测**
+- [x] **Step 2: 构建 + 自测**
 
 Run: `cmd.exe //c build-wpf.cmd` 然后 `cmd.exe //c "dev.cmd test"`
 Expected: `WPF Build OK`；`TOTAL 178 / PASS 175 / FAIL 0 / SKIP 3`。
 
-- [ ] **Step 3: Commit**
+- [x] **Step 3: Commit**
 
 ```bash
 git add wpf/Views/
@@ -1925,7 +1926,7 @@ git commit -m "feat: 页头下沉——10 视图统一 SectionTitle + 副标题"
 
 **设计要点（规格 §7 5a）**：样式 key 不变（所有引用点零改动）；选中/开态统一走 Accent 梯度资源。
 
-- [ ] **Step 1: 替换 `NavItem` 样式**
+- [x] **Step 1: 替换 `NavItem` 样式**
 
 ```xml
   <!-- 导航项 v2：选中 = AccentSoft 底 + AccentEdge 描边 + Accent 文字（规格 §7） -->
@@ -1962,7 +1963,7 @@ git commit -m "feat: 页头下沉——10 视图统一 SectionTitle + 副标题"
   </Style>
 ```
 
-- [ ] **Step 2: 替换 `PrimaryButton` / `GhostButton` 样式**
+- [x] **Step 2: 替换 `PrimaryButton` / `GhostButton` 样式**
 
 ```xml
   <!-- 主按钮 v2：Accent 渐变填充（规格 §7），不发光 -->
@@ -2009,7 +2010,7 @@ git commit -m "feat: 页头下沉——10 视图统一 SectionTitle + 副标题"
   </Style>
 ```
 
-- [ ] **Step 3: 替换分段控件（胶囊化 + 浅底深字选中，规格 §6）**
+- [x] **Step 3: 替换分段控件（胶囊化 + 浅底深字选中，规格 §6）**
 
 ```xml
   <!-- 分段控件项 v2：选中 = SegSelected 浅底 + 深字（深色旗舰反差点） -->
@@ -2048,18 +2049,18 @@ git commit -m "feat: 页头下沉——10 视图统一 SectionTitle + 副标题"
   </Style>
 ```
 
-- [ ] **Step 4: 替换 `PolicyToggle` 开态轨道为 Accent 渐变**
+- [x] **Step 4: 替换 `PolicyToggle` 开态轨道为 Accent 渐变**
 
 `PolicyToggle` 样式模板触发器中：
 `<Setter TargetName="track" Property="Background" Value="{DynamicResource SuccessBrush}"/>` →
 `<Setter TargetName="track" Property="Background" Value="{DynamicResource AccentGradientBrush}"/>`
 
-- [ ] **Step 5: 构建 + 自测**
+- [x] **Step 5: 构建 + 自测**
 
 Run: `cmd.exe //c build-wpf.cmd` 然后 `cmd.exe //c "dev.cmd test"`
 Expected: `WPF Build OK`；`TOTAL 178 / PASS 175 / FAIL 0 / SKIP 3`。
 
-- [ ] **Step 6: Commit**
+- [x] **Step 6: Commit**
 
 ```bash
 git add wpf/Themes/Styles.xaml
@@ -2078,7 +2079,7 @@ git commit -m "feat: 控件换肤——导航 Accent 选中/主按钮渐变/分�
 
 **设计要点（规格 §7 5b）**：静态卡片已由 Task 10 Step 4 的描边升级自动受益；本任务只给**可交互卡片**（游戏库列表项、策略开关卡、体检项、白名单项）换 GlassCard 并挂悬停浮起。
 
-- [ ] **Step 1: 四个视图的卡片机械化替换**
+- [x] **Step 1: 四个视图的卡片机械化替换**
 
 逐文件执行（先读文件确认实际结构）：
 1. 根元素补充命名空间（如缺失）：`xmlns:controls="clr-namespace:CaelusApp.WpfHost.Controls"` 与 `xmlns:local="clr-namespace:CaelusApp.WpfHost"`
@@ -2101,19 +2102,19 @@ git commit -m "feat: 控件换肤——导航 Accent 选中/主按钮渐变/分�
 
 注意 GlassCard 默认 `Padding="14"`，原 PolicyCard 为 `14,10`——替换时把原 Padding 显式带上，保持版式不变。
 
-- [ ] **Step 2: AddGameDialogWpf 换肤**
+- [x] **Step 2: AddGameDialogWpf 换肤**
 
 `wpf/Dialogs/AddGameDialogWpf.xaml` 三处：
 - `BtnAdd`（添加按钮）加 `Style="{DynamicResource PrimaryButton}"`，去掉 `FontWeight="Bold"`（样式已含 SemiBold）
 - 「取消」按钮加 `Style="{DynamicResource GhostButton}"`，`Foreground` 改为 `{DynamicResource TextSecondaryBrush}`（Setter 覆盖样式默认 Accent 文字——取消不应是强调色）
 - `TbFilter` 的 `Background="{DynamicResource GlassCardBrush}"` → `{DynamicResource Surface0Brush}`，`BorderBrush="{DynamicResource GlassBorderBrush}"` → `{DynamicResource BorderSubtleBrush}`
 
-- [ ] **Step 3: 构建 + 自测**
+- [x] **Step 3: 构建 + 自测**
 
 Run: `cmd.exe //c build-wpf.cmd` 然后 `cmd.exe //c "dev.cmd test"`
 Expected: `WPF Build OK`；`TOTAL 178 / PASS 175 / FAIL 0 / SKIP 3`。
 
-- [ ] **Step 4: Commit**
+- [x] **Step 4: Commit**
 
 ```bash
 git add wpf/Views/ wpf/Dialogs/
@@ -2127,17 +2128,17 @@ git commit -m "feat: 交互卡片 GlassCard 化（库/策略/体检/白名单悬
 **Files:**
 - Create: `docs/phase5-verification.md`
 
-- [ ] **Step 1: 自测基线确认**
+- [x] **Step 1: 自测基线确认**
 
 Run: `cmd.exe //c "dev.cmd test"`
 Expected: `TOTAL 178 / PASS 175 / FAIL 0 / SKIP 3`。**FAIL > 0 即真回归，必须修复后才能继续。**
 
-- [ ] **Step 2: 三模式离屏截图矩阵**
+- [x] **Step 2: 三模式离屏截图矩阵**
 
 Run: `cmd.exe //c "wpf\bin\Release\CaelusWpf.exe --wpf-shot C:\Users\Administrator\AppData\Local\Temp\aurora-final"`
 用 Read 工具检查：常规（青紫）/竞技（品红）/自定义（琥珀金）三套 Aurora + Accent 整体换肤正确；浅色主题仍可渲染（不精修但不破）。
 
-- [ ] **Step 3: 实机 GUI 验证（11 页导航 + 交互）**
+- [x] **Step 3: 实机 GUI 验证（11 页导航 + 交互）**
 
 沿用 `docs/phase4-gui-test-report.md` 的方法（UIA Select 触发导航 + PrintWindow 截图，**不用真实鼠标点击**；注意 LOL 客户端可能遮挡；UIA 客户端缓存每步重取；BoundingRectangle 是物理像素勿再乘 DPI）。清单：
 - 11 个导航页全部可达且渲染（每页一张 PrintWindow 截图）
@@ -2146,14 +2147,14 @@ Run: `cmd.exe //c "wpf\bin\Release\CaelusWpf.exe --wpf-shot C:\Users\Administrat
 - 添加游戏对话框打开渲染正常
 - 异常观测点 `%TEMP%\CaelusWpf.crash.log` 无新增异常
 
-- [ ] **Step 4: 性能抽查（动画全开空闲 60s）**
+- [x] **Step 4: 性能抽查（动画全开空闲 60s）**
 
 先启动 `wpf\bin\Release\CaelusWpf.exe` 停在概览页（漂移+脉冲+双环旋转全开），然后：
 
 Run: `powershell -NoProfile -Command "$a=(Get-Process CaelusWpf).CPU; Start-Sleep -Seconds 60; $b=(Get-Process CaelusWpf).CPU; '{0:N2}s CPU / 60s wall' -f ($b-$a)"`
 Expected: ≤ 1.2s CPU / 60s（≈2% 以内；纯 RenderTransform/Opacity 动画应接近 0）。超标则检查是否有布局动画混入（只允许 RenderTransform/Opacity）。
 
-- [ ] **Step 5: 撰写验收报告并 Commit**
+- [x] **Step 5: 撰写验收报告并 Commit**
 
 `docs/phase5-verification.md`：基线结果、截图矩阵结论、11 页导航清单勾选、交互清单勾选、性能数据、已知遗留（浅色主题精修/减弱动效开关/主题编辑 UI/实时遥测序列 → 归入既有遗留项清单）。
 

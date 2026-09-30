@@ -1,4 +1,5 @@
 # Caelus 品牌重构 Implementation Plan
+> **落地状态（2026-10-01 复核）**：全部任务已落地——00c1830（v1.7.0 品牌重构收口）；下文复选框为事后回填的执行记录。
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
@@ -48,7 +49,7 @@
 - Modify: `src/Program.cs:22-30`
 - Modify: `src/AssemblyInfo.cs:7-16`
 
-- [ ] **Step 1: 改 Program.cs 身份常量**
+- [x] **Step 1: 改 Program.cs 身份常量**
 
 把 `src/Program.cs` 中的:
 ```csharp
@@ -76,7 +77,7 @@
 ```
 注意:`WeChat` 设为空字符串而非删除(关于页 Task 会处理空值显示)。
 
-- [ ] **Step 2: 改 AssemblyInfo 属性**
+- [x] **Step 2: 改 AssemblyInfo 属性**
 
 把 `src/AssemblyInfo.cs:7-16` 改为:
 ```csharp
@@ -92,11 +93,11 @@
 [assembly: AssemblyInformationalVersion("1.7.0")]
 ```
 
-- [ ] **Step 3: 编译验证**
+- [x] **Step 3: 编译验证**
 
 `cmd.exe //c "build.cmd"` → 期望 `Build OK -> Pavise.exe`(exe 名下一阶段改)
 
-- [ ] **Step 4: 提交**
+- [x] **Step 4: 提交**
 
 ```bash
 git add src/Program.cs src/AssemblyInfo.cs
@@ -112,7 +113,7 @@ git commit -m "refactor: 身份常量改为 zenjiro/Caelus，版本升至 1.7.0"
 **Files:**
 - Modify: `src/Ui/Pages/PanelForm.AboutPage.cs:35-48`
 
-- [ ] **Step 1: 改关于页四行为三行**
+- [x] **Step 1: 改关于页四行为三行**
 
 把 `src/Ui/Pages/PanelForm.AboutPage.cs` 中的:
 ```csharp
@@ -129,11 +130,11 @@ git commit -m "refactor: 身份常量改为 zenjiro/Caelus，版本升至 1.7.0"
             for (int i = 0; i < 3; i++)
 ```
 
-- [ ] **Step 2: 编译验证**
+- [x] **Step 2: 编译验证**
 
 `cmd.exe //c "build.cmd"` → 期望 `Build OK`
 
-- [ ] **Step 3: 提交**
+- [x] **Step 3: 提交**
 
 ```bash
 git add src/Ui/Pages/PanelForm.AboutPage.cs
@@ -153,34 +154,34 @@ git commit -m "refactor: 关于页移除微信行（zenjiro 暂不提供微信�
 - Modify: `src/Platform/Lang.cs`(about.lic.value + about.desc + 托盘文案)
 - Modify: `src/Core/Tamer.cs:277`(日志标签)
 
-- [ ] **Step 1: 主窗口标题**
+- [x] **Step 1: 主窗口标题**
 
 `src/Ui/PanelForm.Widgets.cs` 中 `"PAVISE  //  CONTROL"` 改为 `"CAELUSELUS  //  CONTROL"`——不,应为 `"CAELUS  //  CONTROL"`。
 
-- [ ] **Step 2: TrayMenu MessageBox 标题**
+- [x] **Step 2: TrayMenu MessageBox 标题**
 
 `src/Ui/TrayMenu.cs:273` 中 MessageBox 标题 `"Pavise"` 改为 `"Caelus"`。
 
-- [ ] **Step 3: EnvironmentPage MessageBox 标题**
+- [x] **Step 3: EnvironmentPage MessageBox 标题**
 
 `src/Ui/Pages/PanelForm.EnvironmentPage.cs` 中所有 `MessageBox.Show(..., "Pavise", ...)` 的 `"Pavise"` 改为 `"Caelus"`(约 10 处,用 Edit replace_all)。
 
-- [ ] **Step 4: Lang.cs 文案**
+- [x] **Step 4: Lang.cs 文案**
 
 `src/Platform/Lang.cs` 中:
 - `about.lic.value` 的值 `"Pavise 许可协议 · 禁止销售"` → `"Caelus 许可协议 · 禁止销售"`
 - `about.desc` 的值改写为兼顾开发场景(原文是"把系统资源让给游戏的 Windows 工具",改为"把系统资源让给当前重任的 Windows 工具——打游戏、写代码、编译,都需要专注算力")
 - 扫描 `tray.*`、`bal.*` 文案中含 "Pavise" 的,改为 "Caelus"(三语都要改:中文数组第 0 项必改,英/日若有也改)
 
-- [ ] **Step 5: Tamer 日志标签**
+- [x] **Step 5: Tamer 日志标签**
 
 `src/Core/Tamer.cs:277` 中 `ReleaseAll("Pavise 退出")` 改为 `ReleaseAll("Caelus 退出")`。
 
-- [ ] **Step 6: 编译 + 自测**
+- [x] **Step 6: 编译 + 自测**
 
 `cmd.exe //c "dev.cmd test"` → 期望 `TOTAL 152  PASS 149  FAIL 0  SKIP 3`
 
-- [ ] **Step 7: 提交**
+- [x] **Step 7: 提交**
 
 ```bash
 git add -A
@@ -197,7 +198,7 @@ git commit -m "refactor: UI 展示层产品名 Pavise → Caelus"
 - 全局:`src/`、`tests/`、`tools/` 下所有 .cs(157 处声明)
 - Modify: `tools/PerfLab/build.ps1:36`
 
-- [ ] **Step 1: 批量替换命名空间声明和引用**
+- [x] **Step 1: 批量替换命名空间声明和引用**
 
 运行脚本(用 sed 全局替换,覆盖 src/ tests/ tools/):
 ```bash
@@ -206,22 +207,22 @@ find src tests tools -name "*.cs" -exec sed -i 's/PavisePerfLab/CaelusPerfLab/g'
 ```
 这同时处理 `namespace PaviseApp`、`namespace PavisePerfLab`、以及跨文件引用 `PaviseApp.`(仅 1 处)。
 
-- [ ] **Step 2: 同步 PerfLab build.ps1 入口**
+- [x] **Step 2: 同步 PerfLab build.ps1 入口**
 
 `tools/PerfLab/build.ps1:36` 中 `-main:PaviseApp.PerfEngineProgram` 改为 `-main:CaelusApp.PerfEngineProgram`:
 ```bash
 sed -i 's/PaviseApp.PerfEngineProgram/CaelusApp.PerfEngineProgram/g' tools/PerfLab/build.ps1
 ```
 
-- [ ] **Step 3: 编译验证**
+- [x] **Step 3: 编译验证**
 
 `cmd.exe //c "build.cmd"` → 期望 `Build OK`。若报类型未找到,说明有遗漏的引用,sed 可能漏了非常规写法,用 `grep -rn "PaviseApp" src/ tests/ tools/` 排查。
 
-- [ ] **Step 4: 自测**
+- [x] **Step 4: 自测**
 
 `cmd.exe //c "dev.cmd test"` → 期望 `TOTAL 152  PASS 149  FAIL 0  SKIP 3`
 
-- [ ] **Step 5: 提交**
+- [x] **Step 5: 提交**
 
 ```bash
 git add -A
@@ -247,11 +248,11 @@ git commit -m "refactor: 命名空间 PaviseApp → CaelusApp（全局 157 文�
 - Modify: `dev.cmd`(Pavise_Exit 2 处)
 - Modify: `.gitignore`
 
-- [ ] **Step 1: 注册表根**
+- [x] **Step 1: 注册表根**
 
 `src/Platform/Settings.cs:12`:`@"Software\Pavise"` → `@"Software\Caelus"`
 
-- [ ] **Step 2: 数据文件名常量(定义点)**
+- [x] **Step 2: 数据文件名常量(定义点)**
 
 逐个改:
 - `src/Core/GameMode.cs:164` `"Pavise.games.txt"` → `"Caelus.games.txt"`
@@ -262,11 +263,11 @@ git commit -m "refactor: 命名空间 PaviseApp → CaelusApp（全局 157 文�
 - `src/Core/Suppression/LegacyFreezeRecovery.cs:15` `"Pavise.freeze.state"` → `"Caelus.freeze.state"`
 - `src/Core/Suppression/LegacyFreezeRecovery.cs:60` `"Pavise.LegacyFreezeRecovery"` → `"Caelus.LegacyFreezeRecovery"`
 
-- [ ] **Step 3: Paths.cs + LegacyPurge.cs 清理数组同步**
+- [x] **Step 3: Paths.cs + LegacyPurge.cs 清理数组同步**
 
 `src/Platform/Paths.cs:24-25` 和 `src/Core/LegacyPurge.cs:53-55` 里的 `"Pavise.games.txt"` 等全部改为 `"Caelus.*"` 对应名。同时 `Paths.cs:53` 的 `"Pavise.portable"` → `"Caelus.portable"`。
 
-- [ ] **Step 4: Program.cs 里的 log/ico 文件名**
+- [x] **Step 4: Program.cs 里的 log/ico 文件名**
 
 `src/Program.cs` 中:
 - `:48` `"Pavise.ico"` → `"Caelus.ico"`
@@ -274,7 +275,7 @@ git commit -m "refactor: 命名空间 PaviseApp → CaelusApp（全局 157 文�
 - `:105` `"Pavise.preview.log"` → `"Caelus.preview.log"`
 - `:194` `"Pavise.log"` → `"Caelus.log"`
 
-- [ ] **Step 5: Mutex/事件名(Program.cs + dev.cmd)**
+- [x] **Step 5: Mutex/事件名(Program.cs + dev.cmd)**
 
 `src/Program.cs` 中(3 处 Mutex/EventWaitHandle 名):
 - `"Global\\Pavise_SingleInstance"` → `"Global\\Caelus_SingleInstance"`
@@ -284,7 +285,7 @@ git commit -m "refactor: 命名空间 PaviseApp → CaelusApp（全局 157 文�
 `dev.cmd` 中(2 处):
 - `Global\Pavise_Exit` → `Global\Caelus_Exit`(PowerShell 里的 OpenExisting 调用)
 
-- [ ] **Step 6: 回滚标志键(*ByPavise → *ByCaelus)**
+- [x] **Step 6: 回滚标志键(*ByPavise → *ByCaelus)**
 
 批量替换 src/Core/Tweaks/ 和相关文件:
 ```bash
@@ -294,19 +295,19 @@ find src/Core -name "*.cs" -exec sed -i 's/ByPavise/ByCaelus/g' {} +
 
 验证覆盖完整:`grep -rn "ByPavise" src/` 应返回空。
 
-- [ ] **Step 7: .gitignore**
+- [x] **Step 7: .gitignore**
 
 `.gitignore` 中所有 `Pavise.*` → `Caelus.*`、`Pavise-v*.zip` → `Caelus-v*.zip`、`Pavise.exe.sha256` → `Caelus.exe.sha256`、`Pavise.freeze.state` 等:
 ```bash
 sed -i 's/Pavise/Caelus/g' .gitignore
 ```
 
-- [ ] **Step 8: 编译 + 自测**
+- [x] **Step 8: 编译 + 自测**
 
 `cmd.exe //c "dev.cmd test"` → 期望 `TOTAL 152  PASS 149  FAIL 0  SKIP 3`
 残留检查:`grep -rn "ByPavise" src/` 应为空;`grep -rn '"Pavise\.' src/` 应为空。
 
-- [ ] **Step 9: 提交**
+- [x] **Step 9: 提交**
 
 ```bash
 git add -A
@@ -326,7 +327,7 @@ git commit -m "refactor: 持久化标识符 Pavise → Caelus（注册表根/数
 - Delete: `Pavise.exe`、`Pavise.selftest.exe`(旧构建产物)
 - Rename: `Pavise.ico` → `Caelus.ico`
 
-- [ ] **Step 1: build.cmd**
+- [x] **Step 1: build.cmd**
 
 `build.cmd` 中:
 - `set OUT=Pavise.exe` → `set OUT=Caelus.exe`
@@ -337,7 +338,7 @@ git commit -m "refactor: 持久化标识符 Pavise → Caelus（注册表根/数
 sed -i 's/Pavise\.exe/Caelus.exe/g; s/Pavise\.ico/Caelus.ico/g' build.cmd
 ```
 
-- [ ] **Step 2: dev.cmd**
+- [x] **Step 2: dev.cmd**
 
 `dev.cmd` 中:
 - `set OUT=Pavise.dev.exe` → `set OUT=Caelus.dev.exe`
@@ -350,28 +351,28 @@ sed -i 's/Pavise\.exe/Caelus.exe/g; s/Pavise\.ico/Caelus.ico/g' build.cmd
 sed -i 's/Pavise\.dev\.exe/Caelus.dev.exe/g; s/Pavise\.selftest/Caelus.selftest/g; s/Pavise\*/Caelus*/g; s/Pavise_Exit/Caelus_Exit/g' dev.cmd
 ```
 
-- [ ] **Step 3: PerfLab 构建脚本和代码**
+- [x] **Step 3: PerfLab 构建脚本和代码**
 
 ```bash
 sed -i 's/Pavise\.PerfLab/Caelus.PerfLab/g; s/Pavise\.PerfEngine/Caelus.PerfEngine/g; s/Pavise\.PerfLauncher/Caelus.PerfLauncher/g; s/Pavise\.PerfBackground/Caelus.PerfBackground/g; s/Pavise\.perf\.log/Caelus.perf.log/g; s/Pavise PerfLab/Caelus PerfLab/g' tools/PerfLab/build.ps1 tools/PerfLab/PerfLab.cs tools/PerfLab/PerfEngine.cs
 ```
 
-- [ ] **Step 4: 图标文件重命名 + 删除旧产物**
+- [x] **Step 4: 图标文件重命名 + 删除旧产物**
 
 ```bash
 mv Pavise.ico Caelus.ico
 rm -f Pavise.exe Pavise.selftest.exe
 ```
 
-- [ ] **Step 5: 编译验证**
+- [x] **Step 5: 编译验证**
 
 `cmd.exe //c "build.cmd"` → 期望 `Build OK -> Caelus.exe`
 
-- [ ] **Step 6: 自测**
+- [x] **Step 6: 自测**
 
 `cmd.exe //c "dev.cmd test"` → 期望 `TOTAL 152  PASS 149  FAIL 0  SKIP 3`
 
-- [ ] **Step 7: 提交**
+- [x] **Step 7: 提交**
 
 ```bash
 git add -A
@@ -388,24 +389,24 @@ git commit -m "refactor: exe/图标/构建脚本 Pavise → Caelus"
 - Modify: `tests/SelfTests.GpuTuning.cs`
 - Modify: `src/Platform/NvApi.cs:215`
 
-- [ ] **Step 1: 批量替换测试占位名**
+- [x] **Step 1: 批量替换测试占位名**
 
 ```bash
 sed -i 's/Pavise_Game/Caelus_Game/g; s/Pavise 自测/Caelus 自测/g; s/PaviseGpuMode/CaelusGpuMode/g' tests/SelfTests.cs tests/SelfTests.PowerPlan.cs tests/SelfTests.GpuTuning.cs
 ```
 
-- [ ] **Step 2: NvApi profile 名**
+- [x] **Step 2: NvApi profile 名**
 
 `src/Platform/NvApi.cs:215` 中 `ProfileName = "Pavise - " + exeName` → `"Caelus - " + exeName`:
 ```bash
 sed -i 's/Pavise - /Caelus - /g' src/Platform/NvApi.cs
 ```
 
-- [ ] **Step 3: 编译 + 自测**
+- [x] **Step 3: 编译 + 自测**
 
 `cmd.exe //c "dev.cmd test"` → 期望 `TOTAL 152  PASS 149  FAIL 0  SKIP 3`
 
-- [ ] **Step 4: 提交**
+- [x] **Step 4: 提交**
 
 ```bash
 git add -A
@@ -421,7 +422,7 @@ git commit -m "refactor: 测试占位名和驱动 profile 名 Pavise → Caelus"
 **Files:**
 - 全局:`src/`、`tests/`、`tools/` 下所有 .cs/.cmd/.ps1
 
-- [ ] **Step 1: 批量替换**
+- [x] **Step 1: 批量替换**
 
 ```bash
 find src tests tools -name "*.cs" -exec sed -i 's|@author bdth 2074055628@qq.com|@author zenjiro 18967498922@163.com|g' {} +
@@ -429,16 +430,16 @@ sed -i 's|@rem @author bdth 2074055628@qq.com|@rem @author zenjiro 18967498922@1
 sed -i 's|# @author bdth 2074055628@qq.com|# @author zenjiro 18967498922@163.com|g' scripts/app-smoke-test.ps1
 ```
 
-- [ ] **Step 2: 验证无残留**
+- [x] **Step 2: 验证无残留**
 
 `grep -rn "2074055628" src/ tests/ tools/ scripts/ build.cmd dev.cmd` 应为空。
 `grep -rn "@author bdth" src/ tests/ tools/ scripts/ build.cmd dev.cmd` 应为空。
 
-- [ ] **Step 3: 编译验证**
+- [x] **Step 3: 编译验证**
 
 `cmd.exe //c "build.cmd"` → 期望 `Build OK`(注释改动不影响编译,但确认 sed 没误伤代码)
 
-- [ ] **Step 4: 提交**
+- [x] **Step 4: 提交**
 
 ```bash
 git add -A
@@ -454,7 +455,7 @@ git commit -m "refactor: 文件头 @author bdth → zenjiro（161 文件）"
 - Modify: `README.md`、`README.en.md`、`README.ja.md`
 - Delete: `docs/wechat.png`、`docs/alipay.png`(原作者收款码)
 
-- [ ] **Step 1: LICENSE 追加衍生版权 + 改名**
+- [x] **Step 1: LICENSE 追加衍生版权 + 改名**
 
 在 `LICENSE` 第 1 行 `Pavise 许可协议` 之前插入衍生版权声明,并把协议正文中的产品名引用 Pavise → Caelus。保留 bdth 原版权作为上游记录。
 
@@ -468,7 +469,7 @@ Caelus 由 zenjiro 基于 Pavise 衍生开发。原始版权与许可条款见�
 ```
 然后把原 `Pavise 许可协议 / Pavise License` 改为 `Caelus 许可协议 / Caelus License`(基于 Pavise)`。协议正文中的 "本软件指 Pavise" 改为 "本软件指 Caelus"。
 
-- [ ] **Step 2: README.md(中文)**
+- [x] **Step 2: README.md(中文)**
 
 - 标题 `# Pavise` → `# Caelus`;图标 alt `Pavise` → `Caelus`
 - 作者段:`作者：bdth` → `作者：zenjiro`;邮箱;移除微信行;QQ 群段移除
@@ -478,17 +479,17 @@ Caelus 由 zenjiro 基于 Pavise 衍生开发。原始版权与许可条款见�
 - 数据目录段:`%AppData%\Pavise` → `%AppData%\Caelus`;文件名 `Pavise.profiles.dat` 等 → `Caelus.*`;注册表 `HKCU\Software\Pavise` → `HKCU\Software\Caelus`
 - 代码结构段:`src/Core` 等描述里的命名空间/文件名引用同步
 
-- [ ] **Step 3: README.en.md / README.ja.md**
+- [x] **Step 3: README.en.md / README.ja.md**
 
 同 Step 2 的改动,对应英文/日文版本。
 
-- [ ] **Step 4: 删除原作者收款码图片**
+- [x] **Step 4: 删除原作者收款码图片**
 
 ```bash
 rm -f docs/wechat.png docs/alipay.png
 ```
 
-- [ ] **Step 5: 提交**
+- [x] **Step 5: 提交**
 
 ```bash
 git add -A
@@ -501,7 +502,7 @@ git commit -m "docs: LICENSE 追加衍生版权，README 三语改为 Caelus/zen
 
 最终确认整个重构无遗漏。
 
-- [ ] **Step 1: 全量残留扫描**
+- [x] **Step 1: 全量残留扫描**
 
 ```bash
 echo "=== src/ tests/ tools/ 中的 Pavise 残留(忽略大小写)==="
@@ -509,11 +510,11 @@ grep -rni "pavise" src/ tests/ tools/ | grep -v "衍生\|derived\|Pavise by bdth
 ```
 预期:仅 LICENSE 里的原版权记录(已在 grep -v 排除)和 ReleaseNotes.cs 历史日志(属"日志事实",保留)。其余应为空。
 
-- [ ] **Step 2: 全量编译 + 自测**
+- [x] **Step 2: 全量编译 + 自测**
 
 `cmd.exe //c "dev.cmd test"` → 期望 `TOTAL 152  PASS 149  FAIL 0  SKIP 3`
 
-- [ ] **Step 3: 实际启动验证**
+- [x] **Step 3: 实际启动验证**
 
 启动 Caelus.exe,确认:
 - 托盘图标标题为 CAELUS
@@ -523,7 +524,7 @@ grep -rni "pavise" src/ tests/ tools/ | grep -v "衍生\|derived\|Pavise by bdth
 - 数据写入 `%AppData%\Caelus\`(Caelus.log 等)
 - 注册表 `HKCU\Software\Caelus`
 
-- [ ] **Step 4: 最终提交**
+- [x] **Step 4: 最终提交**
 
 ```bash
 git add -A

@@ -1,4 +1,5 @@
 # 苹果动效升级 + 亮色抹茶棉花糖主题 实施计划
+> **落地状态（2026-10-01 复核）**：全部任务已落地——c82c46b..e1d4048；下文复选框为事后回填的执行记录。
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 > 注意：本环境用户约束禁止 Agent 子代理，实际执行走 executing-plans 内联路径。
@@ -48,7 +49,7 @@
 **Interfaces:**
 - Produces: `UiMotion.SpringPreset { Gentle, Snappy, Bouncy }`；`UiMotion.SpringParams(SpringPreset preset, out int milliseconds, out double amplitude)`——Task 2 的 `Motion.Spring` 与全部弹簧调用方消费
 
-- [ ] **Step 1: 写失败自测**
+- [x] **Step 1: 写失败自测**
 
 创建 `tests/SelfTests.Motion.cs`：
 
@@ -84,12 +85,12 @@ namespace CaelusApp
             test("动效：弹簧三档预设映射（规格 2026-09-29 §3.1）", TestSpringPresetMap);
 ```
 
-- [ ] **Step 2: 跑自测确认编译失败**
+- [x] **Step 2: 跑自测确认编译失败**
 
 Run: `MSYS_NO_PATHCONV=1 cmd /c "dev.cmd test"`
 Expected: 编译错误 CS0117/CS0103（`UiMotion` 不含 `SpringPreset`/`SpringParams`）——证明测试在真跑
 
-- [ ] **Step 3: 实现弹簧预设**
+- [x] **Step 3: 实现弹簧预设**
 
 `src/UiShared/UiMotion.cs`：在 `UiMotion` **类内**追加嵌套枚举与方法（嵌套枚举才能以 `UiMotion.SpringPreset` 被引用，static class 允许含嵌套类型）：
 
@@ -109,12 +110,12 @@ Expected: 编译错误 CS0117/CS0103（`UiMotion` 不含 `SpringPreset`/`SpringP
         }
 ```
 
-- [ ] **Step 4: 跑自测确认通过**
+- [x] **Step 4: 跑自测确认通过**
 
 Run: `MSYS_NO_PATHCONV=1 cmd /c "dev.cmd test"`
 Expected: `TOTAL 291` 且 `FAIL 0`（290+1）
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add src/UiShared/UiMotion.cs tests/SelfTests.Motion.cs tests/SelfTests.cs
@@ -130,7 +131,7 @@ git commit -m "feat(motion): 弹簧三档预设 SpringParams（Gentle/Snappy/Bou
 - Consumes: `UiMotion.SpringParams` / `UiMotion.SpringPreset`（Task 1）
 - Produces: `Motion.Spring(Animatable target, DependencyProperty property, double from, double to, UiMotion.SpringPreset preset)`——Task 5 侧栏指示器消费
 
-- [ ] **Step 1: 新增 Motion.Spring 公共入口**
+- [x] **Step 1: 新增 Motion.Spring 公共入口**
 
 `wpf/Motion.cs` 类内追加（`Emphasize` 方法之后即可）：
 
@@ -161,7 +162,7 @@ git commit -m "feat(motion): 弹簧三档预设 SpringParams（Gentle/Snappy/Bou
         }
 ```
 
-- [ ] **Step 2: 收口既有弹簧实现（行为对照）**
+- [x] **Step 2: 收口既有弹簧实现（行为对照）**
 
 三处改造，全部走 `SpringParams` 取参，消除散落的魔法数字：
 
@@ -207,17 +208,17 @@ git commit -m "feat(motion): 弹簧三档预设 SpringParams（Gentle/Snappy/Bou
 
 （这是唯一有意的行为变更：入场位移 180→300ms，弹簧尾更长、更接近 iOS  settle；规格 §3.1 Gentle 档定义。）
 
-- [ ] **Step 3: 跑自测确认无回归**
+- [x] **Step 3: 跑自测确认无回归**
 
 Run: `MSYS_NO_PATHCONV=1 cmd /c "dev.cmd test"`
 Expected: `TOTAL 291` / `FAIL 0`
 
-- [ ] **Step 4: 构建正式版并人工抽查动效**
+- [x] **Step 4: 构建正式版并人工抽查动效**
 
 Run: `MSYS_NO_PATHCONV=1 cmd /c "dev.cmd"`
 Expected: 构建成功并启动 Caelus.dev.exe；人工：切页入场有弹簧手感、按钮按压回弹与之前一致
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add wpf/Motion.cs
@@ -234,7 +235,7 @@ git commit -m "refactor(motion): Spring 统一入口 + 既有弹簧收口 Spring
 **Interfaces:**
 - Produces: `Motion.NumberRoll(TextBlock target, double from, double to, string format)`；`Motion.Interpolate(double from, double to, double t)`——Task 4 体检分数滚动消费
 
-- [ ] **Step 1: 写失败自测**
+- [x] **Step 1: 写失败自测**
 
 `tests/SelfTests.Motion.cs` 类内追加：
 
@@ -267,12 +268,12 @@ git commit -m "refactor(motion): Spring 统一入口 + 既有弹簧收口 Spring
             test("动效：NumberRoll 禁用时直出终值", TestNumberRollDisabledSetsFinal);
 ```
 
-- [ ] **Step 2: 跑自测确认编译失败**
+- [x] **Step 2: 跑自测确认编译失败**
 
 Run: `MSYS_NO_PATHCONV=1 cmd /c "dev.cmd test"`
 Expected: 编译错误（`Motion` 不含 `Interpolate`/`NumberRoll`）
 
-- [ ] **Step 3: 实现 NumberRoll**
+- [x] **Step 3: 实现 NumberRoll**
 
 `wpf/Motion.cs` 类内追加（顶部加 `using System.Globalization;`）：
 
@@ -330,12 +331,12 @@ Expected: 编译错误（`Motion` 不含 `Interpolate`/`NumberRoll`）
         }
 ```
 
-- [ ] **Step 4: 跑自测确认通过**
+- [x] **Step 4: 跑自测确认通过**
 
 Run: `MSYS_NO_PATHCONV=1 cmd /c "dev.cmd test"`
 Expected: `TOTAL 293` / `FAIL 0`（291+2）
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add wpf/Motion.cs tests/SelfTests.Motion.cs tests/SelfTests.cs
@@ -352,7 +353,7 @@ git commit -m "feat(motion): NumberRoll 数字滚动 + Interpolate 纯函数 + �
 - Consumes: `Motion.NumberRoll` / `Motion.Interpolate`（Task 3）
 - Produces: 无（终端接线任务）
 
-- [ ] **Step 1: XAML 改命名元素**
+- [x] **Step 1: XAML 改命名元素**
 
 `wpf/Views/AuditView.xaml:212`，把
 
@@ -366,7 +367,7 @@ git commit -m "feat(motion): NumberRoll 数字滚动 + Interpolate 纯函数 + �
               <TextBlock x:Name="TxtScore" FontSize="{DynamicResource FontSizeScore}" FontWeight="SemiBold"
 ```
 
-- [ ] **Step 2: 代码后置接线**
+- [x] **Step 2: 代码后置接线**
 
 `wpf/Views/AuditView.xaml.cs`：
 
@@ -415,17 +416,17 @@ git commit -m "feat(motion): NumberRoll 数字滚动 + Interpolate 纯函数 + �
             UpdateScoreText();
 ```
 
-- [ ] **Step 3: 跑自测确认无回归**
+- [x] **Step 3: 跑自测确认无回归**
 
 Run: `MSYS_NO_PATHCONV=1 cmd /c "dev.cmd test"`
 Expected: `TOTAL 293` / `FAIL 0`
 
-- [ ] **Step 4: 人工验证滚动**
+- [x] **Step 4: 人工验证滚动**
 
 Run: `MSYS_NO_PATHCONV=1 cmd /c "dev.cmd"`
 启动后切到「系统体检」页跑一次体检，观察分数从旧值滚到新值（220ms）
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add wpf/Views/AuditView.xaml wpf/Views/AuditView.xaml.cs
@@ -442,7 +443,7 @@ git commit -m "feat(ui): 体检分数 NumberRoll 滚动（探针/Reduced 直出�
 - Consumes: `Motion.Spring` / `UiMotion.SpringPreset.Snappy`（Task 2）
 - Produces: 无
 
-- [ ] **Step 1: XAML 包 Grid + 放 pill**
+- [x] **Step 1: XAML 包 Grid + 放 pill**
 
 `wpf/MainWindow.xaml:78-80`，现状：
 
@@ -480,7 +481,7 @@ git commit -m "feat(ui): 体检分数 NumberRoll 滚动（探针/Reduced 直出�
           <ScrollViewer x:Name="NavScroll" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
 ```
 
-- [ ] **Step 2: 代码后置实现滑动**
+- [x] **Step 2: 代码后置实现滑动**
 
 `wpf/MainWindow.xaml.cs`：
 
@@ -532,18 +533,18 @@ git commit -m "feat(ui): 体检分数 NumberRoll 滚动（探针/Reduced 直出�
 
 注意：这三个订阅都是窗口级元素事件（非 ThemeManager.ModeChanged 静态事件），随窗口析构自然释放，不违反 Global Constraints 的退订约束。
 
-- [ ] **Step 3: 跑自测确认无回归**
+- [x] **Step 3: 跑自测确认无回归**
 
 Run: `MSYS_NO_PATHCONV=1 cmd /c "dev.cmd test"`
 Expected: `TOTAL 293` / `FAIL 0`
 
-- [ ] **Step 4: 人工验证滑动手感**
+- [x] **Step 4: 人工验证滑动手感**
 
 Run: `MSYS_NO_PATHCONV=1 cmd /c "dev.cmd"`
 逐一点击侧栏 14 个导航项（含底部设置/关于），pill 应以弹簧手感滑动跟随；滚动导航区 pill 不漂移。
 **Fallback**：若 pill 与 NavItem 选中态底色叠加显脏，把 pill 改为 3px 左指示条变体（`Width="3"` `HorizontalAlignment="Left"` `Margin="6,0,0,0"`，其余逻辑不变）。
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add wpf/MainWindow.xaml wpf/MainWindow.xaml.cs
@@ -559,7 +560,7 @@ git commit -m "feat(ui): 侧栏滑动指示器——Snappy 弹簧跟随（iOS �
 - Consumes: `Motion.RiseIn`（既有，Task 2 已收口）
 - Produces: 无
 
-- [ ] **Step 1: 补 RiseIn 接线**
+- [x] **Step 1: 补 RiseIn 接线**
 
 `Grep -n "OnLoaded" wpf/Views/ActivityView.xaml.cs` 找到 OnLoaded，按 LibraryView.xaml.cs:75-78 的既有范式，在其内追加（ActivityView 只有 ZoneHeader/ZoneStatus 两个顶层区块，见 XAML）：
 
@@ -568,17 +569,17 @@ git commit -m "feat(ui): 侧栏滑动指示器——Snappy 弹簧跟随（iOS �
             Motion.RiseIn(ZoneStatus, 100);
 ```
 
-- [ ] **Step 2: 跑自测确认无回归**
+- [x] **Step 2: 跑自测确认无回归**
 
 Run: `MSYS_NO_PATHCONV=1 cmd /c "dev.cmd test"`
 Expected: `TOTAL 293` / `FAIL 0`
 
-- [ ] **Step 3: 动效压测**
+- [x] **Step 3: 动效压测**
 
 Run: `MSYS_NO_PATHCONV=1 cmd /c "powershell -ExecutionPolicy Bypass -File scripts\wpf-motion-stress.ps1"`
 Expected: 脚本跑完无异常退出；输出文本确认动画期间无错误（既有基线：无限动画 15fps 节流不变）
 
-- [ ] **Step 4: Commit + 推送批 1**
+- [x] **Step 4: Commit + 推送批 1**
 
 ```bash
 git add wpf/Views/ActivityView.xaml.cs
@@ -603,13 +604,13 @@ git push origin main
 - Consumes: 无（自包含重构）
 - Produces: 模式档 9 个新色键——Task 8 消费 `Accent*OnLightColor` 六键改抹茶值
 
-- [ ] **Step 1: 确认 ModeKeys 消费方（用户主题校验风险排查）**
+- [x] **Step 1: 确认 ModeKeys 消费方（用户主题校验风险排查）**
 
 Run: `Grep -rn "ModeKeys" src/ wpf/ tests/ --include="*.cs"`
 Expected: 仅 `ThemeContract.cs` 定义 + `tests/SelfTests.ThemeContract.cs` 三处校验。
 **若发现用户主题（Caelus.theme.xaml）校验也消费 ModeKeys**：在 `ThemeContract` 增加 `UserThemeKeys`（=迁移前旧 ModeKeys 22 键快照），把该校验改为引用 `UserThemeKeys`，防止老用户主题因新增 9 键被判不完整。
 
-- [ ] **Step 2: 迁移契约数组**
+- [x] **Step 2: 迁移契约数组**
 
 `src/UiShared/ThemeContract.cs`：
 
@@ -633,7 +634,7 @@ Expected: 仅 `ThemeContract.cs` 定义 + `tests/SelfTests.ThemeContract.cs` 三
 
 （`TestThemeContractValidator` 正反样例仍用 `AccentGlowColor`，仍在 ModeKeys，无需改测试。）
 
-- [ ] **Step 3: Mode.Standard.xaml 重组（另两个模式档照此范式）**
+- [x] **Step 3: Mode.Standard.xaml 重组（另两个模式档照此范式）**
 
 删除这 6 行画刷定义（现 `:37-44` 区域）：
 
@@ -664,13 +665,13 @@ Expected: 仅 `ThemeContract.cs` 定义 + `tests/SelfTests.ThemeContract.cs` 三
 
 同时删除旧的 `ModeAccentSoftBrush`/`ModeAccentEdgeBrush` 兼容别名两行？——**不删**：它们不在本次契约迁移范围，保留防旧引用断裂（YAGNI 逆向：删除无收益）。
 
-- [ ] **Step 4: Mode.Competitive.xaml / Mode.Custom.xaml 同步重组**
+- [x] **Step 4: Mode.Competitive.xaml / Mode.Custom.xaml 同步重组**
 
 同样删 6 画刷、加 9 色键，**用各文件自己的现值平移**。先 `Grep -n "AccentPrimaryColor\|AccentSecondaryColor\|AccentSoftBrush\|AccentEdgeBrush\|AccentGlowColor\|OnAccentBrush" wpf/Themes/Mode.Competitive.xaml wpf/Themes/Mode.Custom.xaml` 取现值。预期值（以实读为准）：
 - Competitive：Primary `#FF8A5C` / Secondary 实读 / Soft `#16FF8A5C` / Edge `#40FF8A5C` / Glow `#FF8A5C` / OnAccent `#2B1F1A`；OnLight 六键填相同现值
 - Custom：Primary `#E6B84C` / Secondary 实读 / Soft `#16E6B84C` / Edge `#40E6B84C` / Glow `#E6B84C` / OnAccent `#2B1F1A`；OnLight 六键填相同现值
 
-- [ ] **Step 5: 两个色板档加 6 画刷桥接**
+- [x] **Step 5: 两个色板档加 6 画刷桥接**
 
 `wpf/Themes/Colors.Dark.xaml` 末尾（`</ResourceDictionary>` 前）追加——全部 DynamicResource 指模式档 OnDark/现有色键，视觉与原定义逐一相等：
 
@@ -702,18 +703,18 @@ Expected: 仅 `ThemeContract.cs` 定义 + `tests/SelfTests.ThemeContract.cs` 三
   <SolidColorBrush x:Key="OnAccentBrush" Color="{DynamicResource OnAccentOnLightColor}"/>
 ```
 
-- [ ] **Step 6: 跑自测确认契约与全量绿**
+- [x] **Step 6: 跑自测确认契约与全量绿**
 
 Run: `MSYS_NO_PATHCONV=1 cmd /c "dev.cmd test"`
 Expected: `TOTAL 293` / `FAIL 0`（主题契约三项 + 令牌一致性全过即桥接正确）
 
-- [ ] **Step 7: 暗色视觉抽查（桥接零漂移证据）**
+- [x] **Step 7: 暗色视觉抽查（桥接零漂移证据）**
 
 Run: `MSYS_NO_PATHCONV=1 cmd /c "powershell -ExecutionPolicy Bypass -File scripts\shoot-all.ps1"`
 然后 `git status --short docs/shots`：76 张应**全部无差异**（本 Task 视觉不变；若有差异文件，打开排查是哪一档桥接值错了）
 确认无差异后 `git checkout -- docs/shots` 还原（不把无变化重摄混进提交）。
 
-- [ ] **Step 8: Commit**
+- [x] **Step 8: Commit**
 
 ```bash
 git add src/UiShared/ThemeContract.cs wpf/Themes/Mode.Standard.xaml wpf/Themes/Mode.Competitive.xaml wpf/Themes/Mode.Custom.xaml wpf/Themes/Colors.Dark.xaml wpf/Themes/Colors.Light.xaml
@@ -731,7 +732,7 @@ git commit -m "refactor(theme): accent 家族明暗桥接——6 画刷迁色板
 - Consumes: Task 7 的桥接键
 - Produces: 亮色抹茶视觉（批 2 矩阵重摄在 Task 10）
 
-- [ ] **Step 1: Colors.Light.xaml 色值替换**
+- [x] **Step 1: Colors.Light.xaml 色值替换**
 
 按下表逐键替换（只改值，不动键名与结构）：
 
@@ -753,7 +754,7 @@ git commit -m "refactor(theme): accent 家族明暗桥接——6 画刷迁色板
 
 `Surface0Color`/`ScenarioDailyBrush`(#B84518)/`InfoColor`/`WarningColor`/`DangerColor`/滚动条灰/描边 alpha/兼容别名层：**不动**。
 
-- [ ] **Step 2: 主按钮渐变化**
+- [x] **Step 2: 主按钮渐变化**
 
 `Colors.Light.xaml` 中 Task 7 加的桥接行里，把亮色 `AccentPrimaryBrush` 从纯色改为渐变（135°，规格 §4.1——模板零改动，按钮/进度条自动渐变）：
 
@@ -764,7 +765,7 @@ git commit -m "refactor(theme): accent 家族明暗桥接——6 画刷迁色板
   </LinearGradientBrush>
 ```
 
-- [ ] **Step 3: Mode.Standard.xaml OnLight 六键改抹茶**
+- [x] **Step 3: Mode.Standard.xaml OnLight 六键改抹茶**
 
 把 Task 7 填的现值替换为（规格 §4.2 + WCAG 实测 §4.3）：
 
@@ -780,7 +781,7 @@ git commit -m "refactor(theme): accent 家族明暗桥接——6 画刷迁色板
 同时 `ModeAccentOnLightColor`（现 `#6D5CE0`，:51）改为 `#3F7A58`（规格 §4.2 原定的唯一一行变更，实测 5.08:1 全场景 AA）。
 **Competitive/Custom 的 OnLight 六键保持 Task 7 的现值，不动**（规格 §2 不做清单）。
 
-- [ ] **Step 4: tokens.css 同步（自测强制）**
+- [x] **Step 4: tokens.css 同步（自测强制）**
 
 `design-sandbox/tokens.css`：
 - `:138` `--hero-title-from: #2B1F1A;` → `--hero-title-from: #26332A;      /* light: 墨绿（2026-09-29 抹茶） */`
@@ -788,16 +789,16 @@ git commit -m "refactor(theme): accent 家族明暗桥接——6 画刷迁色板
 - light 段（:104 起）`--success: #248A3D;` → `--success: #27755C;`（卫生同步，非自测强制）
 - dark 段一律不动
 
-- [ ] **Step 5: 跑自测确认全量绿**
+- [x] **Step 5: 跑自测确认全量绿**
 
 Run: `MSYS_NO_PATHCONV=1 cmd /c "dev.cmd test"`
 Expected: `TOTAL 293` / `FAIL 0`（`TestDesignTokenParity` 与主题契约三项必过；若 FAIL 按消息比对两侧值）
 
-- [ ] **Step 6: 人工看亮色效果**
+- [x] **Step 6: 人工看亮色效果**
 
 Run: `MSYS_NO_PATHCONV=1 cmd /c "dev.cmd"`，设置页切亮色模式：米白底 + 抹茶渐变按钮 + 墨绿文字；切常规/竞技/自定义三模式确认竞技=焙茶橙、自定义=金不变；切回暗色确认零变化。
 
-- [ ] **Step 7: Commit**
+- [x] **Step 7: Commit**
 
 ```bash
 git add wpf/Themes/Colors.Light.xaml wpf/Themes/Mode.Standard.xaml design-sandbox/tokens.css
@@ -818,7 +819,7 @@ git commit -m "feat(theme): 亮色抹茶棉花糖落地——色板/渐变按钮
 - Consumes: 主题 token（`ModeAccentBrush`/`SuccessSoftBrush` 等 DynamicResource）
 - Produces: `AuditViewModel.IsExcellent`（bool，Score≥85）
 
-- [ ] **Step 1: 新建 Illustrations.xaml**
+- [x] **Step 1: 新建 Illustrations.xaml**
 
 ```xml
 <ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
@@ -865,7 +866,7 @@ git commit -m "feat(theme): 亮色抹茶棉花糖落地——色板/渐变按钮
 </ResourceDictionary>
 ```
 
-- [ ] **Step 2: csproj + App.xaml 登记**
+- [x] **Step 2: csproj + App.xaml 登记**
 
 `wpf/Caelus.Wpf.csproj`：在 `<Page Include="Themes\Colors.Light.xaml" />`（或相邻 Theme Page 行）后加：
 
@@ -879,7 +880,7 @@ git commit -m "feat(theme): 亮色抹茶棉花糖落地——色板/渐变按钮
         <ResourceDictionary Source="Themes/Illustrations.xaml"/>
 ```
 
-- [ ] **Step 3: 三处落点接线**
+- [x] **Step 3: 三处落点接线**
 
 1. `wpf/Views/LibraryView.xaml`：读 `:21-40` 空态区，把 `EmptyHeroIcon` 那个 48×48 Border 整体替换为（保留 x:Name 防代码后置引用断裂）：
 
@@ -926,7 +927,7 @@ git commit -m "feat(theme): 亮色抹茶棉花糖落地——色板/渐变按钮
               </StackPanel>
 ```
 
-- [ ] **Step 4: 微文案（Lang 三语 + ViewModel）**
+- [x] **Step 4: 微文案（Lang 三语 + ViewModel）**
 
 1. `wpf/WhitelistViewModel.cs:31`：`public string EmptyTitle { get { return "CAELUS SHIELD"; } }` → `public string EmptyTitle { get { return "白名单空空的"; } }`
 2. `Grep -n "white.page.empty" src/Platform/Lang.cs` 定位三语值，改为：
@@ -935,16 +936,16 @@ git commit -m "feat(theme): 亮色抹茶棉花糖落地——色板/渐变按钮
    - ja：`ルールを追加して、守りたいプロセスを入れましょう`
    （只改值不改键，`TestEveryLangKeyIsDefined` 的引用-定义闭环不受影响）
 
-- [ ] **Step 5: 跑自测确认全量绿**
+- [x] **Step 5: 跑自测确认全量绿**
 
 Run: `MSYS_NO_PATHCONV=1 cmd /c "dev.cmd test"`
 Expected: `TOTAL 293` / `FAIL 0`
 
-- [ ] **Step 6: 人工看三处空态**
+- [x] **Step 6: 人工看三处空态**
 
 Run: `MSYS_NO_PATHCONV=1 cmd /c "dev.cmd"`：清空游戏库/白名单看空态插画与文案；体检满分样本看达标插画（可用 ApplySampleResult 探针路径验证，样例综合评估 82 分<85 不触发，需真跑满分或临时构造）。
 
-- [ ] **Step 7: Commit**
+- [x] **Step 7: Commit**
 
 ```bash
 git add wpf/Themes/Illustrations.xaml wpf/Caelus.Wpf.csproj wpf/App.xaml wpf/Views/LibraryView.xaml wpf/Views/WhitelistView.xaml wpf/Views/AuditView.xaml wpf/WhitelistViewModel.cs wpf/AuditViewModel.cs src/Platform/Lang.cs
@@ -962,23 +963,23 @@ git commit -m "feat(ui): 空态插画 3 处（游戏库/白名单/体检达标�
 - Consumes: 批 1 + 批 2 全部产物
 - Produces: 无（验收收尾任务）
 
-- [ ] **Step 1: 重摄全矩阵**
+- [x] **Step 1: 重摄全矩阵**
 
 Run: `MSYS_NO_PATHCONV=1 cmd /c "powershell -ExecutionPolicy Bypass -File scripts\shoot-all.ps1"`
 Expected: 76 张 PNG 输出到 `docs/shots/`，脚本无异常
 
-- [ ] **Step 2: 人工核对矩阵**
+- [x] **Step 2: 人工核对矩阵**
 
 `git status --short docs/shots` 列出变化文件：
 - **亮色 38 张**：必须变化——逐张或抽查关键页（概览/设置/游戏库空态/白名单空态/体检），确认米白底、抹茶渐变按钮、墨绿文字、插画呈现、竞技=橙/自定义=金不变
 - **暗色 38 张**：应无变化；`git diff --stat docs/shots | grep -i dark` 若有暗色文件变化，打开逐张排查（只允许时间戳/日志内容类噪声），发现真漂移回 Task 7/8 排桥接值
 
-- [ ] **Step 3: 真机冒烟**
+- [x] **Step 3: 真机冒烟**
 
 Run: `MSYS_NO_PATHCONV=1 cmd /c "powershell -ExecutionPolicy Bypass -File scripts\app-smoke-test.ps1"`
 Expected: 冒烟全过（与 2026-09-29 早些时候基线一致）
 
-- [ ] **Step 4: 规格偏差回写**
+- [x] **Step 4: 规格偏差回写**
 
 在 `docs/superpowers/specs/2026-09-29-matcha-marshmallow-uiux-design.md` §8 末尾追加：
 
@@ -992,7 +993,7 @@ Expected: 冒烟全过（与 2026-09-29 早些时候基线一致）
   6. §5.2 体检达标走新增 IsExcellent 触发位（插画+caption），HealthLabel 不动
 ```
 
-- [ ] **Step 5: 自测计数同步 290→293**
+- [x] **Step 5: 自测计数同步 290→293**
 
 三语 README 与 M12 里程碑参照 c67b14b 的做法替换计数（zh 4 处、en 2 处、ja 2 处、M12 验收行 1 处）：
 `Grep -n "290" README.md README.en.md README.ja.md plan/milestones/M12-构建打包与自测验证.md` 逐处改 293；M12 完成记录区追加一行：
@@ -1001,7 +1002,7 @@ Expected: 冒烟全过（与 2026-09-29 早些时候基线一致）
 - 2026-09-29 双轨 UI/UX 优化（苹果动效+亮色抹茶棉花糖）：动效自测 +3（弹簧预设映射/插值边界/NumberRoll 禁用直出），自测基线 290 → 293 项，dev.cmd test 门禁 FAIL 0 维持
 ```
 
-- [ ] **Step 6: Commit + 推送**
+- [x] **Step 6: Commit + 推送**
 
 ```bash
 git add docs/shots docs/superpowers/specs/2026-09-29-matcha-marshmallow-uiux-design.md README.md README.en.md README.ja.md plan/milestones/M12-构建打包与自测验证.md

@@ -1,4 +1,5 @@
 # Phase 1.5 实现计划：Radium 座舱化（视觉材质层演进）
+> **落地状态（2026-10-01 复核）**：全部任务已落地——e121ad2（merge Phase 1 + 1.5）；下文复选框为事后回填的执行记录。
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
@@ -57,7 +58,7 @@
 - Test: `tests/SelfTests.UiShared.cs`（追加）
 - Modify: `tests/SelfTests.cs`（在概览 VM 三个测试注册行之后追加）
 
-- [ ] **Step 1: 写失败测试**
+- [x] **Step 1: 写失败测试**
 
 `tests/SelfTests.UiShared.cs` 追加（文件末尾 class 内）：
 
@@ -136,12 +137,12 @@
             test("模式色板：ModeAccent 深浅两档对比度达到 AA", TestModeAccentContrast);
 ```
 
-- [ ] **Step 2: 运行测试确认失败**
+- [x] **Step 2: 运行测试确认失败**
 
 `cmd //c "dev.cmd test"`
 预期：FAIL（`AppMode`/`ModeColors`/`ModePalette` 不存在，编译错误）。
 
-- [ ] **Step 3: 最小实现**
+- [x] **Step 3: 最小实现**
 
 新建 `src/UiShared/ModePalette.cs`（色值严格按规格 §4.3）：
 
@@ -218,13 +219,13 @@ namespace CaelusApp
 }
 ```
 
-- [ ] **Step 4: 运行测试确认通过**
+- [x] **Step 4: 运行测试确认通过**
 
 `cmd //c "dev.cmd test"`
 预期：`TOTAL 169  PASS 166  FAIL 0  SKIP 3`。
 若 `TestModeAccentContrast` 失败（某档对比度不足 4.5:1），按 Phase 1 Task 2 先例处理：同色相微调加深/提亮至达标，同步更新本文件与规格 §4.3 表，报告 DONE_WITH_CONCERNS 并注明新色值。
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add src/UiShared/ModePalette.cs tests/SelfTests.UiShared.cs tests/SelfTests.cs
@@ -241,7 +242,7 @@ git commit -m "feat: ModePalette 模式氛围色板（巡航/战备/工程，规
 - Modify: `wpf/ThemeManager.cs`
 - Modify: `wpf/Caelus.Wpf.csproj`
 
-- [ ] **Step 1: 三个模式字典**
+- [x] **Step 1: 三个模式字典**
 
 `wpf/Themes/Mode.Standard.xaml`（Fade 孪生 = 同 RGB、alpha 00，供渐变末端的透明停靠点；net4 的 GradientStop 无 Opacity 属性，必须用带 alpha 的 Color）：
 
@@ -271,7 +272,7 @@ git commit -m "feat: ModePalette 模式氛围色板（巡航/战备/工程，规
 
 `wpf/Themes/Mode.Custom.xaml`：同构，色值替换为 `AmbientPrimary=#8B5CF6`（Fade `#008B5CF6`）、`AmbientSecondary=#6D4AC8`（Fade `#006D4AC8`）、`ModeAccentOnDark=#A78BFA`、`ModeAccentOnLight=#7C3AED`。
 
-- [ ] **Step 2: Colors.Dark.xaml 追加玻璃配方键**
+- [x] **Step 2: Colors.Dark.xaml 追加玻璃配方键**
 
 在 `wpf/Themes/Colors.Dark.xaml` 的画刷区末尾（`TextTertiaryBrush` 之后）追加（alpha 已换算为 hex，注释标注意图）：
 
@@ -293,7 +294,7 @@ git commit -m "feat: ModePalette 模式氛围色板（巡航/战备/工程，规
   <SolidColorBrush x:Key="ModeAccentBrush" Color="{DynamicResource ModeAccentOnDarkColor}"/>
 ```
 
-- [ ] **Step 3: Colors.Light.xaml 追加浅色配方**
+- [x] **Step 3: Colors.Light.xaml 追加浅色配方**
 
 在 `wpf/Themes/Colors.Light.xaml` 画刷区末尾追加（规格 §4.1 浅色配方：填充白 55-75%、边框黑 6-10%）：
 
@@ -316,7 +317,7 @@ git commit -m "feat: ModePalette 模式氛围色板（巡航/战备/工程，规
 
 注意：`xmlns:sys` 内联声明与 Tokens.xaml 的做法一致（旧 XAML 编译器对内联命名空间兼容良好）。
 
-- [ ] **Step 4: ThemeManager 双轴升级**
+- [x] **Step 4: ThemeManager 双轴升级**
 
 `wpf/ThemeManager.cs` 替换为：
 
@@ -377,7 +378,7 @@ namespace CaelusApp.WpfHost
 
 注意：本任务先不改调用方（`App.xaml.cs` 仍调旧签名 `Apply(this, UiTone.Light)`），下一任务统一改。因此本 Step 完成后**编译会暂时失败**（旧签名不存在）——同时把 `wpf/App.xaml.cs` 中两处调用临时改为 `ThemeManager.Apply(this, UiTone.Light, AppMode.Standard)`（正常启动分支与 RunShot 内的 `ThemeManager.Apply(this, tone)`），保证编译通过；Task 3/6/7 再做完整接线。
 
-- [ ] **Step 5: csproj 注册**
+- [x] **Step 5: csproj 注册**
 
 `wpf/Caelus.Wpf.csproj` 的 Page 列表追加：
 
@@ -387,17 +388,17 @@ namespace CaelusApp.WpfHost
     <Page Include="Themes\Mode.Custom.xaml" />
 ```
 
-- [ ] **Step 6: 构建验证**
+- [x] **Step 6: 构建验证**
 
 `cmd //c build-wpf.cmd`
 预期：`WPF Build OK`。
 
-- [ ] **Step 7: 自测回归**
+- [x] **Step 7: 自测回归**
 
 `cmd //c "dev.cmd test"`
 预期：`TOTAL 169  PASS 166  FAIL 0  SKIP 3`（UiShared 未动，与 Task 1 后一致）。
 
-- [ ] **Step 8: Commit**
+- [x] **Step 8: Commit**
 
 ```bash
 git add wpf/
@@ -413,7 +414,7 @@ git commit -m "feat: 模式资源字典与双轴 ThemeManager（四槽主题架�
 - Modify: `wpf/MainWindow.xaml`（根 Grid 底层放置）
 - Modify: `wpf/Caelus.Wpf.csproj`
 
-- [ ] **Step 1: AmbientLayer 控件**
+- [x] **Step 1: AmbientLayer 控件**
 
 `wpf/Controls/AmbientLayer.xaml`：
 
@@ -528,7 +529,7 @@ namespace CaelusApp.WpfHost.Controls
 
 注意：`UiMotion.NumberRollMs`（400ms）复用为氛围过渡时长，与规格 §6 一致。`Motion.Reduced`/`Motion.Enabled` 来自 Phase 1 的 `wpf/Motion.cs`。
 
-- [ ] **Step 2: MainWindow 集成**
+- [x] **Step 2: MainWindow 集成**
 
 `wpf/MainWindow.xaml`：在根 Grid 内、标题栏 Border **之前**插入（保持在视觉最底层），并给根 Grid 的 AmbientLayer 跨两行：
 
@@ -561,7 +562,7 @@ Grid 顶部需要声明控件命名空间。Window 根元素的 xmlns 区追加�
         }
 ```
 
-- [ ] **Step 3: csproj 注册**
+- [x] **Step 3: csproj 注册**
 
 Page 追加：
 
@@ -577,12 +578,12 @@ Compile 追加：
     </Compile>
 ```
 
-- [ ] **Step 4: 构建 + 冒烟**
+- [x] **Step 4: 构建 + 冒烟**
 
 `cmd //c build-wpf.cmd`，然后运行 `./wpf/bin/Release/CaelusWpf.exe --wpf-shot "$TEMP/AmbientCheck"`。
 预期：构建 OK；截图正常生成且右上角可见淡青色光域（常规模式默认）。
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add wpf/
@@ -596,7 +597,7 @@ git commit -m "feat: AmbientLayer 环境光控件（两对光域交替交叉淡�
 **Files:**
 - Modify: `wpf/Themes/Styles.xaml`
 
-- [ ] **Step 1: 升级样式字典**
+- [x] **Step 1: 升级样式字典**
 
 `wpf/Themes/Styles.xaml` 整体替换为（变更点：CardBorder 用玻璃画刷 + 投影；NavItem 选中态用 ModeAccent；SegmentHost/SegmentItem 玻璃化；PrimaryButton 用 ModeAccentBrush）：
 
@@ -746,7 +747,7 @@ git commit -m "feat: AmbientLayer 环境光控件（两对光域交替交叉淡�
 
 上表引用了两个新别名键 `ModeAccentSoftBrush`（ModeAccent 12% 底）与 `ModeAccentEdgeBrush`（ModeAccent 33% 描边），它们随模式变化，必须放在模式字典里。
 
-- [ ] **Step 2: 模式字典追加软底/描边画刷**
+- [x] **Step 2: 模式字典追加软底/描边画刷**
 
 三个 `wpf/Themes/Mode.*.xaml` 各自追加（Standard 示例，Competitive/Custom 用各自 OnDark 色换算；12%≈1F、33%≈54）：
 
@@ -760,7 +761,7 @@ Competitive：`#1FFF6B74` / `#54FF6B74`。Custom：`#1FA78BFA` / `#54A78BFA`。
 
 注意：浅色主题下 OnDark 色过亮，选中态可读性会受影响——浅色日间模式本次只做巡航浅验证图，若发现导航选中文字在浅色下不清，记录为遗留项（规格 §8 已声明浅色完整打磨不在本阶段范围）。
 
-- [ ] **Step 3: 构建 + 截图目检**
+- [x] **Step 3: 构建 + 截图目检**
 
 ```bash
 cmd //c build-wpf.cmd
@@ -769,7 +770,7 @@ cmd //c build-wpf.cmd
 
 预期：构建 OK；截图中卡片呈半透明玻璃质感、导航选中有青色软底。
 
-- [ ] **Step 4: Commit**
+- [x] **Step 4: Commit**
 
 ```bash
 git add wpf/
@@ -785,7 +786,7 @@ git commit -m "feat: 玻璃样式升级（面板 alpha 分层 + 内高光 + 投�
 - Modify: `wpf/Views/OverviewView.xaml`
 - Modify: `wpf/Caelus.Wpf.csproj`（如 Converters 已注册则无需动）
 
-- [ ] **Step 1: KeyColorConverter**
+- [x] **Step 1: KeyColorConverter**
 
 `wpf/Converters.cs` 追加（语义键 → Color，供 DropShadowEffect.Color 绑定）：
 
@@ -807,7 +808,7 @@ git commit -m "feat: 玻璃样式升级（面板 alpha 分层 + 内高光 + 投�
     }
 ```
 
-- [ ] **Step 2: OverviewView 玻璃化与语义发光**
+- [x] **Step 2: OverviewView 玻璃化与语义发光**
 
 `wpf/Views/OverviewView.xaml` 修改点（布局结构不动，只换材质）：
 
@@ -856,7 +857,7 @@ git commit -m "feat: 玻璃样式升级（面板 alpha 分层 + 内高光 + 投�
 
 注意：进度条列宽保持 Task 10 修复后的互补 star 写法（`FracLen` + `ConverterParameter=rest`），不要回退。
 
-- [ ] **Step 3: 构建 + 截图目检**
+- [x] **Step 3: 构建 + 截图目检**
 
 ```bash
 cmd //c build-wpf.cmd
@@ -865,12 +866,12 @@ cmd //c build-wpf.cmd
 
 预期：构建 OK；结论图标有柔和状态色光晕、进度条填充有发光、战备语义不被模式色污染（当前仅常规模式，绿灯/绿条）。
 
-- [ ] **Step 4: 自测回归**
+- [x] **Step 4: 自测回归**
 
 `cmd //c "dev.cmd test"`
 预期：`TOTAL 169  PASS 166  FAIL 0  SKIP 3`。
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add wpf/
@@ -889,7 +890,7 @@ git commit -m "feat: 概览页语义发光（状态图标+进度条）与玻璃�
 - Modify: `wpf/App.xaml.cs`（启动读持久化模式）
 - Modify: `wpf/Caelus.Wpf.csproj`
 
-- [ ] **Step 1: SampleOverviewSource 支持模式切换**
+- [x] **Step 1: SampleOverviewSource 支持模式切换**
 
 `src/UiShared/OverviewViewModel.cs` 中 `SampleOverviewSource` 替换为：
 
@@ -917,7 +918,7 @@ git commit -m "feat: 概览页语义发光（状态图标+进度条）与玻璃�
     }
 ```
 
-- [ ] **Step 2: ModeController**
+- [x] **Step 2: ModeController**
 
 新建 `wpf/ModeController.cs`：
 
@@ -965,7 +966,7 @@ namespace CaelusApp.WpfHost
 
 注意：`Settings`/`PerformancePreset` 来自链接编译的 `src/Platform/Settings.cs` 与 `src/Core/Detection/GameProfiles.cs`，同在 `CaelusApp` 命名空间，直接可用。
 
-- [ ] **Step 3: MainWindow 分段控件接线**
+- [x] **Step 3: MainWindow 分段控件接线**
 
 `wpf/MainWindow.xaml`：三个模式 RadioButton 加 x:Name 和 Checked 事件：
 
@@ -1057,7 +1058,7 @@ namespace CaelusApp.WpfHost
 }
 ```
 
-- [ ] **Step 4: App.xaml.cs 启动读模式 + 默认深色**
+- [x] **Step 4: App.xaml.cs 启动读模式 + 默认深色**
 
 `wpf/App.xaml.cs` 正常启动分支改为（规格 §2 决策 3：深色为默认主题）：
 
@@ -1071,13 +1072,13 @@ namespace CaelusApp.WpfHost
 
 RunShot 中的 `ThemeManager.Apply(this, tone)` 改为 `ThemeManager.Apply(this, tone, AppMode.Standard)`（Task 7 扩展矩阵）。
 
-- [ ] **Step 5: csproj 注册**
+- [x] **Step 5: csproj 注册**
 
 ```xml
     <Compile Include="ModeController.cs" />
 ```
 
-- [ ] **Step 6: 构建 + 实机验证**
+- [x] **Step 6: 构建 + 实机验证**
 
 `cmd //c build-wpf.cmd`，然后正常运行 `./wpf/bin/Release/CaelusWpf.exe`：
 - 默认深色启动，巡航青氛围
@@ -1086,12 +1087,12 @@ RunShot 中的 `ThemeManager.Apply(this, tone)` 改为 `ThemeManager.Apply(this,
 - 关闭重开：保持上次模式
 - 系统「减少动画」开启时：切换瞬时完成
 
-- [ ] **Step 7: 自测回归**
+- [x] **Step 7: 自测回归**
 
 `cmd //c "dev.cmd test"`
 预期：`TOTAL 169  PASS 166  FAIL 0  SKIP 3`。
 
-- [ ] **Step 8: Commit**
+- [x] **Step 8: Commit**
 
 ```bash
 git add wpf/ src/UiShared/OverviewViewModel.cs
@@ -1107,7 +1108,7 @@ git commit -m "feat: 模式分段控件真实切换——氛围过渡 + Settings
 - Create: `docs/wpf-phase1_5/`（截图存档）
 - Create: `docs/wpf-phase1_5-verification.md`
 
-- [ ] **Step 1: RunShot 矩阵化**
+- [x] **Step 1: RunShot 矩阵化**
 
 `wpf/App.xaml.cs` 的 `RunShot` 方法替换为：
 
@@ -1157,7 +1158,7 @@ git commit -m "feat: 模式分段控件真实切换——氛围过渡 + Settings
 
 注意：RunShot 顶部已有的 `Motion.Enabled = false`（Task 11 的门控）必须保留，它在 `OnStartup` 的 `--wpf-shot` 分支里设置，不在本方法内——确认勿删。
 
-- [ ] **Step 2: 构建 + 生成矩阵**
+- [x] **Step 2: 构建 + 生成矩阵**
 
 ```bash
 cmd //c build-wpf.cmd
@@ -1166,7 +1167,7 @@ cmd //c build-wpf.cmd
 
 预期：退出码 0，生成 4 张 PNG，无 `wpf-shot.error.txt`。
 
-- [ ] **Step 3: 视觉验收**
+- [x] **Step 3: 视觉验收**
 
 用 Read 工具逐张查看 `docs/wpf-phase1_5/` 四张 PNG，对照规格 §4/§5：
 - `dark-cruise`：青蓝环境光域、玻璃面板、绿灯绿条、导航选中青色软底
@@ -1176,7 +1177,7 @@ cmd //c build-wpf.cmd
 
 不符则修正后重新生成，直至符合。
 
-- [ ] **Step 4: 端到端回归**
+- [x] **Step 4: 端到端回归**
 
 ```bash
 cmd //c "build.cmd"
@@ -1186,7 +1187,7 @@ cmd //c "dev.cmd test"
 
 预期：两个 Build OK；`TOTAL 169  PASS 166  FAIL 0  SKIP 3`。
 
-- [ ] **Step 5: 写验收记录并提交**
+- [x] **Step 5: 写验收记录并提交**
 
 创建 `docs/wpf-phase1_5-verification.md`，记录：构建结果、自测 TOTAL、4 张截图核对结论（逐项对照规格 §4.1 三层材质、§4.2 色彩宪法、§4.3 模式色表）、模式切换实机验证结论、遗留项（浅色日间模式完整打磨、真毛玻璃、其余页面迁移）。
 

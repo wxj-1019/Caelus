@@ -1,4 +1,5 @@
 # Phase 2 实现计划：优化策略页 WPF 迁移
+> **落地状态（2026-10-01 复核）**：全部任务已落地——a722de3 / ab5705f / 0a5267e；下文复选框为事后回填的执行记录。
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
@@ -49,7 +50,7 @@
 - Test: `tests/SelfTests.UiShared.cs`（追加）
 - Modify: `tests/SelfTests.cs`（注册）
 
-- [ ] **Step 1: 写失败测试**
+- [x] **Step 1: 写失败测试**
 
 `tests/SelfTests.UiShared.cs` 追加：
 
@@ -80,12 +81,12 @@
             test("策略项：三分组共 21 项，标题/说明/属性名齐全", TestPolicyItemsCompleteness);
 ```
 
-- [ ] **Step 2: 运行测试确认失败**
+- [x] **Step 2: 运行测试确认失败**
 
 `cmd //c "dev.cmd test"`
 预期：FAIL（`PolicyViewModel` 不存在）。
 
-- [ ] **Step 3: 最小实现**
+- [x] **Step 3: 最小实现**
 
 新建 `src/UiShared/PolicyViewModel.cs`（元数据部分，暂不含 GameMode 接线）：
 
@@ -163,12 +164,12 @@ namespace CaelusApp
 
 注意：`ReadOnlyCollection`、`Array.AsReadOnly`、`yield return` 均为 C# 2.0+ 特性，net4 兼容。
 
-- [ ] **Step 4: 运行测试确认通过**
+- [x] **Step 4: 运行测试确认通过**
 
 `cmd //c "dev.cmd test"`
 预期：`TOTAL 170  PASS 167  FAIL 0  SKIP 3`（166 + 1）。
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add src/UiShared/PolicyViewModel.cs tests/SelfTests.UiShared.cs tests/SelfTests.cs
@@ -184,7 +185,7 @@ git commit -m "feat: PolicyViewModel 策略项元数据（21 项 × 3 分组，�
 - Test: `tests/SelfTests.UiShared.cs`（追加）
 - Modify: `tests/SelfTests.cs`（注册）
 
-- [ ] **Step 1: 写失败测试**
+- [x] **Step 1: 写失败测试**
 
 `tests/SelfTests.UiShared.cs` 追加：
 
@@ -269,12 +270,12 @@ git commit -m "feat: PolicyViewModel 策略项元数据（21 项 × 3 分组，�
             test("策略属性映射：21 项 get/set 正确读写 GameMode", TestPolicyPropertyAccess);
 ```
 
-- [ ] **Step 2: 运行测试确认失败**
+- [x] **Step 2: 运行测试确认失败**
 
 `cmd //c "dev.cmd test"`
 预期：FAIL（`GetLockState`/`GetProperty`/`SetProperty` 不存在）。
 
-- [ ] **Step 3: 最小实现**
+- [x] **Step 3: 最小实现**
 
 `src/UiShared/PolicyViewModel.cs` 追加（在 `AllItems()` 之后）：
 
@@ -371,12 +372,12 @@ git commit -m "feat: PolicyViewModel 策略项元数据（21 项 × 3 分组，�
 
 并相应修改 `TestPolicyPropertyAccess` 的调用和清理（用 `out string dir` 接收，finally 里删 `dir`）。
 
-- [ ] **Step 4: 运行测试确认通过**
+- [x] **Step 4: 运行测试确认通过**
 
 `cmd //c "dev.cmd test"`
 预期：`TOTAL 172  PASS 169  FAIL 0  SKIP 3`（167 + 2）。
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add src/UiShared/PolicyViewModel.cs tests/SelfTests.UiShared.cs tests/SelfTests.cs
@@ -390,7 +391,7 @@ git commit -m "feat: 策略锁定矩阵 + GameMode 属性映射（21 项显式 s
 **Files:**
 - Modify: `wpf/Themes/Styles.xaml`（追加）
 
-- [ ] **Step 1: 追加样式**
+- [x] **Step 1: 追加样式**
 
 在 `wpf/Themes/Styles.xaml` 末尾（`</ResourceDictionary>` 之前）追加：
 
@@ -441,12 +442,12 @@ git commit -m "feat: 策略锁定矩阵 + GameMode 属性映射（21 项显式 s
 
 注意：WPF net4 的 `ToggleButton` 滑块无动画过渡（Storyboard 会显著增加复杂度，Phase 2 先无动画，Phase 4 打磨时加）。`IsEnabled=false` 时 `Opacity=0.4` 实现锁定灰化（复刻 WinForms Toggle 的蒙版效果）。
 
-- [ ] **Step 2: 构建验证**
+- [x] **Step 2: 构建验证**
 
 `cmd //c build-wpf.cmd`
 预期：`WPF Build OK`。
 
-- [ ] **Step 3: Commit**
+- [x] **Step 3: Commit**
 
 ```bash
 git add wpf/Themes/Styles.xaml
@@ -461,7 +462,7 @@ git commit -m "feat: 策略卡片与滑动开关样式（PolicyCard 玻璃底 + 
 - Create: `wpf/Views/PolicyView.xaml`、`wpf/Views/PolicyView.xaml.cs`
 - Modify: `wpf/Caelus.Wpf.csproj`
 
-- [ ] **Step 1: 创建视图**
+- [x] **Step 1: 创建视图**
 
 `wpf/Views/PolicyView.xaml`：
 
@@ -532,7 +533,7 @@ namespace CaelusApp.WpfHost.Views
 }
 ```
 
-- [ ] **Step 2: csproj 注册**
+- [x] **Step 2: csproj 注册**
 
 Page 追加：
 ```xml
@@ -545,12 +546,12 @@ Compile 追加：
     </Compile>
 ```
 
-- [ ] **Step 3: 构建验证**
+- [x] **Step 3: 构建验证**
 
 `cmd //c build-wpf.cmd`
 预期：`WPF Build OK`（绑定路径在运行时才解析，编译不检查 DataContext）。
 
-- [ ] **Step 4: Commit**
+- [x] **Step 4: Commit**
 
 ```bash
 git add wpf/Views/PolicyView.xaml wpf/Views/PolicyView.xaml.cs wpf/Caelus.Wpf.csproj
@@ -567,7 +568,7 @@ git commit -m "feat: PolicyView 视图骨架（滚动 + 模式提示 + 三分组
 - Modify: `wpf/App.xaml.cs`
 - Modify: `wpf/Caelus.Wpf.csproj`
 
-- [ ] **Step 1: 运行时 ViewModel**
+- [x] **Step 1: 运行时 ViewModel**
 
 创建 `wpf/PolicyRuntime.cs`——WPF 绑定用的运行时 ViewModel（不放 UiShared，因为它依赖 WPF 的 `ObservableCollection` 和 `INotifyPropertyChanged`）：
 
@@ -726,7 +727,7 @@ namespace CaelusApp.WpfHost
 
 注意：`PolicyCardViewModel.IsOn` 的 setter 在 `isLocked` 时直接 return（锁定项不可手动切）。但 WPF 绑定会尝试写——这没问题，setter 静默拒绝。确认对话框逻辑（`ConfirmIfNeeded`）在 Task 6 的视图交互中接入。
 
-- [ ] **Step 2: App.xaml.cs 构造 GameMode**
+- [x] **Step 2: App.xaml.cs 构造 GameMode**
 
 `wpf/App.xaml.cs` 正常启动分支，在 `MainWindow w = new MainWindow()` 之前加：
 
@@ -741,7 +742,7 @@ namespace CaelusApp.WpfHost
             MainWindow w = new MainWindow(gameMode);
 ```
 
-- [ ] **Step 3: MainWindow 构造函数 + NavPolicy 路由**
+- [x] **Step 3: MainWindow 构造函数 + NavPolicy 路由**
 
 `wpf/MainWindow.xaml.cs` 修改构造函数链：
 
@@ -826,7 +827,7 @@ ModeChecked 事件中模式切换后刷新策略锁定：
 
 注意：`ModeController` 的 `ToPreset` 当前是 `private static`（`wpf/ModeController.cs:32`）。执行时把它改为 `public static PerformancePreset ToPreset(AppMode mode)`（仅改可见性，方法体不变），然后在 ModeChecked 中用 `gameMode.Preset = ModeController.ToPreset(mode)` 同步 GameMode。不要新增 `AppModeToPreset` 方法（DRY）。
 
-- [ ] **Step 4: 冻结确认对话框接线**
+- [x] **Step 4: 冻结确认对话框接线**
 
 PolicyView 的 XAML 中，ToggleButton 的 Click 事件（PreviewClick——在绑定写入前拦截）接入确认对话框。但 WPF 绑定的 IsChecked 写入时机难拦截。替代方案：PolicyCardViewModel.IsOn setter 内部做确认——但这会让 ViewModel 依赖 MessageBox（不佳但可接受）。
 
@@ -856,13 +857,13 @@ PolicyView 的 XAML 中，ToggleButton 的 Click 事件（PreviewClick——在�
 
 这样移除 `ConfirmIfNeeded` 方法（不再需要），确认逻辑内聚在 setter。
 
-- [ ] **Step 5: csproj 注册**
+- [x] **Step 5: csproj 注册**
 
 ```xml
     <Compile Include="PolicyRuntime.cs" />
 ```
 
-- [ ] **Step 6: 构建 + 自测回归**
+- [x] **Step 6: 构建 + 自测回归**
 
 ```bash
 cmd //c build-wpf.cmd
@@ -871,7 +872,7 @@ cmd //c "dev.cmd test"
 
 预期：WPF Build OK；`TOTAL 172  PASS 169  FAIL 0  SKIP 3`。
 
-- [ ] **Step 7: Commit**
+- [x] **Step 7: Commit**
 
 ```bash
 git add wpf/ src/UiShared/PolicyViewModel.cs
@@ -886,7 +887,7 @@ git commit -m "feat: 策略页运行时接线——GameMode 实例 + PolicyPageV
 - Modify: `wpf/Views/PolicyView.xaml`（完善卡片模板）
 - Modify: `wpf/App.xaml.cs`（截图探针增加策略页）
 
-- [ ] **Step 1: 完善卡片模板**
+- [x] **Step 1: 完善卡片模板**
 
 `wpf/Views/PolicyView.xaml` 中三个 ItemsControl 各加 `ItemTemplate`（每组共享同一模板）：
 
@@ -923,7 +924,7 @@ git commit -m "feat: 策略页运行时接线——GameMode 实例 + PolicyPageV
 
 注意：`ToggleButton` 的 `IsChecked` 绑定是双向的（默认 TwoWay for ToggleButton.IsChecked）。`IsEnabled` 绑定到 `IsEnabled` 属性（= `!IsLocked`）。
 
-- [ ] **Step 2: 截图探针扩展**
+- [x] **Step 2: 截图探针扩展**
 
 `wpf/App.xaml.cs` 的 RunShot 方法，在矩阵循环之后追加策略页截图。在循环内或循环后添加：
 
@@ -976,7 +977,7 @@ RunShot 中替换为：
                 pw.Close();
 ```
 
-- [ ] **Step 3: 构建 + 截图**
+- [x] **Step 3: 构建 + 截图**
 
 ```bash
 cmd //c build-wpf.cmd
@@ -985,16 +986,16 @@ cmd //c build-wpf.cmd
 
 预期：生成 `wpf-policy-dark-cruise.png`，无 error.txt。
 
-- [ ] **Step 4: 视觉验证**
+- [x] **Step 4: 视觉验证**
 
 用 Read 工具或 UIA 检查 `wpf-policy-dark-cruise.png`：21 个卡片分三组可见、开关渲染正确、锁定项有灰化效果、文案无截断。
 
-- [ ] **Step 5: 自测回归**
+- [x] **Step 5: 自测回归**
 
 `cmd //c "dev.cmd test"`
 预期：`TOTAL 172  PASS 169  FAIL 0  SKIP 3`。
 
-- [ ] **Step 6: 端到端回归**
+- [x] **Step 6: 端到端回归**
 
 ```bash
 cmd //c "build.cmd"
@@ -1004,7 +1005,7 @@ cmd //c "dev.cmd test"
 
 预期：两个 Build OK；自测 172/169/0/3。
 
-- [ ] **Step 7: Commit**
+- [x] **Step 7: Commit**
 
 ```bash
 git add wpf/

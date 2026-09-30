@@ -1,4 +1,5 @@
 # UI 重构 Phase 1 实现计划：WPF 骨架 + 设计系统 + 概览页
+> **落地状态（2026-10-01 复核）**：全部任务已落地——e121ad2（merge Phase 1 + 1.5）；下文复选框为事后回填的执行记录。
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
@@ -62,7 +63,7 @@ WPF 项目不会编译 `src/Ui/`，但 `src/Platform/Native.Desktop.cs:91` 引�
 - Test: `tests/SelfTests.UiShared.cs`（新建）
 - Modify: `tests/SelfTests.cs`（注册测试，锚点：`test("模式配色：…` 之后）
 
-- [ ] **Step 1: 写失败测试**
+- [x] **Step 1: 写失败测试**
 
 新建 `tests/SelfTests.UiShared.cs`：
 
@@ -100,12 +101,12 @@ namespace CaelusApp
             test("桌面主题钩子：未注入时安全回退，注入后跟随应用主题", TestNativeLightModeHook);
 ```
 
-- [ ] **Step 2: 运行测试确认失败**
+- [x] **Step 2: 运行测试确认失败**
 
 Git Bash 执行：`cmd //c dev.cmd test`
 预期：FAIL 1 条，`Native` 不包含 `LightModeQuery` 定义（编译错误也算失败）。
 
-- [ ] **Step 3: 最小实现**
+- [x] **Step 3: 最小实现**
 
 `src/Platform/Native.Desktop.cs`：该文件整体是 `internal static partial class Native`（无嵌套 Desktop 类，`Dark()` 直接挂在 `Native` 上）。在 `Dark` 方法旁新增钩子成员，并替换 `Theme.LightMode` 引用：
 
@@ -136,12 +137,12 @@ Git Bash 执行：`cmd //c dev.cmd test`
         }
 ```
 
-- [ ] **Step 4: 运行测试确认通过**
+- [x] **Step 4: 运行测试确认通过**
 
 `cmd //c dev.cmd test`
 预期：`TOTAL 150/0/3`（基线 149 + 新增 1），FAIL=0。
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add src/Platform/Native.Desktop.cs src/Ui/Theme.cs tests/SelfTests.UiShared.cs tests/SelfTests.cs
@@ -159,7 +160,7 @@ git commit -m "refactor: 解除 Platform 对 Ui.Theme 的依赖（主题查询�
 - Test: `tests/SelfTests.UiShared.cs`
 - Modify: `tests/SelfTests.cs`（在 Task 1 注册行之后追加）
 
-- [ ] **Step 1: 写失败测试**
+- [x] **Step 1: 写失败测试**
 
 `tests/SelfTests.UiShared.cs` 追加：
 
@@ -238,12 +239,12 @@ git commit -m "refactor: 解除 Platform 对 Ui.Theme 的依赖（主题查询�
             test("调色板：正文/次级文字与底色对比度达到 AA", TestPaletteContrast);
 ```
 
-- [ ] **Step 2: 运行测试确认失败**
+- [x] **Step 2: 运行测试确认失败**
 
 `cmd //c dev.cmd test`
 预期：FAIL（`UiTone`/`ThemeColors`/`Palette` 不存在，编译错误）。
 
-- [ ] **Step 3: 最小实现**
+- [x] **Step 3: 最小实现**
 
 新建 `src/UiShared/Palette.cs`（色值严格按规格 §3.1）：
 
@@ -322,12 +323,12 @@ namespace CaelusApp
 
 注意：返回共享只读实例（字段为值语义使用，调用方不得修改；如需防止误改，后续可改只读属性，Phase 1 保持简单）。
 
-- [ ] **Step 4: 运行测试确认通过**
+- [x] **Step 4: 运行测试确认通过**
 
 `cmd //c dev.cmd test`
 预期：`TOTAL 153/0/3`。
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add src/UiShared/Palette.cs tests/SelfTests.UiShared.cs tests/SelfTests.cs
@@ -345,7 +346,7 @@ git commit -m "feat: UiShared 调色板（规格 §3.1 语义色+中性色，深
 - Test: `tests/SelfTests.UiShared.cs`
 - Modify: `tests/SelfTests.cs`（追加注册）
 
-- [ ] **Step 1: 写失败测试**
+- [x] **Step 1: 写失败测试**
 
 `tests/SelfTests.UiShared.cs` 追加：
 
@@ -376,12 +377,12 @@ git commit -m "feat: UiShared 调色板（规格 §3.1 语义色+中性色，深
             test("动效：减少动态效果时时长减半且禁用位移", TestMotionReducedPolicy);
 ```
 
-- [ ] **Step 2: 运行测试确认失败**
+- [x] **Step 2: 运行测试确认失败**
 
 `cmd //c dev.cmd test`
 预期：FAIL（`UiMotion` 不存在）。
 
-- [ ] **Step 3: 最小实现**
+- [x] **Step 3: 最小实现**
 
 新建 `src/UiShared/UiMotion.cs`：
 
@@ -415,12 +416,12 @@ namespace CaelusApp
 }
 ```
 
-- [ ] **Step 4: 运行测试确认通过**
+- [x] **Step 4: 运行测试确认通过**
 
 `cmd //c dev.cmd test`
 预期：`TOTAL 155/0/3`。
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add src/UiShared/UiMotion.cs tests/SelfTests.UiShared.cs tests/SelfTests.cs
@@ -439,7 +440,7 @@ ViewModelBase 与 RelayCommand 只依赖 `System.ComponentModel` 与 `System.Win
 - Test: `tests/SelfTests.UiShared.cs`
 - Modify: `tests/SelfTests.cs`（追加注册）
 
-- [ ] **Step 1: 写失败测试**
+- [x] **Step 1: 写失败测试**
 
 `tests/SelfTests.UiShared.cs` 追加：
 
@@ -488,12 +489,12 @@ ViewModelBase 与 RelayCommand 只依赖 `System.ComponentModel` 与 `System.Win
             test("MVVM：RelayCommand 尊重 CanExecute 并执行委托", TestRelayCommand);
 ```
 
-- [ ] **Step 2: 运行测试确认失败**
+- [x] **Step 2: 运行测试确认失败**
 
 `cmd //c dev.cmd test`
 预期：FAIL（类型不存在）。
 
-- [ ] **Step 3: 最小实现**
+- [x] **Step 3: 最小实现**
 
 新建 `src/UiShared/ViewModelBase.cs`：
 
@@ -574,12 +575,12 @@ namespace CaelusApp
 
 注意：WinForms 编译已引用 `System.dll`，`System.Windows.Input.ICommand` 自 .NET 4.0 起在 System.dll 中，无需新增程序集引用。
 
-- [ ] **Step 4: 运行测试确认通过**
+- [x] **Step 4: 运行测试确认通过**
 
 `cmd //c dev.cmd test`
 预期：`TOTAL 157/0/3`。
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add src/UiShared/ViewModelBase.cs src/UiShared/RelayCommand.cs tests/SelfTests.UiShared.cs tests/SelfTests.cs
@@ -597,7 +598,7 @@ git commit -m "feat: MVVM 基座（ViewModelBase / RelayCommand，双宿主共�
 - Test: `tests/SelfTests.UiShared.cs`
 - Modify: `tests/SelfTests.cs`（追加注册）
 
-- [ ] **Step 1: 写失败测试**
+- [x] **Step 1: 写失败测试**
 
 `tests/SelfTests.UiShared.cs` 追加：
 
@@ -650,12 +651,12 @@ git commit -m "feat: MVVM 基座（ViewModelBase / RelayCommand，双宿主共�
             test("概览结论：状态等级映射到语义色 Token 键", TestConclusionColorKeys);
 ```
 
-- [ ] **Step 2: 运行测试确认失败**
+- [x] **Step 2: 运行测试确认失败**
 
 `cmd //c dev.cmd test`
 预期：FAIL（类型不存在）。
 
-- [ ] **Step 3: 最小实现**
+- [x] **Step 3: 最小实现**
 
 新建 `src/UiShared/OverviewStatus.cs`：
 
@@ -765,12 +766,12 @@ namespace CaelusApp
 }
 ```
 
-- [ ] **Step 4: 运行测试确认通过**
+- [x] **Step 4: 运行测试确认通过**
 
 `cmd //c dev.cmd test`
 预期：`TOTAL 160/0/3`。
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add src/UiShared/OverviewStatus.cs tests/SelfTests.UiShared.cs tests/SelfTests.cs
@@ -788,7 +789,7 @@ git commit -m "feat: 概览状态结论与指标分级纯逻辑（规格 §5.1�
 - Test: `tests/SelfTests.UiShared.cs`
 - Modify: `tests/SelfTests.cs`（追加注册）
 
-- [ ] **Step 1: 写失败测试**
+- [x] **Step 1: 写失败测试**
 
 `tests/SelfTests.UiShared.cs` 追加：
 
@@ -868,12 +869,12 @@ git commit -m "feat: 概览状态结论与指标分级纯逻辑（规格 §5.1�
             test("概览 VM：查看详情命令往返切换", TestOverviewDetailToggle);
 ```
 
-- [ ] **Step 2: 运行测试确认失败**
+- [x] **Step 2: 运行测试确认失败**
 
 `cmd //c dev.cmd test`
 预期：FAIL（类型不存在）。
 
-- [ ] **Step 3: 最小实现**
+- [x] **Step 3: 最小实现**
 
 新建 `src/UiShared/OverviewViewModel.cs`：
 
@@ -1046,12 +1047,12 @@ namespace CaelusApp
 }
 ```
 
-- [ ] **Step 4: 运行测试确认通过**
+- [x] **Step 4: 运行测试确认通过**
 
 `cmd //c dev.cmd test`
 预期：`TOTAL 163/0/3`。
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add src/UiShared/OverviewViewModel.cs tests/SelfTests.UiShared.cs tests/SelfTests.cs
@@ -1072,7 +1073,7 @@ git commit -m "feat: 概览 ViewModel 与数据源抽象（含示例数据源）
 - Create: `wpf/Caelus.Wpf.csproj`
 - Create: `build-wpf.cmd`
 
-- [ ] **Step 1: 创建项目文件**
+- [x] **Step 1: 创建项目文件**
 
 `wpf/Properties/AssemblyInfo.cs`：
 
@@ -1267,22 +1268,22 @@ echo WPF Build OK -^> wpf\bin\Release\CaelusWpf.exe
 
 注意：图标通过 csproj 中 `ApplicationIcon` 的 `Exists('..\Caelus.ico')` 条件引用——若先前跑过 `build.cmd` 生成了 `Caelus.ico` 则自动复用，否则跳过；脚本本身不需要图标处理逻辑。全文件保持 ASCII。
 
-- [ ] **Step 2: 构建 WPF 项目**
+- [x] **Step 2: 构建 WPF 项目**
 
 Git Bash 执行：`cmd //c build-wpf.cmd`
 预期：`WPF Build OK -> wpf\bin\Release\CaelusWpf.exe`。若出现 MSB3644（缺 targeting pack 警告）可忽略；若出现引用解析错误，检查 HintPath 与实际 framework 路径。
 
-- [ ] **Step 3: 冒烟运行**
+- [x] **Step 3: 冒烟运行**
 
 `./wpf/bin/Release/CaelusWpf.exe`（会请求管理员权限，属预期）
 预期：空白窗口弹出，标题 Caelus，无异常。关闭窗口。
 
-- [ ] **Step 4: 确认既有构建无回归**
+- [x] **Step 4: 确认既有构建无回归**
 
 `cmd //c dev.cmd test`
 预期：`TOTAL 163/0/3`（与 Task 6 结束一致）。
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add wpf/ build-wpf.cmd
@@ -1302,7 +1303,7 @@ git commit -m "feat: WPF 预览宿主骨架（net40 目标 + 显式 HintPath，�
 - Modify: `wpf/App.xaml`、`wpf/App.xaml.cs`
 - Modify: `wpf/Caelus.Wpf.csproj`（注册新文件）
 
-- [ ] **Step 1: 创建颜色字典**
+- [x] **Step 1: 创建颜色字典**
 
 `wpf/Themes/Colors.Light.xaml`（色值与 `Palette.For(UiTone.Light)` 完全一致）：
 
@@ -1340,7 +1341,7 @@ git commit -m "feat: WPF 预览宿主骨架（net40 目标 + 显式 HintPath，�
 
 `wpf/Themes/Colors.Dark.xaml`：同上结构，色值替换为 `Palette.For(UiTone.Dark)` 的 13 个值。
 
-- [ ] **Step 2: 创建 Token 字典**
+- [x] **Step 2: 创建 Token 字典**
 
 `wpf/Themes/Tokens.xaml`（规格 §3.2/§3.3；WPF 尺寸单位为 1/96 英寸，字号直接用数值）：
 
@@ -1367,7 +1368,7 @@ git commit -m "feat: WPF 预览宿主骨架（net40 目标 + 显式 HintPath，�
 
 注意：`xmlns:sys` 重复声明是为了每个 Double 独立可用；也可以在根节点声明一次后省略内联声明（执行时保持一种即可）。
 
-- [ ] **Step 3: ThemeManager 与 App 接线**
+- [x] **Step 3: ThemeManager 与 App 接线**
 
 `wpf/ThemeManager.cs`：
 
@@ -1442,12 +1443,12 @@ Compile 列表追加：
     <Compile Include="ThemeManager.cs" />
 ```
 
-- [ ] **Step 4: 构建验证**
+- [x] **Step 4: 构建验证**
 
 `cmd //c build-wpf.cmd`
 预期：`WPF Build OK`。注意 Styles.xaml 尚未创建，App.xaml 中对它的引用会导致编译失败——先临时移除该行，或在 Task 9 Step 1 创建 Styles.xaml 后一并验证。**执行顺序：先临时注释掉 Styles.xaml 行，本任务验证 Colors/Tokens 装载；Task 9 再恢复。**
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add wpf/
@@ -1468,7 +1469,7 @@ git commit -m "feat: WPF 主题资源字典（深浅色板 + 字体/间距/圆�
 - Modify: `wpf/Caelus.Wpf.csproj`
 - Modify: `wpf/App.xaml`（恢复 Styles.xaml 引用）
 
-- [ ] **Step 1: 创建样式字典**
+- [x] **Step 1: 创建样式字典**
 
 `wpf/Themes/Styles.xaml`（实现规格 §4.1/§4.5/§4.6 的按钮、导航项、分段控件、卡片）：
 
@@ -1597,7 +1598,7 @@ git commit -m "feat: WPF 主题资源字典（深浅色板 + 字体/间距/圆�
 
 恢复 `wpf/App.xaml` 中 Styles.xaml 的引用（若 Task 8 临时移除了）。
 
-- [ ] **Step 2: 占位视图与概览空壳**
+- [x] **Step 2: 占位视图与概览空壳**
 
 `wpf/Views/PlaceholderView.xaml`：
 
@@ -1656,7 +1657,7 @@ namespace CaelusApp.WpfHost.Views
 }
 ```
 
-- [ ] **Step 3: 主窗口外壳**
+- [x] **Step 3: 主窗口外壳**
 
 `wpf/MainWindow.xaml` 替换为：
 
@@ -1814,12 +1815,12 @@ Compile 追加：
     </Compile>
 ```
 
-- [ ] **Step 4: 构建并冒烟**
+- [x] **Step 4: 构建并冒烟**
 
 `cmd //c build-wpf.cmd`，然后运行 `./wpf/bin/Release/CaelusWpf.exe`
 预期：窗口显示标题栏、左侧导航（概览选中高亮）、顶部“常规/竞技/自定义”分段控件；点击其他导航项显示占位文案；最小化/关闭/拖动可用。
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add wpf/
@@ -1837,7 +1838,7 @@ git commit -m "feat: WPF 外壳——标题栏 / NavRail / 分段控件 / 占位
 - Modify: `wpf/App.xaml.cs`
 - Modify: `wpf/MainWindow.xaml.cs`（暴露主题切换供探针使用）
 
-- [ ] **Step 1: 概览视图**
+- [x] **Step 1: 概览视图**
 
 `wpf/Views/OverviewView.xaml` 替换为以下内容。绑定 OverviewViewModel；语义颜色键经转换器解析为当前主题的 `DynamicResource` 画刷（转换器代码紧随其后，一并在本步创建）；进度条用「比例列宽 Grid」实现，`Fraction` 经 `FractionGridLengthConverter` 转成 `GridLength(f, Star)`：
 
@@ -2044,7 +2045,7 @@ namespace CaelusApp.WpfHost.Views
     <Compile Include="Converters.cs" />
 ```
 
-- [ ] **Step 2: --wpf-shot 截图探针**
+- [x] **Step 2: --wpf-shot 截图探针**
 
 `wpf/App.xaml.cs` 替换为：
 
@@ -2120,7 +2121,7 @@ namespace CaelusApp.WpfHost
 }
 ```
 
-- [ ] **Step 3: 构建 + 生成截图**
+- [x] **Step 3: 构建 + 生成截图**
 
 ```bash
 cmd //c build-wpf.cmd
@@ -2129,7 +2130,7 @@ cmd //c build-wpf.cmd
 
 预期：退出码 0，目录下出现 `wpf-overview-light.png` 与 `wpf-overview-dark.png`，无 `wpf-shot.error.txt`。
 
-- [ ] **Step 4: 视觉验收**
+- [x] **Step 4: 视觉验收**
 
 用 Read 工具查看两张 PNG，对照规格 §5.1：
 - 结论卡片在顶部、图标圆形底、右侧「查看详情」按钮
@@ -2139,7 +2140,7 @@ cmd //c build-wpf.cmd
 
 若渲染与规格不符，修正 XAML 后重复 Step 3-4，直至符合。
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add wpf/
@@ -2157,7 +2158,7 @@ git commit -m "feat: 概览视图（结论卡片+关键指标+渐进披露）与
 - Modify: `wpf/Views/OverviewView.xaml.cs`（进入时淡入）
 - Modify: `wpf/Caelus.Wpf.csproj`
 
-- [ ] **Step 1: Motion 帮助类**
+- [x] **Step 1: Motion 帮助类**
 
 `wpf/Motion.cs`：
 
@@ -2233,7 +2234,7 @@ namespace CaelusApp.WpfHost.Views
     <Compile Include="Motion.cs" />
 ```
 
-- [ ] **Step 2: 构建 + 截图回归**
+- [x] **Step 2: 构建 + 截图回归**
 
 ```bash
 cmd //c build-wpf.cmd
@@ -2242,7 +2243,7 @@ cmd //c build-wpf.cmd
 
 预期：截图仍正常生成（动画完成后截图内容不变）。
 
-- [ ] **Step 3: Commit**
+- [x] **Step 3: Commit**
 
 ```bash
 git add wpf/
@@ -2260,7 +2261,7 @@ git commit -m "feat: 概览页进入动效与减少动态效果降级（规格 �
 - Modify: `wpf/App.xaml.cs`（托盘图标）
 - Modify: `wpf/Caelus.Wpf.csproj`（如需）
 
-- [ ] **Step 1: AutomationProperties 标注**
+- [x] **Step 1: AutomationProperties 标注**
 
 `wpf/MainWindow.xaml` 中为交互元素补充标注：
 
@@ -2280,7 +2281,7 @@ git commit -m "feat: 概览页进入动效与减少动态效果降级（规格 �
 
 `wpf/Views/OverviewView.xaml` 的「查看详情」按钮加 `AutomationProperties.Name="查看或收起诊断详情"`。
 
-- [ ] **Step 2: 托盘图标（System.Windows.Forms.NotifyIcon 互操作）**
+- [x] **Step 2: 托盘图标（System.Windows.Forms.NotifyIcon 互操作）**
 
 `wpf/App.xaml.cs`：`OnStartup` 正常分支（非 --wpf-shot）在 `w.Show()` 之后加入：
 
@@ -2311,17 +2312,17 @@ git commit -m "feat: 概览页进入动效与减少动态效果降级（规格 �
 
 注意：Phase 1 用系统占位图标即可，模式感知图标（IconArt）在 WinForms 侧，正式切换图标属后续阶段。
 
-- [ ] **Step 3: 构建 + 冒烟**
+- [x] **Step 3: 构建 + 冒烟**
 
 `cmd //c build-wpf.cmd`，运行 `./wpf/bin/Release/CaelusWpf.exe`
 预期：托盘出现图标；Tab 键可在导航/分段控件/按钮间移动焦点；关闭窗口后托盘图标消失。
 
-- [ ] **Step 4: 回归自测**
+- [x] **Step 4: 回归自测**
 
 `cmd //c dev.cmd test`
 预期：`TOTAL 163/0/3`。
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add wpf/
@@ -2336,7 +2337,7 @@ git commit -m "feat: 可访问性标注与 WPF 宿主托盘图标验证"
 - Modify: `docs/superpowers/specs/2026-08-09-ui-redesign-design.md`（不动，仅核对）
 - Create: `docs/wpf-phase1-verification.md`（验收记录）
 
-- [ ] **Step 1: 全量构建**
+- [x] **Step 1: 全量构建**
 
 ```bash
 cmd //c "build.cmd"
@@ -2345,12 +2346,12 @@ cmd //c build-wpf.cmd
 
 预期：`Build OK -> Caelus.exe` 与 `WPF Build OK` 均成功。
 
-- [ ] **Step 2: 自测基线**
+- [x] **Step 2: 自测基线**
 
 `cmd //c dev.cmd test`
 预期：`TOTAL 163/0/3`（149 基线 + 14 新增，FAIL=0，SKIP=3）。
 
-- [ ] **Step 3: 视觉验收截图**
+- [x] **Step 3: 视觉验收截图**
 
 ```bash
 ./wpf/bin/Release/CaelusWpf.exe --wpf-shot docs/wpf-phase1
@@ -2358,14 +2359,14 @@ cmd //c build-wpf.cmd
 
 生成 `docs/wpf-phase1/wpf-overview-light.png` 与 `wpf-overview-dark.png`，人工核对规格 §5.1。
 
-- [ ] **Step 4: 系统调用验证（规格 §10 风险项）**
+- [x] **Step 4: 系统调用验证（规格 §10 风险项）**
 
 正常运行 `./wpf/bin/Release/CaelusWpf.exe`（管理员）：
 - 进程监控：WPF 宿主链接编译了 Core/Platform，`GameMode` 等类型可实例化（Task 7 编译通过即验证类型兼容；运行时不启动监控循环属预期——Phase 1 只验证宿主兼容性，监控接线在正式切换时完成）
 - 托盘图标：Task 12 已验证
 - 优先级调整：不属 Phase 1 范围（无 UI 触发入口），记录于验收文档
 
-- [ ] **Step 5: 写验收记录并提交**
+- [x] **Step 5: 写验收记录并提交**
 
 创建 `docs/wpf-phase1-verification.md`，记录：构建结果、自测 TOTAL、截图路径、托盘/键盘验证结论、遗留项（实时指标接线、详情面板内容、图标）。
 

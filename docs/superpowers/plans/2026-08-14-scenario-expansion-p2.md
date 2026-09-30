@@ -1,4 +1,5 @@
 # 场景扩展 P2：开发者专注模式 + IDE 性能优化 实施计划
+> **落地状态（2026-10-01 复核）**：全部任务已落地——310272d（审查 3d64021）；下文复选框为事后回填的执行记录。
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
@@ -58,7 +59,7 @@
 - Test: `tests/SelfTests.DevFocus.cs`
 - Modify: `tests/SelfTests.cs`
 
-- [ ] **Step 1: 写失败测试**
+- [x] **Step 1: 写失败测试**
 
 在 `tests/SelfTests.DevFocus.cs` 类内追加：
 
@@ -119,7 +120,7 @@
             test("开发专注：活性三来源任一即活跃", TestDevFocusActivitySources);
 ```
 
-- [ ] **Step 2: 运行自测确认编译失败**
+- [x] **Step 2: 运行自测确认编译失败**
 
 ```bash
 cmd.exe //c "dev.cmd test"
@@ -127,7 +128,7 @@ cmd.exe //c "dev.cmd test"
 
 预期：编译错误 `CS1061: DevFocus 不包含 SetFocusMode 的定义`。
 
-- [ ] **Step 3: 实现三来源活性重构**
+- [x] **Step 3: 实现三来源活性重构**
 
 `src/Core/Scenario/DevFocus.cs` 的改动（**基于 P1 终态**）：
 
@@ -367,7 +368,7 @@ cmd.exe //c "dev.cmd test"
         }
 ```
 
-- [ ] **Step 4: 运行自测确认通过**
+- [x] **Step 4: 运行自测确认通过**
 
 ```bash
 cmd.exe //c "dev.cmd test"
@@ -385,7 +386,7 @@ cmd.exe //c "dev.cmd test"
         }
 ```
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add src/Core/Scenario/DevFocus.cs tests/
@@ -399,7 +400,7 @@ git commit -m "refactor: DevFocus 三来源活性——编译/专注/IDE 统一�
 **Files:**
 - Modify: `src/Core/Scenario/DevFocus.cs`
 
-- [ ] **Step 1: 写失败测试**
+- [x] **Step 1: 写失败测试**
 
 在 `tests/SelfTests.DevFocus.cs` 类内追加：
 
@@ -450,7 +451,7 @@ git commit -m "refactor: DevFocus 三来源活性——编译/专注/IDE 统一�
             test("开发专注：专注掌权启动校正定时器、挂起即停", TestDevFocusFocusGrantEffects);
 ```
 
-- [ ] **Step 2: 运行自测确认编译失败**
+- [x] **Step 2: 运行自测确认编译失败**
 
 ```bash
 cmd.exe //c "dev.cmd test"
@@ -458,7 +459,7 @@ cmd.exe //c "dev.cmd test"
 
 预期：编译错误（`SetFocusMode`/`FocusTimerRunning` 已存在于 Task 1 的 `dev` 上但行为未实现——实际报错取决于 Task 1 落地程度；若 Task 1 已含属性声明，则表现为**断言失败**而非编译错误，同样满足"先失败"）。
 
-- [ ] **Step 3: 实现专注块**
+- [x] **Step 3: 实现专注块**
 
 **改动 1 — `SweepBuildSuppression` 排除 IDE 进程**（防"IDE 被提优同时又被后台压制"自相矛盾）。找到 P1 终态 `SweepBuildSuppression` 中：
 
@@ -592,7 +593,7 @@ cmd.exe //c "dev.cmd test"
         }
 ```
 
-- [ ] **Step 4: 运行自测确认通过**
+- [x] **Step 4: 运行自测确认通过**
 
 ```bash
 cmd.exe //c "dev.cmd test"
@@ -600,7 +601,7 @@ cmd.exe //c "dev.cmd test"
 
 预期：`TOTAL 194  PASS 192  FAIL 0  SKIP 2`。
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add src/Core/Scenario/DevFocus.cs tests/
@@ -616,7 +617,7 @@ git commit -m "feat: 开发者专注模式核心——Notif 静默 + 持续压�
 - Modify: `src/Platform/Lang.cs`（加 bal.distract / tray.focus / bal.focuson / bal.focusoff）
 - Test: `tests/SelfTests.DevFocus.cs`
 
-- [ ] **Step 1: 写失败测试**
+- [x] **Step 1: 写失败测试**
 
 在 `tests/SelfTests.DevFocus.cs` 类内追加：
 
@@ -673,7 +674,7 @@ git commit -m "feat: 开发者专注模式核心——Notif 静默 + 持续压�
             test("开发专注：分心应用气球每名一次、专注重开可再报", TestDevFocusDistractOnce);
 ```
 
-- [ ] **Step 2: 运行自测确认编译失败**
+- [x] **Step 2: 运行自测确认编译失败**
 
 ```bash
 cmd.exe //c "dev.cmd test"
@@ -683,7 +684,7 @@ cmd.exe //c "dev.cmd test"
 
 **注意**：Task 1 的 `NewDevFocus` 辅助传了 `name => false` 作为第 5 参，本测试直接调 5 参构造——若 Task 1 已落地 5 参构造则编译错误只剩 Lang 键。Lang 键缺失不会编译失败（`Lang.T` 返回键名本身），此测试表现为**断言失败**。可接受（先红后绿）。
 
-- [ ] **Step 3: 实现 DistractCatalog + Lang 键**
+- [x] **Step 3: 实现 DistractCatalog + Lang 键**
 
 新建 `src/Core/Scenario/DistractCatalog.cs`：
 
@@ -762,7 +763,7 @@ namespace CaelusApp
                 DistractCatalog.IsMatch);
 ```
 
-- [ ] **Step 4: 运行自测确认通过**
+- [x] **Step 4: 运行自测确认通过**
 
 ```bash
 cmd.exe //c "dev.cmd test"
@@ -770,7 +771,7 @@ cmd.exe //c "dev.cmd test"
 
 预期：`TOTAL 195  PASS 193  FAIL 0  SKIP 2`。
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add -A
@@ -787,7 +788,7 @@ git commit -m "feat: 分心应用提醒——DistractCatalog 注册表清单 + �
 - Modify: `src/Core/Scenario/DevFocus.cs`（ReconcileIdeBoost/BoostOneIde/RestoreIdeBoost）
 - Test: `tests/SelfTests.DevFocus.cs`
 
-- [ ] **Step 1: 写失败测试**
+- [x] **Step 1: 写失败测试**
 
 在 `tests/SelfTests.DevFocus.cs` 类内追加：
 
@@ -858,7 +859,7 @@ git commit -m "feat: 分心应用提醒——DistractCatalog 注册表清单 + �
             test("开发专注：IDE 提优 AboveNormal 与还原往返", TestDevFocusIdeBoostRestore);
 ```
 
-- [ ] **Step 2: 运行自测确认编译失败**
+- [x] **Step 2: 运行自测确认编译失败**
 
 ```bash
 cmd.exe //c "dev.cmd test"
@@ -866,7 +867,7 @@ cmd.exe //c "dev.cmd test"
 
 预期：编译错误（`IdeCatalog` / `BoostIdeForTest` / `RestoreIdeBoost` 不存在）。
 
-- [ ] **Step 3: 实现**
+- [x] **Step 3: 实现**
 
 **改动 1 — Native.cs 补常量**。找到 `src/Platform/Native.cs` L532：
 
@@ -1082,7 +1083,7 @@ namespace CaelusApp
 
 **改动 4 — 文件顶部 using 确认**：`src/Core/Scenario/DevFocus.cs` 需要 `using System.Diagnostics;`（P1 Task 4 已加）。
 
-- [ ] **Step 4: 运行自测确认通过**
+- [x] **Step 4: 运行自测确认通过**
 
 ```bash
 cmd.exe //c "dev.cmd test"
@@ -1090,7 +1091,7 @@ cmd.exe //c "dev.cmd test"
 
 预期：`TOTAL 197  PASS 195  FAIL 0  SKIP 2`。
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add -A
@@ -1106,7 +1107,7 @@ git commit -m "feat: IDE 性能优化——双校验家族识别 + AboveNormal/I
 - Modify: `src/Program.cs`（TrayMenu 创建实参）
 - Test: 无新增（UI 冒烟覆盖）
 
-- [ ] **Step 1: TrayMenu 注入 DevFocus**
+- [x] **Step 1: TrayMenu 注入 DevFocus**
 
 找到 `src/Ui/TrayMenu.cs` L128 构造：
 
@@ -1133,7 +1134,7 @@ git commit -m "feat: IDE 性能优化——双校验家族识别 + AboveNormal/I
         private readonly DevFocus devFocus;
 ```
 
-- [ ] **Step 2: Rebuild 加专注开关**
+- [x] **Step 2: Rebuild 加专注开关**
 
 找到 `src/Ui/TrayMenu.cs` Rebuild 中 L222 附近：
 
@@ -1156,7 +1157,7 @@ git commit -m "feat: IDE 性能优化——双校验家族识别 + AboveNormal/I
             }));
 ```
 
-- [ ] **Step 3: Program.cs 同步 TrayMenu 创建**
+- [x] **Step 3: Program.cs 同步 TrayMenu 创建**
 
 找到 `src/Program.cs` 中（L324 附近）：
 
@@ -1172,7 +1173,7 @@ git commit -m "feat: IDE 性能优化——双校验家族识别 + AboveNormal/I
                 () => panel.ShowPanel(),
 ```
 
-- [ ] **Step 4: 全量回归 + 双构建**
+- [x] **Step 4: 全量回归 + 双构建**
 
 ```bash
 cmd.exe //c "dev.cmd test"
@@ -1182,14 +1183,14 @@ cmd.exe //c "build-wpf.cmd"
 
 预期：`TOTAL 197  PASS 195  FAIL 0  SKIP 2`；两个构建均 OK。
 
-- [ ] **Step 5: 冒烟验证（手动）**
+- [x] **Step 5: 冒烟验证（手动）**
 
 1. 启动 `Caelus.exe`，托盘菜单勾选"专注模式"→ 日志出现"开发专注：获得掌职权（…专注=True…）"
 2. 注册表 `HKCU\Software\Caelus` 的 `DevFocusDistractList` 写入 `discord;steam`，专注模式下启动其中任一程序 → 托盘气球提醒一次
 3. 启动真实 IDE（VS/VSCode）→ 任务管理器确认其优先级变为"高于标准"；关闭 IDE 窗口 → 30 秒内还原
 4. 取消专注勾选 → 日志出现"挂起，全部副作用已还原"
 
-- [ ] **Step 6: Commit**
+- [x] **Step 6: Commit**
 
 ```bash
 git add -A && git commit -m "feat: 托盘菜单专注模式快速开关（P2 收尾，197 项自测 0 失败）"

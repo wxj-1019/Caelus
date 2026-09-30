@@ -1,4 +1,5 @@
 # 场景扩展 P4：系统健康维护 + UI 完善 实施计划
+> **落地状态（2026-10-01 复核）**：全部任务已落地——0579669（审查 3d64021）；下文复选框为事后回填的执行记录。
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
@@ -54,7 +55,7 @@
 - Modify: `src/Core/Scenario/DevFocus.cs`
 - Modify: `tests/SelfTests.DevFocus.cs`（两个测试加注册表恢复）
 
-- [ ] **Step 1: DevFocus.cs 修正**
+- [x] **Step 1: DevFocus.cs 修正**
 
 **改动 1** — 删除字段 `private bool focusOn;`，属性替换为实时读：
 
@@ -101,7 +102,7 @@
 
 `ReconcileTick` 内 `lock (sync) focus = focusOn;` → `focus = FocusModeOn;`（注册表读不需要锁，但保留锁内读取无害——改为锁外读更干净：`bool focus = FocusModeOn;`）。
 
-- [ ] **Step 2: 测试加注册表恢复**
+- [x] **Step 2: 测试加注册表恢复**
 
 以下**三个**测试都通过 `SetFocusMode` 写真实注册表，finally 块在 `dev.Stop()` 后追加恢复（防污染）：
 
@@ -113,7 +114,7 @@
                 try { Settings.Save("DevFocusModeOn", false); } catch { }
 ```
 
-- [ ] **Step 3: 全量自测回归**
+- [x] **Step 3: 全量自测回归**
 
 ```bash
 cmd.exe //c "dev.cmd test"
@@ -121,7 +122,7 @@ cmd.exe //c "dev.cmd test"
 
 预期：`TOTAL 203  PASS 201  FAIL 0  SKIP 2`（与 P3 终态一致）。
 
-- [ ] **Step 4: Commit**
+- [x] **Step 4: Commit**
 
 ```bash
 git add -A && git commit -m "fix: 专注开关实时读注册表——WPF 宿主跨进程修改即时生效（P2 修正）"
@@ -136,7 +137,7 @@ git add -A && git commit -m "fix: 专注开关实时读注册表——WPF 宿主
 - Test: `tests/SelfTests.HealthCare.cs`
 - Modify: `tests/SelfTests.cs`
 
-- [ ] **Step 1: 写失败测试**
+- [x] **Step 1: 写失败测试**
 
 新建 `tests/SelfTests.HealthCare.cs`：
 
@@ -215,7 +216,7 @@ namespace CaelusApp
             test("健康维护：到点判定覆盖从未运行与损坏数据", TestHealthCareIsDue);
 ```
 
-- [ ] **Step 2: 运行自测确认编译失败**
+- [x] **Step 2: 运行自测确认编译失败**
 
 ```bash
 cmd.exe //c "dev.cmd test"
@@ -223,7 +224,7 @@ cmd.exe //c "dev.cmd test"
 
 预期：编译错误（`StartupAudit`/`HealthCare` 不存在）。
 
-- [ ] **Step 3: 实现 StartupAudit.cs**
+- [x] **Step 3: 实现 StartupAudit.cs**
 
 ```csharp
 // @author zenjiro 18967498922@163.com
@@ -349,7 +350,7 @@ namespace CaelusApp
 
 **注意**：测试中基线文件行含 `|` 字符——上述实现用 **TAB 分隔 + 反斜杠转义**，竖线无需转义。测试 `TestStartupAuditBaselineRoundtrip` 的断言（"App|特殊" 往返）对此成立。若落地时改用其他分隔符，同步调整测试。
 
-- [ ] **Step 4: 运行自测确认通过（部分）**
+- [x] **Step 4: 运行自测确认通过（部分）**
 
 ```bash
 cmd.exe //c "dev.cmd test"
@@ -357,7 +358,7 @@ cmd.exe //c "dev.cmd test"
 
 预期：编译错误仅剩 `HealthCare.IsDue` 不存在；`StartupAudit` 两项测试应已通过（报告里 PASS）。
 
-- [ ] **Step 5: 实现 HealthCare.cs**
+- [x] **Step 5: 实现 HealthCare.cs**
 
 ```csharp
 // @author zenjiro 18967498922@163.com
@@ -433,7 +434,7 @@ namespace CaelusApp
 
 在 `tests/SelfTests.cs` 注册已在 Step 1 完成。
 
-- [ ] **Step 6: 运行自测确认通过**
+- [x] **Step 6: 运行自测确认通过**
 
 ```bash
 cmd.exe //c "dev.cmd test"
@@ -441,7 +442,7 @@ cmd.exe //c "dev.cmd test"
 
 预期：`TOTAL 206  PASS 204  FAIL 0  SKIP 2`。
 
-- [ ] **Step 7: Commit**
+- [x] **Step 7: Commit**
 
 ```bash
 git add -A && git commit -m "feat: 系统健康维护——启动项基线审查 + 着色器缓存到点清理（3 项自测）"
@@ -458,7 +459,7 @@ git add -A && git commit -m "feat: 系统健康维护——启动项基线审查
 - Modify: `src/Program.cs`
 - Modify: `src/Platform/Lang.cs`
 
-- [ ] **Step 1: DailyCare 挂载**
+- [x] **Step 1: DailyCare 挂载**
 
 找到 `DailyCare.cs` 的 `ReconcileTick`（P3 终态）：
 
@@ -484,7 +485,7 @@ git add -A && git commit -m "feat: 系统健康维护——启动项基线审查
                 HealthCare.RunIfDue();   // 到点判定内部做，未到期零开销
 ```
 
-- [ ] **Step 2: PanelForm 注入 DevFocus**
+- [x] **Step 2: PanelForm 注入 DevFocus**
 
 找到 `src/Ui/PanelForm.cs` L83 构造签名：
 
@@ -524,7 +525,7 @@ git add -A && git commit -m "feat: 系统健康维护——启动项基线审查
 
 （若代码库还有其他 `new PanelForm(` 调用点——如测试或预览探针——运行 `grep -rn "new PanelForm(" src/ tests/ | grep -v "PanelForm.cs"` 全部同步。）
 
-- [ ] **Step 3: WinForms 设置页——开发区扩展**
+- [x] **Step 3: WinForms 设置页——开发区扩展**
 
 找到 `src/Ui/Pages/PanelForm.SettingsPage.cs` 的自定义编译进程块结束处（`sy += 114;` 之后、`Section(scroll, Lang.T("sec.maint"), ...)` 之前），插入：
 
@@ -567,7 +568,7 @@ git add -A && git commit -m "feat: 系统健康维护——启动项基线审查
 
 字段区加 `private Toggle swFocus;`——先 `grep -n "private Toggle swDev" src/Ui/Pages/PanelForm.SettingsPage.cs` 确认 swDev 的声明类型与位置，照抄声明。
 
-- [ ] **Step 4: WinForms 设置页——日常区**
+- [x] **Step 4: WinForms 设置页——日常区**
 
 在 Step 3 插入块之后继续插入（仍在 `sec.maint` 之前）：
 
@@ -607,7 +608,7 @@ git add -A && git commit -m "feat: 系统健康维护——启动项基线审查
 
 **确认 `Lang.F` 存在**（带格式参数）：`grep -n "public static string F(" src/Platform/Lang.cs`——现有用法 `Lang.F("mode.tray.current", ...)`（TrayMenu.cs）已证实存在。
 
-- [ ] **Step 5: Lang.cs 加键**
+- [x] **Step 5: Lang.cs 加键**
 
 在 `bal.daily.batt` 行后插入：
 
@@ -625,7 +626,7 @@ git add -A && git commit -m "feat: 系统健康维护——启动项基线审查
             { "set.startup.scanned", new[]{ "审查完成：{0} 项新增" } },
 ```
 
-- [ ] **Step 6: 全量自测 + 构建**
+- [x] **Step 6: 全量自测 + 构建**
 
 ```bash
 cmd.exe //c "dev.cmd test"
@@ -634,7 +635,7 @@ cmd.exe //c "build.cmd"
 
 预期：`TOTAL 206  PASS 204  FAIL 0  SKIP 2`；构建 OK。
 
-- [ ] **Step 7: Commit**
+- [x] **Step 7: Commit**
 
 ```bash
 git add -A && git commit -m "feat: DailyCare 挂载健康维护 + WinForms 设置页开发区/日常区"
@@ -648,7 +649,7 @@ git add -A && git commit -m "feat: DailyCare 挂载健康维护 + WinForms 设�
 - Modify: `wpf/SettingsViewModel.cs`
 - Modify: `wpf/Views/SettingsView.xaml`
 
-- [ ] **Step 1: SettingsViewModel 加属性**
+- [x] **Step 1: SettingsViewModel 加属性**
 
 找到 `wpf/SettingsViewModel.cs` 的 `devMode` 属性区域（L31 附近字段、L109-131 属性），在其后追加：
 
@@ -703,7 +704,7 @@ git add -A && git commit -m "feat: DailyCare 挂载健康维护 + WinForms 设�
 
 **确认 ViewModel 基类的属性通知方法名**：`grep -n "OnPropertyChanged\|RaiseProperty" src/UiShared/ViewModelBase.cs | head -3`——按实际方法名调整（WPF 的 SettingsViewModel 继承关系见其类声明；若它直接用 `SetField` 模式则照抄现有 DevMode 属性的写法）。
 
-- [ ] **Step 2: SettingsView.xaml 加行**
+- [x] **Step 2: SettingsView.xaml 加行**
 
 找到开发区 `Border` 块中 `BtnDevSave` 所在 `PolicyRow` 的结束标签之后（`ZoneMaint` 的 `StackPanel` 开始之前），插入专注开关行：
 
@@ -729,7 +730,7 @@ ViewModel 补 `public string StartupNewsTitle { get { return Lang.T("set.startup
 
 **注意 XAML 注释陷阱（memory）**：WPF XAML 不支持 `StrokeLineCap`，用 `StrokeStartLineCap`/`StrokeEndLineCap`——本任务不涉及 Path 图标，无需处理。
 
-- [ ] **Step 3: WPF 构建验证**
+- [x] **Step 3: WPF 构建验证**
 
 ```bash
 cmd.exe //c "build-wpf.cmd"
@@ -737,7 +738,7 @@ cmd.exe //c "build-wpf.cmd"
 
 预期：`WPF Build OK`。
 
-- [ ] **Step 4: Commit**
+- [x] **Step 4: Commit**
 
 ```bash
 git add -A && git commit -m "feat: WPF 设置页同步——专注模式/日常调度开关 + 启动项新报告展示"
@@ -754,7 +755,7 @@ git add -A && git commit -m "feat: WPF 设置页同步——专注模式/日常�
 - Test: `tests/SelfTests.Arbiter.cs`（追加场景名映射纯逻辑测试）
 - Modify: `tests/SelfTests.cs`
 
-- [ ] **Step 1: 写失败测试**
+- [x] **Step 1: 写失败测试**
 
 在 `tests/SelfTests.Arbiter.cs` 类内追加：
 
@@ -774,7 +775,7 @@ git add -A && git commit -m "feat: WPF 设置页同步——专注模式/日常�
             test("场景仲裁：掌权场景状态后缀映射", TestScenarioStatusSuffix);
 ```
 
-- [ ] **Step 2: 运行自测确认编译失败**
+- [x] **Step 2: 运行自测确认编译失败**
 
 ```bash
 cmd.exe //c "dev.cmd test"
@@ -782,7 +783,7 @@ cmd.exe //c "dev.cmd test"
 
 预期：编译错误（`PanelForm.ScenarioStatusSuffix` 不存在）。
 
-- [ ] **Step 3: 实现**
+- [x] **Step 3: 实现**
 
 **改动 1 — PanelForm.cs 加静态映射与实例方法**（放在 `SyncAllToggles` 附近）：
 
@@ -841,7 +842,7 @@ cmd.exe //c "dev.cmd test"
 
 **改动 4 — 状态文本语义**。后缀直接拼在 `gameMode.StatusText` 后过于简陋，用间隔符——上面的实现直接拼接；若视觉拥挤，改为 `" · " + suffix`：在 `ScenarioStatusSuffix` 返回值前加 `" · "`（此时 null 返回 `""` 保持不变）。落地时按概览页实际观感二选一，保持测试断言同步。
 
-- [ ] **Step 4: 全量回归**
+- [x] **Step 4: 全量回归**
 
 ```bash
 cmd.exe //c "dev.cmd test"
@@ -849,7 +850,7 @@ cmd.exe //c "dev.cmd test"
 
 预期：`TOTAL 207  PASS 205  FAIL 0  SKIP 2`。
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add -A && git commit -m "feat: 概览页掌权场景指示——GrantedChanged 驱动守护状态后缀"
@@ -859,7 +860,7 @@ git add -A && git commit -m "feat: 概览页掌权场景指示——GrantedChang
 
 ### Task 5: 全量回归 + 双构建 + 冒烟
 
-- [ ] **Step 1: 全量自测**
+- [x] **Step 1: 全量自测**
 
 ```bash
 cmd.exe //c "dev.cmd test"
@@ -867,21 +868,21 @@ cmd.exe //c "dev.cmd test"
 
 预期：`TOTAL 207  PASS 205  FAIL 0  SKIP 2`。
 
-- [ ] **Step 2: 双构建**
+- [x] **Step 2: 双构建**
 
 ```bash
 cmd.exe //c "build.cmd"
 cmd.exe //c "build-wpf.cmd"
 ```
 
-- [ ] **Step 3: 冒烟验证（手动）**
+- [x] **Step 3: 冒烟验证（手动）**
 
 1. 设置页：开发区出现"专注模式"开关与分心清单输入；日常区出现"日常场景调度"开关与"新出现的启动项"
 2. 概览页：打开浏览器 → 守护状态出现"日常"后缀；启动游戏 → 变"游戏"
 3. 健康维护：删除注册表 `HealthLastRun` 值，保持浏览器打开等 30 秒（掌权 Tick）→ 日志出现"健康维护：…"；%AppData%\Caelus\Caelus.startup.baseline 生成
 4. WPF 侧：CaelusWpf.exe 设置页切换"专注模式"→ Caelus.exe 日志 30 秒内出现掌权记录（跨进程注册表生效）
 
-- [ ] **Step 4: Commit**
+- [x] **Step 4: Commit**
 
 ```bash
 git add -A && git commit -m "test: P4 全量回归——207 项自测 0 失败，场景扩展四期收官"

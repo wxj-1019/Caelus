@@ -1,4 +1,5 @@
 # 概览页「夜空烟花」+ 改样式工作流强化 实施计划
+> **落地状态（2026-10-01 复核）**：全部任务已落地——cc0f1e5..febfd9d（12 提交，55d25a5 合并推送）；下文复选框为事后回填的执行记录。
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
@@ -23,7 +24,7 @@
 - Modify: `design-sandbox/tokens.css`（新增 hero 令牌）
 - Modify: `design-sandbox/overview.html`（应用夜空烟花版 Hero 与场景卡）
 
-- [ ] **Step 1: tokens.css 新增令牌**
+- [x] **Step 1: tokens.css 新增令牌**
 
 在 `:root,[data-theme="dark"]` 段（主色板后）与 `[data-theme="light"]` 段各加：
 
@@ -40,15 +41,15 @@
 ```
 浅色段对应：`--hero-title-from: #2B1F1A; --hero-title-to: #6D5CE0; --scenario-daily: #B84518;`（dev 复用 --success）。
 
-- [ ] **Step 2: overview.html 应用夜空烟花**
+- [x] **Step 2: overview.html 应用夜空烟花**
 
 Hero 卡改：标题 `font-size:var(--font-size-showcase); font-weight:800;` + `background:linear-gradient(120deg,var(--hero-title-from) 30%,var(--hero-title-to)); -webkit-background-clip:text; background-clip:text; color:transparent;`；卡内叠加两个光晕层（右上 `radial-gradient(circle, var(--mode-accent) 55% 透明度, transparent 70%)`、左下用 `--aurora-2`/次色——与模式联动，因为 mode-accent 本就按 [data-mode] 换槽）。场景卡图标 chip：游戏卡保持 `--mode-accent`，开发卡 `color:var(--scenario-dev)`、日常卡 `color:var(--scenario-daily)`（背景换同色 20% 透明底）。
 
-- [ ] **Step 3: 目检定稿**
+- [x] **Step 3: 目检定稿**
 
 浏览器打开 `design-sandbox/overview.html`，右下角工具条过一遍 深/浅 × 巡航/竞技/自定义 共 6 态，确认渐变可读、光晕不过曝（浅色版光晕透明度若过强，在浅色段把光晕再降 10%）。用手机截图或沙盒 shots 存档留底到 `design-sandbox/shots/`。
 
-- [ ] **Step 4: Commit**
+- [x] **Step 4: Commit**
 
 ```bash
 git add design-sandbox/tokens.css design-sandbox/overview.html design-sandbox/shots
@@ -63,7 +64,7 @@ git commit -m "feat(design): 沙盒定稿夜空烟花版概览——Hero 渐变�
 - Create: `tests/SelfTests.DesignTokens.cs`
 - Modify: `tests/SelfTests.cs`（注册两行 test）
 
-- [ ] **Step 1: 写对比测试**
+- [x] **Step 1: 写对比测试**
 
 新建 `tests/SelfTests.DesignTokens.cs`：
 
@@ -137,7 +138,7 @@ namespace CaelusApp
 
 注意：CSS 段选择器 `:root,` 与 `[data-theme="dark"]` 在 tokens.css 里是同一行两个选择器（`:root,\n[data-theme="dark"] {`）——`CssVar` 的 IndexOf 用 `[data-theme="dark"]` 会命中同一规则块，正确。`:root` 段选择器用 `:root {`（注意空格）以防误命中 `:root,`。
 
-- [ ] **Step 2: 注册测试**
+- [x] **Step 2: 注册测试**
 
 `tests/SelfTests.cs` 在 ThemeContract 相关注册行附近加：
 
@@ -145,12 +146,12 @@ namespace CaelusApp
             test("设计令牌：沙盒 tokens.css 与 wpf/Themes 主色板/字号/圆角一致", TestDesignTokenParity);
 ```
 
-- [ ] **Step 3: 运行验证 GREEN**
+- [x] **Step 3: 运行验证 GREEN**
 
 Run: `cmd /c dev.cmd test`
 Expected: TOTAL 254，本项 PASS（两侧现有令牌本应一致；若 FAIL 说明既有漂移，先修漂移再进 Task 3）
 
-- [ ] **Step 4: Commit**
+- [x] **Step 4: Commit**
 
 ```bash
 git add tests/SelfTests.DesignTokens.cs tests/SelfTests.cs
@@ -167,7 +168,7 @@ git commit -m "test: 设计令牌沙盒↔XAML 一致性自测（主色板/字�
 - Modify: `wpf/Views/OverviewView.xaml`（Hero 渐变标题+双光晕层、场景卡图标着色）
 - Modify: `src/UiShared/ThemeContract.cs`（ToneKeys 扩进新键）
 
-- [ ] **Step 1: Tokens.xaml 加展示字号**
+- [x] **Step 1: Tokens.xaml 加展示字号**
 
 `FontSizeHero` 行后加：
 
@@ -176,7 +177,7 @@ git commit -m "test: 设计令牌沙盒↔XAML 一致性自测（主色板/字�
   <sys:Double x:Key="FontSizeShowcase">36</sys:Double>
 ```
 
-- [ ] **Step 2: 明暗色板加新画刷**
+- [x] **Step 2: 明暗色板加新画刷**
 
 `Colors.Dark.xaml` 的 BrandBrush 附近加：
 
@@ -194,7 +195,7 @@ git commit -m "test: 设计令牌沙盒↔XAML 一致性自测（主色板/字�
 ```
 `Colors.Light.xaml` 对应：`HeroTitleBrush` 停 #2B1F1A/#6D5CE0；`ScenarioDevBrush #248A3D`、`ScenarioDailyBrush #B84518`、Soft 用 #248A3D26/#B8451824。
 
-- [ ] **Step 3: OverviewView.xaml Hero 夜空烟花化**
+- [x] **Step 3: OverviewView.xaml Hero 夜空烟花化**
 
 `ZoneHero` 的 `<Grid>` 内最底层插两个光晕（Grid.ColumnSpan="3" 盖住整卡）：
 
@@ -272,7 +273,7 @@ GrantedTitle 的 TextBlock 改：
                   </Border>
 ```
 
-- [ ] **Step 4: ThemeContract 扩键**
+- [x] **Step 4: ThemeContract 扩键**
 
 `src/UiShared/ThemeContract.cs` 的 `ToneKeys` 数组末尾（`"BrandBrush",` 后）加：
 
@@ -282,7 +283,7 @@ GrantedTitle 的 TextBlock 改：
             "ScenarioDevSoftBrush", "ScenarioDailySoftBrush",
 ```
 
-- [ ] **Step 5: 令牌对比自测扩进新令牌**
+- [x] **Step 5: 令牌对比自测扩进新令牌**
 
 `tests/SelfTests.DesignTokens.cs` 的 `TestDesignTokenParity` 末尾加：
 
@@ -294,18 +295,18 @@ GrantedTitle 的 TextBlock 改：
                 && tokens.Contains("x:Key=\"FontSizeShowcase\">36<"));
 ```
 
-- [ ] **Step 6: 构建 + 单页截图目检**
+- [x] **Step 6: 构建 + 单页截图目检**
 
 Run: `cmd /c build.cmd`（Expected: Build OK）
 Run: `Caelus.exe --screenshot docs\shots\overview-nightsky-dark.png overview`（Expected: 出图，渐变标题与双光晕可见；`--screenshot` 默认深色巡航）
 若渐变标题文字看不见（透明 bug）：检查 LinearGradientBrush 的 Stop 是否带 Alpha=00——不允许；回到 Step 2 修正。
 
-- [ ] **Step 7: 全量自测**
+- [x] **Step 7: 全量自测**
 
 Run: `cmd /c dev.cmd test`
 Expected: 全绿（ThemeContract 新键两侧齐全、令牌对比通过）
 
-- [ ] **Step 8: Commit**
+- [x] **Step 8: Commit**
 
 ```bash
 git add wpf/Themes wpf/Views/OverviewView.xaml src/UiShared/ThemeContract.cs tests/SelfTests.DesignTokens.cs docs/shots
@@ -320,7 +321,7 @@ git commit -m "feat(ui): 概览页夜空烟花落地——Hero 超大渐变标�
 - Modify: `wpf/App.xaml.cs`（RunShot 扩展矩阵）
 - Create: `scripts/shoot-all.ps1`
 
-- [ ] **Step 1: RunShot 扩展为全矩阵**
+- [x] **Step 1: RunShot 扩展为全矩阵**
 
 `wpf/App.xaml.cs` 的 `RunShot` 方法：把"其余 12 页只出深色常规"的段改为循环矩阵。现段（`string[] pages = ...; for ... CapturePage(dir, pages[i]);`）替换为：
 
@@ -348,7 +349,7 @@ git commit -m "feat(ui): 概览页夜空烟花落地——Hero 超大渐变标�
 ```
 确认 `CapturePage(dir, name)` 现有签名是按名字导航+出图（看它当前实现，若内部用 RunSingleShot 同款流程则名字直接用于文件名；文件命名带 tag 即可）。若 CapturePage 内部固定了文件名规则，调整为文件名 `wpf-<name>.png`。
 
-- [ ] **Step 2: scripts/shoot-all.ps1 一键脚本**
+- [x] **Step 2: scripts/shoot-all.ps1 一键脚本**
 
 新建：
 
@@ -365,12 +366,12 @@ Write-Host "全矩阵截图已输出到 $OutDir"
 ```
 （dev.cmd 若不支持 `build` 参数则直接 `build.cmd`；以仓库现有脚本参数为准微调。）
 
-- [ ] **Step 3: 出图并目检**
+- [x] **Step 3: 出图并目检**
 
 Run: `powershell -File scripts\shoot-all.ps1`
 Expected: `docs/shots/` 下出现 12 页 × 6 组合 + 概览 4 组合共 76 张 PNG；抽竞技橙与浅色巡航各一张目检光晕/渐变
 
-- [ ] **Step 4: Commit**
+- [x] **Step 4: Commit**
 
 ```bash
 git add wpf/App.xaml.cs scripts/shoot-all.ps1 docs/shots
@@ -385,15 +386,15 @@ git commit -m "feat(dev): --wpf-shot 扩展 13 页×明暗×三模式全矩阵 +
 - Modify: `design-sandbox/index.html`
 - Modify: `design-sandbox/sandbox.css`（缺的状态类补类名，与 XAML Style 键同名注释）
 
-- [ ] **Step 1: 补齐组件清单**
+- [x] **Step 1: 补齐组件清单**
 
 index.html 按 XAML `Styles.xaml`/`Icons.xaml` 的 Style 键逐一给出对应组件（每个含 默认/悬停/禁用 三态）：主按钮、次按钮、危险按钮、开关（PolicyToggle）、分段选择器（SegmentedControl）、玻璃卡（GlassCard）、组卡（SettingsGroup）、状态徽章（StatusBadge/NeutralStatusBadge）、场景卡（ScenarioCard）、进度环（ProgressRing）、危险确认对话框、输入框、滚动区。每节标题注明对应 Style 键名。
 
-- [ ] **Step 2: 目检 + 存档**
+- [x] **Step 2: 目检 + 存档**
 
 浏览器过一遍 index.html 明暗×三模式；缺样式的组件在 sandbox.css 补齐。
 
-- [ ] **Step 3: Commit**
+- [x] **Step 3: Commit**
 
 ```bash
 git add design-sandbox/index.html design-sandbox/sandbox.css
@@ -408,17 +409,17 @@ git commit -m "feat(design): 沙盒组件库补齐——全核心组件×状态�
 - Modify: `README.md`、`README.en.md`、`README.ja.md`（截图引用换新）
 - Regenerate: `docs/overview-v15.png` 等被引用的截图（或改用新文件名并同步引用）
 
-- [ ] **Step 1: 从 docs/shots 矩阵挑最终图**
+- [x] **Step 1: 从 docs/shots 矩阵挑最终图**
 
 概览页取 `wpf-overview-dark-cruise.png`（或矩阵里对应新图），按 README.md 现有 `<img src="docs/...">` 引用名逐张换新（保留文件名直接覆盖最省事：矩阵图复制覆盖 docs/overview-v15.png 等；其余页面本次未改版则截图不变可不动）。
 
-- [ ] **Step 2: 最终验证**
+- [x] **Step 2: 最终验证**
 
 Run: `cmd /c dev.cmd test`（Expected: 全绿）
 Run: `cmd /c build.cmd`（Expected: Build OK）
 Run: `cmd /c build-winforms.cmd`（Expected: Build OK——WinForms 回退宿主不参与本次视觉，但必须仍可构建）
 
-- [ ] **Step 3: Commit**
+- [x] **Step 3: Commit**
 
 ```bash
 git add README.md README.en.md README.ja.md docs/*.png

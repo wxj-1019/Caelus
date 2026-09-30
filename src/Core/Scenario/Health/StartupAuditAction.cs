@@ -16,17 +16,17 @@ namespace CaelusApp
         public bool AllowAuto { get { return false; } }   // 自动周期只扫描报告
         public bool CanUndo { get { return true; } }
 
-        // —— 测试挂钩（生产全为 null 走真实注册表/文件）——
-        internal static Func<List<StartupAudit.Entry>> ScanCurrentHook;
-        internal static Func<string, string, string> ReadRunValueHook;          // (hive,name)→data|null
-        internal static Func<string, string, string, string> WriteRunValueHook; // (hive,name,data)→error|null（同名已存在须报错）
-        internal static Func<string, string, string> DeleteRunValueHook;        // →error|null
-        internal static Func<string, string, string, string> BackupWriteHook;   // 备份允许覆盖
-        internal static Func<string, string, string> BackupDeleteHook;
-        internal static Func<string, List<KeyValuePair<string, string>>> BackupEnumHook;
-        internal static string StartupFolderOverride;
-        internal static string BackupDirOverride;
-        internal static string BaselinePathOverride;
+        // —— 测试挂钩（生产全为 null 走真实注册表/文件；显式 = null 消 CS0649 噪音）——
+        internal static Func<List<StartupAudit.Entry>> ScanCurrentHook = null;
+        internal static Func<string, string, string> ReadRunValueHook = null;          // (hive,name)→data|null
+        internal static Func<string, string, string, string> WriteRunValueHook = null; // (hive,name,data)→error|null（同名已存在须报错）
+        internal static Func<string, string, string> DeleteRunValueHook = null;        // →error|null
+        internal static Func<string, string, string, string> BackupWriteHook = null;   // 备份允许覆盖
+        internal static Func<string, string, string> BackupDeleteHook = null;
+        internal static Func<string, List<KeyValuePair<string, string>>> BackupEnumHook = null;
+        internal static string StartupFolderOverride = null;
+        internal static string BackupDirOverride = null;
+        internal static string BaselinePathOverride = null;
 
         private const string BackupKeyPath = @"SOFTWARE\Caelus\DisabledStartup";
 

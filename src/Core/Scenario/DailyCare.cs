@@ -27,9 +27,9 @@ namespace CaelusApp
         private bool grantedFlag;
         private long grantStartTicks;
 
-        /// <summary>测试挂钩：隔离真实注册表（生产为 null 走 PowerOverlay 真实实现）</summary>
-        internal static Func<bool> BatterySaverApplyHook;
-        internal static Func<bool> BatterySaverRestoreHook;
+        /// <summary>测试挂钩：隔离真实注册表（生产为 null 走 PowerOverlay 真实实现；显式 = null 消 CS0649）</summary>
+        internal static Func<bool> BatterySaverApplyHook = null;
+        internal static Func<bool> BatterySaverRestoreHook = null;
 
         private static bool SaverApply()
         {

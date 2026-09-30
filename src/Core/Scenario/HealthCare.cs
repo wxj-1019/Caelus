@@ -13,13 +13,13 @@ namespace CaelusApp
         private static Timer autoTimer;
         private static int runningFlag;
 
-        /// <summary>测试挂钩：替换动作目录（生产为 null 用 HealthCatalog.Shared）</summary>
-        internal static HealthActionCatalog CatalogOverride;
+        /// <summary>测试挂钩：替换动作目录（生产为 null 用 HealthCatalog.Shared；显式 = null 消 CS0649）</summary>
+        internal static HealthActionCatalog CatalogOverride = null;
 
         /// <summary>忙时门控（宿主接线）：游戏进行中时本轮跳过——着色器缓存是游戏
         /// 运行时热用的文件，对局中清理＝全量重编译卡顿，对游戏优化工具是反向操作。
         /// 未接线时视为空闲（自测场景）。</summary>
-        public static Func<bool> ShouldDefer;
+        public static Func<bool> ShouldDefer = null;
 
         /// <summary>启动独立维护调度。此前唯一的到点判定挂在 DailyCare 掌权节拍上，
         /// 市电台式机且不开日常家族、或长期被游戏/开发场景抢占的用户永远等不到掌权，

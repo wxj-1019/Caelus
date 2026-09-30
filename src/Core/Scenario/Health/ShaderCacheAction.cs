@@ -7,9 +7,9 @@ namespace CaelusApp
     {
         internal const long Threshold = 64L * 1024 * 1024;
 
-        /// <summary>测试挂钩：隔离真实文件系统（生产为 null 走 ShaderCache 真实实现）</summary>
-        internal static System.Func<long> MeasureHook;
-        internal static System.Func<CacheSweep.Result> CleanHook;
+        /// <summary>测试挂钩：隔离真实文件系统（生产为 null 走 ShaderCache 真实实现；显式 = null 消 CS0649）</summary>
+        internal static System.Func<long> MeasureHook = null;
+        internal static System.Func<CacheSweep.Result> CleanHook = null;
 
         public string Id { get { return "shader-cache"; } }
         public string TitleKey { get { return "health.shader.title"; } }

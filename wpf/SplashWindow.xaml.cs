@@ -20,13 +20,15 @@ namespace CaelusApp.WpfHost
         public SplashWindow()
         {
             InitializeComponent();
-            // 按持久化主题着色：浅色=奶油底暖可可，深色=梅子夜奶油字（XAML 默认即深色）
+            // 按持久化主题着色：浅色=抹茶米白底墨绿字，深色=梅子夜奶油字（XAML 默认即深色）。
+            // 亮色三元组与 Colors.Light.xaml 调色板值级同步（TestSplashPaletteSync 守卫防再漂移——
+            // 自包含不引应用资源的取舍不变，代价是改调色板时须同步这里）
             bool light = false;
             try { light = CaelusApp.Settings.Load("UiLight", false); } catch { }
             if (light)
             {
-                Background = new SolidColorBrush(Color.FromArgb(255, 251, 244, 238));
-                LblHint.Foreground = new SolidColorBrush(Color.FromArgb(255, 107, 93, 85));
+                Background = new SolidColorBrush(Color.FromArgb(255, 250, 248, 241));
+                LblHint.Foreground = new SolidColorBrush(Color.FromRgb(94, 112, 100));
                 BlobA.Opacity = 0.42;
                 BlobB.Opacity = 0.38;
                 BlobC.Opacity = 0.34;
@@ -140,7 +142,7 @@ namespace CaelusApp.WpfHost
         private void BuildTitleLetters(bool light)
         {
             string word = "CAELUS";
-            Color fg = light ? Color.FromRgb(43, 31, 26) : Color.FromRgb(247, 241, 234);
+            Color fg = light ? Color.FromRgb(38, 51, 42) : Color.FromRgb(247, 241, 234);
             TitleHost.Children.Clear();
             for (int i = 0; i < word.Length; i++)
             {

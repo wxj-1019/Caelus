@@ -111,5 +111,45 @@ namespace CaelusApp
             Eq(true, CssVar(css, ":root", "--font-size-showcase") != null
                 && tokens.Contains("x:Key=\"FontSizeShowcase\">36<"));
         }
+
+        // '#RRGGBB[B]' → 'R, G, B' 十进制文本：供代码后置里 Color.From* 调用的子串比对
+        private static string RgbArgs(string hex)
+        {
+            string h = HexNorm(hex);
+            if (h.Length == 8) h = h.Substring(2);
+            return Convert.ToInt32(h.Substring(0, 2), 16) + ", "
+                + Convert.ToInt32(h.Substring(2, 2), 16) + ", "
+                + Convert.ToInt32(h.Substring(4, 2), 16);
+        }
+
+        // 启动屏自包含配色 ↔ 主题调色板同步守卫：亮色三元组曾与抹茶改版漂移
+        // （#FBF4EE vs #FAF8F1）——「不引应用资源」的取舍代价须靠值级断言兜住
+        private static void TestSplashPaletteSync()
+        {
+            string light = ReadThemeFile("Colors.Light.xaml");
+            string dark = ReadThemeFile("Colors.Dark.xaml");
+            string root = AppDomain.CurrentDomain.BaseDirectory;
+            string sx = File.ReadAllText(Path.Combine(root, "wpf", "SplashWindow.xaml"));
+            string sc = File.ReadAllText(Path.Combine(root, "wpf", "SplashWindow.xaml.cs"));
+
+            // 暗侧（XAML 默认即深色）：窗口底 == BackgroundColor，提示 == TextSecondaryColor
+            Match bg = Regex.Match(sx, "Background=\"(#[0-9A-Fa-f]{8})\"", RegexOptions.CultureInvariant);
+            Eq(true, bg.Success);
+            Eq(HexNorm(bg.Groups[1].Value), HexNorm(ThemeContract.ExtractColorValue(dark, "BackgroundColor")));
+            Match hint = Regex.Match(sx, "Foreground=\"(#[0-9A-Fa-f]{6,8})\"", RegexOptions.CultureInvariant);
+            Eq(true, hint.Success);
+            Eq(HexNorm(hint.Groups[1].Value), HexNorm(ThemeContract.ExtractColorValue(dark, "TextSecondaryColor")));
+
+            // 亮侧（代码后置三元组）：底/标题/提示 == 调色板 Background/TextPrimary/TextSecondary
+            Eq(true, sc.Contains("Color.FromArgb(255, "
+                + RgbArgs(ThemeContract.ExtractColorValue(light, "BackgroundColor")) + ")"));
+            Eq(true, sc.Contains("Color.FromRgb("
+                + RgbArgs(ThemeContract.ExtractColorValue(light, "TextPrimaryColor")) + ")"));
+            Eq(true, sc.Contains("Color.FromRgb("
+                + RgbArgs(ThemeContract.ExtractColorValue(light, "TextSecondaryColor")) + ")"));
+            // 暗侧标题字在代码后置的三元分支里
+            Eq(true, sc.Contains("Color.FromRgb("
+                + RgbArgs(ThemeContract.ExtractColorValue(dark, "TextPrimaryColor")) + ")"));
+        }
     }
 }

@@ -57,8 +57,10 @@
           <Grid Grid.Row="1">
             <ContentControl x:Name="EmptyPanel" Style="{DynamicResource DropZoneEmpty}" Margin="12" Visibility="Collapsed">
               <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center" MaxWidth="360" Margin="24">
-                <ContentControl Content="{DynamicResource IllusWhitelist}" Width="96" Height="96"
-                                HorizontalAlignment="Center" Margin="0,0,0,10"/>
+                <!-- 空态插画走 IllusHost 代码构建（2026-09-30 坑修复：Canvas/Shape 子树经 BAML
+                     实例化——无论资源注入还是视图内联——在本机 net4+25H2 AOT WPF 上渲染数据确定性
+                     损坏，盾牌与右上点丢失；代码 new 的同款子树完全正常，同 IconView 一族） -->
+                <controls:IllusHost x:Name="EmptyIllus" Key="Whitelist" Margin="0,0,0,10"/>
                 <TextBlock Text="{Binding EmptyTitle}" FontSize="{DynamicResource FontSizeEmpty}" FontWeight="SemiBold" Foreground="{DynamicResource TextPrimaryBrush}" HorizontalAlignment="Center" TextAlignment="Center"/>
                 <TextBlock Text="{Binding EmptyHint}" FontSize="{DynamicResource FontSizeCaption}" Foreground="{DynamicResource TextSecondaryBrush}" HorizontalAlignment="Center" TextAlignment="Center" TextWrapping="Wrap" Margin="0,8,0,18"/>
                 <Button Style="{DynamicResource PrimaryButton}" Click="OnPickClick" Content="{Binding PickText}" HorizontalAlignment="Center" AutomationProperties.Name="从运行中的程序添加白名单规则"/>

@@ -206,3 +206,4 @@ Aurora 光晕结构改造（见 §4.4）、图标重绘、竞技/自定义模式
   9. §5.1 文案「三语」按现状只落 zh：Lang.cs 当前为中文单语值（Cur 恒 0），en/ja 数组不存在可改
   10. 验收基线说明：HEAD 历史截图残留本机自定义青色强调色（非预设），本次 82 张矩阵为无覆盖干净基线重摄——暗色三档橙/金/紫归位，故暗色张张有差异属预期而非漂移
   11. 冒烟脚本健壮性：app-smoke-test.ps1 测试靶进程 mspaint.exe 在本机（Store 版 Paint 无执行别名）不存在，加 notepad.exe 回退，语义不变（非游戏 GUI 进程应判 NONE 且优先级/亲和性零副作用）
+  12. §5.1 插画载体改道（2026-09-30 坑、2026-10-01 收尾）：`Illustrations.xaml` 落地后真机验收发现 BAML 实例化的 Canvas/Shape 子树（资源注入与视图内联同病）在本机 net4+25H2 WPF 渲染管线中确定性丢件（盾牌主体/右上点消失、勾纵向位移，位置敏感），弃用整个文件——删除 `Themes/Illustrations.xaml` 及 App.xaml 合并字典与 csproj `<Page>` 登记，改 `Controls/IllusHost.cs`：与 IconView 同族的 OnRender `DrawingContext` 直绘（3 幅几何逐笔移植、96 视窗），画刷经自定义 DP + `SetResourceReference` 保留 DynamicResource 语义，明暗/模式换肤联动不受损；2026-10-01 真机暗/亮双主题复验白名单盾形插画完整（盾/勾/双点齐、无调试残留、换肤正确）

@@ -23,8 +23,8 @@
                       AutomationProperties.Name="游戏库为空，可添加或拖放游戏"
                       AutomationProperties.HelpText="将游戏主程序拖放到此区域，或使用添加游戏按钮">
         <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center" MaxWidth="440" Margin="32">
-          <ContentControl x:Name="EmptyHeroIcon" Content="{DynamicResource IllusLibrary}"
-                          Width="96" Height="96" HorizontalAlignment="Center" Margin="0,0,0,16"/>
+          <!-- 空态插画走 IllusHost 代码构建（2026-09-30 坑修复：BAML 实例化 Shape 子树渲染损坏，见白名单页注释） -->
+          <ctl:IllusHost x:Name="EmptyHeroIcon" Key="Library" Margin="0,0,0,16"/>
           <TextBlock Text="还没有游戏哦，拖个 exe 进来养一只" FontSize="{DynamicResource FontSizeEmpty}" FontWeight="SemiBold"
                      Foreground="{DynamicResource TextPrimaryBrush}" HorizontalAlignment="Center" TextAlignment="Center"/>
           <TextBlock Text="{Binding EmptyHint}" Margin="0,6,0,0" FontSize="{DynamicResource FontSizeCaption}"

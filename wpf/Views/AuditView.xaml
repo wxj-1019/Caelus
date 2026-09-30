@@ -259,7 +259,8 @@
                     </Style.Triggers>
                   </Style>
                 </StackPanel.Style>
-                <ContentControl Content="{DynamicResource IllusAuditWin}" Width="96" Height="96" HorizontalAlignment="Center"/>
+                <!-- 空态插画走 IllusHost 代码构建（2026-09-30 坑修复：BAML 实例化 Shape 子树渲染损坏，见白名单页注释） -->
+                <controls:IllusHost Key="AuditWin"/>
                 <TextBlock Text="状态满分，去尽情玩耍吧" FontSize="{DynamicResource FontSizeCaption}"
                            Foreground="{DynamicResource TextSecondaryBrush}" HorizontalAlignment="Center" Margin="0,4,0,0"/>
               </StackPanel>

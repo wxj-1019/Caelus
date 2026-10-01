@@ -175,4 +175,16 @@ IDE 可见使 reported 持续 true。后果：
 
 ## 8. 实施偏差回写
 
-（随落地 commit 追加）
+- **2026-10-02 落地回写**（执行提交 60bcde3..[HEAD]，子代理驱动 6 任务 + 每任务规格/质量双审）：
+  1. §3.1 CustomList 往返测试从 TestBuildCatalogExpandedTools 抽为独立注册测试 TestBuildCatalogCustomList——质量审查发现原计划内联位置在 `Settings.UseTransientStoreForCurrentProcess()` 之前注册，往返写真实 HKCU；抽出后注册于瞬态存储区，计数基线 295→296（后续期望随之 +1）。
+  2. §3.2 统计落点收归 `BuildSetBecameEmpty` 单一记账点——原计划空转淘汰路径漏记统计（测试断言 FocusStatsBuildN==1 与实现矛盾）；同时该收尾末尾需 `RecomputeActivity()`（原计划缺失则淘汰路径永不向仲裁器报失活），收敛器调用因依赖顺序挪至 Task 3 落地。
+  3. Task 2 三处计划文本修正（实现者发现、审查核准）：CPU 采样与清死遍历 `buildPidName.Keys` 而非 `buildPidCpuMs.Keys`（入场时 cpu 表被 Remove，遍历它=新入场 pid 永不被采样、20 秒全灭）；`RemoveIdleBuilds` 加部分淘汰守卫（多 pid 并存时不得提前收尾）。
+  4. §3.2 第 2 条「不可读不淘汰」的确定性实现：`buildPidUnreadable` 标记集（每拍锁内重建）+ 句柄死活甄别（OpenProcess 可开且 !StillActive 才判死清出，句柄拿不到=受保护进程保守标记），`RemoveIdleBuilds` 跳过标记 pid——规格审查发现原计划仅「不更新进度」仍会被静默淘汰。
+  5. Task 2 并发加固（质量审查三轮）：锁内 `buildSetEmptied` 布尔消 TOCTOU；采样 Timer 回调包 try/catch（对齐 ReconcileTick 纪律）；`samplingFlag` Interlocked 重入护栏（重叠拍清标记竞态）；初始扫描宽限改 `graceSec = max(阈值−5, 0)` 去魔法数。
+  6. §4.1 补充：校正节拍在收敛器之外保留**长编译期增量追压**（每 30 秒幂等重扫）——期望态表只写了升沿一次性 sweep，旧 ReconcileTick 的持续追压行为经规格审查点名后恢复，避免长编译中途新起的后台进程逃逸。
+  7. Task 3 质量修补：三处收敛调用点从 `lock(sync){...}` 解包为「锁内读布尔、锁外收敛」（全进程枚举不进场景锁）；SvcPause 升沿补 try 对称故障隔离；记账位加「最终一致快照 + 三层兜底」契约注释；测试补 Notif 降沿（focus 关、build 在场）与 Suspend 后 `PidsWith(Build)==0` 确定性断言。
+  8. §5.4 空满足：计划为 9 处探针测试预备的 `BuildIdleDropSeconds=0` 插桩实际不需要——心跳探针（--test-heartbeat-probe）80ms 一跳持续烧 CPU，活性门判定其「在编译」，既有测试零改动全绿；插桩仍作为 CpuProbe/阈值覆写机制的存在依据保留在实现里。
+  9. §5.5 真机验收三场景全过：①空转 msbuild（cmd 副本跑 ping）——事件入场秒级掌权+WSearch 暂停+压制 77 进程，**25 秒后活性门精确淘汰**（乐观 20s+采样对齐）、服务恢复、空转进程存活不再持权（nodeReuse 语义正确）；②真实 MSBuild 编排编译——5 秒内掌权（含全量 sweep）、9.1 秒会话记账、结束即恢复无残留；③git status/log/diff 三连——零编译反应。
+  10. 验收附发现（既有行为，非本项目回归）：**裸 csc 亚秒级编译不可见**——对新旧构建 A/B（83e5e95 基线 worktree 同机同法同现象）：BuildCatalog 成员的事件走 ProcNotify 身份核验（WpfRuntime.cs:549 对名录成员 CaptureStartIdentity），短命进程在核验/交付窗口内退出则事件名留空被跳过；编排器型构建（msbuild/dotnet 等 orchestrator 全程存活）不受影响。留待后续观察，不在本规格范围。
+  11. 质量审查遗留 Minor（未修，后续清理清单）：SampleBuildCpu 记忆清死段锁内系统调用（应锁内快照锁外甄别）、三处停用路径清理去重抽方法、`deadActive` 更名 `deadConfirmed`、测试 FocusHistory 重定向看齐 TestFocusBuildRecorded、§3.2 淘汰路径不弹 bal.buildend 气球（事件路径会弹，淘汰路径静默收权）。
+  12. 门禁：TOTAL 299 / PASS 294 / FAIL 0 / SKIP 5（SKIP 为 LOL/ACE 运行与 CPU Sets 环境项浮动）；三语 README 计数 295→299 同步。

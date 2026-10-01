@@ -644,6 +644,15 @@ namespace CaelusApp
                     new[] { MakeChange(probe.Id, "msbuild", ProcessChangeKind.Started) }, false));
                 Eq(true, SvcPause.HeldBy(SvcPause.OwnerDevFocus));
 
+                // 3.5) focus 关闭但编译仍在（build 维持掌权）：静默降沿立即回收，服务保持
+                //     （插在步骤 2 与 3 之间：步骤 3 已发 Stopped，编译不在场无法验证本段语义）
+                dev.SetFocusMode(false);
+                Eq(true, dev.IsGranted);
+                Eq(false, Notif.HeldBy(Notif.OwnerDevFocus));
+                Eq(true, SvcPause.HeldBy(SvcPause.OwnerDevFocus));
+                dev.SetFocusMode(true);
+                Eq(true, Notif.HeldBy(Notif.OwnerDevFocus));
+
                 // 3) 编译结束、focus 仍在（IDE 常驻同款）：服务降沿回收，静默保持
                 dev.NotifyProcessChanges(new ProcessChangeBatch(
                     new[] { MakeChange(probe.Id, "msbuild", ProcessChangeKind.Stopped) }, false));
@@ -654,6 +663,7 @@ namespace CaelusApp
                 dev.SetFocusMode(false);
                 Eq(false, dev.IsGranted);
                 Eq(false, Notif.HeldBy(Notif.OwnerDevFocus));
+                Eq(0, core.PidsWith(SuppressReason.Build).Count);   // Suspend 双保险后编译位压制无残留
             }
             finally
             {

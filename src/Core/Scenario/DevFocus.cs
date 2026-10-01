@@ -34,6 +34,7 @@ namespace CaelusApp
         // 阻断气球按名限频：被阻断的自启循环应用不该刷屏（阻断照常执行，只是不重复弹泡）
         private readonly Dictionary<string, long> blockBalloonTicks = new Dictionary<string, long>(StringComparer.OrdinalIgnoreCase);
         private bool granted;
+        // 记账位为锁外读写的最终一致快照：误差由收敛器幂等升降沿 + 尾置竞态护栏 + Suspend 全量还原三层兜底收敛
         private bool quietApplied;
         private bool svcPauseApplied;    // 收敛器记账：SvcPause 升沿已施加（规格 §4.1）
         private bool suppressApplied;    // 收敛器记账：后台压制 sweep 已施加
@@ -787,7 +788,10 @@ namespace CaelusApp
             try
             {
                 if (build && !svcPauseApplied)
-                    svcPauseApplied = SvcPause.Activate(SvcPause.OwnerDevFocus);
+                {
+                    try { svcPauseApplied = SvcPause.Activate(SvcPause.OwnerDevFocus); }
+                    catch { }
+                }
                 else if (!build && svcPauseApplied)
                 {
                     try { SvcPause.Restore(SvcPause.OwnerDevFocus); } catch { }

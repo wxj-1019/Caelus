@@ -675,6 +675,21 @@ namespace CaelusApp
             Eq(false, BuildCatalog.IsMatch("dotnet"));
             Eq(false, BuildCatalog.IsMatch("java"));
             Eq(false, BuildCatalog.IsMatch("python"));
+            // 2026-10-02 §3.1：通用 CLI 家族移出默认名录（每条 git status 都算编译会话的误报源）
+            Eq(false, BuildCatalog.IsMatch("git"));
+            Eq(false, BuildCatalog.IsMatch("git-bash"));
+            Eq(false, BuildCatalog.IsMatch("git-cmd"));
+            Eq(false, BuildCatalog.IsMatch("docker"));
+            Eq(false, BuildCatalog.IsMatch("docker-buildx"));
+            // 补回路径：CustomList 加回后恢复命中
+            string oldCustom = BuildCatalog.CustomList;
+            try
+            {
+                BuildCatalog.CustomList = "git;docker";
+                Eq(true, BuildCatalog.IsMatch("git"));
+                Eq(true, BuildCatalog.IsMatch("docker"));
+            }
+            finally { BuildCatalog.CustomList = oldCustom; }
         }
 
         // 用户自定义豁免名录：反作弊/加速器自定义清单写入即生效，清除即失效

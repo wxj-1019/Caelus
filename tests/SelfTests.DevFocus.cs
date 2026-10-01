@@ -658,8 +658,8 @@ namespace CaelusApp
             finally
             {
                 DevFocus.BuildIdleDropSeconds = oldIdle;
-                Settings.Save("DevFocusModeOn", oldFocus);
-                try { if (dev != null) dev.SetFocusMode(false); } catch { }
+                try { if (dev != null) dev.SetFocusMode(false); } catch { }   // 先释放副作用（会写 DevFocusModeOn=false）
+                Settings.Save("DevFocusModeOn", oldFocus);                     // 再还原原值（顺序不能反，否则被前者吃掉）
                 try { if (dev != null) dev.Stop(); } catch { }
                 StopOwned(probe);
                 DeleteTempDir(dir);

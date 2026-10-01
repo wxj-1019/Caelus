@@ -170,7 +170,9 @@ namespace CaelusApp
             Settings.Save("DevFocusModeOn", on);
             if (!on) { lock (sync) { distractNotified.Clear(); blockBalloonTicks.Clear(); } }
             RecomputeActivity();
-            lock (sync) { if (granted) ReconcileSideEffects(); }   // 掌权中开关翻转的升降沿
+            // 掌权中开关翻转的升降沿（锁内只读布尔，收敛体含全进程枚举不进 sync）
+            bool recon; lock (sync) recon = granted;
+            if (recon) ReconcileSideEffects();
         }
 
         /// <summary>IDE 优化开关（设置页调用）。关闭时清空已追踪的 IDE 集合，避免 Grant 仍提优。</summary>
@@ -382,7 +384,9 @@ namespace CaelusApp
             if (ideChanged) RefreshIdeVisible(false);
 
             // 仍掌权时收敛副作用：编译中途起始的服务暂停/压制升沿在此补做（P1-2 主诉）
-            lock (sync) { if (granted) ReconcileSideEffects(); }
+            // 锁内只读布尔，收敛体含全进程枚举不进 sync
+            bool recon; lock (sync) recon = granted;
+            if (recon) ReconcileSideEffects();
 
             // 活性变化只向仲裁器报告；副作用由仲裁器经 Grant/Suspend 回调控制
             if (becameActive)
@@ -513,7 +517,9 @@ namespace CaelusApp
             // 事件 Stopped 路径在 NotifyProcessChanges 锁内已翻 reported，此处重算为幂等空转，
             // 只有活性门淘汰路径（无事件批次）靠这里收权。
             RecomputeActivity();
-            lock (sync) { if (granted) ReconcileSideEffects(); }   // 编译排空仍掌权：降沿回收（服务恢复/压制解除）
+            // 编译排空仍掌权：降沿回收（服务恢复/压制解除）。锁内只读布尔，收敛体不进 sync
+            bool recon; lock (sync) recon = granted;
+            if (recon) ReconcileSideEffects();
         }
 
         /// <summary>CPU 采样节拍（5 秒）：推进度、不可读保守标记（句柄甄别清死）、
@@ -1026,6 +1032,12 @@ namespace CaelusApp
                 RecomputeActivity();
                 lock (sync) { if (!granted) return; }
                 ReconcileSideEffects();   // 收敛器内含压制 sweep/服务暂停/静默的全部升降沿
+                // 长编译/长专注期间增量追压新后台（旧节拍行为，收敛器升沿一次性 sweep 之外的持续追压）：
+                // sweep 幂等（Acquire 对已压进程返回 AlreadyThrottled），与升沿共用 SuppressReason.Build
+                bool buildNow; bool focusNow;
+                lock (sync) { buildNow = activeBuildPids.Count > 0; }
+                focusNow = FocusModeOn;
+                if (buildNow || focusNow) SweepBuildSuppression();
                 ReconcileIdeBoost();
                 // 竞态护栏：挂起可能在收敛期间到达（granted 已翻 false），泄漏的压制立即回收；
                 // 若挂起在护栏之后到达，Suspend 自带的 ReleaseReason(Build) 会兜底。

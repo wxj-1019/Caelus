@@ -52,6 +52,7 @@ namespace CaelusApp
         private readonly Dictionary<int, long> buildPidLastProgress = new Dictionary<int, long>(); // pid → 最近 CPU 前进时刻
         private readonly Dictionary<int, long> buildPidCpuMs = new Dictionary<int, long>();       // pid → 上次采样累计 CPU 毫秒
         private readonly Dictionary<int, string> buildPidName = new Dictionary<int, string>();    // pid → 进程名（复活重入的合成事件用）
+        private readonly HashSet<int> buildPidUnreadable = new HashSet<int>(); // 最近一拍 CPU 不可读且在世的 pid（本拍不参与静默淘汰）
         private Timer buildSampleTimer;
 
         /// <summary>编译 pid 静默淘汰阈值秒数（默认 20；0=关闭）。internal static 供自测覆写。</summary>
@@ -70,7 +71,9 @@ namespace CaelusApp
         }
 
         /// <summary>读编译 pid 的累计 CPU（可注入）。不可读（提权/跨会话/已退出）返回 null：
-        /// 保守保留——不更新进度也不淘汰，防误杀真编译；死进程由 Stopped/CleanDeadPids 走。</summary>
+        /// 保守保留——不更新进度也不参与静默淘汰（SampleBuildCpu 标记后 RemoveIdleBuilds 跳过，
+        /// 规格 §3.2「不可读不淘汰」），防误杀真编译；死进程由 Stopped 事件、CleanDeadPids
+        /// 兜底与采样节拍的句柄死活甄别清出。</summary>
         private static TimeSpan? ReadBuildCpu(int pid)
         {
             Func<int, TimeSpan?> probe = CpuProbe;
@@ -199,6 +202,7 @@ namespace CaelusApp
                     buildPidLastProgress.Clear();
                     buildPidCpuMs.Clear();
                     buildPidName.Clear();
+                    buildPidUnreadable.Clear();
                 }
                 Timer st;
                 lock (sync) { st = buildSampleTimer; buildSampleTimer = null; }
@@ -228,6 +232,7 @@ namespace CaelusApp
                     buildPidLastProgress.Clear();
                     buildPidCpuMs.Clear();
                     buildPidName.Clear();
+                    buildPidUnreadable.Clear();
                 }
                 Timer st;
                 lock (sync) { st = buildSampleTimer; buildSampleTimer = null; }
@@ -451,6 +456,7 @@ namespace CaelusApp
                 var dropped = new List<int>();
                 foreach (int pid in activeBuildPids)
                 {
+                    if (buildPidUnreadable.Contains(pid)) continue;   // 本拍不可读：保守保留（规格 §3.2）
                     long last;
                     buildPidLastProgress.TryGetValue(pid, out last);
                     if (ShouldDropForIdle(last, nowTicks)) dropped.Add(pid);
@@ -491,7 +497,8 @@ namespace CaelusApp
             RecomputeActivity();
         }
 
-        /// <summary>CPU 采样节拍（5 秒）：推进度、清死记忆、复活重入、静默淘汰。</summary>
+        /// <summary>CPU 采样节拍（5 秒）：推进度、不可读保守标记（句柄甄别清死）、
+        /// 清死记忆、复活重入、静默淘汰。</summary>
         internal void SampleBuildCpu()
         {
             int[] active;
@@ -504,14 +511,35 @@ namespace CaelusApp
                 // 只遍历 cpu 表会漏掉「已入场未采样」与「被淘汰待重入」的 pid（它们恰恰是本节拍要看的）
                 remembered = new int[buildPidName.Count];
                 buildPidName.Keys.CopyTo(remembered, 0);
+                buildPidUnreadable.Clear();   // 标记只活一拍：本拍重新甄别
             }
             long now = DateTime.UtcNow.Ticks;
             var alive = new HashSet<int>();
             var reenter = new List<int>();
+            var deadActive = new List<int>();
             foreach (int pid in remembered)
             {
                 TimeSpan? cpu = ReadBuildCpu(pid);
-                if (cpu == null) continue;               // 不可读保守保留（不淘汰、不重入、不清记忆）
+                if (cpu == null)
+                {
+                    // 不可读（提权/跨会话/已退出）：句柄死活甄别——确认死者清出，
+                    // 其余（含句柄都拿不到的受保护进程）保守保留：本拍标记不可读，
+                    // RemoveIdleBuilds 对其跳过（规格 §3.2「不可读不淘汰」）
+                    IntPtr h = Native.OpenProcess(Native.PROCESS_QUERY_LIMITED_INFORMATION, false, pid);
+                    if (h != IntPtr.Zero)
+                    {
+                        bool isAlive;
+                        try { isAlive = Native.StillActive(h); }
+                        finally { Native.CloseHandle(h); }
+                        if (!isAlive)
+                        {
+                            deadActive.Add(pid);   // 句柄可开且已退出：确认死，清出活性集合与记忆
+                            continue;
+                        }
+                    }
+                    lock (sync) buildPidUnreadable.Add(pid);
+                    continue;
+                }
                 alive.Add(pid);
                 long ms = (long)cpu.Value.TotalMilliseconds;
                 long prev;
@@ -524,6 +552,25 @@ namespace CaelusApp
                 }
                 bool inSet = Array.IndexOf(active, pid) >= 0;
                 if (!inSet) reenter.Add(pid);            // 被淘汰的 pid 复烧 CPU → 重入场
+            }
+            // 甄别出的死者：清出活性集合与记忆；活性集合因此 空←非空 时走与
+            // RemoveIdleBuilds 同款收尾（统计落点 + 停采样 + 活性重算收权）
+            if (deadActive.Count > 0)
+            {
+                bool activeBecameEmpty;
+                lock (sync)
+                {
+                    bool wasActive = activeBuildPids.Count > 0;
+                    foreach (int pid in deadActive)
+                    {
+                        activeBuildPids.Remove(pid);
+                        buildPidCpuMs.Remove(pid);
+                        buildPidLastProgress.Remove(pid);
+                        buildPidName.Remove(pid);
+                    }
+                    activeBecameEmpty = wasActive && activeBuildPids.Count == 0;
+                }
+                if (activeBecameEmpty) BuildSetBecameEmpty();
             }
             // 记忆清死：确认死亡的 pid 才清（不可读 ≠ 死，规格 §3.2）。清死范围与记忆全集
             // 一致——否则短命编译器（csc 数秒即退、从未被采样）的名字条目永久滞留，
@@ -1004,6 +1051,7 @@ namespace CaelusApp
                 buildPidLastProgress.Clear();
                 buildPidCpuMs.Clear();
                 buildPidName.Clear();
+                buildPidUnreadable.Clear();
             }
             Timer st;
             lock (sync) { st = buildSampleTimer; buildSampleTimer = null; }

@@ -1204,6 +1204,12 @@ ode.exe",
                 DevFocus.CpuProbe = pid => TimeSpan.FromMilliseconds(5000);
                 dev.SampleBuildCpu();
                 Eq(true, dev.IsActive);
+
+                // 不可读保守保留（规格 §3.2）：探针活但 CPU 读不出 → 采样标记后不被静默淘汰
+                DevFocus.CpuProbe = pid => null;
+                dev.SampleBuildCpu();
+                dev.RemoveIdleBuilds(DateTime.UtcNow.Ticks + 30L * TimeSpan.TicksPerSecond);
+                Eq(true, dev.IsActive);
             }
             finally
             {

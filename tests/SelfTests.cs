@@ -1312,6 +1312,7 @@ namespace CaelusApp
             // 自定义清单写 Settings：必须在临时存储启用之后跑，不污染真实注册表
             test("豁免名录：反作弊/加速器自定义清单即存即效", TestCustomExemptionCatalogs);
             test("IDE 目录：自定义名录合并与坏行容错", TestIdeCatalogCustomList);
+            test("编译名录：CustomList 补回 git/docker 即存即效", TestBuildCatalogCustomList);
             test("专注历史：按日合并、截断与近 7 日补零", TestFocusHistoryMergeAndTrim);
             test("专注历史：会话与分心计数写入当日趋势", TestFocusStatsFeedsHistory);
             test("日常统计：掌权时长写入今日键与 TSV 日常列", TestDailyCareRecordsSession);

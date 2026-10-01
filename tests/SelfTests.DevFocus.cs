@@ -681,7 +681,12 @@ namespace CaelusApp
             Eq(false, BuildCatalog.IsMatch("git-cmd"));
             Eq(false, BuildCatalog.IsMatch("docker"));
             Eq(false, BuildCatalog.IsMatch("docker-buildx"));
-            // 补回路径：CustomList 加回后恢复命中
+        }
+
+        // 补回路径：CustomList 加回后恢复命中。写 Settings——必须注册在
+        // 临时存储启用之后跑，不污染真实注册表
+        private static void TestBuildCatalogCustomList()
+        {
             string oldCustom = BuildCatalog.CustomList;
             try
             {

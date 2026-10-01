@@ -1204,6 +1204,7 @@ ode.exe",
                 DevFocus.CpuProbe = pid => TimeSpan.FromMilliseconds(5000);
                 dev.SampleBuildCpu();
                 Eq(true, dev.IsActive);
+                Eq(true, dev.IsGranted);   // 重入→再掌权整链（活性上报→仲裁→Grant）
 
                 // 不可读保守保留（规格 §3.2）：探针活但 CPU 读不出 → 采样标记后不被静默淘汰
                 DevFocus.CpuProbe = pid => null;

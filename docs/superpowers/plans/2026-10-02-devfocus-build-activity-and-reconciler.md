@@ -10,7 +10,7 @@
 
 **规格文档:** `docs/superpowers/specs/2026-10-02-devfocus-build-activity-and-reconciler-design.md`（§3 活性门 / §4 收敛器 / §5 测试策略 / §7 验收）
 
-**基线:** TOTAL 295 / PASS 291 / FAIL 0 / SKIP 4（83e5e95）。完成后预期 298。
+**基线:** TOTAL 295（83e5e95）。执行期修订：Task 1 质量审查将 CustomList 往返抽为独立注册测试（+1），基线随之 296；完成后预期 **299**。
 
 ---
 
@@ -67,7 +67,7 @@ Expected: `FAIL  开发专注：编译工具名录覆盖扩展工具链`（git/d
 - [ ] **Step 4: 跑测试确认通过**
 
 Run: `cmd //c "dev.cmd test" 2>&1 | tail -5`
-Expected: `TOTAL 295 … FAIL 0`（计数未变，本轮只扩断言）
+Expected: `TOTAL 296 … FAIL 0`（295 基线 + Task 1 抽出的独立往返测试；本轮只扩断言）
 
 - [ ] **Step 5: Commit**
 
@@ -163,7 +163,7 @@ Expected: 编译错误 `DevFocus 未定义 BuildIdleDropSeconds/ShouldDropForIdl
 - [ ] **Step 4: 跑测试确认通过**
 
 Run: `cmd //c "dev.cmd test" 2>&1 | tail -5`
-Expected: `TOTAL 296 … FAIL 0`
+Expected: `TOTAL 297 … FAIL 0`
 
 - [ ] **Step 5: 写集成失败测试（淘汰/重入/统计落点）**
 
@@ -264,21 +264,12 @@ Expected: 编译错误 `DevFocus 未定义 RemoveIdleBuilds/SampleBuildCpu`
                 }
 ```
 
-(c) 同方法锁外统计段（原 :297-303 的 `if (buildEndedElapsed > 0)` 块）整块替换为统一收尾调用：
+(c) 同方法锁内转换段：删除 `else if (activeBuildPids.Count == 0 && wasBuildActive) buildEndedElapsed = …` 分支与局部变量 `long buildEndedElapsed = 0;`（统计落点收归 BuildSetBecameEmpty 统一负责，见 (e)——两条路径单一记账点，防漏记/重记）；锁外原统计段（`if (buildEndedElapsed > 0)` 块）整块替换为：
 
 ```csharp
             // 编译集合 空←非空 的统一收尾（统计落点 + 停采样 + 仍掌权时收敛副作用降沿）
-            if (buildEndedElapsed > 0)
-            {
-                // 保持原统计行为（buildEndedElapsed 语义不变），收尾细节见 BuildSetBecameEmpty
-                try { FocusStats.RecordBuild(buildEndedElapsed, DateTime.Now); } catch { }
-                try { Logger.Log(string.Format("开发专注：本次编译 {0:0.#} 秒",
-                    buildEndedElapsed / (double)TimeSpan.TicksPerSecond)); } catch { }
-            }
             if (buildActivity && activeBuildPids.Count == 0) BuildSetBecameEmpty();
 ```
-
-（锁内计算 `buildEndedElapsed` 的原逻辑保留不动；`BuildSetBecameEmpty` 负责停采样与收敛，不重复统计——见 (e)。）
 
 (d) `OnInitialProcess`（原 :344-361）改用悲观入场：
 
@@ -346,10 +337,22 @@ Expected: 编译错误 `DevFocus 未定义 RemoveIdleBuilds/SampleBuildCpu`
             BuildSetBecameEmpty();
         }
 
-        /// <summary>编译集合 空←非空 的统一收尾：停采样器 + 仍掌权时收敛副作用降沿
-        /// （统计落点由调用方的事件路径完成，这里不重复记——两条路径共用保证见规格 §5.2）。</summary>
+        /// <summary>编译集合 空←非空 的统一收尾（事件 Stopped 与活性门淘汰共用的单一记账点）：
+        /// 统计落点（FocusStats + 日志）+ 复位编译起点钟 + 停采样器 + 仍掌权时收敛副作用降沿。</summary>
         private void BuildSetBecameEmpty()
         {
+            long elapsed;
+            lock (sync)
+            {
+                elapsed = BuildEndedElapsed(buildStartTicks, DateTime.UtcNow.Ticks);
+                buildStartTicks = 0;
+            }
+            if (elapsed > 0)
+            {
+                try { FocusStats.RecordBuild(elapsed, DateTime.Now); } catch { }
+                try { Logger.Log(string.Format("开发专注：本次编译 {0:0.#} 秒",
+                    elapsed / (double)TimeSpan.TicksPerSecond)); } catch { }
+            }
             Timer t;
             lock (sync)
             {
@@ -357,7 +360,7 @@ Expected: 编译错误 `DevFocus 未定义 RemoveIdleBuilds/SampleBuildCpu`
                 buildSampleTimer = null;
             }
             if (t != null) t.Dispose();
-            lock (sync) { if (granted) ReconcileSideEffects(); }
+            // 收敛器调用在 Task 3 落地后由其 Step (h) 补上（本任务先编译通过）
         }
 
         /// <summary>CPU 采样节拍（5 秒）：推进度、清死记忆、复活重入、静默淘汰。</summary>
@@ -455,7 +458,7 @@ Expected: 编译错误 `DevFocus 未定义 RemoveIdleBuilds/SampleBuildCpu`
 - [ ] **Step 8: 跑测试确认通过**
 
 Run: `cmd //c "dev.cmd test" 2>&1 | tail -5`
-Expected: `TOTAL 297 … FAIL 0`（注意：既有探针测试可能因活性门淘汰心跳探针而 FAIL——若出现，先做 Task 4 的插桩再回到本步；正常顺序应无 FAIL，因为心跳探针 20 秒内测试已完成）
+Expected: `TOTAL 298 … FAIL 0`（注意：既有探针测试可能因活性门淘汰心跳探针而 FAIL——若出现，先做 Task 4 的插桩再回到本步；正常顺序应无 FAIL，因为心跳探针 20 秒内测试已完成）
 
 - [ ] **Step 9: Commit**
 
@@ -696,10 +699,16 @@ Expected: `FAIL  开发专注：副作用收敛器升降沿…`（步骤 1 断�
                 suppressApplied = false;
 ```
 
+(h) `BuildSetBecameEmpty()` 末尾注释处（Task 2 预留）补上收敛器调用：
+
+```csharp
+            lock (sync) { if (granted) ReconcileSideEffects(); }
+```
+
 - [ ] **Step 4: 跑测试确认通过**
 
 Run: `cmd //c "dev.cmd test" 2>&1 | tail -5`
-Expected: `TOTAL 298 … FAIL 0`（若既有 DevFocus 测试 FAIL，多为快照语义被收敛器改变所致——逐个核对断言意图后修正测试或实现，不得跳过）
+Expected: `TOTAL 299 … FAIL 0`（若既有 DevFocus 测试 FAIL，多为快照语义被收敛器改变所致——逐个核对断言意图后修正测试或实现，不得跳过）
 
 - [ ] **Step 5: Commit**
 
@@ -740,7 +749,7 @@ Expected 9 处：:60、:98、:136、:210、:453、:506、:537、:903、:954（�
 - [ ] **Step 3: 全量门禁确认无回归**
 
 Run: `cmd //c "dev.cmd test" 2>&1 | tail -5`
-Expected: `TOTAL 298 / FAIL 0`（SKIP 2~5 浮动属常态）
+Expected: `TOTAL 299 / FAIL 0`（SKIP 2~5 浮动属常态）
 
 - [ ] **Step 4: Commit**
 
@@ -754,12 +763,12 @@ git commit -m "test(dev): 既有探针测试适配编译活性门（心跳探针
 ### Task 5: 三语 README 计数同步 + 真机验收
 
 **Files:**
-- Modify: `README.md` / `README.en.md` / `README.ja.md`（295 → 298，各自徽章行 + 正文计数行，共 8 处）
+- Modify: `README.md` / `README.en.md` / `README.ja.md`（295 → 299，各自徽章行 + 正文计数行，共 8 处）
 
 - [ ] **Step 1: 计数同步**
 
-Run: `sed -i 's/295/298/g' README.md README.en.md README.ja.md`
-核对：`grep -n "298" README.md README.en.md README.ja.md` 应命中 4+2+2 处且语义均为自测计数。
+Run: `sed -i 's/295/299/g' README.md README.en.md README.ja.md`
+核对：`grep -n "299" README.md README.en.md README.ja.md` 应命中 4+2+2 处且语义均为自测计数。
 
 - [ ] **Step 2: 真机验收三场景（规格 §5.5）**
 
@@ -774,13 +783,13 @@ Expected: 三场景全过；失败则按 systematic-debugging 定位（优先查
 - [ ] **Step 3: 最终门禁**
 
 Run: `cmd //c "dev.cmd test" 2>&1 | tail -5`
-Expected: `TOTAL 298 / FAIL 0`
+Expected: `TOTAL 299 / FAIL 0`
 
 - [ ] **Step 4: Commit**
 
 ```bash
 git add README.md README.en.md README.ja.md
-git commit -m "docs: 三语 README 自测计数 295→298（活性门 + 收敛器测试）"
+git commit -m "docs: 三语 README 自测计数 295→299（活性门 + 收敛器测试）"
 ```
 
 ---

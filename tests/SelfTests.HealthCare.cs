@@ -61,6 +61,14 @@ namespace CaelusApp
             Eq(true, HealthCare.IsDue("garbage", 1, new DateTime(2026, 8, 14)));
         }
 
+        private static void TestHealthCareShouldMarkCompleted()
+        {
+            Eq(true, HealthCare.ShouldMarkCompleted(3, 0));   // 全部成功：照常标记
+            Eq(true, HealthCare.ShouldMarkCompleted(2, 1));   // 部分失败：照常标记，失败的明天再试
+            Eq(true, HealthCare.ShouldMarkCompleted(0, 0));   // 空目录：无事可做也标记
+            Eq(false, HealthCare.ShouldMarkCompleted(0, 2));  // 全部失败：不标记，下周期重试
+        }
+
         private static void TestStartupAuditEscapingRoundtrip()
         {
             string dir = NewTempDir("startup-esc");

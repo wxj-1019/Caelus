@@ -754,15 +754,34 @@ namespace CaelusApp
             catch { }
         }
 
-        /// <summary>立即执行（代码后置在后台线程调用）。返回 true 表示本轮真的跑了。</summary>
-        public bool RunHealthNowCore()
+        /// <summary>立即执行（代码后置在后台线程调用）。返回 true 表示本轮真的跑了；
+        /// false 时 reason 给出冷却/游戏让路/执行失败的具体原因（供反馈行展示）。</summary>
+        public bool RunHealthNowCore(out string reason)
         {
             long now = DateTime.UtcNow.Ticks;
-            if (now - lastHealthRunTicks < 60L * TimeSpan.TicksPerSecond) return false;
-            if (source.Granted == ScenarioKind.Game) return false;
+            if (now - lastHealthRunTicks < 60L * TimeSpan.TicksPerSecond)
+            {
+                reason = "刚执行过，60 秒冷却中";
+                return false;
+            }
+            if (source.Granted == ScenarioKind.Game)
+            {
+                reason = "游戏进行中，健康维护已让路";
+                return false;
+            }
             lastHealthRunTicks = now;
-            try { HealthRunner.Run(HealthTrigger.Manual, HealthCatalog.Shared, null); return true; }
-            catch (Exception ex) { Logger.LogFailure("手动维护执行失败", ex); return false; }
+            try
+            {
+                HealthRunner.Run(HealthTrigger.Manual, HealthCatalog.Shared, null);
+                reason = "维护执行完成";
+                return true;
+            }
+            catch (Exception ex)
+            {
+                Logger.LogFailure("手动维护执行失败", ex);
+                reason = "执行失败：" + ex.Message;
+                return false;
+            }
         }
 
         /// <summary>禁用所选启动项（后台线程调用，ids 为 UI 线程预取的勾选快照）。</summary>

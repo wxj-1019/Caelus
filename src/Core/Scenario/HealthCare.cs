@@ -77,6 +77,14 @@ namespace CaelusApp
             return days > 30 ? 30 : days;
         }
 
+        /// <summary>失败轮是否标记今日已维护（纯逻辑可单测）：全部失败不标记，让 30 分钟
+        /// 调度自然重试——否则一次权限/占用故障会让着色器清理整整一天不跑；有成功项或
+        /// 无失败项照常标记，避免每天为一个部分失败动作反复重跑全目录。</summary>
+        internal static bool ShouldMarkCompleted(int ok, int bad)
+        {
+            return ok > 0 || bad == 0;
+        }
+
         /// <summary>到点则经维护框架执行一轮。由独立调度（StartAuto）调用。</summary>
         public static void RunIfDue()
         {
@@ -104,6 +112,16 @@ namespace CaelusApp
                     else if (r.Outcome == HealthOutcome.Failed) bad++;
                 }
                 ActivityLog.Add("健康维护自动执行完成（成功 " + ok + " 项" + (bad > 0 ? "，失败 " + bad + " 项" : "") + "）");
+                if (!ShouldMarkCompleted(ok, bad))
+                {
+                    ActivityLog.Add("健康维护：本轮全部失败，不标记已维护，下个周期自动重试");
+                    return;
+                }
+            }
+            else
+            {
+                // 执行框架整体异常：与全部失败同语义，不标记、下个周期重试
+                return;
             }
 
             Settings.SaveStr("HealthLastRun", today);

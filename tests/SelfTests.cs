@@ -1971,6 +1971,7 @@ namespace CaelusApp
             test("健康维护：启动项基线对比只报新增", TestStartupAuditDiffNew);
             test("健康维护：基线快照存储往返与转义", TestStartupAuditBaselineRoundtrip);
             test("健康维护：到点判定覆盖从未运行与损坏数据", TestHealthCareIsDue);
+            test("健康维护：全部失败的轮次不标记已维护（下周期重试）", TestHealthCareShouldMarkCompleted);
     test("健康维护：反斜杠-t 序列与真实制表符基线往返无损", TestStartupAuditEscapingRoundtrip);
             test("维护框架：目录注册与查找", TestHealthCatalogRegister);
             test("维护框架：自动路径跳过手动动作", TestHealthRunnerAutoSkipsManualOnly);

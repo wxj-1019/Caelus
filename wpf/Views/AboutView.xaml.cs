@@ -37,7 +37,16 @@ namespace CaelusApp.WpfHost.Views
                 AboutViewModel vm = DataContext as AboutViewModel;
                 if (vm != null) vm.RefreshNotesButton();
             }
-            catch { }
+            catch (Exception ex)
+            {
+                // 打开失败必须可见：静默等于按钮失灵（与 OnDownload 的反馈模式一致）
+                AboutViewModel vm = DataContext as AboutViewModel;
+                if (vm != null)
+                {
+                    vm.UpdateKind = "Error";
+                    vm.UpdateStatus = "发布说明打开失败：" + ex.Message;
+                }
+            }
         }
 
         private void OnNavigate(object sender, RequestNavigateEventArgs e)

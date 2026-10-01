@@ -159,17 +159,27 @@ namespace CaelusApp
         public string LightModeNote { get { return Lang.T("set.light.n"); } }
         public bool LightMode
         {
-            get { return lightMode; }
+            get
+            {
+                // 跟随系统时取当前实际生效色调，避免开关与界面颜色自相矛盾
+                if (ToneMode == 2) return ThemeManager.CurrentTone == UiTone.Light;
+                return lightMode;
+            }
             set
             {
+                bool wasFollow = ToneMode == 2;
                 if (!SetProperty(ref lightMode, value, "LightMode")) return;
-                // 同步写 UiToneMode：0=深 1=浅，保证重启后与新三态控件一致
+                // 同步写 UiToneMode：0=深 1=浅，保证重启后与新三态控件一致。
+                // 跟随系统下拨动本开关 = 用户显式退出跟随，须告知而非静默清除三态选择
                 Settings.SaveStr("UiToneMode", value ? "1" : "0");
                 Settings.Save("UiLight", value);
+                Raise("ToneMode");   // 通知三态控件跟随同步（跟随被退出时视觉必须立即离开「跟随系统」）
                 if (Application.Current != null)
                     ThemeManager.Apply(Application.Current,
                         value ? UiTone.Light : UiTone.Dark, ThemeManager.CurrentMode);
-                ShowFeedback("主题偏好已保存。", "Success");
+                ShowFeedback(wasFollow
+                    ? (value ? "已退出「跟随系统」，固定为浅色主题。" : "已退出「跟随系统」，固定为深色主题。")
+                    : "主题偏好已保存。", "Success");
                 Raise("PreferenceSummary");
             }
         }
@@ -493,6 +503,7 @@ namespace CaelusApp
                 }
                 Raise("ToneMode");
                 ApplyToneFromSetting();
+                if (value == 2) Raise("LightMode");   // 进入跟随后 getter 转为动态取实际生效色调
             }
         }
 

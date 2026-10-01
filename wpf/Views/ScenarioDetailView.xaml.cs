@@ -32,10 +32,17 @@ namespace CaelusApp.WpfHost.Views
         {
             ScenarioDetailViewModel vm = DataContext as ScenarioDetailViewModel;
             if (vm == null) return;
+            vm.HealthActionFeedback = "维护执行中……";
             System.Threading.ThreadPool.QueueUserWorkItem(delegate
             {
-                try { vm.RunHealthNowCore(); } catch { }
-                Dispatcher.BeginInvoke(new Action(delegate { vm.RefreshHealthZone(true); }));
+                string reason;
+                try { vm.RunHealthNowCore(out reason); }
+                catch (Exception ex) { reason = "执行失败：" + ex.Message; }
+                Dispatcher.BeginInvoke(new Action(delegate
+                {
+                    vm.HealthActionFeedback = reason;
+                    vm.RefreshHealthZone(true);
+                }));
             });
         }
 
@@ -50,7 +57,8 @@ namespace CaelusApp.WpfHost.Views
             System.Threading.ThreadPool.QueueUserWorkItem(delegate
             {
                 string msg = "";
-                try { msg = vm.DisableSelectedStartupCore(ids); } catch { }
+                try { msg = vm.DisableSelectedStartupCore(ids); }
+                catch (Exception ex) { msg = "操作失败：" + ex.Message; }
                 string feedback = msg ?? "";
                 Dispatcher.BeginInvoke(new Action(delegate { vm.HealthActionFeedback = feedback; vm.RefreshHealthZone(true); }));
             });
@@ -66,7 +74,8 @@ namespace CaelusApp.WpfHost.Views
             System.Threading.ThreadPool.QueueUserWorkItem(delegate
             {
                 string msg = "";
-                try { msg = vm.UndoStartupCore(payload); } catch { }
+                try { msg = vm.UndoStartupCore(payload); }
+                catch (Exception ex) { msg = "操作失败：" + ex.Message; }
                 string feedback = msg ?? "";
                 Dispatcher.BeginInvoke(new Action(delegate { vm.HealthActionFeedback = feedback; vm.RefreshHealthZone(true); }));
             });

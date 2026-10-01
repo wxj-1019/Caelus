@@ -23,6 +23,7 @@ namespace CaelusApp.WpfHost.Views
     {
         private static volatile bool shaderCleaning;
         private static int devEnvBusy;
+        private bool syncingTonePicker;
 
         public SettingsView()
         {
@@ -37,6 +38,13 @@ namespace CaelusApp.WpfHost.Views
             // 页面每次进入都重读注册表快照：托盘菜单/恢复默认等界面外改动不回刷本页时的兜底
             SettingsViewModel svm = DataContext as SettingsViewModel;
             if (svm != null) { try { svm.RefreshFromSettings(); } catch { } }
+            // 二态开关（亮色主题）写 UiToneMode 时回同步三态控件，避免跟随选择被
+            // 退出后 TonePicker 视觉停留在「跟随系统」
+            if (svm != null)
+            {
+                svm.PropertyChanged -= OnSettingsVmPropertyChanged;
+                svm.PropertyChanged += OnSettingsVmPropertyChanged;
+            }
             Motion.RiseIn(ZoneHeader, 40);
             Motion.RiseIn(ZoneSummary, 90);
             Motion.RiseIn(ZoneApp, 140);
@@ -64,8 +72,19 @@ namespace CaelusApp.WpfHost.Views
             TonePicker.SetCurrentValue(SegmentedControl.SelectedIndexProperty, vm.ToneMode);
         }
 
+        private void OnSettingsVmPropertyChanged(object sender, PropertyChangedEventArgs e)
+        {
+            if (e.PropertyName != "ToneMode" || syncingTonePicker) return;
+            SettingsViewModel vm = DataContext as SettingsViewModel;
+            if (vm == null) return;
+            syncingTonePicker = true;
+            try { TonePicker.SetCurrentValue(SegmentedControl.SelectedIndexProperty, vm.ToneMode); }
+            finally { syncingTonePicker = false; }
+        }
+
         private void OnToneModeChanged(object sender, int index)
         {
+            if (syncingTonePicker) return;
             SettingsViewModel vm = DataContext as SettingsViewModel;
             if (vm == null) return;
             // ToneMode setter 已调用 ApplyToneFromSetting，这里不重复应用（避免双重换肤）

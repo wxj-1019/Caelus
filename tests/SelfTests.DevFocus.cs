@@ -1152,5 +1152,69 @@ ode.exe",
             Eq(true, IdeCatalog.IsMatch("mysqlworkbench",
                 System.IO.Path.Combine(pf, @"MySQL\MySQL Workbench\MySQLWorkbench.exe")));
         }
+
+        // —— 编译活性门（规格 2026-10-02 §3.2）——
+        private static void TestBuildIdleDropDecision()
+        {
+            int old = DevFocus.BuildIdleDropSeconds;
+            try
+            {
+                DevFocus.BuildIdleDropSeconds = 20;
+                long now = DateTime.UtcNow.Ticks;
+                Eq(false, DevFocus.ShouldDropForIdle(0, now));                                      // 未起钟不淘汰
+                Eq(false, DevFocus.ShouldDropForIdle(now - 19L * TimeSpan.TicksPerSecond, now));   // 静默 19 秒保留
+                Eq(true, DevFocus.ShouldDropForIdle(now - 20L * TimeSpan.TicksPerSecond, now));    // 满 20 秒淘汰
+                DevFocus.BuildIdleDropSeconds = 0;
+                Eq(false, DevFocus.ShouldDropForIdle(now - 3600L * TimeSpan.TicksPerSecond, now)); // 0=关闭淘汰
+            }
+            finally { DevFocus.BuildIdleDropSeconds = old; }
+        }
+
+        private static void TestBuildIdleDropAndReenter()
+        {
+            string dir = NewTempDir("devfocus-idle");
+            Process probe = null;
+            DevFocus dev = null;
+            int oldIdle = DevFocus.BuildIdleDropSeconds;
+            Func<int, TimeSpan?> oldProbe = DevFocus.CpuProbe;
+            string oldN = Settings.LoadStr("FocusStatsBuildN", "");
+            string oldSec = Settings.LoadStr("FocusStatsBuildSec", "");
+            DevFocus.BuildIdleDropSeconds = 20;
+            try
+            {
+                var arbiter = new ScenarioArbiter();
+                var core = new SuppressionCore(Path.Combine(dir, "s.state"));
+                dev = new DevFocus(arbiter, core, () => true, (n, p) => false, name => false);
+
+                string beat;
+                probe = StartNamedProbe(dir, "msbuild.exe", out beat);
+                DevFocus.CpuProbe = pid => TimeSpan.FromMilliseconds(1000);   // 恒定读数 = 无 CPU 前进
+                dev.NotifyProcessChanges(new ProcessChangeBatch(
+                    new[] { MakeChange(probe.Id, "msbuild", ProcessChangeKind.Started) }, false));
+                Eq(true, dev.IsActive);
+                Eq(true, dev.IsGranted);   // 事件入场乐观计活 → 掌权（SvcPause 真实往返，finally 还原）
+
+                // 静默超阈 → 淘汰收权，编译统计落一条
+                dev.RemoveIdleBuilds(DateTime.UtcNow.Ticks + 30L * TimeSpan.TicksPerSecond);
+                Eq(false, dev.IsActive);
+                Eq(false, dev.IsGranted);
+                Eq("1", Settings.LoadStr("FocusStatsBuildN", "0"));
+
+                // 复活重入：被淘汰的 pid 复烧 CPU（无 Started 事件，nodeReuse 场景）→ 采样器重入场
+                DevFocus.CpuProbe = pid => TimeSpan.FromMilliseconds(5000);
+                dev.SampleBuildCpu();
+                Eq(true, dev.IsActive);
+            }
+            finally
+            {
+                DevFocus.BuildIdleDropSeconds = oldIdle;
+                DevFocus.CpuProbe = oldProbe;
+                Settings.SaveStr("FocusStatsBuildN", oldN);
+                Settings.SaveStr("FocusStatsBuildSec", oldSec);
+                try { if (dev != null) dev.Stop(); } catch { }   // Grant 真实停过服务，必须还原
+                StopOwned(probe);
+                DeleteTempDir(dir);
+            }
+        }
     }
 }

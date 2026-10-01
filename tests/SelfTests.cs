@@ -1313,6 +1313,8 @@ namespace CaelusApp
             test("豁免名录：反作弊/加速器自定义清单即存即效", TestCustomExemptionCatalogs);
             test("IDE 目录：自定义名录合并与坏行容错", TestIdeCatalogCustomList);
             test("编译名录：CustomList 补回 git/docker 即存即效", TestBuildCatalogCustomList);
+            test("编译活性门：静默淘汰判定真值表", TestBuildIdleDropDecision);
+            test("编译活性门：空转淘汰/复活重入/统计落点", TestBuildIdleDropAndReenter);
             test("专注历史：按日合并、截断与近 7 日补零", TestFocusHistoryMergeAndTrim);
             test("专注历史：会话与分心计数写入当日趋势", TestFocusStatsFeedsHistory);
             test("日常统计：掌权时长写入今日键与 TSV 日常列", TestDailyCareRecordsSession);

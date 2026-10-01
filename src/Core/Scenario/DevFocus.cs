@@ -48,6 +48,42 @@ namespace CaelusApp
         private readonly Dictionary<int, string> buildBoostedName = new Dictionary<int, string>();
         private readonly Dictionary<int, int> buildBoostedIo = new Dictionary<int, int>();
 
+        // —— 编译活性门（规格 2026-10-02 §3.2）：CPU 进度驻留，空转常驻节点不维持掌权 ——
+        private readonly Dictionary<int, long> buildPidLastProgress = new Dictionary<int, long>(); // pid → 最近 CPU 前进时刻
+        private readonly Dictionary<int, long> buildPidCpuMs = new Dictionary<int, long>();       // pid → 上次采样累计 CPU 毫秒
+        private readonly Dictionary<int, string> buildPidName = new Dictionary<int, string>();    // pid → 进程名（复活重入的合成事件用）
+        private Timer buildSampleTimer;
+
+        /// <summary>编译 pid 静默淘汰阈值秒数（默认 20；0=关闭）。internal static 供自测覆写。</summary>
+        internal static int BuildIdleDropSeconds = 20;
+
+        /// <summary>编译 pid 的累计 CPU 读数注入（返回 null=不可读，保守保留）。null=生产实现。</summary>
+        internal static Func<int, TimeSpan?> CpuProbe;
+
+        /// <summary>静默淘汰判定（纯逻辑，可单测）：未起钟（&lt;=0）不淘汰；
+        /// 静默超过 BuildIdleDropSeconds 秒（0=关闭）淘汰。</summary>
+        internal static bool ShouldDropForIdle(long lastProgressTicks, long nowTicks)
+        {
+            if (lastProgressTicks <= 0) return false;
+            if (BuildIdleDropSeconds <= 0) return false;
+            return nowTicks - lastProgressTicks >= BuildIdleDropSeconds * TimeSpan.TicksPerSecond;
+        }
+
+        /// <summary>读编译 pid 的累计 CPU（可注入）。不可读（提权/跨会话/已退出）返回 null：
+        /// 保守保留——不更新进度也不淘汰，防误杀真编译；死进程由 Stopped/CleanDeadPids 走。</summary>
+        private static TimeSpan? ReadBuildCpu(int pid)
+        {
+            Func<int, TimeSpan?> probe = CpuProbe;
+            if (probe != null) return probe(pid);
+            try
+            {
+                Process p = Process.GetProcessById(pid);
+                try { return p.TotalProcessorTime; }
+                finally { p.Dispose(); }
+            }
+            catch { return null; }
+        }
+
         /// <summary>编译会话状态变化时触发，参数是文案 key（bal.buildstart / bal.buildend）</summary>
         public event Action<string> SessionChanged;
 
@@ -160,7 +196,13 @@ namespace CaelusApp
                     ideVisible = false;
                     distractNotified.Clear();
                     blockBalloonTicks.Clear();
+                    buildPidLastProgress.Clear();
+                    buildPidCpuMs.Clear();
+                    buildPidName.Clear();
                 }
+                Timer st;
+                lock (sync) { st = buildSampleTimer; buildSampleTimer = null; }
+                if (st != null) st.Dispose();
                 ForceReportInactive();
             }
             else
@@ -183,7 +225,13 @@ namespace CaelusApp
                     reported = false;
                     activeBuildPids.Clear();
                     activeIdePids.Clear();
+                    buildPidLastProgress.Clear();
+                    buildPidCpuMs.Clear();
+                    buildPidName.Clear();
                 }
+                Timer st;
+                lock (sync) { st = buildSampleTimer; buildSampleTimer = null; }
+                if (st != null) st.Dispose();
                 if (wasReported) arbiter.ReportActivity(Kind, false);
                 return;
             }
@@ -195,7 +243,6 @@ namespace CaelusApp
             bool ideChanged = false;
             List<int> newlyBuilt = null;
             List<int> toBlock = null;
-            long buildEndedElapsed = 0;
 
             lock (sync)
             {
@@ -214,10 +261,11 @@ namespace CaelusApp
                             {
                                 if (newlyBuilt == null) newlyBuilt = new List<int>();
                                 newlyBuilt.Add(pc.Pid);
+                                EnterBuildPidLocked(pc.Pid, pc.Name, DateTime.UtcNow.Ticks);
                             }
                         }
                         else if (pc.Kind == ProcessChangeKind.Stopped)
-                            activeBuildPids.Remove(pc.Pid);
+                            activeBuildPids.Remove(pc.Pid);   // 记忆字典保留供复活重入
                     }
 
                     // IDE 进程匹配（Task 4 接线：名称预筛 + 安装目录双重校验，见 IsIdeProcess）
@@ -287,20 +335,18 @@ namespace CaelusApp
                 }
 
                 buildActivity = wasBuildActive != (activeBuildPids.Count > 0);
-                // 编译统计真实起止：集合 空→非空 记起点、非空→空 记时长（无起点不记——初始扫描外的边界防护）
+                // 编译统计真实起止：集合 空→非空 记起点并起采样器；非空→空 的时长记
+                // 收归 BuildSetBecameEmpty 单一记账点（事件 Stopped 与活性门淘汰共用）
                 if (activeBuildPids.Count > 0 && !wasBuildActive)
+                {
                     buildStartTicks = DateTime.UtcNow.Ticks;
-                else if (activeBuildPids.Count == 0 && wasBuildActive)
-                    buildEndedElapsed = BuildEndedElapsed(buildStartTicks, DateTime.UtcNow.Ticks);
+                    if (buildSampleTimer == null)
+                        buildSampleTimer = new Timer(_ => SampleBuildCpu(), null, 5000, 5000);
+                }
             }
 
-            // 编译结束（场景仍在运行也记账）：写今日统计与按日历史，替代旧「场景会话起点近似」日志
-            if (buildEndedElapsed > 0)
-            {
-                try { FocusStats.RecordBuild(buildEndedElapsed, DateTime.Now); } catch { }
-                try { Logger.Log(string.Format("开发专注：本次编译 {0:0.#} 秒",
-                    buildEndedElapsed / (double)TimeSpan.TicksPerSecond)); } catch { }
-            }
+            // 编译集合 空←非空 的统一收尾（统计落点 + 停采样 + 收敛副作用降沿[Task 3 接]）
+            if (buildActivity && activeBuildPids.Count == 0) BuildSetBecameEmpty();
 
             // 分心阻断在锁外执行：优雅关闭最多等 1 秒，不能压住进程事件线程
             if (toBlock != null)
@@ -332,7 +378,7 @@ namespace CaelusApp
             {
                 if (buildActivity)
                 {
-                    // 编译时长日志改在编译集合 1→0 处按真实起点记（见上 buildEndedElapsed），
+                    // 编译时长统计已在 BuildSetBecameEmpty 单一记账点落盘（见上），
                     // 此处只发场景结束气球
                     try { var h = SessionChanged; if (h != null) h("bal.buildend"); } catch { }
                 }
@@ -347,11 +393,19 @@ namespace CaelusApp
             if (BuildCatalog.IsMatch(change.Name))
             {
                 // 初始扫描加入的编译进程也要起钟：否则它在第一批事件里就结束时，
-                // 转换逻辑以 buildStartTicks==0 计出天文数字时长，写爆今日统计
+                // 转换逻辑以 buildStartTicks==0 计出天文数字时长，写爆今日统计。
+                // 活性门入场悲观（规格 §3.2）：只给 5 秒宽限证明自己在编译——
+                // 开机残留的 nodeReuse 节点最多 5 秒假阳性，真编译延迟 ≤5 秒收权
                 lock (sync)
                 {
-                    if (activeBuildPids.Add(change.Pid) && buildStartTicks == 0)
-                        buildStartTicks = DateTime.UtcNow.Ticks;
+                    if (activeBuildPids.Add(change.Pid))
+                    {
+                        if (buildStartTicks == 0) buildStartTicks = DateTime.UtcNow.Ticks;
+                        EnterBuildPidLocked(change.Pid, change.Name,
+                            DateTime.UtcNow.Ticks - 15L * TimeSpan.TicksPerSecond);
+                        if (buildSampleTimer == null)
+                            buildSampleTimer = new Timer(_ => SampleBuildCpu(), null, 5000, 5000);
+                    }
                 }
             }
             if (IdeOn && IsIdeProcess(change.Pid, change.Name, change.Path))
@@ -373,6 +427,147 @@ namespace CaelusApp
                 finally { Native.CloseHandle(h); }
             }
             foreach (int pid in dead) pids.Remove(pid);
+        }
+
+        // —— 编译活性门内部 ——
+
+        /// <summary>乐观/悲观入场：记录名字与起钟时刻，CPU 基线由下次采样重建。</summary>
+        private void EnterBuildPidLocked(int pid, string name, long progressTicks)
+        {
+            buildPidName[pid] = name ?? "";
+            buildPidLastProgress[pid] = progressTicks;
+            buildPidCpuMs.Remove(pid);
+        }
+
+        /// <summary>活性门淘汰（采样节拍调用；自测可直接传人造时刻）：静默超阈的 pid
+        /// 移出活性集合，集合因此 空←非空 时走与 Stopped 相同的收尾。</summary>
+        internal void RemoveIdleBuilds(long nowTicks)
+        {
+            bool wasBuildActive;
+            lock (sync)
+            {
+                wasBuildActive = activeBuildPids.Count > 0;
+                if (!wasBuildActive) return;
+                var dropped = new List<int>();
+                foreach (int pid in activeBuildPids)
+                {
+                    long last;
+                    buildPidLastProgress.TryGetValue(pid, out last);
+                    if (ShouldDropForIdle(last, nowTicks)) dropped.Add(pid);
+                }
+                if (dropped.Count == 0) return;
+                foreach (int pid in dropped) activeBuildPids.Remove(pid);
+                if (activeBuildPids.Count > 0) return;   // 仍有编译在场：不收尾（采样器继续跑）
+            }
+            BuildSetBecameEmpty();
+        }
+
+        /// <summary>编译集合 空←非空 的统一收尾（事件 Stopped 与活性门淘汰共用的单一记账点）：
+        /// 统计落点（FocusStats + 日志）+ 复位编译起点钟 + 停采样器 + 仍掌权时收敛副作用降沿。</summary>
+        private void BuildSetBecameEmpty()
+        {
+            long elapsed;
+            lock (sync)
+            {
+                elapsed = BuildEndedElapsed(buildStartTicks, DateTime.UtcNow.Ticks);
+                buildStartTicks = 0;
+            }
+            if (elapsed > 0)
+            {
+                try { FocusStats.RecordBuild(elapsed, DateTime.Now); } catch { }
+                try { Logger.Log(string.Format("开发专注：本次编译 {0:0.#} 秒",
+                    elapsed / (double)TimeSpan.TicksPerSecond)); } catch { }
+            }
+            Timer t;
+            lock (sync)
+            {
+                t = buildSampleTimer;
+                buildSampleTimer = null;
+            }
+            if (t != null) t.Dispose();
+            // 编译来源消失后活性重算：无其他来源时向仲裁器报告不活跃（收权/还原服务暂停）。
+            // 事件 Stopped 路径在 NotifyProcessChanges 锁内已翻 reported，此处重算为幂等空转，
+            // 只有活性门淘汰路径（无事件批次）靠这里收权。仍掌权时收敛副作用降沿由 Task 3 接。
+            RecomputeActivity();
+        }
+
+        /// <summary>CPU 采样节拍（5 秒）：推进度、清死记忆、复活重入、静默淘汰。</summary>
+        internal void SampleBuildCpu()
+        {
+            int[] active;
+            int[] remembered;
+            lock (sync)
+            {
+                active = new int[activeBuildPids.Count];
+                activeBuildPids.CopyTo(active);
+                // 记忆全集以名字表为准：入场/重入场必写名字，清死才删——
+                // 只遍历 cpu 表会漏掉「已入场未采样」与「被淘汰待重入」的 pid（它们恰恰是本节拍要看的）
+                remembered = new int[buildPidName.Count];
+                buildPidName.Keys.CopyTo(remembered, 0);
+            }
+            long now = DateTime.UtcNow.Ticks;
+            var alive = new HashSet<int>();
+            var reenter = new List<int>();
+            foreach (int pid in remembered)
+            {
+                TimeSpan? cpu = ReadBuildCpu(pid);
+                if (cpu == null) continue;               // 不可读保守保留（不淘汰、不重入、不清记忆）
+                alive.Add(pid);
+                long ms = (long)cpu.Value.TotalMilliseconds;
+                long prev;
+                lock (sync) buildPidCpuMs.TryGetValue(pid, out prev);
+                if (ms <= prev) continue;
+                lock (sync)
+                {
+                    buildPidCpuMs[pid] = ms;
+                    buildPidLastProgress[pid] = now;
+                }
+                bool inSet = Array.IndexOf(active, pid) >= 0;
+                if (!inSet) reenter.Add(pid);            // 被淘汰的 pid 复烧 CPU → 重入场
+            }
+            // 记忆清死：确认死亡的 pid 才清（不可读 ≠ 死，规格 §3.2）。清死范围与记忆全集
+            // 一致——否则短命编译器（csc 数秒即退、从未被采样）的名字条目永久滞留，
+            // PID 复用后会以「复烧 CPU」假触发重入
+            lock (sync)
+            {
+                var dead = new List<int>();
+                foreach (int pid in buildPidName.Keys)
+                {
+                    if (activeBuildPids.Contains(pid) || alive.Contains(pid)) continue;
+                    IntPtr h = Native.OpenProcess(Native.PROCESS_QUERY_LIMITED_INFORMATION, false, pid);
+                    if (h == IntPtr.Zero) { dead.Add(pid); continue; }
+                    try { if (!Native.StillActive(h)) dead.Add(pid); }
+                    finally { Native.CloseHandle(h); }
+                }
+                foreach (int pid in dead)
+                {
+                    buildPidCpuMs.Remove(pid);
+                    buildPidLastProgress.Remove(pid);
+                    buildPidName.Remove(pid);
+                }
+            }
+            if (reenter.Count > 0)
+            {
+                // 复活重入走事件正路（活性上报/掌权/提优/气球全部复用）
+                var changes = new List<ProcessChange>();
+                foreach (int pid in reenter)
+                {
+                    string nm;
+                    lock (sync) buildPidName.TryGetValue(pid, out nm);
+                    changes.Add(MakeReentryChange(pid, string.IsNullOrEmpty(nm) ? "msbuild" : nm));
+                }
+                NotifyProcessChanges(new ProcessChangeBatch(changes.ToArray(), false));
+            }
+            RemoveIdleBuilds(now);
+        }
+
+        private static ProcessChange MakeReentryChange(int pid, string name)
+        {
+            var pc = new ProcessChange();
+            pc.Pid = pid;
+            pc.Name = name;
+            pc.Kind = ProcessChangeKind.Started;
+            return pc;
         }
 
         /// <summary>编译结束时长计算（纯逻辑，可单测）：无起点（初始扫描外的边界）一律记 0，
@@ -806,7 +1001,13 @@ namespace CaelusApp
                 activeIdePids.Clear();
                 distractNotified.Clear();
                 blockBalloonTicks.Clear();
+                buildPidLastProgress.Clear();
+                buildPidCpuMs.Clear();
+                buildPidName.Clear();
             }
+            Timer st;
+            lock (sync) { st = buildSampleTimer; buildSampleTimer = null; }
+            if (st != null) st.Dispose();
             // 走仲裁器单一路径还原（若正掌权会回调 Suspend）
             if (wasReported) arbiter.ReportActivity(Kind, false);
         }

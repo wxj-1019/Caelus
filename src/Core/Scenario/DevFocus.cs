@@ -35,6 +35,8 @@ namespace CaelusApp
         private readonly Dictionary<string, long> blockBalloonTicks = new Dictionary<string, long>(StringComparer.OrdinalIgnoreCase);
         private bool granted;
         private bool quietApplied;
+        private bool svcPauseApplied;    // 收敛器记账：SvcPause 升沿已施加（规格 §4.1）
+        private bool suppressApplied;    // 收敛器记账：后台压制 sweep 已施加
         private Timer reconcileTimer;
         private long sessionStartTicks;
         private long grantStartTicks;
@@ -168,6 +170,7 @@ namespace CaelusApp
             Settings.Save("DevFocusModeOn", on);
             if (!on) { lock (sync) { distractNotified.Clear(); blockBalloonTicks.Clear(); } }
             RecomputeActivity();
+            lock (sync) { if (granted) ReconcileSideEffects(); }   // 掌权中开关翻转的升降沿
         }
 
         /// <summary>IDE 优化开关（设置页调用）。关闭时清空已追踪的 IDE 集合，避免 Grant 仍提优。</summary>
@@ -354,7 +357,7 @@ namespace CaelusApp
                 }
             }
 
-            // 编译集合 空←非空 的统一收尾（统计落点 + 停采样 + 收敛副作用降沿[Task 3 接]）；
+            // 编译集合 空←非空 的统一收尾（统计落点 + 停采样 + 收敛副作用降沿）；
             // 门控用锁内判定的 buildSetEmptied，不在锁外重读集合——防与并发 Started 批次
             // 交错时清掉新会话起点钟/Dispose 新采样器（TOCTOU）
             if (buildSetEmptied) BuildSetBecameEmpty();
@@ -377,6 +380,9 @@ namespace CaelusApp
 
             // IDE 集合变化时复查可见窗口（节流）：无窗口的常驻 IDE 不激活场景
             if (ideChanged) RefreshIdeVisible(false);
+
+            // 仍掌权时收敛副作用：编译中途起始的服务暂停/压制升沿在此补做（P1-2 主诉）
+            lock (sync) { if (granted) ReconcileSideEffects(); }
 
             // 活性变化只向仲裁器报告；副作用由仲裁器经 Grant/Suspend 回调控制
             if (becameActive)
@@ -505,8 +511,9 @@ namespace CaelusApp
             if (t != null) t.Dispose();
             // 编译来源消失后活性重算：无其他来源时向仲裁器报告不活跃（收权/还原服务暂停）。
             // 事件 Stopped 路径在 NotifyProcessChanges 锁内已翻 reported，此处重算为幂等空转，
-            // 只有活性门淘汰路径（无事件批次）靠这里收权。仍掌权时收敛副作用降沿由 Task 3 接。
+            // 只有活性门淘汰路径（无事件批次）靠这里收权。
             RecomputeActivity();
+            lock (sync) { if (granted) ReconcileSideEffects(); }   // 编译排空仍掌权：降沿回收（服务恢复/压制解除）
         }
 
         /// <summary>CPU 采样节拍（5 秒）：推进度、不可读保守标记（句柄甄别清死）、
@@ -726,7 +733,9 @@ namespace CaelusApp
             return IdeCatalog.IsMatch(name, p);
         }
 
-        /// <summary>IScenario：获得掌职权——暂停索引服务、提优编译进程（后台压制在 Task 4 加入）</summary>
+        /// <summary>IScenario：获得掌职权。副作用不再按 Grant 时刻快照施加——
+        /// 收敛器按 build/focus 当前态升降沿收敛（规格 §4），节拍无条件启动
+        /// （IDE-only 授予也要跑活性重算与收敛）。</summary>
         public override void Grant()
         {
             lock (sync)
@@ -737,40 +746,82 @@ namespace CaelusApp
             }
             try
             {
-                bool build;
-                bool focus;
-                bool ide;
+                bool build; bool focus; bool ide;
                 lock (sync)
                 {
                     build = activeBuildPids.Count > 0;
                     focus = FocusModeOn;
                     ide = activeIdePids.Count > 0;
                 }
-
-                // 注：GameMode.Deactivate 的 ActiveChanged(false) 已移到 RestoreEnv 之后触发
-                // （审查迭代 2026-08），本场景 Activate 不再被游戏还原路径覆盖。
-                // SvcPause/Notif 现为多占用方引用计数（SharedEffectClaim），游戏与本场景
-                // 叠加时最后一个占用方离开才还原；交接直通见 Suspend。
-                if (build)
-                {
-                    SvcPause.Activate(SvcPause.OwnerDevFocus);
-                    BoostBuildProcesses();
-                }
-                // 编译深化与专注模式共用同一套常规档压制（Build 位）
-                if (build || focus) SweepBuildSuppression();
-                if (focus)
-                {
-                    try { if (Notif.Quiet(Notif.OwnerDevFocus)) { lock (sync) quietApplied = true; } } catch { }
-                }
-                // 校正节拍在编译/专注任一来源下都运行：长编译期间增量追压新后台，
-                // 专注模式还需节拍感知 WPF 宿主跨进程的开关翻转（无进程事件时也能解除）。
-                if (build || focus) StartReconcileTimer();
+                StartReconcileTimer();
+                ReconcileSideEffects();
                 if (ide) ReconcileIdeBoost();
-
                 Logger.Log("开发专注：获得掌职权（编译=" + build + " 专注=" + focus + " IDE=" + ide + "）");
                 ActivityLog.Add("开发专注掌权（编译=" + build + " 专注=" + focus + " IDE=" + ide + "）");
             }
             catch (Exception ex) { Logger.LogFailure("开发专注掌权失败", ex); }
+        }
+
+        /// <summary>副作用收敛器（规格 §4.1 期望态表）：掌权期间让 服务暂停=build、
+        /// 通知静默=focus、后台压制=build||focus 持续成立——Grant/进程事件/开关翻转/
+        /// 校正节拍/活性门淘汰全部收敛到期望态。升降沿幂等：SvcPause/Notif 走 owner
+        /// 引用计数（游戏叠加时最后一个占用方离开才真还原），sweep 的 Acquire 对已压
+        /// 进程返回 AlreadyThrottled，boost 有快照字典防重。</summary>
+        private void ReconcileSideEffects()
+        {
+            bool build; bool focus; bool grantedNow;
+            lock (sync)
+            {
+                grantedNow = granted;
+                build = activeBuildPids.Count > 0;
+                focus = FocusModeOn;
+            }
+            if (!grantedNow) return;   // 已挂起：不施加升沿，全量还原交给 Suspend
+
+            try
+            {
+                if (build && !svcPauseApplied)
+                    svcPauseApplied = SvcPause.Activate(SvcPause.OwnerDevFocus);
+                else if (!build && svcPauseApplied)
+                {
+                    try { SvcPause.Restore(SvcPause.OwnerDevFocus); } catch { }
+                    svcPauseApplied = false;
+                }
+
+                if (focus && !quietApplied)
+                {
+                    try { quietApplied = Notif.Quiet(Notif.OwnerDevFocus); } catch { }
+                }
+                else if (!focus && quietApplied)
+                {
+                    try { Notif.Restore(Notif.OwnerDevFocus); } catch { }
+                    quietApplied = false;
+                }
+
+                bool wantSuppress = build || focus;
+                if (wantSuppress && !suppressApplied)
+                {
+                    SweepBuildSuppression();
+                    suppressApplied = true;
+                }
+                else if (!wantSuppress && suppressApplied)
+                {
+                    if (core != null) { try { core.ReleaseReason(SuppressReason.Build); } catch { } }
+                    suppressApplied = false;
+                }
+
+                if (build) BoostBuildProcesses();   // 幂等：快照字典 ContainsKey 跳过
+
+                // 竞态护栏（与 ReconcileTick 同款）：收敛期间挂起到达时，已施加升沿立即回收
+                lock (sync) grantedNow = granted;
+                if (!grantedNow)
+                {
+                    if (svcPauseApplied) { try { SvcPause.Restore(SvcPause.OwnerDevFocus); } catch { } svcPauseApplied = false; }
+                    if (quietApplied) { try { Notif.Restore(Notif.OwnerDevFocus); } catch { } quietApplied = false; }
+                    if (suppressApplied && core != null) { try { core.ReleaseReason(SuppressReason.Build); } catch { } suppressApplied = false; }
+                }
+            }
+            catch (Exception ex) { Logger.LogFailure("开发专注：副作用收敛失败", ex); }
         }
 
         /// <summary>IScenario：挂起——还原全部副作用，检测状态保留。
@@ -786,6 +837,8 @@ namespace CaelusApp
                 granted = false;
                 wasQuiet = quietApplied;
                 quietApplied = false;
+                svcPauseApplied = false;
+                suppressApplied = false;
                 elapsed = DateTime.UtcNow.Ticks - grantStartTicks;
             }
             if (elapsed > 0) FocusStats.RecordSession(elapsed);
@@ -960,25 +1013,21 @@ namespace CaelusApp
             if (t != null) t.Dispose();
         }
 
-        /// <summary>校正节拍：增量追压新后台 + IDE 窗口条件复查。回调到达时可能已挂起，先检查。</summary>
+        /// <summary>校正节拍：收敛副作用 + IDE 窗口条件复查。回调到达时可能已挂起，先检查。</summary>
         private void ReconcileTick()
         {
             lock (sync) { if (!granted) return; }
             try
             {
-                bool build;
-                bool focus;
-                lock (sync) { build = activeBuildPids.Count > 0; }
-                focus = FocusModeOn;
                 // IDE 窗口条件复查（节流），无可见窗口的 IDE 不再维持场景活性
                 RefreshIdeVisible(false);
                 // 专注开关可能已被 WPF 宿主跨进程关闭：本进程没有进程事件时，靠节拍重算活性
                 // 触发仲裁器挂起（还原 Notif 静默等副作用），避免开关失效延迟到下一个进程事件。
                 RecomputeActivity();
                 lock (sync) { if (!granted) return; }
-                if (build || focus) SweepBuildSuppression();   // Acquire 对已压进程返回 AlreadyThrottled，幂等
+                ReconcileSideEffects();   // 收敛器内含压制 sweep/服务暂停/静默的全部升降沿
                 ReconcileIdeBoost();
-                // 竞态护栏：挂起可能在扫描期间到达（granted 已翻 false），泄漏的压制立即回收；
+                // 竞态护栏：挂起可能在收敛期间到达（granted 已翻 false），泄漏的压制立即回收；
                 // 若挂起在护栏之后到达，Suspend 自带的 ReleaseReason(Build) 会兜底。
                 lock (sync) { if (!granted && core != null) core.ReleaseReason(SuppressReason.Build); }
             }

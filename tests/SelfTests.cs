@@ -1315,6 +1315,7 @@ namespace CaelusApp
             test("编译名录：CustomList 补回 git/docker 即存即效", TestBuildCatalogCustomList);
             test("编译活性门：静默淘汰判定真值表", TestBuildIdleDropDecision);
             test("编译活性门：空转淘汰/复活重入/统计落点", TestBuildIdleDropAndReenter);
+            test("开发专注：副作用收敛器升降沿（掌权中途编译起止/中途开关）", TestDevFocusSideEffectReconcile);
             test("专注历史：按日合并、截断与近 7 日补零", TestFocusHistoryMergeAndTrim);
             test("专注历史：会话与分心计数写入当日趋势", TestFocusStatsFeedsHistory);
             test("日常统计：掌权时长写入今日键与 TSV 日常列", TestDailyCareRecordsSession);

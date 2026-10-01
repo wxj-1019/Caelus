@@ -613,6 +613,59 @@ namespace CaelusApp
             }
         }
 
+        // —— 副作用收敛器（规格 2026-10-02 §4）：升沿补做与降沿回收 ——
+
+        private static void TestDevFocusSideEffectReconcile()
+        {
+            if (SvcState.Query("SysMain") == 0 && SvcState.Query("WSearch") == 0)
+                Skip("SysMain/WSearch 均未运行");
+            string dir = NewTempDir("devfocus-reconcile");
+            Process probe = null;
+            DevFocus dev = null;
+            int oldIdle = DevFocus.BuildIdleDropSeconds;
+            bool oldFocus = Settings.Load("DevFocusModeOn", false);
+            DevFocus.BuildIdleDropSeconds = 0;   // 探针 CPU 行为与本测试无关，防活性门干扰
+            try
+            {
+                var arbiter = new ScenarioArbiter();
+                var core = new SuppressionCore(Path.Combine(dir, "s.state"));
+                dev = new DevFocus(arbiter, core, () => true, (n, p) => false, name => false);
+
+                // 1) focus-only 掌权（无编译进程）：静默施加，服务不动
+                dev.SetFocusMode(true);
+                Eq(true, dev.IsGranted);
+                Eq(true, Notif.HeldBy(Notif.OwnerDevFocus));
+                Eq(false, SvcPause.HeldBy(SvcPause.OwnerDevFocus));
+
+                // 2) 掌权期间编译起始（P1-2 主诉）：服务暂停升沿即时补做
+                string beat;
+                probe = StartNamedProbe(dir, "msbuild.exe", out beat);
+                dev.NotifyProcessChanges(new ProcessChangeBatch(
+                    new[] { MakeChange(probe.Id, "msbuild", ProcessChangeKind.Started) }, false));
+                Eq(true, SvcPause.HeldBy(SvcPause.OwnerDevFocus));
+
+                // 3) 编译结束、focus 仍在（IDE 常驻同款）：服务降沿回收，静默保持
+                dev.NotifyProcessChanges(new ProcessChangeBatch(
+                    new[] { MakeChange(probe.Id, "msbuild", ProcessChangeKind.Stopped) }, false));
+                Eq(false, SvcPause.HeldBy(SvcPause.OwnerDevFocus));
+                Eq(true, Notif.HeldBy(Notif.OwnerDevFocus));
+
+                // 4) focus 关闭：整体失活 → Suspend 全量还原
+                dev.SetFocusMode(false);
+                Eq(false, dev.IsGranted);
+                Eq(false, Notif.HeldBy(Notif.OwnerDevFocus));
+            }
+            finally
+            {
+                DevFocus.BuildIdleDropSeconds = oldIdle;
+                Settings.Save("DevFocusModeOn", oldFocus);
+                try { if (dev != null) dev.SetFocusMode(false); } catch { }
+                try { if (dev != null) dev.Stop(); } catch { }
+                StopOwned(probe);
+                DeleteTempDir(dir);
+            }
+        }
+
         /// <summary>场景提优的崩溃自愈凭据必须与 CrashGuard.Identify 用同一时间纪元
         /// （QueryProcessSample 的 FILETIME）。此前存 DateTime ticks，两者相差固定常数，
         /// 崩溃后身份校验永远 Mismatch，提优过的进程永不还原。
